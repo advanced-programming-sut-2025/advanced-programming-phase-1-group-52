@@ -1,4 +1,6 @@
 package enums.items;
 
-public enum Tools {
+
+public enum Tools implements Items {
+
 }

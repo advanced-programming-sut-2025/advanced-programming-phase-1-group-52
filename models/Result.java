@@ -1,4 +1,4 @@
 package models;
 
-public record Result() {
+public record Result(Boolean isSuccessful, String Message) {
 }

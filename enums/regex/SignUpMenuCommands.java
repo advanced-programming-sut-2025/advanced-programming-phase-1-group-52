@@ -1,4 +1,23 @@
 package enums.regex;
 
-public enum SignUpMenuCommands implements Command {
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+public enum SignUpMenuCommands{
+    Register(""),
+    PickQuestion(""),
+    ShowCurrentMenu(""),
+    MenuExit("");
+
+
+    private final String pattern;
+
+    SignUpMenuCommands(String pattern) {
+        this.pattern = pattern;
+    }
+
+    public Matcher getMatcher(String input) {
+        Matcher matcher = Pattern.compile(this.pattern).matcher(input);
+        return matcher.matches() ? matcher : null;
+    }
 }

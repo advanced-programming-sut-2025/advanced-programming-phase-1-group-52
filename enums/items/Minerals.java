@@ -1,4 +1,5 @@
 package enums.items;
 
-public enum Minerals {
+
+public enum Minerals implements Items {
 }
