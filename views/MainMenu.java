@@ -1,4 +1,4 @@
 package views;
 
-public class MainMenu {
+public class MainMenu implements AppMenu {
 }

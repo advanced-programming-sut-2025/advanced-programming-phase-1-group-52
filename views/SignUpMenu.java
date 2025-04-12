@@ -1,4 +1,4 @@
 package views;
 
-public class SignUpMenu {
+public class SignUpMenu implements AppMenu {
 }
