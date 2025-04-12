@@ -29,5 +29,8 @@ public enum Fish {
     private Season season;
 
     Fish(String name, int price, Season season) {
+        this.name = name;
+        this.price = price;
+        this.season = season;
     }
 }

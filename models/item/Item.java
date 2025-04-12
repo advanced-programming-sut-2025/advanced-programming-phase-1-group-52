@@ -1,8 +1,27 @@
 package models.item;
 
+import enums.items.Items;
 import enums.items.Tools;
 
 public abstract class Item {
-    String name;
+    private String name;
+    private int number = 0;
+    protected Items itemType;
     protected abstract int calculateEnergyConsumption();
+
+    public String name() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public int number() {
+        return number;
+    }
+
+    public void setNumber(int number) {
+        this.number = number;
+    }
 }
