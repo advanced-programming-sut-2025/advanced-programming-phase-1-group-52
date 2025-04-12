@@ -1,4 +1,4 @@
 package views;
 
-public class InventoryMenu {
+public class InventoryMenu implements AppMenu {
 }
