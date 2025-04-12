@@ -1,4 +1,4 @@
 package enums.items;
 
-public enum Goods {
+public enum Goods implements Items {
 }

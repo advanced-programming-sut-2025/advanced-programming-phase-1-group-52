@@ -1,4 +1,5 @@
 package enums.items;
 
-public enum Crops {
+
+public enum Crops implements Items {
 }
