@@ -1,4 +1,5 @@
 package enums.items;
 
-public enum CraftingRecipes {
+
+public enum CraftingRecipes implements Items {
 }

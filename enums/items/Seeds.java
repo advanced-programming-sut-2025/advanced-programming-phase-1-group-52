@@ -1,4 +1,5 @@
 package enums.items;
 
-public enum Seeds {
+
+public enum Seeds implements Items {
 }
