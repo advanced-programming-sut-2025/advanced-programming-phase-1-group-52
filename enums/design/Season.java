@@ -3,29 +3,37 @@ package enums.design;
 import java.util.ArrayList;
 
 public enum Season {
-    Spring(new ArrayList<Weather>(){{
+    Spring("spring", new ArrayList<Weather>(){{
         add(Weather.Sunny);
         add(Weather.Rainy);
         add(Weather.Stormy);
     }}),
-    Summer(new ArrayList<Weather>(){{
+    Summer("summer", new ArrayList<Weather>(){{
         add(Weather.Sunny);
         add(Weather.Rainy);
         add(Weather.Stormy);
     }}),
-    Autumn(new ArrayList<Weather>(){{
+    Fall("fall", new ArrayList<Weather>(){{
         add(Weather.Sunny);
         add(Weather.Rainy);
         add(Weather.Stormy);
     }}),
-    Winter(new ArrayList<Weather>(){{
+    Winter("winter", new ArrayList<Weather>(){{
         add(Weather.Sunny);
+        add(Weather.Snowy);
+    }}),
+    Special("special", new ArrayList<Weather>(){{
+        add(Weather.Sunny);
+        add(Weather.Rainy);
+        add(Weather.Stormy);
         add(Weather.Snowy);
     }});
 
+    private final String name;
     private final ArrayList<Weather> weathers;
 
-    Season(ArrayList<Weather> weathers) {
+    Season(String name, ArrayList<Weather> weathers) {
+        this.name = name;
         this.weathers = weathers;
     }
 
