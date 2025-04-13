@@ -2,19 +2,25 @@ package enums;
 
 import views.*;
 
+import java.util.Scanner;
+
 public enum Menu {
-    GameMenu(new GameMenu()),
-    InventoryMenu(new InventoryMenu()),
     LoginMenu(new LoginMenu()),
-    MainMenu(new MainMenu()),
-    ProfileMenu(new ProfileMenu()),
+    ExitMenu(new ExitMenu()),
     SignUpMenu(new SignUpMenu()),
     StoreMenu(new StoreMenu()),
-    ExitMenu(new ExitMenu());
+    ProfileMenu(new ProfileMenu()),
+    MainMenu(new MainMenu()),
+    GameMenu(new GameMenu()),
+    InventoryMenu(new InventoryMenu());
 
     private final AppMenu menu;
 
     Menu(AppMenu menu) {
         this.menu = menu;
+    }
+
+    public void checkCommand(Scanner scanner) {
+        this.menu.checkInput(scanner);
     }
 }
