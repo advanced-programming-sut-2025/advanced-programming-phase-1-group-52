@@ -10,6 +10,7 @@ public class App {
     private final ArrayList<Game> games;
     private Menu currentMenu;
     private User currentUser;
+    private Game currentGame;
 
     private App() {
         users = new ArrayList<>();
@@ -36,6 +37,10 @@ public class App {
 
     public User getCurrentUser() {
         return currentUser;
+    }
+
+    public Game getCurrentGame() {
+        return currentGame;
     }
 
     public void setCurrentMenu(Menu currentMenu) {

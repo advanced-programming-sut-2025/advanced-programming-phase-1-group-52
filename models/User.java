@@ -2,13 +2,15 @@ package models;
 
 import enums.player.Gender;
 
+import java.util.HashMap;
+
 public class User {
     private String username;
     private String password;
     private String nickname;
     private String email;
     private final Gender gender;
-    private Player player;
+    private final HashMap<Game, Player> userPlayers;
     private int numPlayed;
     private int highScore;
 
@@ -18,6 +20,7 @@ public class User {
         this.nickname = nickname;
         this.email = email;
         this.gender = gender;
+        this.userPlayers = new HashMap<>();
     }
 
     public String getUsername() {
@@ -41,7 +44,7 @@ public class User {
     }
 
     public Player getPlayer() {
-        return player;
+        return this.userPlayers.get(App.getInstance().getCurrentGame());
     }
 
     public void setUsername(String username) {
