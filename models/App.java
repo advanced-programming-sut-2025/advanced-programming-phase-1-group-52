@@ -17,7 +17,7 @@ public class App {
         currentMenu = Menu.LoginMenu;
     }
 
-    public App getInstance() {
+    public static App getInstance() {
         if (instance == null) instance = new App();
         return instance;
     }
