@@ -1,13 +1,11 @@
 package models;
 
-import enums.items.Items;
+import enums.items.Backpacks;
+import models.item.Item;
 
-import java.util.HashMap;
+import java.util.ArrayList;
 
 public class Inventory {
-    private final HashMap<Items, Integer> items;
-
-    public Inventory() {
-        items = new HashMap<Items, Integer>();
-    }
+    private Backpacks backpack = Backpacks.PrimitiveBackpack;
+    private ArrayList<Item> items = new ArrayList<>();
 }
