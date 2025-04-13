@@ -10,6 +10,8 @@ public class TrashCan extends Item {
         return trashCanType;
     }
 
+    public void addItem(Item item, int amount) {}
+
     public void setTrashCanType(TrashCans trashCanType) {
         this.trashCanType = trashCanType;
     }
