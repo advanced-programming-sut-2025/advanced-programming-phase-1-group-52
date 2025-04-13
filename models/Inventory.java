@@ -8,6 +8,6 @@ public class Inventory {
     private final HashMap<Items, Integer> items;
 
     public Inventory() {
-        items = new HashMap<Items, Integer>();
+        items = new HashMap<>();
     }
 }

@@ -28,4 +28,8 @@ public enum Season {
     Season(ArrayList<Weather> weathers) {
         this.weathers = weathers;
     }
+
+    public Season getNextSeason() {
+        return values()[(this.ordinal() + 1) % values().length];
+    }
 }
