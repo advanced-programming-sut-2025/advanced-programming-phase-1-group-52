@@ -1,4 +1,10 @@
 package views;
 
-public class InventoryMenu {
+import java.util.Scanner;
+
+public class InventoryMenu implements AppMenu {
+    @Override
+    public void checkInput(Scanner scanner) {
+
+    }
 }
