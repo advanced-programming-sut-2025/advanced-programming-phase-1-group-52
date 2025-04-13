@@ -35,7 +35,11 @@ public class Trade {
         Trade.id++;
     }
 
-    public setResponse(boolean isAccepted) {
+    public void setResponse(boolean isAccepted) {
         this.isAccepted = isAccepted;
+    }
+
+    public Player getBuyer() {
+        return buyer;
     }
 }
