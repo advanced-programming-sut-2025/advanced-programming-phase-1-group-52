@@ -1,4 +1,4 @@
 package views;
 
-public class ExitMenu {
+public class ExitMenu implements AppMenu {
 }
