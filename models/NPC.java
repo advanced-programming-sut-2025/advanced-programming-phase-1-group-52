@@ -18,6 +18,9 @@ public class NPC {
         }
     }
 
+    public void meetNPC() {
+
+    }
 
     public void finishQuest(int id) {
 

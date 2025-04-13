@@ -36,4 +36,8 @@ public enum Season {
         this.name = name;
         this.weathers = weathers;
     }
+
+    public Season getNextSeason() {
+        return values()[(this.ordinal() + 1) % values().length];
+    }
 }
