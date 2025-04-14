@@ -23,7 +23,7 @@ public enum ArtisanMachines {
             Materials.Coal, 1
     ), 50 ),
 
-    Sprinkler("Sprinkler", Map.of(
+    Sprinkler("Sprinkler", Map.of (
             Materials.CopperBar, 1,
             Materials.IronBar, 1
     ), 0 ),
