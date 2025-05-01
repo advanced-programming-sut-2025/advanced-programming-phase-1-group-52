@@ -1,6 +1,6 @@
 package enums.items;
 
-public enum AnimalProducts {
+public enum AnimalProductType {
     ChickenEgg("ChickenEgg",50),
     BigChickenEgg("BigChickenEgg",95),
     DuckEgg("DuckEgg",95),
@@ -18,7 +18,7 @@ public enum AnimalProducts {
     private String name;
     private int price;
 
-    AnimalProducts(String name, int price) {
+    AnimalProductType(String name, int price) {
         this.name = name;
         this.price = price;
     }

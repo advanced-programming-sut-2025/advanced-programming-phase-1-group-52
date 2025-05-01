@@ -1,7 +1,7 @@
 package enums.items;
 
 
-public enum Materials implements Items {
+public enum MaterialType implements Items {
     
     Egg("Egg"),
     Milk("Milk"),
@@ -49,7 +49,7 @@ public enum Materials implements Items {
 
     private final String name;
 
-    Materials(String name) {
+    MaterialType(String name) {
         this.name = name;
     }
 

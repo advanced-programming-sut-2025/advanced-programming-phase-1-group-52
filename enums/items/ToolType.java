@@ -1,7 +1,7 @@
 package enums.items;
 
 
-public enum Tools implements Items {
+public enum ToolType implements Items {
     // Hoes :
     PrimitiveHoe(5),
     CopperHoe(4),
@@ -41,7 +41,7 @@ public enum Tools implements Items {
 
     private int energyConsumption;
 
-    Tools(int energyConsumption) {
+    ToolType(int energyConsumption) {
         this.energyConsumption = energyConsumption;
     }
 }
