@@ -38,14 +38,31 @@ public enum MaterialType implements Items {
 
     // Foraged Items
     Dandelion("Dandelion"),
-    Fiber("Fiber"),
     Coffee("Coffee"),
 
     // Processed Items
     Rice("Rice"),
     Bread("Bread"),
     HashBrowns("Hash browns"),
-    Omelet("Omelet");
+    Omelet("Omelet"),
+
+    // Handicrafts Items
+    CopperOre("Copper ore"),
+    IronOre("Iron ore"),
+    GoldOre("Gold ore"),
+    IridiumOre("Iridium ore"),
+    CopperBar("Copper bar"),
+    IronBar("Iron bar"),
+    GoldBar("Gold bar"),
+    IridiumBar("Iridium bar"),
+    Wood("Wood"),
+    Stone("Stone"),
+    Coal("Coal"),
+    Fiber("Fiber"),
+    Acorn("Acorn"),
+    MapleSeed("Maple seed"),
+    PineCone("Pine cone"),
+    MahoganySeed("Mahogany seed");
 
     private final String name;
 
