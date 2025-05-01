@@ -1,10 +1,10 @@
 package models.item;
 
-import enums.items.Materials;
+import enums.items.MaterialType;
 
 public class Good extends Item{
-    public Good(Materials material) {
-        this.itemType = Materials.valueOf(material.name());
+    public Good(MaterialType material) {
+        this.itemType = MaterialType.valueOf(material.name());
     }
     @Override
     protected int calculateEnergyConsumption() {

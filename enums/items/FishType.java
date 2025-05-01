@@ -2,11 +2,11 @@ package enums.items;
 
 import enums.design.Season;
 
-public enum Fish {
-    Salmon("Salmon", 75, Season.Fall),
-    Sardine("Sardine", 40, Season.Fall),
-    Shad("Shad", 60, Season.Fall),
-    BlueDiscus("Blue Discus", 120, Season.Fall),
+public enum FishType {
+    Salmon("Salmon", 75, Season.Autumn),
+    Sardine("Sardine", 40, Season.Autumn),
+    Shad("Shad", 60, Season.Autumn),
+    BlueDiscus("Blue Discus", 120, Season.Autumn),
     MidnightCarp("Midnight Carp", 150, Season.Winter),
     Squid("Squid", 80, Season.Winter),
     Tuna("Tuna", 100, Season.Winter),
@@ -21,14 +21,14 @@ public enum Fish {
     RainbowTrout("Rainbow Trout", 65, Season.Summer),
     Legend("Legend", 5000, Season.Spring),
     Glacierfish("Glacierfish", 1000, Season.Winter),
-    Angler("Angler", 900, Season.Fall),
+    Angler("Angler", 900, Season.Autumn),
     Crimsonfish("Crimsonfish", 1500, Season.Summer);
 
     private String name;
     private int price;
     private Season season;
 
-    Fish(String name, int price, Season season) {
+    FishType(String name, int price, Season season) {
         this.name = name;
         this.price = price;
         this.season = season;

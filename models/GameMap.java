@@ -4,11 +4,11 @@ import enums.design.Weather;
 
 import java.util.ArrayList;
 
-public class gameMap {
+public class GameMap {
     private final ArrayList<Tile> tiles;
     private Weather currentWeather;
 
-    public gameMap() {
+    public GameMap() {
         this.tiles = new ArrayList<>();
     }
 
