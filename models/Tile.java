@@ -1,18 +1,25 @@
 package models;
 
-import enums.design.Tiles;
+import enums.design.TileType;
 
 public class Tile {
-    private Tiles type;
-    private final int x;
-    private final int y;
+    private TileType type;
+    private final Player owner;
 
-    public Tile(int x, int y) {
-        this.x = x;
-        this.y = y;
+    public Tile(TileType type, Player owner) {
+        this.type = type;
+        this.owner = owner;
     }
 
-    public void setType(Tiles type) {
+    public TileType getType() {
+        return type;
+    }
+
+    public Player getOwner() {
+        return owner;
+    }
+
+    public void setType(TileType type) {
         this.type = type;
     }
 }

@@ -1,6 +1,6 @@
 package enums.design;
 
-public enum Tiles {
+public enum TileType {
     Grass(true),
     Water(false),
     Stone(false),
@@ -14,7 +14,7 @@ public enum Tiles {
 
     private final boolean reachable;
 
-    Tiles(boolean reachable) {
+    TileType(boolean reachable) {
         this.reachable = reachable;
     }
 }
