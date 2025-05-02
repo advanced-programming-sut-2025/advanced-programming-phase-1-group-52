@@ -5,7 +5,7 @@ import models.item.AnimalProduct;
 import java.util.ArrayList;
 import java.util.List;
 
-public enum Animals {
+public enum Animals implements Items {
     Chicken("Chicken",800) {
         {
             products.add(AnimalProducts.ChickenEgg);

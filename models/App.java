@@ -7,7 +7,7 @@ import java.util.ArrayList;
 public class App {
     private static App instance = null;
     private final ArrayList<User> users;
-    private final ArrayList<Game> games;
+    private ArrayList<Game> games;
     private Menu currentMenu;
     private User currentUser;
     private Game currentGame;
@@ -31,6 +31,10 @@ public class App {
         return games;
     }
 
+    public void addGames(Game game) {
+        this.games.add(game);
+    }
+
     public Menu getCurrentMenu() {
         return currentMenu;
     }
@@ -50,4 +54,5 @@ public class App {
     public void setCurrentUser(User currentUser) {
         this.currentUser = currentUser;
     }
+
 }
