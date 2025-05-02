@@ -8,6 +8,10 @@ public class Date {
     private Weekday currentWeekday = Weekday.Sunday;
     private int currentDay = 1;
 
+    public Date() {
+
+    }
+
     public void dayPassed() {
         this.currentWeekday = this.currentWeekday.getNextDay();
         this.currentDay++;

@@ -3,6 +3,10 @@ package models;
 public class Time {
     private int hour = 9;
 
+    public Time() {
+
+    }
+
     public void hourPassed() {
         this.hour++;
     }
@@ -19,4 +23,9 @@ public class Time {
     private void dayPassed() {
         this.hour = 9;
     }
+
+    public int hour() {
+        return hour;
+    }
+
 }

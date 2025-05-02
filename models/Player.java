@@ -15,6 +15,26 @@ public class Player {
         this.trades = new ArrayList<>();
     }
 
+    public int energy() {
+        return energy;
+    }
+
+    public void setEnergy(int energy) {
+        this.energy = energy;
+    }
+
+    public ArrayList<Trade> trades() {
+        return trades;
+    }
+
+    public Inventory inventory() {
+        return inventory;
+    }
+
+    public String username() {
+        return username;
+    }
+
     public void hoeHandler(){}
     public void shearHandler(){}
     public void pickaxeHandler(){}
