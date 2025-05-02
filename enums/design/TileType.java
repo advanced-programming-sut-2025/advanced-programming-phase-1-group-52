@@ -10,7 +10,9 @@ public enum TileType {
     GreenHouse(true),
     BrokenGreenHouse(false),
     Quarry(true),
-    Tree(false);
+    Tree(false),
+    Shop(true),
+    NPCHouse(true),;
 
     private final boolean reachable;
 
