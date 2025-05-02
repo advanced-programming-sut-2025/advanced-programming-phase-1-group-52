@@ -57,10 +57,6 @@ public class Game {
         return time;
     }
 
-    public void setTime(Time time) {
-        this.time = time;
-    }
-
     public User mainPlayer() {
         return mainPlayer;
     }
@@ -86,6 +82,21 @@ public class Game {
         if(this.time.isDayOver()){
             this.date.dayPassed();
             this.date.isSeasonOver();
+        }
+    }
+
+    public void timeChecker(){
+        if(this.time.hour() > 22){
+
+            this.time.setHour(9 + (this.time.hour() % 22));
+            this.date.dayPassed();
+            this.date.isSeasonOver();
+        }
+    }
+
+    public void dateChecker(){
+        if(this.date.currentDay() > 28){
+            this.date.setCurrentDay(this.date.currentDay() % 28);
         }
     }
 }

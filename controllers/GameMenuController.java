@@ -1,5 +1,6 @@
 package controllers;
 
+import enums.design.Season;
 import enums.regex.GameMenuCommands;
 import models.App;
 import models.Game;
@@ -58,7 +59,6 @@ public class GameMenuController {
         return new Result(true, "Now Choose your map!");
     }
 
-
     public Result chooseMap(User user, String mapIdStr) {
         // todo : get each user map in game view
         // todo : print options for users in game view
@@ -105,6 +105,65 @@ public class GameMenuController {
     public Result showTime(){
         Game game = App.getInstance().getCurrentGame();
         return new Result(true, "It's " + game.time().hour() + "O'clock");
+    }
+
+    public Result showDate(){
+        Game game = App.getInstance().getCurrentGame();
+        return new Result(true,"Season: " + game.date().currentSeason().name() +
+                "\nDay: " + game.date().currentDay());
+    }
+
+    public Result showDateAndTime(){
+        return new Result(true, showTime().Message() + "\n" + showDate().Message());
+    }
+
+    public Result showDayOfWeek(){
+        Game game = App.getInstance().getCurrentGame();
+        return new Result(true,"It's " + game.date().currentWeekday().name());
+    }
+
+    public Result changeTime(int hours) {
+        if (hours <= 0) {
+            return new Result(false, "Hours must be positive");
+        }
+        Game game = App.getInstance().getCurrentGame();
+        Time time = game.time();
+        Date date = game.date();
+
+        int originalHour = time.hour();
+        int daysPassed = time.addHours(hours);
+
+
+        if (daysPassed > 0) {
+            int seasonsPassed = date.addDays(daysPassed);
+            this.onDayPassed(daysPassed);
+        }
+
+        return new Result(true, "time changed!");
+    }
+
+    public Result changeDate(int days) {
+        if (days <= 0) {
+            return new Result(false, "Days must be positive");
+        }
+        Game game = App.getInstance().getCurrentGame();
+        Date date = game.date();
+        int originalDay = date.currentDay();
+        Season originalSeason = date.currentSeason();
+
+        int seasonsPassed = date.addDays(days);
+
+        game.time().setHour(Time.DAY_START);
+
+        this.onSeasonChanged(seasonsPassed);
+
+        return new Result(true,"date changed!");
+    }
+
+    private void onDayPassed(int days) {
+    }
+
+    private void onSeasonChanged(int seasons) {
     }
 
     private User findUser(String username) {
