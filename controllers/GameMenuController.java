@@ -1,11 +1,16 @@
 package controllers;
 
 import enums.regex.GameMenuCommands;
+import models.App;
+import models.Game;
+import models.Result;
+import models.User;
 import models.*;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
+
 
 public class GameMenuController {
     public Result startNewGame(String input) {
@@ -48,10 +53,11 @@ public class GameMenuController {
 
         Game newGame = new Game(players);
         newGame.setMainPlayer(loggedInUser);
-        App.getInstance().addGames(newGame);
+        App.getInstance().addGame(newGame);
         App.getInstance().setCurrentGame(newGame);
         return new Result(true, "Now Choose your map!");
     }
+
 
     public Result chooseMap(User user, String mapIdStr) {
         // todo : get each user map in game view
@@ -100,6 +106,7 @@ public class GameMenuController {
         Game game = App.getInstance().getCurrentGame();
         return new Result(true, "It's " + game.time().hour() + "O'clock");
     }
+
     private User findUser(String username) {
         for(User user : App.getInstance().getUsers()){
             if(user.getUsername().equals(username)){

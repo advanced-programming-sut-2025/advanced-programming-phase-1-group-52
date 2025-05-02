@@ -25,6 +25,10 @@ public class Game {
         this.players = players;
     }
 
+    public void setGameMap(GameMap map) {
+        this.map = map;
+    }
+
     public GameMap map() {
         return map;
     }

@@ -46,5 +46,8 @@ public class Player {
     public void backpackHandler(){}
     public void trashCanHandler(){}
 
+    public boolean checkFaint (){
+        return this.energy <= 0;
+    }
     // todo: having private method for each tool functionality
 }
