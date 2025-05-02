@@ -1,11 +1,7 @@
 package enums.items;
 
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-public enum Foods implements Items {
+public enum FoodType implements Items {
     FriedEgg("Fried egg", 50, null, "Starter", 35),
     BakedFish("Baked Fish",75, null, "Starter", 100),
     Salad("Salad", 113, null, "Starter", 110),
@@ -40,7 +36,7 @@ public enum Foods implements Items {
     private final String source;
     private final int sellPrice;
 
-    Foods(String name, int energy, String buff, String source, int sellPrice) {
+    FoodType(String name, int energy, String buff, String source, int sellPrice) {
         this.name = name;
         this.energy = energy;
         this.buff = buff;

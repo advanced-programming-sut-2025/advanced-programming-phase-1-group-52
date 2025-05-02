@@ -4,7 +4,7 @@ import enums.items.Items;
 
 import java.util.ArrayList;
 
-public enum Shops {
+public enum ShopType {
     Blacksmith("Clint"){
         {
             items.add();
@@ -46,7 +46,7 @@ public enum Shops {
     public  ArrayList<Items> items = new ArrayList<>();
 
 
-    Shops(String name) {
+    ShopType(String name) {
         this.name = name;
     }
     public String getName() {

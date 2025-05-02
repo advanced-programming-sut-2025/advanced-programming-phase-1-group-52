@@ -5,7 +5,7 @@ import models.item.Item;
 
 import java.util.ArrayList;
 
-public enum NPCs {
+public enum NPCType {
     Sebastian(),
     Abigail(),
     Harvey(),

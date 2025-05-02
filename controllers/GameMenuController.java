@@ -1,15 +1,22 @@
 package controllers;
 
 import enums.regex.GameMenuCommands;
+<<<<<<< HEAD
 import models.App;
 import models.Game;
 import models.Result;
 import models.User;
+=======
+import models.*;
+>>>>>>> main
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
+<<<<<<< HEAD
 import java.util.regex.Pattern;
+=======
+>>>>>>> main
 
 public class GameMenuController {
     public Result startNewGame(String input) {
@@ -29,6 +36,7 @@ public class GameMenuController {
         if(!isUserAvailable(user1) || !isUserAvailable(user2) || !isUserAvailable(user3)) {
             return new Result(false, "Users are not available");
         }
+<<<<<<< HEAD
         return new Result(true, "Now Choose your map!");
     }
 
@@ -36,6 +44,82 @@ public class GameMenuController {
         // todo : get each user map in game view
         int mapId = Integer.parseInt(mapIdStr);
 
+=======
+        ArrayList<User> players = new ArrayList<>();
+        User loggedInUser = App.getInstance().getCurrentUser();
+
+        Player player1 = new Player(loggedInUser.getUsername());
+        loggedInUser.setCurrentPlayer(player1);
+        players.add(loggedInUser);
+
+        Player player2 = new Player(user1.getUsername());
+        user1.setCurrentPlayer(player2);
+        players.add(user1);
+
+
+        Player player3 = new Player(user2.getUsername());
+        user2.setCurrentPlayer(player3);
+        players.add(user2);
+
+
+        Player player4 = new Player(user3.getUsername());
+        user3.setCurrentPlayer(player4);
+        players.add(user3);
+
+        Game newGame = new Game(players);
+        newGame.setMainPlayer(loggedInUser);
+        App.getInstance().addGames(newGame);
+        App.getInstance().setCurrentGame(newGame);
+        return new Result(true, "Now Choose your map!");
+    }
+
+    public Result chooseMap(User user, String mapIdStr) {
+        // todo : get each user map in game view
+        // todo : print options for users in game view
+        // todo : check the other error
+        int mapId = Integer.parseInt(mapIdStr);
+        if (mapId > 3 || mapId < 1) {
+            return new Result(false, "Invalid map id, please try again");
+        }
+        Player userPlayer = user.currentPlayer();
+        // todo : return player and mapId to be built
+        return new Result(true,user.getUsername() + "'s map is " + mapId);
+    }
+
+    public Result loadMap() {
+        if(App.getInstance().getCurrentUser().userGame() == null) {
+            return new Result(false, "You are not in a game");
+        }
+        // todo : load game
+        return new Result(true, "Your last game is loaded");
+    }
+
+    public Result exitGame() {
+        Game game = App.getInstance().getCurrentGame();
+        User loggedInUser = App.getInstance().getCurrentUser();
+        if(game.mainPlayer().equals(loggedInUser)){
+            // todo : exit the game and go to game menu
+            return new Result(true, "You are in game menu now");
+        }
+        else{
+            return new Result(false, "You are not the creator of this game");
+        }
+    }
+
+    public Result terminateGame() {
+        return new Result(true, "Game terminated");
+    }
+
+    public Result switchTurn(){
+        Game game = App.getInstance().getCurrentGame();
+        game.switchCurrentPlayer();
+        return new Result(true, "Game switched to " + game.currentPlayer().username() + " ");
+    }
+
+    public Result showTime(){
+        Game game = App.getInstance().getCurrentGame();
+        return new Result(true, "It's " + game.time().hour() + "O'clock");
+>>>>>>> main
     }
     private User findUser(String username) {
         for(User user : App.getInstance().getUsers()){
@@ -80,5 +164,8 @@ public class GameMenuController {
         }
         return true;
     }
+<<<<<<< HEAD
 
+=======
+>>>>>>> main
 }

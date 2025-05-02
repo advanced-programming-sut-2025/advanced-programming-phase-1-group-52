@@ -1,10 +1,10 @@
 package models.item;
 
-import enums.items.Materials;
+import enums.items.MaterialType;
 
 public class Material extends Item{
-    public Material(Materials material) {
-        this.itemType = Materials.valueOf(material.name());
+    public Material(MaterialType material) {
+        this.itemType = MaterialType.valueOf(material.name());
     }
 
     @Override

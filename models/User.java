@@ -10,7 +10,9 @@ public class User {
     private String nickname;
     private String email;
     private final Gender gender;
-    private final HashMap<Game, Player> userPlayers;
+    private HashMap<Game, Player> userPlayers;
+    private Game userGame;
+    private Player currentPlayer;
     private int numPlayed;
     private int highScore;
 
@@ -47,6 +49,14 @@ public class User {
         return this.userPlayers.get(App.getInstance().getCurrentGame());
     }
 
+    public HashMap<Game, Player> userPlayers() {
+        return userPlayers;
+    }
+
+    public void addUserPlayers(Game game, Player player) {
+        this.userPlayers.put(game, player);
+    }
+
     public void setUsername(String username) {
         this.username = username;
     }
@@ -61,5 +71,21 @@ public class User {
 
     public void setEmail(String email) {
         this.email = email;
+    }
+
+    public Player currentPlayer() {
+        return currentPlayer;
+    }
+
+    public void setCurrentPlayer(Player currentPlayer) {
+        this.currentPlayer = currentPlayer;
+    }
+
+    public Game userGame() {
+        return userGame;
+    }
+
+    public void setUserGame(Game userGame) {
+        this.userGame = userGame;
     }
 }

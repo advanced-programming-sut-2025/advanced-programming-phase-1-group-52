@@ -1,10 +1,10 @@
 package models.item;
 
-import enums.items.Materials;
+import enums.items.MaterialType;
 
 public class Fish extends Item {
-    public Fish(Materials material) {
-        this.itemType = Materials.valueOf(material.name());
+    public Fish(MaterialType material) {
+        this.itemType = MaterialType.valueOf(material.name());
     }
 
     @Override

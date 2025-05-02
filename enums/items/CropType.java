@@ -3,7 +3,7 @@ package enums.items;
 
 import enums.design.Season;
 
-public enum Crops implements Items {
+public enum CropType implements Items {
     // All crops:
 
     // Foraging crops :
@@ -43,7 +43,7 @@ public enum Crops implements Items {
     private final int baseSellPrice;
     private final int energy;
 
-    Crops(Season season, int baseSellPrice, int energy) {
+    CropType(Season season, int baseSellPrice, int energy) {
         this.season = season;
         this.baseSellPrice = baseSellPrice;
         this.energy = energy;
