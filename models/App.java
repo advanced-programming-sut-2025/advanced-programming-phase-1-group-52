@@ -6,11 +6,7 @@ import java.util.ArrayList;
 
 public class App {
     private static App instance = null;
-<<<<<<< HEAD
     private final ArrayList<User> users;
-=======
-    private ArrayList<User> users;
->>>>>>> main
     private ArrayList<Game> games;
     private Menu currentMenu;
     private User currentUser;
@@ -35,7 +31,7 @@ public class App {
         return games;
     }
 
-    public void addGames(Game game) {
+    public void addGame(Game game) {
         this.games.add(game);
     }
 
@@ -51,9 +47,7 @@ public class App {
         return currentGame;
     }
 
-    public void addGames(Game game) {
-        this.games.add(game);
-    }
+
 
     public void setCurrentMenu(Menu currentMenu) {
         this.currentMenu = currentMenu;
@@ -63,8 +57,6 @@ public class App {
         this.currentUser = currentUser;
     }
 
-<<<<<<< HEAD
-=======
     public Game currentGame() {
         return currentGame;
     }
@@ -80,5 +72,4 @@ public class App {
     public void addUsers(User user) {
         this.users.add(user);
     }
->>>>>>> main
 }

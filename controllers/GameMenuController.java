@@ -1,22 +1,16 @@
 package controllers;
 
 import enums.regex.GameMenuCommands;
-<<<<<<< HEAD
 import models.App;
 import models.Game;
 import models.Result;
 import models.User;
-=======
 import models.*;
->>>>>>> main
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
-<<<<<<< HEAD
-import java.util.regex.Pattern;
-=======
->>>>>>> main
+
 
 public class GameMenuController {
     public Result startNewGame(String input) {
@@ -36,15 +30,6 @@ public class GameMenuController {
         if(!isUserAvailable(user1) || !isUserAvailable(user2) || !isUserAvailable(user3)) {
             return new Result(false, "Users are not available");
         }
-<<<<<<< HEAD
-        return new Result(true, "Now Choose your map!");
-    }
-
-    public Result chooseMap(String mapIdStr) {
-        // todo : get each user map in game view
-        int mapId = Integer.parseInt(mapIdStr);
-
-=======
         ArrayList<User> players = new ArrayList<>();
         User loggedInUser = App.getInstance().getCurrentUser();
 
@@ -68,10 +53,11 @@ public class GameMenuController {
 
         Game newGame = new Game(players);
         newGame.setMainPlayer(loggedInUser);
-        App.getInstance().addGames(newGame);
+        App.getInstance().addGame(newGame);
         App.getInstance().setCurrentGame(newGame);
         return new Result(true, "Now Choose your map!");
     }
+
 
     public Result chooseMap(User user, String mapIdStr) {
         // todo : get each user map in game view
@@ -119,8 +105,8 @@ public class GameMenuController {
     public Result showTime(){
         Game game = App.getInstance().getCurrentGame();
         return new Result(true, "It's " + game.time().hour() + "O'clock");
->>>>>>> main
     }
+
     private User findUser(String username) {
         for(User user : App.getInstance().getUsers()){
             if(user.getUsername().equals(username)){
@@ -164,8 +150,4 @@ public class GameMenuController {
         }
         return true;
     }
-<<<<<<< HEAD
-
-=======
->>>>>>> main
 }

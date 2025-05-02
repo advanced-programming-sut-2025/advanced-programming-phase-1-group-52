@@ -4,12 +4,8 @@ import java.util.ArrayList;
 
 public class Game {
     private ArrayList<User> players;
-<<<<<<< HEAD
-    private gameMap map;
-=======
     private User mainPlayer;
     private GameMap map;
->>>>>>> main
     private Player currentPlayer;
     private Date date;
     private Time time;
@@ -29,18 +25,15 @@ public class Game {
         this.players = players;
     }
 
-<<<<<<< HEAD
-    public gameMap map() {
-        return map;
+    public void setGameMap(GameMap map) {
+        this.map = map;
     }
-    public void setGameMap(gameMap map) {
-=======
+
     public GameMap map() {
         return map;
     }
 
     public void setMap(GameMap map) {
->>>>>>> main
         this.map = map;
     }
 
@@ -67,8 +60,6 @@ public class Game {
     public void setTime(Time time) {
         this.time = time;
     }
-<<<<<<< HEAD
-=======
 
     public User mainPlayer() {
         return mainPlayer;
@@ -97,5 +88,4 @@ public class Game {
             this.date.isSeasonOver();
         }
     }
->>>>>>> main
 }
