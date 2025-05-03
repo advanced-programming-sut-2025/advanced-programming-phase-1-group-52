@@ -78,25 +78,9 @@ public class Game {
     }
 
     public void timePassed() {
-        this.time.hourPassed();
-        if(this.time.isDayOver()){
-            this.date.dayPassed();
-            this.date.isSeasonOver();
-        }
-    }
-
-    public void timeChecker(){
-        if(this.time.hour() > 22){
-
-            this.time.setHour(9 + (this.time.hour() % 22));
-            this.date.dayPassed();
-            this.date.isSeasonOver();
-        }
-    }
-
-    public void dateChecker(){
-        if(this.date.currentDay() > 28){
-            this.date.setCurrentDay(this.date.currentDay() % 28);
+        int dayPassed = this.time.addHours(1);
+        if(dayPassed > 0){
+            int seasonPassed = this.date.addDays(dayPassed);
         }
     }
 }

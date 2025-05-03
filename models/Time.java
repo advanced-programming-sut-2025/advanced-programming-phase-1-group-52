@@ -31,7 +31,6 @@ public class Time {
         return this.hour >= DAY_END;
     }
 
-    // Getters and setters
     public int hour() {
         return hour;
     }

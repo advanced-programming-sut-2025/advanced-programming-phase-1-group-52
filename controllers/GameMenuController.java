@@ -160,6 +160,19 @@ public class GameMenuController {
         return new Result(true,"date changed!");
     }
 
+    public Result showSeason() {
+        Game game = App.getInstance().getCurrentGame();
+        return new Result(true,game.date().currentSeason().name());
+    }
+
+    public Result lightningHandling(){
+        return new Result(true, "Lightning handling");
+    }
+
+    public Result cheatLightning(int x, int y){
+        return new Result(true, "Lightning handling");
+    }
+
     private void onDayPassed(int days) {
     }
 
