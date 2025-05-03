@@ -7,9 +7,10 @@ import java.util.ArrayList;
 public class App {
     private static App instance = null;
     private final ArrayList<User> users;
-    private final ArrayList<Game> games;
+    private ArrayList<Game> games;
     private Menu currentMenu;
     private User currentUser;
+    private Game currentGame;
 
     private App() {
         users = new ArrayList<>();
@@ -30,6 +31,10 @@ public class App {
         return games;
     }
 
+    public void addGame(Game game) {
+        this.games.add(game);
+    }
+
     public Menu getCurrentMenu() {
         return currentMenu;
     }
@@ -38,11 +43,33 @@ public class App {
         return currentUser;
     }
 
+    public Game getCurrentGame() {
+        return currentGame;
+    }
+
+
+
     public void setCurrentMenu(Menu currentMenu) {
         this.currentMenu = currentMenu;
     }
 
     public void setCurrentUser(User currentUser) {
         this.currentUser = currentUser;
+    }
+
+    public Game currentGame() {
+        return currentGame;
+    }
+
+    public void setCurrentGame(Game currentGame) {
+        this.currentGame = currentGame;
+    }
+
+    public ArrayList<User> users() {
+        return users;
+    }
+
+    public void addUsers(User user) {
+        this.users.add(user);
     }
 }

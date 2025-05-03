@@ -4,7 +4,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public enum GameMenuCommands {
-    GameNew(""),
+    CheckFlagInNewGame("^game new -u\\b.*"),
+    ExtractUsernames("(?:^game new -u|(?!^)\\G)\\s+(\\w+)"),
     GameMap(""),
     ShowCurrentMenu(""),
     MenuExit("");

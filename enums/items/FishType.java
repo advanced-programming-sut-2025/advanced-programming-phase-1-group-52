@@ -2,7 +2,7 @@ package enums.items;
 
 import enums.design.Season;
 
-public enum Fish {
+public enum FishType {
     Salmon("Salmon", 75, Season.Autumn),
     Sardine("Sardine", 40, Season.Autumn),
     Shad("Shad", 60, Season.Autumn),
@@ -28,6 +28,9 @@ public enum Fish {
     private int price;
     private Season season;
 
-    Fish(String name, int price, Season season) {
+    FishType(String name, int price, Season season) {
+        this.name = name;
+        this.price = price;
+        this.season = season;
     }
 }

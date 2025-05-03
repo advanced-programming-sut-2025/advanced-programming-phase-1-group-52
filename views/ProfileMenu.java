@@ -40,6 +40,5 @@ public class ProfileMenu implements AppMenu {
         } else {
             System.out.println("Invalid command");
         }
-
     }
 }
