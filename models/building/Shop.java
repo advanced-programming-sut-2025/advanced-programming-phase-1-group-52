@@ -1,17 +1,16 @@
 package models.building;
 
 import enums.design.ShopType;
+import java.util.ArrayList;
 import models.item.Item;
-
-import java.util.HashMap;
 
 public class Shop extends Building {
     private final ShopType shopType;
-    private final HashMap<Item, Integer> items;
+    private final ArrayList<Item> items;
 
     public Shop(ShopType shopType) {
         this.shopType = shopType;
-        items = new HashMap<>();
+        items = new ArrayList<>();
 
         // todo: add items from shopType and set stock
     }

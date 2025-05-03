@@ -126,48 +126,64 @@ public class GameMap {
     }
 
     private void generateFarm(ArrayList<Player> players, ArrayList<FarmThemes> themes) {
-        if (themes.get(0).equals(FarmThemes.Neutral)) {
-            generateBuilding(players, 0, TileType.Quarry, 1, 9, 14, 18);
-            generateLake(players.get(0), 23, 28, 14, 17);
-        }
-        else if (themes.get(0).equals(FarmThemes.Miner)) {
-            generateBuilding(players, 0, TileType.Quarry, 1, 19, 14, 18);
-        }
-        else if (themes.get(0).equals(FarmThemes.Fisher)) {
-            generateLake(players.get(0), 1, 19, 14, 17);
-        }
-
-        if (themes.get(1).equals(FarmThemes.Neutral)) {
-            generateBuilding(players, 1, TileType.Quarry, 1, 9, 14, 18);
-            generateLake(players.get(1), 23, 28, 14, 17);
-        }
-        else if (themes.get(1).equals(FarmThemes.Miner)) {
-            generateBuilding(players, 1, TileType.Quarry, 1, 19, 14, 18);
-        }
-        else if (themes.get(1).equals(FarmThemes.Fisher)) {
-            generateLake(players.get(1), 1, 19, 14, 17);
+        switch (themes.get(0)) {
+            case Neutral:
+                generateBuilding(players, 0, TileType.Quarry, 1, 9, 14, 18);
+                generateLake(players.get(0), 23, 28, 14, 17);
+                break;
+            case Miner:
+                generateBuilding(players, 0, TileType.Quarry, 1, 19, 14, 18);
+                break;
+            case Fisher:
+                generateLake(players.get(0), 1, 19, 14, 17);
+                break;
+            default:
+                break;
         }
 
-        if (themes.get(2).equals(FarmThemes.Neutral)) {
-            generateBuilding(players, 2, TileType.Quarry, 1, 9, 14, 18);
-            generateLake(players.get(2), 23, 28, 14, 17);
-        }
-        else if (themes.get(2).equals(FarmThemes.Miner)) {
-            generateBuilding(players, 2, TileType.Quarry, 1, 19, 14, 18);
-        }
-        else if (themes.get(2).equals(FarmThemes.Fisher)) {
-            generateLake(players.get(2), 1, 19, 34, 38);
+        switch (themes.get(1)) {
+            case Neutral:
+                generateBuilding(players, 1, TileType.Quarry, 1, 9, 14, 18);
+                generateLake(players.get(1), 23, 28, 14, 17);
+                break;
+            case Miner:
+                generateBuilding(players, 1, TileType.Quarry, 1, 19, 14, 18);
+                break;
+            case Fisher:
+                generateLake(players.get(1), 1, 19, 14, 17);
+                break;
+            default:
+                break;
         }
 
-        if (themes.get(3).equals(FarmThemes.Neutral)) {
-            generateBuilding(players, 3, TileType.Quarry, 1, 9, 14, 18);
-            generateLake(players.get(3), 23, 28, 14, 17);
+        switch (themes.get(2)) {
+            case Neutral:
+                generateBuilding(players, 2, TileType.Quarry, 1, 9, 14, 18);
+                generateLake(players.get(2), 23, 28, 14, 17);
+                break;
+            case Miner:
+                generateBuilding(players, 2, TileType.Quarry, 1, 19, 14, 18);
+                break;
+            case Fisher:
+                generateLake(players.get(2), 1, 19, 34, 38);
+                break;
+            default:
+                break;
         }
-        else if (themes.get(3).equals(FarmThemes.Miner)) {
-            generateBuilding(players, 3, TileType.Quarry, 1, 19, 14, 18);
-        }
-        else if (themes.get(3).equals(FarmThemes.Fisher)) {
-            generateLake(players.get(3), 1, 19, 34, 38);
+
+        switch (themes.get(3)) {
+            case Neutral:
+                generateBuilding(players, 3, TileType.Quarry, 1, 9, 14, 18);
+                generateLake(players.get(3), 23, 28, 14, 17);
+                break;
+            case Miner:
+                generateBuilding(players, 3, TileType.Quarry, 1, 19, 14, 18);
+                break;
+            case Fisher:
+                generateLake(players.get(3), 1, 19, 34, 38);
+                break;
+            default:
+                break;
         }
     }
 }
