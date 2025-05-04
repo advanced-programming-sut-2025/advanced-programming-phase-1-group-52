@@ -1,6 +1,7 @@
 package models;
 
 import enums.player.Gender;
+import enums.regex.SecurityQuestion;
 
 import java.util.HashMap;
 
@@ -10,6 +11,8 @@ public class User {
     private String nickname;
     private String email;
     private final Gender gender;
+    private SecurityQuestion securityQuestion;
+    private String securityAnswer;
     private HashMap<Game, Player> userPlayers;
     private Game userGame;
     private Player currentPlayer;
@@ -49,6 +52,10 @@ public class User {
         return this.userPlayers.get(App.getInstance().getCurrentGame());
     }
 
+    public SecurityQuestion getSecurityQuestion() { return securityQuestion; }
+
+    public String getSecurityAnswer() { return securityAnswer; }
+
     public HashMap<Game, Player> userPlayers() {
         return userPlayers;
     }
@@ -80,6 +87,10 @@ public class User {
     public void setCurrentPlayer(Player currentPlayer) {
         this.currentPlayer = currentPlayer;
     }
+
+    public void setSecurityQuestion(SecurityQuestion securityQuestion) { this.securityQuestion = securityQuestion; }
+
+    public void setSecurityAnswer(String securityAnswer) { this.securityAnswer = securityAnswer; }
 
     public Game userGame() {
         return userGame;

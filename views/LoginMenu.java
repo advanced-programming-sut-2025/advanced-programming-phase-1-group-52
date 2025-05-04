@@ -29,6 +29,10 @@ public class LoginMenu implements AppMenu {
             ).toString());
         } else if ((matcher = LoginMenuCommands.ShowCurrentMenu.getMatcher(input)) != null) {
             controller.showCurrentMenu();
+        } else if ((matcher = LoginMenuCommands.ResetPassword.getMatcher(input)) != null) {
+            System.out.println(controller.resetPassword(
+                    matcher.group("resetPassword")
+            ).toString());
         } else if ((matcher = LoginMenuCommands.MenuExit.getMatcher(input)) != null) {
             controller.menuExit();
         }
