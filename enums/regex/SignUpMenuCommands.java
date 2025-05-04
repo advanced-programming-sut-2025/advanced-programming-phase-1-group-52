@@ -12,7 +12,10 @@ public enum SignUpMenuCommands{
     ShowCurrentMenu("(\\s*)show(\\s+)current(\\s+)menu(\\s*)"),
     MenuExit("(\\s*)menu(\\s+)exit(\\s*)"),
     ValidUsername("[A-Za-z0-9_]+"),
-    StrongPassword("(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[^0-9a-zA-Z]).{6,}"),
+    ValidDigit("(?=.*[0-9])"),
+    ValidLower( "(?=.*[a-z])"),
+    ValidUpper("(?=.*[A-Z])"),
+    ValidSpecial("(?=.*[^0-9A-Za-z])"),
     ValidEmail("[a-zA-Z0-9_\\\\.]+@[a-zA-Z0-9_\\\\.]+\\\\.[a-zA-Z0-9_\\\\.]+"),
     ;
 
