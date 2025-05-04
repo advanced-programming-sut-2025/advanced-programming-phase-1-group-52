@@ -6,6 +6,7 @@ import enums.design.ShopType;
 import enums.design.TileType;
 import enums.design.Weather;
 import java.util.ArrayList;
+import java.util.Random;
 import models.building.GreenHouse;
 import models.building.House;
 import models.building.NPCHouse;
@@ -20,7 +21,7 @@ public class GameMap {
     private final ArrayList<GreenHouse> greenHouses;
 
     public GameMap(ArrayList<Player> players, ArrayList<FarmThemes> themes) {
-        this.tiles = new Tile[90][40];
+        this.tiles = new Tile[90][90];
         this.currentWeather = Weather.Sunny;
         this.shops = new ArrayList<>();
         this.houses = new ArrayList<>();
@@ -33,19 +34,19 @@ public class GameMap {
         this.greenHouses.add(new GreenHouse(players.get(0), 22, 1));
 
         generateBuilding(players, 1, TileType.House, 83, 88, 1, 6);
-        generateBuilding(players, 1, TileType.BrokenGreenHouse, 81, 88, 1, 7);
+        generateBuilding(players, 1, TileType.BrokenGreenHouse, 61, 68, 1, 7);
         this.houses.add(new House(players.get(1), 83, 1));
-        this.greenHouses.add(new GreenHouse(players.get(1), 81, 1));
+        this.greenHouses.add(new GreenHouse(players.get(1), 61, 1));
 
         generateBuilding(players, 2, TileType.House, 1, 6, 33, 38);
         generateBuilding(players, 2, TileType.BrokenGreenHouse, 22, 29, 32, 38);
         this.houses.add(new House(players.get(2), 1, 33));
-        this.greenHouses.add(new GreenHouse(players.get(2), 22, 33));
+        this.greenHouses.add(new GreenHouse(players.get(2), 22, 32));
 
-        generateBuilding(players, 3, TileType.House, 83, 88, 33, 38);
-        generateBuilding(players, 3, TileType.BrokenGreenHouse, 81, 88, 32, 38);
-        this.houses.add(new House(players.get(3), 83, 33));
-        this.greenHouses.add(new GreenHouse(players.get(3), 81, 33));
+        generateBuilding(players, 3, TileType.House, 63, 68, 33, 38);
+        generateBuilding(players, 3, TileType.BrokenGreenHouse, 61, 68, 32, 38);
+        this.houses.add(new House(players.get(3), 63, 33));
+        this.greenHouses.add(new GreenHouse(players.get(3), 61, 32));
 
         generateFarm(players, themes);
 
@@ -75,6 +76,128 @@ public class GameMap {
             );
 
             this.npcHouses.add(new NPCHouse(npc));
+        }
+
+        Random rand = new Random();
+        int grassAmount = rand.nextInt(3);
+
+        for (int i = 0; i < grassAmount + 2; i++) {
+            int grassX = rand.nextInt(20) + 4;
+            int grassY = rand.nextInt(12) + 8;
+            int grassHeight = rand.nextInt(4) + 1;
+            
+            for (int j = grassY - grassHeight / 2; j < grassY + grassHeight / 2; j++) {
+                for (int k = grassX - rand.nextInt(2) - 1; k < grassX + rand.nextInt(2); k++) {
+                    tiles[k][j] = new Tile(TileType.Grass, players.get(0));
+                } 
+            }
+        }
+
+        grassAmount = rand.nextInt(3);
+        for (int i = 0; i < grassAmount + 2; i++) {
+            int grassX = rand.nextInt(20) + 64;
+            int grassY = rand.nextInt(12) + 8;
+            int grassHeight = rand.nextInt(4) + 1;
+
+            for (int j = grassY - grassHeight / 2; j < grassY + grassHeight / 2; j++) {
+                for (int k = grassX - rand.nextInt(2) - 1; k < grassX + rand.nextInt(2); k++) {
+                    tiles[k][j] = new Tile(TileType.Grass, players.get(1));
+                }
+            }
+        }
+
+        grassAmount = rand.nextInt(3);
+        for (int i = 0; i < grassAmount + 2; i++) {
+            int grassX = rand.nextInt(20) + 4;
+            int grassY = rand.nextInt(12) + 38;
+            int grassHeight = rand.nextInt(4) + 1;
+
+            for (int j = grassY - grassHeight / 2; j < grassY + grassHeight / 2; j++) {
+                for (int k = grassX - rand.nextInt(2) - 1; k < grassX + rand.nextInt(2); k++) {
+                    tiles[k][j] = new Tile(TileType.Grass, players.get(2));
+                }
+            }
+        }
+
+        grassAmount = rand.nextInt(3);
+        for (int i = 0; i < grassAmount + 2; i++) {
+            int grassX = rand.nextInt(20) + 64;
+            int grassY = rand.nextInt(12) + 38;
+            int grassHeight = rand.nextInt(4) + 1;
+
+            for (int j = grassY - grassHeight / 2; j < grassY + grassHeight / 2; j++) {
+                for (int k = grassX - rand.nextInt(2) - 1; k < grassX + rand.nextInt(2); k++) {
+                    tiles[k][j] = new Tile(TileType.Grass, players.get(3));
+                }
+            }
+        }
+
+        for (int i = 0; i < 30; i++) {
+            for (int j = 0; j < 30; j++) {
+                if (tiles[i][j] == null) {
+                    int tileProb = rand.nextInt(10);
+                    if (tileProb < 4) {
+                        tiles[i][j] = new Tile(TileType.Earth, players.get(0));
+                    }
+                    else if (tileProb < 7) {
+                        tiles[i][j] = new Tile(TileType.Stone, players.get(0));
+                    }
+                    else {
+                        tiles[i][j] = new Tile(TileType.Tree, players.get(0));
+                    }
+                }
+            }
+        }
+        
+        for (int i = 60; i < 90; i++) {
+            for (int j = 0; j < 30; j++) {
+                if (tiles[i][j] == null) {
+                    int tileProb = rand.nextInt(10);
+                    if (tileProb < 4) {
+                        tiles[i][j] = new Tile(TileType.Earth, players.get(1));
+                    }
+                    else if (tileProb < 7) {
+                        tiles[i][j] = new Tile(TileType.Stone, players.get(1));
+                    }
+                    else {
+                        tiles[i][j] = new Tile(TileType.Tree, players.get(1));
+                    }
+                }
+            }
+        }
+
+        for (int i = 0; i < 30; i++) {
+            for (int j = 30; j < 60; j++) {
+                if (tiles[i][j] == null) {
+                    int tileProb = rand.nextInt(10);
+                    if (tileProb < 4) {
+                        tiles[i][j] = new Tile(TileType.Earth, players.get(2));
+                    }
+                    else if (tileProb < 7) {
+                        tiles[i][j] = new Tile(TileType.Stone, players.get(2));
+                    }
+                    else {
+                        tiles[i][j] = new Tile(TileType.Tree, players.get(2));
+                    }
+                }
+            }
+        }
+
+        for (int i = 60; i < 90; i++) {
+            for (int j = 30; j < 60; j++) {
+                if (tiles[i][j] == null) {
+                    int tileProb = rand.nextInt(10);
+                    if (tileProb < 4) {
+                        tiles[i][j] = new Tile(TileType.Earth, players.get(3));
+                    }
+                    else if (tileProb < 7) {
+                        tiles[i][j] = new Tile(TileType.Stone, players.get(3));
+                    }
+                    else {
+                        tiles[i][j] = new Tile(TileType.Tree, players.get(3));
+                    }
+                }
+            }
         }
     }
 
@@ -128,14 +251,14 @@ public class GameMap {
     private void generateFarm(ArrayList<Player> players, ArrayList<FarmThemes> themes) {
         switch (themes.get(0)) {
             case Neutral:
-                generateBuilding(players, 0, TileType.Quarry, 1, 9, 14, 18);
-                generateLake(players.get(0), 23, 28, 14, 17);
+                generateBuilding(players, 0, TileType.Quarry, 1, 9, 24, 28);
+                generateLake(players.get(0), 23, 28, 24, 27);
                 break;
             case Miner:
-                generateBuilding(players, 0, TileType.Quarry, 1, 19, 14, 18);
+                generateBuilding(players, 0, TileType.Quarry, 1, 19, 24, 28);
                 break;
             case Fisher:
-                generateLake(players.get(0), 1, 19, 14, 17);
+                generateLake(players.get(0), 1, 19, 24, 27);
                 break;
             default:
                 break;
@@ -143,14 +266,14 @@ public class GameMap {
 
         switch (themes.get(1)) {
             case Neutral:
-                generateBuilding(players, 1, TileType.Quarry, 1, 9, 14, 18);
-                generateLake(players.get(1), 23, 28, 14, 17);
+                generateBuilding(players, 1, TileType.Quarry, 61, 69, 24, 28);
+                generateLake(players.get(1), 83, 88, 24, 27);
                 break;
             case Miner:
-                generateBuilding(players, 1, TileType.Quarry, 1, 19, 14, 18);
+                generateBuilding(players, 1, TileType.Quarry, 61, 79, 24, 28);
                 break;
             case Fisher:
-                generateLake(players.get(1), 1, 19, 14, 17);
+                generateLake(players.get(1), 61, 79, 24, 27);
                 break;
             default:
                 break;
@@ -158,14 +281,14 @@ public class GameMap {
 
         switch (themes.get(2)) {
             case Neutral:
-                generateBuilding(players, 2, TileType.Quarry, 1, 9, 14, 18);
-                generateLake(players.get(2), 23, 28, 14, 17);
+                generateBuilding(players, 2, TileType.Quarry, 1, 9, 54, 58);
+                generateLake(players.get(2), 23, 28, 54, 57);
                 break;
             case Miner:
-                generateBuilding(players, 2, TileType.Quarry, 1, 19, 14, 18);
+                generateBuilding(players, 2, TileType.Quarry, 1, 19, 54, 58);
                 break;
             case Fisher:
-                generateLake(players.get(2), 1, 19, 34, 38);
+                generateLake(players.get(2), 1, 19, 54, 58);
                 break;
             default:
                 break;
@@ -173,14 +296,14 @@ public class GameMap {
 
         switch (themes.get(3)) {
             case Neutral:
-                generateBuilding(players, 3, TileType.Quarry, 1, 9, 14, 18);
-                generateLake(players.get(3), 23, 28, 14, 17);
+                generateBuilding(players, 3, TileType.Quarry, 61, 69, 54, 58);
+                generateLake(players.get(3), 83, 88, 54, 57);
                 break;
             case Miner:
-                generateBuilding(players, 3, TileType.Quarry, 1, 19, 14, 18);
+                generateBuilding(players, 3, TileType.Quarry, 61, 79, 54, 58);
                 break;
             case Fisher:
-                generateLake(players.get(3), 1, 19, 34, 38);
+                generateLake(players.get(3), 61, 79, 54, 58);
                 break;
             default:
                 break;
