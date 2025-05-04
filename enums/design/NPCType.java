@@ -1,16 +1,15 @@
 package enums.design;
 
+import java.util.ArrayList;
 import models.Quest;
 import models.item.Item;
 
-import java.util.ArrayList;
-
 public enum NPCType {
-    Sebastian(42, 22),
-    Abigail(52, 22),
-    Harvey(32, 32),
-    Lia(42, 32),
-    Robin(52, 32),;
+    Sebastian(42, 32),
+    Abigail(52, 32),
+    Harvey(32, 42),
+    Lia(42, 42),
+    Robin(52, 42),;
 
     private final ArrayList<Item> favorites = new ArrayList<>();
     private final ArrayList<Quest> quests = new ArrayList<>();
