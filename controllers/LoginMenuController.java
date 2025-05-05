@@ -17,7 +17,7 @@ public class LoginMenuController {
                 foundUser = user;
             }
         }
-        if (foundUser != null) {
+        if (foundUser == null) {
             return new Result(false,"No user account found with the provided Username.");
         }
         if (!foundUser.getPassword().equals(password)) {
@@ -38,7 +38,7 @@ public class LoginMenuController {
                 .findFirst()
                 .orElse(null);
 
-        if (user != null) {
+        if (user == null) {
             return new Result(false,"No user account found with the provided Username.");
         }
         App.getInstance().setCurrentUser(user);
