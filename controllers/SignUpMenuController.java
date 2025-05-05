@@ -28,23 +28,23 @@ public class SignUpMenuController {
             return new Result(false, "Password must be at least 8 characters");
         }
         if (!password.matches(String.valueOf(SignUpMenuCommands.ValidDigit))) {
-            return new Result(false, "Password must be digit");
+            return new Result(false, "Password must contain digit");
         }
         if (!password.matches(String.valueOf(SignUpMenuCommands.ValidLower))) {
-            return new Result(false, "Password must be lower case letter");
+            return new Result(false, "Password must contain lowercase letter");
         }
         if (!password.matches(String.valueOf(SignUpMenuCommands.ValidUpper))) {
-            return new Result(false, "Password must be upper case letter");
+            return new Result(false, "Password must contain uppercase letter");
         }
         if (!password.matches(String.valueOf(SignUpMenuCommands.ValidSpecial))) {
-            return new Result(false, "Password must be special character");
+            return new Result(false, "Password must contain special character");
         }
         if (!email.matches(String.valueOf(SignUpMenuCommands.ValidEmail))) {
             return new Result(false, "Email is invalid");
         }
         Gender genderEnum = Gender.valueOf(gender);
         User newUser = new User (username, password, nickname, email, genderEnum);
-        App.getInstance().getUsers().add(newUser);
+        App.getInstance().addUsers(newUser);
 
         return new Result(true, "User registered successfully");
 
