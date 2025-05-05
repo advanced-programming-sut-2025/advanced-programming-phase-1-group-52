@@ -46,7 +46,7 @@ public class User {
     }
 
     public Player getPlayer() {
-        return this.userPlayers.get(App.getInstance().getCurrentGame());
+        return this.userPlayers.get(App.getInstance().currentGame());
     }
 
     public HashMap<Game, Player> userPlayers() {
