@@ -1,6 +1,10 @@
 package models;
 
+import enums.design.Weather;
+
 import java.util.ArrayList;
+import java.util.Map;
+import java.util.Random;
 
 public class Game {
     private ArrayList<User> players;
@@ -9,12 +13,93 @@ public class Game {
     private Player currentPlayer;
     private Date date;
     private Time time;
+    private Weather todayWeather;
+    private Weather tomorrowWeather;
 
     public Game(ArrayList<User> players) {
         this.time = new Time();
         this.date = new Date();
         this.players = players;
         this.currentPlayer = players.getFirst().getPlayer();
+        this.todayWeather = Weather.Sunny;
+        this.tomorrowWeather = Weather.Rainy;
+    }
+
+    public boolean switchCurrentPlayer() {
+        int currentIndex = players.indexOf(currentPlayer);
+        if (currentIndex == -1) return false;
+
+        Player nextPlayer = findNextAvailablePlayer(currentIndex);
+
+        if (nextPlayer == null) {
+            return false;
+        }
+
+        setCurrentPlayer(nextPlayer);
+        timePassed();
+        return true;
+    }
+
+    private Player findNextAvailablePlayer(int currentIndex) {
+        for (int offset = 1; offset <= players.size(); offset++) {
+            int nextIndex = (currentIndex + offset) % players.size();
+            Player candidate = players.get(nextIndex).currentPlayer();
+
+            if (candidate.energy() > 0) {
+                return candidate;
+            }
+        }
+        return null;
+    }
+
+    public void timePassed() {
+        int dayPassed = this.time.addHours(1);
+        if(dayPassed > 0){
+            int seasonPassed = this.date.addDays(dayPassed);
+            // todo : add page 22 conditions
+            this.todayWeather = this.tomorrowWeather;
+            randomizeTomorrowWeather();
+            handlePlayersCoordinateInMorning();
+            handleFaintedPlayers();
+        }
+    }
+
+    public void randomizeTomorrowWeather() {
+        Map<Weather, Double> probabilities = date.currentSeason().weatherProbabilities();
+
+        double random = new Random().nextDouble();
+        double cumulative = 0.0;
+
+        for (Map.Entry<Weather, Double> entry : probabilities.entrySet()) {
+            cumulative += entry.getValue();
+            if (random <= cumulative) {
+                this.tomorrowWeather = entry.getKey();
+                return;
+            }
+        }
+        this.tomorrowWeather = Weather.Sunny;
+    }
+
+    private void handleFaintedPlayers(){
+        Player player;
+        for(User user : players){
+            player = user.currentPlayer();
+            if(player.isFainted()){
+                player.setFainted(false);
+                player.setEnergy(150);
+            }
+        }
+    }
+
+    private void handlePlayersCoordinateInMorning(){
+        Player player;
+        for(User user : players){
+            player = user.currentPlayer();
+            if(!player.isFainted()){
+                player.setCurrentX(player.originX());
+                player.setCurrentY(player.originY());
+            }
+        }
     }
 
     public ArrayList<User> players() {
@@ -65,22 +150,19 @@ public class Game {
         this.mainPlayer = mainPlayer;
     }
 
-    public void switchCurrentPlayer() {
-        for(int i = 0 ; i < players.size() ; i++){
-            if(players.get(i).equals(currentPlayer)){
-                if(i == 3){
-                    setCurrentPlayer(players.get(0).currentPlayer());
-                }
-                setCurrentPlayer(players.get(i+1).currentPlayer());
-            }
-        }
-        timePassed();
+    public Weather todayWeather() {
+        return todayWeather;
     }
 
-    public void timePassed() {
-        int dayPassed = this.time.addHours(1);
-        if(dayPassed > 0){
-            int seasonPassed = this.date.addDays(dayPassed);
-        }
+    public void setTodayWeather(Weather todayWeather) {
+        this.todayWeather = todayWeather;
+    }
+
+    public Weather tomorrowWeather() {
+        return tomorrowWeather;
+    }
+
+    public void setTomorrowWeather(Weather tomorrowWeather) {
+        this.tomorrowWeather = tomorrowWeather;
     }
 }
