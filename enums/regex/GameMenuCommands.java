@@ -6,7 +6,8 @@ import java.util.regex.Pattern;
 public enum GameMenuCommands {
     CheckFlagInNewGame("^game new -u\\b.*"),
     ExtractUsernames("(?:^game new -u|(?!^)\\G)\\s+(\\w+)"),
-    GameMap(""),
+    GameMap("game map (?<map_number>[\\d]*)"),
+    RemoveInventoryItems("^inventory trash -i (?<name>[\\S]*)\\s*(?:-n (?<number>[\\d]+))?\\s*$"),
     ShowCurrentMenu(""),
     MenuExit("");
 

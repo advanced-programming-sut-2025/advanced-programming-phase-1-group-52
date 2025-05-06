@@ -8,7 +8,7 @@ public abstract class Item {
     protected Items itemType;
     protected abstract int calculateEnergyConsumption();
 
-    public String name() {
+    public String getName() {
         return name;
     }
 
@@ -16,7 +16,7 @@ public abstract class Item {
         this.name = name;
     }
 
-    public int number() {
+    public int getNumber() {
         return number;
     }
 

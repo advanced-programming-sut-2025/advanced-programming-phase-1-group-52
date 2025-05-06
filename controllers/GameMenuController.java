@@ -8,6 +8,7 @@ import models.Game;
 import models.Result;
 import models.User;
 import models.*;
+import models.item.Item;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -231,6 +232,52 @@ public class GameMenuController {
         return new Result(true, "Player energy: " + playerEnergy);
     }
 
+    public Result cheatSetEnergy(int value){
+        Game game = App.getInstance().currentGame();
+        Player player = game.currentPlayer();
+        player.setEnergy(value);
+        return new Result(true, player.username() + "'s energy: is set to " + value);
+    }
+
+    public Result cheatUnlimitedEnergy(){
+        Game game = App.getInstance().currentGame();
+        Player player = game.currentPlayer();
+        player.setEnergy(Integer.MAX_VALUE);
+        return new Result(true, player.username() + "'s energy: is unlimited now! HA HA HA");
+    }
+
+    public Result showInventoryItems(){
+        Game game = App.getInstance().currentGame();
+        Player player = game.currentPlayer();
+        StringBuilder items = new StringBuilder();
+        for(Item item: player.inventory().getItems()){
+            items.append(item.getName() + " x" + item.getNumber() + ", ");
+        }
+        items.delete(items.length() - 2, items.length());
+        return new Result(true, items.toString());
+    }
+
+    public Result removeItemFromInventory(String itemName, String itemNumberStr){
+        // todo : handle trim in view for now
+        Game game = App.getInstance().currentGame();
+        Inventory inventory = game.currentPlayer().inventory();
+        int itemNumber;
+        Item item;
+        if((item = findItem(itemName, inventory.getItems())) == null){
+            return new Result(false, "Item not found");
+        }
+
+        if(itemNumberStr != null && !itemNumberStr.isEmpty()){
+            itemNumber = Integer.parseInt(itemNumberStr);
+            item.setNumber(item.getNumber() - itemNumber);
+            return new Result(true,  "x" + itemNumber + item.getName() + " has been removed");
+        }
+
+        else{
+            inventory.removeItem(item);
+            return new Result(true, "Item removed from inventory");
+        }
+    }
     private void onDayPassed(int days) {
     }
 
@@ -291,5 +338,14 @@ public class GameMenuController {
             player.setFainted(true);
             switchTurn();
         }
+    }
+    
+    private Item findItem(String itemName, ArrayList<Item> items) {
+        for(Item item : items){
+            if(item.getName().equals(itemName)){
+                return item;
+            }
+        }
+        return null;
     }
 }
