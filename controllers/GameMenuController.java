@@ -259,6 +259,7 @@ public class GameMenuController {
 
     public Result removeItemFromInventory(String itemName, String itemNumberStr){
         // todo : handle trim in view for now
+        // todo : calculate return money
         Game game = App.getInstance().currentGame();
         Inventory inventory = game.currentPlayer().inventory();
         int itemNumber;
@@ -278,6 +279,8 @@ public class GameMenuController {
             return new Result(true, "Item removed from inventory");
         }
     }
+
+
     private void onDayPassed(int days) {
     }
 
