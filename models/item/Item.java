@@ -8,6 +8,11 @@ public abstract class Item {
     protected Items itemType;
     protected abstract int calculateEnergyConsumption();
 
+    public Item(String name, Items itemType) {
+        this.name = name;
+        this.itemType = itemType;
+    }
+
     public String getName() {
         return name;
     }
@@ -22,5 +27,13 @@ public abstract class Item {
 
     public void setNumber(int number) {
         this.number = number;
+    }
+
+    public Items getItemType() {
+        return itemType;
+    }
+
+    public void setItemType(Items itemType) {
+        this.itemType = itemType;
     }
 }

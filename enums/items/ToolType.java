@@ -9,11 +9,13 @@ public enum ToolType implements Items {
     GoldenHoe(2),
     IridiumHoe(1),
 
+
     // Pickaxes :
     PrimitivePickaxe(5),
     CopperPickaxe(4),
     IronicPickaxe(3),
     GoldenPickaxe(2),
+
     IridiumPickaxe(1),
 
     // Axes :
