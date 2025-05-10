@@ -1,7 +1,6 @@
 package models;
 
 import enums.Menu;
-
 import java.util.ArrayList;
 
 public class App {
@@ -39,11 +38,11 @@ public class App {
         return currentMenu;
     }
 
-    public User currentUser() {
+    public User getCurrentUser() {
         return currentUser;
     }
 
-    public Game currentGame() {
+    public Game getCurrentGame() {
         return currentGame;
     }
 

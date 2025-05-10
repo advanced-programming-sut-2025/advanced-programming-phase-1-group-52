@@ -1,7 +1,6 @@
 package models;
 
 import enums.design.Weather;
-
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.Random;
@@ -102,7 +101,7 @@ public class Game {
         }
     }
 
-    public ArrayList<User> players() {
+    public ArrayList<User> getPlayers() {
         return players;
     }
 
@@ -114,7 +113,7 @@ public class Game {
         this.map = map;
     }
 
-    public GameMap map() {
+    public GameMap getMap() {
         return map;
     }
 
@@ -122,7 +121,7 @@ public class Game {
         this.map = map;
     }
 
-    public Player currentPlayer() {
+    public Player getCurrentPlayer() {
         return currentPlayer;
     }
 
@@ -130,7 +129,7 @@ public class Game {
         this.currentPlayer = currentPlayer;
     }
 
-    public Date date() {
+    public Date getDate() {
         return date;
     }
 
@@ -138,11 +137,11 @@ public class Game {
         this.date = date;
     }
 
-    public Time time() {
+    public Time getTime() {
         return time;
     }
 
-    public User mainPlayer() {
+    public User getMainPlayer() {
         return mainPlayer;
     }
 
@@ -150,7 +149,7 @@ public class Game {
         this.mainPlayer = mainPlayer;
     }
 
-    public Weather todayWeather() {
+    public Weather getTodayWeather() {
         return todayWeather;
     }
 
@@ -158,7 +157,7 @@ public class Game {
         this.todayWeather = todayWeather;
     }
 
-    public Weather tomorrowWeather() {
+    public Weather getTomorrowWeather() {
         return tomorrowWeather;
     }
 
