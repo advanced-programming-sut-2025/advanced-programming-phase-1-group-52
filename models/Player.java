@@ -1,43 +1,71 @@
 package models;
 
+import enums.player.Skills;
+import models.item.Item;
+import models.item.Tool;
+
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 public class Player {
 
-    private final String username;
-    private final Inventory inventory;
-    private final ArrayList<Trade> trades;
+    private String username;
+    private Inventory inventory;
+    private ArrayList<Trade> trades;
     private int energy = 200;
     private int originX;
     private int originY;
     private int currentX;
     private int currentY;
     private boolean isFainted = false;
+    private Map<Skills, SkillData> skills;
+    private Tool currentTool = null;
 
     public Player(String username) {
         this.username = username;
         this.inventory = new Inventory();
         this.trades = new ArrayList<>();
+        this.skills = new HashMap<>();
+        for(Skills skill : Skills.values()){
+            this.skills.put(skill, new SkillData());
+        }
     }
 
-    public int energy() {
-        return energy;
+    public void addSkillExperience(Skills skill, int amount) {
+        SkillData data = skills.get(skill);
+        data.addExperience(amount);
+        checkLevelUp(data);
     }
 
-    public void setEnergy(int energy) {
-        this.energy = energy;
+    private void checkLevelUp(SkillData data) {
+        int expNeeded = getExpForNextLevel(data.getLevel());
+
+        if (data.getExperience() >= expNeeded) {
+            data.deductExperience(expNeeded);
+            data.levelUp();
+            data.deductExperience(expNeeded);
+        }
     }
 
-    public ArrayList<Trade> trades() {
-        return trades;
+    private int getExpForNextLevel(int currentLevel) {
+        return 100 * (currentLevel + 1) + 50;
     }
 
-    public Inventory inventory() {
-        return inventory;
+    public void harvestCrop() {
+        addSkillExperience(Skills.Farming, 5);
     }
 
-    public String username() {
-        return username;
+    public void extract() {
+        addSkillExperience(Skills.Extraction, 10);
+    }
+
+    public void foraging() {
+        addSkillExperience(Skills.Foraging, 10);
+    }
+
+    public void catchFish() {
+        addSkillExperience(Skills.Fishing, 5);
     }
 
     public void hoeHandler(){}
@@ -95,6 +123,41 @@ public class Player {
         this.originX = originX;
     }
 
+    public int energy() {
+        return energy;
+    }
+
+    public void setEnergy(int energy) {
+        this.energy = energy;
+    }
+
+    public ArrayList<Trade> trades() {
+        return trades;
+    }
+
+    public Inventory inventory() {
+        return inventory;
+    }
+
+    public String username() {
+        return username;
+    }
+
+    public int getSkillLevel(Skills skill) {
+        return skills.get(skill).getLevel();
+    }
+
+    public int getSkillExperience(Skills skill) {
+        return skills.get(skill).getExperience();
+    }
+
+    public Tool getCurrentTool() {
+        return currentTool;
+    }
+
+    public void setCurrentTool(Tool currentTool) {
+        this.currentTool = currentTool;
+    }
 
     // todo: having private method for each tool functionality
 }

@@ -2,6 +2,7 @@ package controllers;
 
 import enums.design.Season;
 import enums.design.Weather;
+import enums.items.ToolType;
 import enums.regex.GameMenuCommands;
 import models.App;
 import models.Game;
@@ -9,6 +10,7 @@ import models.Result;
 import models.User;
 import models.*;
 import models.item.Item;
+import models.item.Tool;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -280,7 +282,32 @@ public class GameMenuController {
         }
     }
 
+    public Result equipTool(String toolName){
+        Game game = App.getInstance().currentGame();
+        Player player = game.currentPlayer();
+        Tool tool;
+        if((tool = (Tool) findItem(toolName, player.inventory().getItems())) == null){
+            return new Result(false, "Tool not found in your inventory");
+        }
+        player.setCurrentTool(tool);
+        return new Result(true, tool.getName() + "'s tool has been equipped");
+    }
 
+    public Result showCurrentTool(){
+        Game game = App.getInstance().currentGame();
+        Tool tool = game.currentPlayer().getCurrentTool();
+        if(tool == null){
+            return new Result(false, "There is no tool in your hand!");
+        }
+        return new Result(true, tool.getName() + " is your current tool");
+    }
+
+    public Result showAllTools(){
+        Game game = App.getInstance().currentGame();
+        Player player = game.currentPlayer();
+        ArrayList<Item> tools = player.inventory().getItems();
+
+    }
     private void onDayPassed(int days) {
     }
 
@@ -351,4 +378,12 @@ public class GameMenuController {
         }
         return null;
     }
+
+    private String toolListMaker(ArrayList<Item> tools) {
+        StringBuilder toolList = new StringBuilder();
+        for(Item item : tools){
+            if(item.getItemType() == ToolType.PrimitiveHoe){}
+        }
+    }
+
 }
