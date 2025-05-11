@@ -1,5 +1,6 @@
 package models;
 
+import models.building.House;
 import enums.player.Skills;
 import models.item.Item;
 import models.item.Tool;
@@ -14,6 +15,7 @@ public class Player {
     private Inventory inventory;
     private ArrayList<Trade> trades;
     private int energy = 200;
+    private House house;
     private int originX;
     private int originY;
     private int currentX;
@@ -78,6 +80,7 @@ public class Player {
     public void milkPaleHandler(){}
     public void backpackHandler(){}
     public void trashCanHandler(){}
+    public House getHouse() { return house; }
 
     public int currentY() {
         return currentY;
