@@ -1,6 +1,7 @@
 package enums.design;
 
 public enum TileType {
+    Earth(true),
     Grass(true),
     Water(false),
     Stone(false),

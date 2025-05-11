@@ -39,15 +39,13 @@ public class App {
         return currentMenu;
     }
 
-    public User getCurrentUser() {
+    public User currentUser() {
         return currentUser;
     }
 
-    public Game getCurrentGame() {
+    public Game currentGame() {
         return currentGame;
     }
-
-
 
     public void setCurrentMenu(Menu currentMenu) {
         this.currentMenu = currentMenu;
@@ -55,10 +53,6 @@ public class App {
 
     public void setCurrentUser(User currentUser) {
         this.currentUser = currentUser;
-    }
-
-    public Game currentGame() {
-        return currentGame;
     }
 
     public void setCurrentGame(Game currentGame) {
