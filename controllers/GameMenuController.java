@@ -1,6 +1,7 @@
 package controllers;
 
 import enums.design.Season;
+import enums.design.TileType;
 import enums.design.Weather;
 import enums.items.ToolType;
 import enums.regex.GameMenuCommands;
@@ -14,6 +15,7 @@ import models.item.Tool;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 
 
@@ -92,7 +94,7 @@ public class GameMenuController {
         return new Result(true, "Your last game is loaded");
     }
 
-    public Result exitGame() {
+    public Result exitGame() sx{
         Game game = App.getInstance().currentGame();
         User loggedInUser = App.getInstance().currentUser();
         if(game.mainPlayer().equals(loggedInUser)){
@@ -230,7 +232,7 @@ public class GameMenuController {
 
     public Result energyShow(){
         Game game = App.getInstance().currentGame();
-        int playerEnergy = game.currentPlayer().energy();
+        int playerEnergy = game.currentPlayer().getEnergy();
         return new Result(true, "Player energy: " + playerEnergy);
     }
 
@@ -238,21 +240,21 @@ public class GameMenuController {
         Game game = App.getInstance().currentGame();
         Player player = game.currentPlayer();
         player.setEnergy(value);
-        return new Result(true, player.username() + "'s energy: is set to " + value);
+        return new Result(true, player.getUsername() + "'s energy: is set to " + value);
     }
 
     public Result cheatUnlimitedEnergy(){
         Game game = App.getInstance().currentGame();
         Player player = game.currentPlayer();
         player.setEnergy(Integer.MAX_VALUE);
-        return new Result(true, player.username() + "'s energy: is unlimited now! HA HA HA");
+        return new Result(true, player.getUsername() + "'s energy: is unlimited now! HA HA HA");
     }
 
     public Result showInventoryItems(){
         Game game = App.getInstance().currentGame();
         Player player = game.currentPlayer();
         StringBuilder items = new StringBuilder();
-        for(Item item: player.inventory().getItems()){
+        for(Item item: player.getInventory().getItems()){
             items.append(item.getName() + " x" + item.getNumber() + ", ");
         }
         items.delete(items.length() - 2, items.length());
@@ -263,7 +265,7 @@ public class GameMenuController {
         // todo : handle trim in view for now
         // todo : calculate return money
         Game game = App.getInstance().currentGame();
-        Inventory inventory = game.currentPlayer().inventory();
+        Inventory inventory = game.currentPlayer().getInventory();
         int itemNumber;
         Item item;
         if((item = findItem(itemName, inventory.getItems())) == null){
@@ -286,7 +288,7 @@ public class GameMenuController {
         Game game = App.getInstance().currentGame();
         Player player = game.currentPlayer();
         Tool tool;
-        if((tool = (Tool) findItem(toolName, player.inventory().getItems())) == null){
+        if((tool = (Tool) findItem(toolName, player.getInventory().getItems())) == null){
             return new Result(false, "Tool not found in your inventory");
         }
         player.setCurrentTool(tool);
@@ -305,7 +307,7 @@ public class GameMenuController {
     public Result showAllTools(){
         Game game = App.getInstance().currentGame();
         Player player = game.currentPlayer();
-        ArrayList<Item> tools = player.inventory().getItems();
+        ArrayList<Item> tools = player.getInventory().getItems();
         return new Result(true, toolListMaker(tools));
     }
 
@@ -314,28 +316,47 @@ public class GameMenuController {
         return new Result(true, "Upgrading Tool");
     }
 
-    public Result useTool(String directionStr){
+    public Result useTool(String directionStr) {
         Game game = App.getInstance().currentGame();
-        switch (directionStr){
-            case "up":
-                break;
-                case "down":
-                    break;
-                    case "left":
-                        break;
-                        case "right":
-                            break;
-                            case "left_up":
-                                break;
-                                case "right_up":
-                                    break;
-                                    case "left_down":
-                                        break;
-                                        case "right_down":
-                                            break;
-                            default:
+        Player player = game.currentPlayer();
+        GameMap map = game.map();
+
+        int playerX = player.currentX();
+        int playerY = player.currentY();
+
+        Map<String, int[]> directionMap = Map.of(
+                "up", new int[]{0, -1},
+                "down", new int[]{0, 1},
+                "left", new int[]{-1, 0},
+                "right", new int[]{1, 0},
+                "left_up", new int[]{-1, -1},
+                "right_up", new int[]{1, -1},
+                "left_down", new int[]{-1, 1},
+                "right_down", new int[]{1, 1}
+        );
+
+        if (!directionMap.containsKey(directionStr)) {
+            return new Result(false, "Direction not found");
         }
+
+        int dx = directionMap.get(directionStr)[0];
+        int dy = directionMap.get(directionStr)[1];
+        int targetX = playerX + dx;
+        int targetY = playerY + dy;
+
+        if (targetX < 0 || targetX >= 91 || targetY < 0 || targetY >= 61) {
+            return new Result(false, "Tile out of bounds");
+        }
+
+        Tile targetTile = map.getTile(targetX, targetY);
+        if (targetTile == null) {
+            return new Result(false, "Tile not found");
+        }
+
+        TileType currentType = targetTile.getType();
+        // pass it to player class to handle them
     }
+
 
     private void onDayPassed(int days) {
     }

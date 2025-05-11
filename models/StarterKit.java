@@ -9,13 +9,11 @@ import java.util.List;
 public class StarterKit {
     public static List<Tool> getStarterTools() {
         List<Tool> tools = new ArrayList<>();
-
         for (ToolType toolType : ToolType.values()) {
             if (toolType.getIsStarter()) {
                 tools.add(new Tool(toolType));
             }
         }
-
         return tools;
     }
 }

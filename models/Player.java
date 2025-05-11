@@ -6,6 +6,7 @@ import models.item.Tool;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class Player {
@@ -30,26 +31,13 @@ public class Player {
         for(Skills skill : Skills.values()){
             this.skills.put(skill, new SkillData());
         }
+        giveStarterTools();
     }
 
     public void addSkillExperience(Skills skill, int amount) {
         SkillData data = skills.get(skill);
         data.addExperience(amount);
         checkLevelUp(data);
-    }
-
-    private void checkLevelUp(SkillData data) {
-        int expNeeded = getExpForNextLevel(data.getLevel());
-
-        if (data.getExperience() >= expNeeded) {
-            data.deductExperience(expNeeded);
-            data.levelUp();
-            data.deductExperience(expNeeded);
-        }
-    }
-
-    private int getExpForNextLevel(int currentLevel) {
-        return 100 * (currentLevel + 1) + 50;
     }
 
     public void harvestCrop() {
@@ -67,8 +55,41 @@ public class Player {
     public void catchFish() {
         addSkillExperience(Skills.Fishing, 5);
     }
+    public Result handleToolUse(Tile tile) {
+        if (currentTool == null) {
+            return new Result(false, "No tool selected");
+        }
 
-    public void hoeHandler(){}
+        String typeName = currentTool.getToolType().name();
+
+        if (typeName.endsWith("Hoe")) {
+            return hoeHandler(tile);
+        } else if (typeName.endsWith("Pickaxe")) {
+            return pickaxeHandler(tile);
+        } else if (typeName.endsWith("Axe")) {
+            return axeHandler(tile);
+        } else if (typeName.endsWith("WateringCan")) {
+            return wateringCanHandler(tile);
+        } else if (typeName.endsWith("FishingPole")) {
+            return fishingPoleHandler(tile);
+        } else if (typeName.equals("Seythe")) {
+            return scytheHandler(tile);
+        } else if (typeName.equals("MilkPale")) {
+            return milkPailHandler(tile);
+        } else if (typeName.equals("Shear")) {
+            return shearHandler(tile);
+        } else {
+            return new Result(false, "Unknown tool type");
+        }
+    }
+
+    public void hoeHandler(Tile tile) {
+        int energyConsumption;
+        if(this.skills.){
+
+        }
+        this.energy -= this.currentTool.getToolType().getEnergyConsumption();
+    }
     public void shearHandler(){}
     public void pickaxeHandler(){}
     public void axeHandler(){}
@@ -123,7 +144,7 @@ public class Player {
         this.originX = originX;
     }
 
-    public int energy() {
+    public int getEnergy() {
         return energy;
     }
 
@@ -131,15 +152,15 @@ public class Player {
         this.energy = energy;
     }
 
-    public ArrayList<Trade> trades() {
+    public ArrayList<Trade> getTrades() {
         return trades;
     }
 
-    public Inventory inventory() {
+    public Inventory getInventory() {
         return inventory;
     }
 
-    public String username() {
+    public String getUsername() {
         return username;
     }
 
@@ -159,5 +180,25 @@ public class Player {
         this.currentTool = currentTool;
     }
 
+    private void checkLevelUp(SkillData data) {
+        int expNeeded = getExpForNextLevel(data.getLevel());
+
+        if (data.getExperience() >= expNeeded) {
+            data.deductExperience(expNeeded);
+            data.levelUp();
+            data.deductExperience(expNeeded);
+        }
+    }
+
+    private int getExpForNextLevel(int currentLevel) {
+        return 100 * (currentLevel + 1) + 50;
+    }
+
+    private void giveStarterTools() {
+        List<Tool> starterTools = StarterKit.getStarterTools();
+        for (Tool tool : starterTools) {
+            inventory.addItem(tool);
+        }
+    }
     // todo: having private method for each tool functionality
 }

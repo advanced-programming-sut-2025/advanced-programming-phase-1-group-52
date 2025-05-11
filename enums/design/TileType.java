@@ -2,9 +2,9 @@ package enums.design;
 
 public enum TileType {
     Earth(true),
+    Shoveled(true),
     Grass(true),
     Water(false),
-    Soil(true),
     Stone(false),
     Wall(false),
     Door(true),

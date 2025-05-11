@@ -309,4 +309,7 @@ public class GameMap {
                 break;
         }
     }
+    public Tile getTile(int x, int y) {
+        return tiles[x][y];
+    }
 }
