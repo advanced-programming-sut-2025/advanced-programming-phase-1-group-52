@@ -2,7 +2,7 @@ package enums.items;
 
 import enums.design.Season;
 
-public enum FishType {
+public enum FishType implements Items {
     Salmon("Salmon", 75, Season.Fall),
     Sardine("Sardine", 40, Season.Fall),
     Shad("Shad", 60, Season.Fall),

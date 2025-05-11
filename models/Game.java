@@ -14,6 +14,7 @@ public class Game {
     private Time time;
     private Weather todayWeather;
     private Weather tomorrowWeather;
+    private final ArrayList<Friendship> friendships = new ArrayList<>();
 
     public Game(ArrayList<User> players) {
         this.time = new Time();
@@ -22,6 +23,12 @@ public class Game {
         this.currentPlayer = players.getFirst().getPlayer();
         this.todayWeather = Weather.Sunny;
         this.tomorrowWeather = Weather.Rainy;
+        this.friendships.add(new Friendship(players.get(0), players.get(1)));
+        this.friendships.add(new Friendship(players.get(0), players.get(2)));
+        this.friendships.add(new Friendship(players.get(0), players.get(3)));
+        this.friendships.add(new Friendship(players.get(1), players.get(2)));
+        this.friendships.add(new Friendship(players.get(1), players.get(3)));
+        this.friendships.add(new Friendship(players.get(2), players.get(3)));
     }
 
     public boolean switchCurrentPlayer() {

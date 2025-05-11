@@ -1,14 +1,13 @@
 package models;
 
-import models.item.Item;
-
+import enums.items.Items;
 import java.util.HashMap;
 
 public class Quest {
-    private final HashMap<Item, Integer> demands;
-    private final HashMap<Object, Integer> reward;
+    private final HashMap<Items, Integer> demands;
+    private final HashMap<Items, Integer> reward;
 
-    public Quest(Item demand, int demandAmount, Object reward, int rewardAmount) {
+    public Quest(Items demand, int demandAmount, Items reward, Integer rewardAmount) {
         this.demands = new HashMap<>();
         this.reward = new HashMap<>();
 
@@ -16,11 +15,11 @@ public class Quest {
         this.reward.put(reward, rewardAmount);
     }
 
-    public HashMap<Item, Integer> getDemands() {
+    public HashMap<Items, Integer> getDemands() {
         return demands;
     }
 
-    public HashMap<Object, Integer> getReward() {
+    public HashMap<Items, Integer> getReward() {
         return reward;
     }
 }
