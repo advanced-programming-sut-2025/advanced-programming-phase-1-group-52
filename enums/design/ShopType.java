@@ -5,41 +5,13 @@ import enums.items.Items;
 import java.util.ArrayList;
 
 public enum ShopType {
-    Blacksmith("Clint", 32, 2){
-        {
-            items.add();
-        }
-    },
-    JojaMart("Morris", 42, 2){
-        {
-            items.add();
-        }
-    },
-    PierresGeneralStore("Pierre", 52, 2){
-        {
-            items.add();
-        }
-    },
-    ArpentersShop("Robin", 32, 12){
-        {
-            items.add();
-        }
-    },
-    FishShop("Willy", 42, 12){
-        {
-            items.add();
-        }
-    },
-    MarniesRanch("Marnie", 52, 12){
-        {
-            items.add();
-        }
-    },
-    TheStardropSaloon("Gus", 32, 22){
-        {
-            items.add();
-        }
-    };
+    Blacksmith("Clint", 32, 2),
+    JojaMart("Morris", 42, 2),
+    PierresGeneralStore("Pierre", 52, 2),
+    ArpentersShop("Robin", 32, 12),
+    FishShop("Willy", 42, 12),
+    MarniesRanch("Marnie", 52, 12),
+    TheStardropSaloon("Gus", 32, 22);
 
     private final String name;
     private final int cornerX;
