@@ -21,7 +21,7 @@ public class Player {
     private int currentX;
     private int currentY;
     private boolean isFainted = false;
-    private Map<Skills, SkillData> skills;
+    public Map<Skills, SkillData> skills;
     private Tool currentTool = null;
 
     public Player(String username) {

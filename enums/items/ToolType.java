@@ -46,4 +46,8 @@ public enum ToolType implements Items {
     ToolType(int energyConsumption) {
         this.energyConsumption = energyConsumption;
     }
+
+    public int getEnergyConsumption() {
+        return energyConsumption;
+    }
 }

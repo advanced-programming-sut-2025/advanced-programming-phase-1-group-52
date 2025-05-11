@@ -13,6 +13,7 @@ import models.Result;
 import models.User;
 import models.*;
 import models.building.House;
+import models.item.Fish;
 import models.item.Item;
 import models.item.Tool;
 import java.util.ArrayList;
@@ -480,5 +481,8 @@ public class GameMenuController {
         for(Item item : tools){
             if(item.getItemType() == ToolType.PrimitiveHoe){}
         }
+    }
+
+    public void fishingAndDisplay(ToolType pole) {
     }
 }
