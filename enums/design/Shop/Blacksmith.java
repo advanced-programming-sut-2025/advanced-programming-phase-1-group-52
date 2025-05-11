@@ -1,5 +1,6 @@
 package enums.design.Shop;
 
+import enums.design.ShopType;
 import enums.items.MaterialType;
 
 public enum Blacksmith {
@@ -32,8 +33,9 @@ public enum Blacksmith {
     private final int dailyLimit;
     private final MaterialType ingredient;
     private final int upgradeCost;
+    private final ShopType shopType;
 
-    Blacksmith(ItemType type, String displayName, String description, int price, int dailyLimit, MaterialType ingredient, int upgradeCost) {
+    Blacksmith(ItemType type, String displayName, String description, int price, int dailyLimit, MaterialType ingredient, int upgradeCost, ShopType shopType) {
         this.type = type;
         this.displayName = displayName;
         this.description = description;
@@ -41,6 +43,7 @@ public enum Blacksmith {
         this.dailyLimit = dailyLimit;
         this.ingredient = ingredient;
         this.upgradeCost = upgradeCost;
+        this.shopType = ShopType.Blacksmith;
     }
 
     public ItemType getType() { return type; }
