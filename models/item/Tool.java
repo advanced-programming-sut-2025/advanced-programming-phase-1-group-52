@@ -1,13 +1,20 @@
 package models.item;
 
 import enums.items.MaterialType;
+import enums.items.ToolType;
 
 public class Tool extends Item{
-    public Tool(MaterialType material) {
-        this.itemType = MaterialType.valueOf(material.name());
+
+    public Tool(ToolType toolType) {
+        super(toolType);
     }
+
     @Override
     protected int calculateEnergyConsumption() {
-        return 0;
+        return ((ToolType)itemType).getEnergyConsumption();
+    }
+
+    public ToolType getToolType() {
+        return (ToolType)itemType;
     }
 }

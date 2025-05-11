@@ -306,8 +306,37 @@ public class GameMenuController {
         Game game = App.getInstance().currentGame();
         Player player = game.currentPlayer();
         ArrayList<Item> tools = player.inventory().getItems();
-
+        return new Result(true, toolListMaker(tools));
     }
+
+    public Result upgradeTool(String toolName){
+        // todo : blacksmith
+        return new Result(true, "Upgrading Tool");
+    }
+
+    public Result useTool(String directionStr){
+        Game game = App.getInstance().currentGame();
+        switch (directionStr){
+            case "up":
+                break;
+                case "down":
+                    break;
+                    case "left":
+                        break;
+                        case "right":
+                            break;
+                            case "left_up":
+                                break;
+                                case "right_up":
+                                    break;
+                                    case "left_down":
+                                        break;
+                                        case "right_down":
+                                            break;
+                            default:
+        }
+    }
+
     private void onDayPassed(int days) {
     }
 
@@ -382,8 +411,13 @@ public class GameMenuController {
     private String toolListMaker(ArrayList<Item> tools) {
         StringBuilder toolList = new StringBuilder();
         for(Item item : tools){
-            if(item.getItemType() == ToolType.PrimitiveHoe){}
+            if(item.isTool()){
+                toolList.append(item.getName());
+                toolList.append(", ");
+            }
         }
+        toolList.delete(toolList.length()-2, toolList.length());
+        return toolList.toString();
     }
 
 }

@@ -1,6 +1,6 @@
 package enums.design;
 
-import enums.items.Items;
+import enums.items.ItemType;
 
 import java.util.ArrayList;
 
@@ -44,7 +44,7 @@ public enum ShopType {
     private final String name;
     private final int cornerX;
     private final int cornerY;
-    private final ArrayList<Items> items = new ArrayList<>();
+    private final ArrayList<ItemType> items = new ArrayList<>();
 
     ShopType(String name, int cornerX, int cornerY) {
         this.name = name;

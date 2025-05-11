@@ -1,7 +1,7 @@
 package enums.items;
 
 
-public enum MaterialType implements Items {
+public enum MaterialType implements ItemType {
     
     Egg("Egg"),
     Milk("Milk"),
@@ -36,17 +36,17 @@ public enum MaterialType implements Items {
     Flounder("Flounder"),
     MidnightCarp("Midnight carp"),
 
-    // Foraged Items
+    // Foraged ItemType
     Dandelion("Dandelion"),
     Coffee("Coffee"),
 
-    // Processed Items
+    // Processed ItemType
     Rice("Rice"),
     Bread("Bread"),
     HashBrowns("Hash browns"),
     Omelet("Omelet"),
 
-    // Handicrafts Items
+    // Handicrafts ItemType
     CopperOre("Copper ore"),
     IronOre("Iron ore"),
     GoldOre("Gold ore"),
@@ -72,5 +72,10 @@ public enum MaterialType implements Items {
 
     public String getDisplayName() {
         return name;
+    }
+
+    @Override
+    public boolean isTool() {
+        return false;
     }
 }

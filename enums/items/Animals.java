@@ -1,11 +1,8 @@
 package enums.items;
 
-import models.item.AnimalProduct;
-
 import java.util.ArrayList;
-import java.util.List;
 
-public enum Animals implements Items {
+public enum Animals implements ItemType {
     Chicken("Chicken",800) {
         {
             products.add(AnimalProducts.ChickenEgg);

@@ -4,7 +4,7 @@ package enums.items;
 import java.util.HashMap;
 import java.util.Map;
 
-public enum CookingRecipes implements Items {
+public enum CookingRecipes implements ItemType {
     FriedEgg("Fried egg") {
         {
             ingredients.put(MaterialType.Egg, 1);

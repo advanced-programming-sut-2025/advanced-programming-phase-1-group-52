@@ -1,5 +1,5 @@
 package enums.items;
 
 
-public enum SeedType implements Items {
+public enum SeedType implements ItemType {
 }

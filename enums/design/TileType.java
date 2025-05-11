@@ -4,6 +4,7 @@ public enum TileType {
     Earth(true),
     Grass(true),
     Water(false),
+    Soil(true),
     Stone(false),
     Wall(false),
     Door(true),

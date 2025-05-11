@@ -1,6 +1,6 @@
 package enums.design;
 
-import enums.items.Items;
+import enums.items.ItemType;
 import enums.items.MaterialType;
 import java.util.HashMap;
 import java.util.Map;
@@ -134,7 +134,7 @@ public enum ArtisanMachines {
         return displayName;
     }
 
-    public Map<Items, Integer> getIngredients() {
+    public Map<ItemType, Integer> getIngredients() {
         return new HashMap<>(ingredients);
     }
 

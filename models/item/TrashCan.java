@@ -1,9 +1,8 @@
 package models.item;
 
-import enums.items.Items;
 import enums.items.TrashCans;
 
-public class TrashCan extends Item {
+public class TrashCan {
     private TrashCans trashCanType;
 
     public TrashCans trashCanType() {
@@ -16,7 +15,6 @@ public class TrashCan extends Item {
         this.trashCanType = trashCanType;
     }
 
-    @Override
     protected int calculateEnergyConsumption() {
         return 0;
     }

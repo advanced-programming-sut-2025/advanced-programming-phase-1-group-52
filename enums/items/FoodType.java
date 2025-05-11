@@ -1,7 +1,7 @@
 package enums.items;
 
 
-public enum FoodType implements Items {
+public enum FoodType implements ItemType {
     FriedEgg("Fried egg", 50, null, "Starter", 35),
     BakedFish("Baked Fish",75, null, "Starter", 100),
     Salad("Salad", 113, null, "Starter", 110),

@@ -1,16 +1,21 @@
 package models.item;
 
-import enums.items.Items;
+import enums.items.ItemType;
+import enums.items.ToolType;
 
 public abstract class Item {
     private String name;
     private int number = 0;
-    protected Items itemType;
+    protected ItemType itemType;
     protected abstract int calculateEnergyConsumption();
 
-    public Item(String name, Items itemType) {
-        this.name = name;
+    public Item(ItemType itemType) {
+        this.name = itemType.toString();
         this.itemType = itemType;
+    }
+
+    public boolean isTool() {
+        return itemType.isTool();
     }
 
     public String getName() {
@@ -29,11 +34,13 @@ public abstract class Item {
         this.number = number;
     }
 
-    public Items getItemType() {
+    public ItemType getItemType() {
         return itemType;
     }
 
-    public void setItemType(Items itemType) {
+    public void setItemType(ItemType itemType) {
         this.itemType = itemType;
     }
+
+
 }
