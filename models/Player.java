@@ -1,5 +1,6 @@
 package models;
 
+import enums.design.TileType;
 import enums.player.Skills;
 import models.item.Item;
 import models.item.Tool;
@@ -83,15 +84,41 @@ public class Player {
         }
     }
 
-    public void hoeHandler(Tile tile) {
-        int energyConsumption;
-        if(this.skills.){
+    public Result hoeHandler(Tile tile) {
+        SkillData farmingData = skills.get(Skills.Farming);
+        int energyConsumption = currentTool.getToolType().getEnergyConsumption();
+        if(farmingData.getLevel() >= 4){
+            energyConsumption -= 1;
+        }
+        if(this.energy <= energyConsumption){
+            return new Result(false, "You don't have enough energy to farm");
+        }
+        this.energy -= energyConsumption;
+        if(!tile.getType().equals(TileType.Earth)){
+            return new Result(false, "you can not shovel this tile!");
+        }
+        else{
+            tile.setType(TileType.Shoveled);
+        }
+        return new Result(true, "Tile with X: " + tile.getX() + " Y: " + tile.getY() + " has been shoved");
+    }
+
+    public void shearHandler(){}
+    public Result pickaxeHandler(Tile tile) {
+        SkillData extractionData = skills.get(Skills.Extraction);
+        int energyConsumption = currentTool.getToolType().getEnergyConsumption();
+        if(extractionData.getLevel() >= 4){
+            energyConsumption -= 1;
+        }
+        if(this.energy <= energyConsumption){
+            return new Result(false, "You don't have enough energy to mine!(extract)");
+        }
+        this.energy -= energyConsumption;
+        switch (tile.getType()){
+            case NormalStone:
 
         }
-        this.energy -= this.currentTool.getToolType().getEnergyConsumption();
     }
-    public void shearHandler(){}
-    public void pickaxeHandler(){}
     public void axeHandler(){}
     public void wateringCanHandler(){}
     public void fishingPoleHandler(){}
@@ -200,5 +227,4 @@ public class Player {
             inventory.addItem(tool);
         }
     }
-    // todo: having private method for each tool functionality
 }

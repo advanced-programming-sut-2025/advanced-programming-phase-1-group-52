@@ -5,7 +5,11 @@ public enum TileType {
     Shoveled(true),
     Grass(true),
     Water(false),
-    Stone(false),
+    CopperStone(false),
+    IronStone(false),
+    GoldStone(false),
+    IridiumStone(false),
+    NormalStone(false),
     Wall(false),
     Door(true),
     House(true),
@@ -14,7 +18,7 @@ public enum TileType {
     Quarry(true),
     Tree(false),
     Shop(true),
-    NPCHouse(true),;
+    NPCHouse(true);
 
     private final boolean reachable;
 
