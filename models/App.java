@@ -72,4 +72,11 @@ public class App {
     public void addUsers(User user) {
         this.users.add(user);
     }
+
+    public Player currentPlayer() {
+        if (currentGame == null) {
+            return null;
+        }
+        return currentGame.currentPlayer();
+    }
 }

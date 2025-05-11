@@ -10,4 +10,8 @@ public enum Backpacks implements Items {
     Backpacks(int value) {
         this.value = value;
     }
+
+    public int getCapacity() {
+        return value;
+    }
 }

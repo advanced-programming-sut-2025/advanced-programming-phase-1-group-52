@@ -1,15 +1,20 @@
 package controllers;
 
 import enums.design.Season;
+import enums.items.CookingRecipes;
+import enums.items.FoodType;
+import enums.items.MaterialType;
 import enums.regex.GameMenuCommands;
 import models.App;
 import models.Game;
 import models.Result;
 import models.User;
 import models.*;
+import models.building.House;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 
 
@@ -222,4 +227,96 @@ public class GameMenuController {
         }
         return true;
     }
+
+    private Result cookingRefrigeratorPut(String materialName, String quantityStr) {
+        Player player = App.getInstance().currentPlayer();
+        House house  = player.getHouse();
+        int quantity;
+        try { quantity = Integer.parseInt(quantityStr); }
+        catch (NumberFormatException e) {
+            return Result.failure("The value must be an integer: " + quantityStr);
+        }
+
+        MaterialType material;
+        try { material = MaterialType.valueOf(materialName); }
+        catch (IllegalArgumentException e) {
+            return Result.failure("Invalid raw material: " + materialName);
+        }
+
+        boolean ok = house.refrigerator().putMaterial(material, quantity);
+        return ok
+                ? Result.success(quantity + " × " + material + " It was placed in the refrigerator.")
+                : Result.failure("Error in placing the material in the refrigerator.");
+    }
+
+    private Result cookingRefrigeratorPick(String materialName, String quantityStr) {
+        Player player = App.getInstance().currentPlayer();
+        House  house  = player.getHouse();
+        int quantity;
+        try { quantity = Integer.parseInt(quantityStr); }
+        catch (NumberFormatException e) {
+            return Result.failure("The value must be an integer: " + quantityStr);
+        }
+
+        MaterialType mat;
+        try { mat = MaterialType.valueOf(materialName); }
+        catch (IllegalArgumentException e) {
+            return Result.failure("Invalid raw material: " + materialName);
+        }
+
+        boolean ok = house.refrigerator().pickMaterial(mat, quantity);
+        return ok
+                ? Result.success(quantity + " × " + mat + " Removed from the refrigerator.")
+                : Result.failure("There is not enough " + mat + " in the refrigerator.");
+    }
+
+    private Result cookingShowRecipes() {
+        StringBuilder sb = new StringBuilder("Cooking recipes:\n");
+        for (CookingRecipes r : CookingRecipes.values()) {
+            sb.append("- ").append(r.getDisplayName()).append("\n");
+        }
+        return Result.success(sb.toString());
+    }
+
+    private Result cookingPrepare(String recipeName) {
+        Player player = App.getInstance().currentPlayer();
+        House  house  = player.getHouse();
+        var    refrigerator = house.refrigerator();
+        var    inventory    = player.inventory();
+
+        CookingRecipes recipe;
+        try { recipe = CookingRecipes.valueOf(recipeName); }
+        catch (IllegalArgumentException e) {
+            return Result.failure("Invalid recipe: " + recipeName);
+        }
+
+        boolean ok = recipe.getIngredients().entrySet().stream()
+                .allMatch(e -> refrigerator.hasMaterial(e.getKey(), e.getValue()));
+        if (!ok) {
+            return Result.failure("There are not enough ingredients in the refrigerator.");
+        }
+
+        for (Map.Entry<MaterialType, Integer> e : recipe.getIngredients().entrySet()) {
+            refrigerator.pickMaterial(e.getKey(), e.getValue());
+        }
+
+        FoodType food;
+        try { food = FoodType.valueOf(recipeName); }
+        catch (IllegalArgumentException e) {
+            return Result.failure("Error converting to FoodType.");
+        }
+
+        boolean added = inventory.addItem(food.createItem(1));
+        if (!added) {
+            for (Map.Entry<MaterialType, Integer> e : recipe.getIngredients().entrySet()) {
+                refrigerator.putMaterial(e.getKey(), e.getValue());
+            }
+            return Result.failure("There is not enough space in the inventory.");
+        }
+
+        return Result.success(recipe.getDisplayName() + "Ready and added.");
+    }
+
+    private void eat(String foodName) {}
+
 }

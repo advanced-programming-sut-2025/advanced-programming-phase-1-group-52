@@ -1,5 +1,7 @@
 package models;
 
+import models.building.House;
+
 import java.util.ArrayList;
 
 public class Player {
@@ -8,6 +10,7 @@ public class Player {
     private final Inventory inventory;
     private final ArrayList<Trade> trades;
     private int energy = 200;
+    private House house;
 
     public Player(String username) {
         this.username = username;
@@ -45,6 +48,7 @@ public class Player {
     public void milkPaleHandler(){}
     public void backpackHandler(){}
     public void trashCanHandler(){}
+    public House getHouse() { return house; }
 
     public boolean checkFaint (){
         return this.energy <= 0;
