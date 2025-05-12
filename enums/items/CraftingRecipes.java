@@ -1,6 +1,6 @@
 package enums.items;
 
 
-public enum CraftingRecipes implements Items {
+public enum CraftingRecipes implements ItemType {
 
 }

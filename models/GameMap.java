@@ -299,7 +299,9 @@ public class GameMap {
             }
         }
     }
-
+    public Tile getTile(int x, int y) {
+        return tiles[x][y];
+    }
     public ArrayList<Tile> findWalkPath(int startX, int startY, int destX, int destY) {
         boolean[][] visited = new boolean[tiles.length][tiles[0].length];
         Tile[][] previous = new Tile[tiles.length][tiles[0].length];

@@ -91,7 +91,7 @@ public class Game {
             int nextIndex = (currentIndex + offset) % players.size();
             Player candidate = players.get(nextIndex).currentPlayer();
 
-            if (candidate.energy() > 0) {
+            if (candidate.getEnergy() > 0) {
                 return candidate;
             }
         }
