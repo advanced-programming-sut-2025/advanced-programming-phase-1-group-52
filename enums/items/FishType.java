@@ -2,7 +2,7 @@ package enums.items;
 
 import enums.design.Season;
 
-public enum FishType implements Items {
+public enum FishType implements ItemType {
     Salmon("Salmon", 75, Season.Fall),
     Sardine("Sardine", 40, Season.Fall),
     Shad("Shad", 60, Season.Fall),
@@ -22,7 +22,7 @@ public enum FishType implements Items {
     Legend("Legend", 5000, Season.Spring),
     Glacierfish("Glacierfish", 1000, Season.Winter),
     Angler("Angler", 900, Season.Fall),
-    Crimsonfish("Crimsonfish", 1500, Season.Summer);
+    Crimsonfish("Crimsonfish", 1500, Season.Summer),
     Salmon("Salmon", 75, Season.Fall,"Ordinary"),
     Sardine("Sardine", 40, Season.Fall,"Ordinary"),
     Shad("Shad", 60, Season.Fall,"Ordinary"),
@@ -42,7 +42,7 @@ public enum FishType implements Items {
     Legend("Legend", 5000, Season.Spring,"Legendary"),
     GlacierFish("GlacierFish", 1000, Season.Winter,"Legendary"),
     Angler("Angler", 900, Season.Fall,"Legendary"),
-    CrimsonFish("CrimsonFish", 1500, Season.Summer,"Legendary"),;
+    CrimsonFish("CrimsonFish", 1500, Season.Summer,"Legendary");
 
     private final String name;
     private final int price;
@@ -60,4 +60,9 @@ public enum FishType implements Items {
     public int getPrice() { return price; }
     public Season getSeason() { return season; }
     public String getType() { return type; }
+
+    @Override
+    public boolean isTool() {
+        return false;
+    }
 }

@@ -2,11 +2,8 @@ package controllers;
 
 import enums.design.FarmThemes;
 import enums.design.Season;
-import enums.items.CookingRecipes;
-import enums.items.FoodType;
-import enums.items.MaterialType;
+import enums.items.*;
 import enums.design.Weather;
-import enums.items.ToolType;
 import enums.regex.GameMenuCommands;
 import models.App;
 import models.Game;
@@ -373,7 +370,6 @@ public class GameMenuController {
         return Math.abs(playerX - x) <= 1 && Math.abs(playerY - y) <= 1;
     }
 
-
     public Result cheatSetEnergy(int value) {
         Player player = game.getCurrentPlayer();
         player.setEnergy(value);
@@ -440,6 +436,32 @@ public class GameMenuController {
         return new Result(true, toolListMaker(tools));
     }
 
+    public Result craftInfo(String craftName) {
+        CropType cropType;
+        if((cropType = findCropType(craftName)) == null) {
+            return new Result(false, "Crop not found");
+        }
+        StringBuilder info = new StringBuilder();
+        info.append("Name: " + cropType.name()).append("\nSource: " + cropType.getSeedSource()).append("\nStages: ");
+        for(Integer stage : cropType.getGrowthStages()){
+            info.append(stage).append("-");
+        }
+        info.deleteCharAt(info.length() - 1);
+        info.append("\nTotal Harvest Time: " + cropType.getTotalHarvestTime()).
+                append("\nOne Time: " + cropType.isOneTimeHarvest()).
+                append("\nRegrowth Time: " + cropType.getRegrowthTime()).
+                append("\nBase Sell Price: " + cropType.getBaseSellPrice()).
+                append("\nIs Edible: " + cropType.isEdible()).
+                append("\nBase Energy: " + cropType.getEnergy()).
+                append("\nBase Health: " + cropType.getBaseHealth()).
+                append(("\nSeason: "));
+        for(Season season : cropType.getSeasons()){
+            info.append(season.name()).append(", ");
+        }
+        info.deleteCharAt(info.length() - 1);
+        info.append("\nCan Become Giant: " + cropType.canBecomeGiant());
+        return new Result(true, info.toString());
+    }
     private void onDayPassed(int days) {
     }
 
@@ -450,6 +472,15 @@ public class GameMenuController {
         for (User user : App.getInstance().getUsers()) {
             if (user.getUsername().equals(username)) {
                 return user;
+            }
+        }
+        return null;
+    }
+
+    private CropType findCropType(String cropName) {
+        for(CropType cropType : CropType.values()) {
+            if (cropType.name().equals(cropName)) {
+                return cropType;
             }
         }
         return null;
