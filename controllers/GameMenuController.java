@@ -365,22 +365,22 @@ public class GameMenuController {
     }
 
     public Result cheatSetEnergy(int value){
-        Game game = App.getInstance().currentGame();
-        Player player = game.currentPlayer();
+        Game game = App.getInstance().getCurrentGame();
+        Player player = game.getCurrentPlayer();
         player.setEnergy(value);
         return new Result(true, player.username() + "'s energy: is set to " + value);
     }
 
     public Result cheatUnlimitedEnergy(){
-        Game game = App.getInstance().currentGame();
-        Player player = game.currentPlayer();
+        Game game = App.getInstance().getCurrentGame();
+        Player player = game.getCurrentPlayer();
         player.setEnergy(Integer.MAX_VALUE);
         return new Result(true, player.username() + "'s energy: is unlimited now! HA HA HA");
     }
 
     public Result showInventoryItems(){
-        Game game = App.getInstance().currentGame();
-        Player player = game.currentPlayer();
+        Game game = App.getInstance().getCurrentGame();
+        Player player = game.getCurrentPlayer();
         StringBuilder items = new StringBuilder();
         for(Item item: player.inventory().getItems()){
             items.append(item.getName() + " x" + item.getNumber() + ", ");
@@ -392,8 +392,8 @@ public class GameMenuController {
     public Result removeItemFromInventory(String itemName, String itemNumberStr){
         // todo : handle trim in view for now
         // todo : calculate return money
-        Game game = App.getInstance().currentGame();
-        Inventory inventory = game.currentPlayer().inventory();
+        Game game = App.getInstance().getCurrentGame();
+        Inventory inventory = game.getCurrentPlayer().inventory();
         int itemNumber;
         Item item;
         if((item = findItem(itemName, inventory.getItems())) == null){
@@ -413,8 +413,8 @@ public class GameMenuController {
     }
 
     public Result equipTool(String toolName){
-        Game game = App.getInstance().currentGame();
-        Player player = game.currentPlayer();
+        Game game = App.getInstance().getCurrentGame();
+        Player player = game.getCurrentPlayer();
         Tool tool;
         if((tool = (Tool) findItem(toolName, player.inventory().getItems())) == null){
             return new Result(false, "Tool not found in your inventory");
@@ -424,8 +424,8 @@ public class GameMenuController {
     }
 
     public Result showCurrentTool(){
-        Game game = App.getInstance().currentGame();
-        Tool tool = game.currentPlayer().getCurrentTool();
+        Game game = App.getInstance().getCurrentGame();
+        Tool tool = game.getCurrentPlayer().getCurrentTool();
         if(tool == null){
             return new Result(false, "There is no tool in your hand!");
         }
@@ -433,8 +433,8 @@ public class GameMenuController {
     }
 
     public Result showAllTools(){
-        Game game = App.getInstance().currentGame();
-        Player player = game.currentPlayer();
+        Game game = App.getInstance().getCurrentGame();
+        Player player = game.getCurrentPlayer();
         ArrayList<Item> tools = player.inventory().getItems();
 
     }
