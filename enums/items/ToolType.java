@@ -15,7 +15,6 @@ public enum ToolType implements Items {
     CopperPickaxe(4),
     IronicPickaxe(3),
     GoldenPickaxe(2),
-
     IridiumPickaxe(1),
 
     // Axes :

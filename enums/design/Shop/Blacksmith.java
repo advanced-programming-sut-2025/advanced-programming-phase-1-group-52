@@ -2,24 +2,68 @@ package enums.design.Shop;
 
 import enums.items.MaterialType;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public enum Blacksmith {
     // Stock items
-    COPPER_ORE(ItemType.STOCK, "Copper Ore", "A common ore that can be smelted into bars.", 75, Integer.MAX_VALUE, MaterialType.CopperOre, 0),
-    IRON_ORE(ItemType.STOCK, "Iron Ore", "A fairly common ore that can be smelted into bars.", 150, Integer.MAX_VALUE, MaterialType.IronOre, 0),
-    COAL(ItemType.STOCK, "Coal", "A combustible rock that is useful for crafting and smelting.", 150, Integer.MAX_VALUE, MaterialType.Coal, 0),
-    GOLD_ORE(ItemType.STOCK, "Gold Ore", "A precious ore that can be smelted into bars.", 400, Integer.MAX_VALUE, MaterialType.GoldOre, 0),
-    IRIDIUM_ORE(ItemType.STOCK, "Iridium Ore", "A rare and valuable ore used for advanced crafts.", 1000, Integer.MAX_VALUE, MaterialType.IridiumOre, 0),
+    CopperOre(ItemType.STOCK, "Copper Ore", "A common ore that can be smelted into bars.",
+            75, MaterialType.CopperOre, Integer.MAX_VALUE,0, null),
+    IronOre(ItemType.STOCK, "Iron Ore", "A fairly common ore that can be smelted into bars.",
+            150, MaterialType.IronOre, Integer.MAX_VALUE, 0, null),
+    Coal(ItemType.STOCK, "Coal", "A combustible rock that is useful for crafting and smelting.",
+            150, MaterialType.Coal, Integer.MAX_VALUE, 0, null),
+    GoldOre(ItemType.STOCK, "Gold Ore", "A precious ore that can be smelted into bars.",
+            400, MaterialType.GoldOre, Integer.MAX_VALUE, 0, null),
+    IridiumOre(ItemType.STOCK, "Iridium Ore", "A rare and valuable ore used for advanced crafts.",
+            1000, MaterialType.IridiumOre, Integer.MAX_VALUE, 0, null),
 
     // Upgrade items
-    COPPER_TOOL(ItemType.UPGRADE, "Copper Tool", null, 0, 1, MaterialType.CopperBar, 2000),
-    STEEL_TOOL(ItemType.UPGRADE, "Steel Tool", null, 0, 1, MaterialType.IronBar, 5000),
-    GOLD_TOOL(ItemType.UPGRADE, "Gold Tool", null, 0, 1, MaterialType.GoldBar, 10000),
-    IRIDIUM_TOOL(ItemType.UPGRADE, "Iridium Tool", null, 0, 1, MaterialType.IridiumBar, 25000),
-    COPPER_TRASH_CAN(ItemType.UPGRADE, "Copper Trash Can", null, 0, 1, MaterialType.CopperBar, 1000),
-    STEEL_TRASH_CAN(ItemType.UPGRADE, "Steel Trash Can", null, 0, 1, MaterialType.IronBar, 2500),
-    GOLD_TRASH_CAN(ItemType.UPGRADE, "Gold Trash Can", null, 0, 1, MaterialType.GoldBar, 5000),
-    IRIDIUM_TRASH_CAN(ItemType.UPGRADE, "Iridium Trash Can", null, 0, 1, MaterialType.IridiumBar, 12500);
+    CopperHoes(ItemType.UPGRADE,"Copper Hoe", null, null,
+            null, 1, 2000, createIngredients(MaterialType.CopperBar, 5)),
+    CopperPickaxe(ItemType.UPGRADE,"Copper Pickaxe", null, null,
+            null, 1, 2000, createIngredients(MaterialType.CopperBar, 5)),
+    CopperAxe(ItemType.UPGRADE,"Copper Axe", null, null,
+            null, 1, 2000, createIngredients(MaterialType.CopperBar, 5)),
+    CopperWaterCan(ItemType.UPGRADE,"Copper Watering Can", null, null,
+            null, 1, 2000, createIngredients(MaterialType.CopperBar, 5)),
 
+    SteelHoes(ItemType.UPGRADE,"Steel Hoe", null, null,
+            null, 1, 5000, createIngredients(MaterialType.IronBar, 5)),
+    SteelPickaxe(ItemType.UPGRADE,"Steel Pickaxe", null, null,
+            null, 1, 5000, createIngredients(MaterialType.IronBar, 5)),
+    SteelAxe(ItemType.UPGRADE,"Steel Axe", null, null,
+            null, 1, 5000, createIngredients(MaterialType.IronBar, 5)),
+    SteelWaterCan(ItemType.UPGRADE,"Steel Watering Can", null, null,
+            null, 1, 5000, createIngredients(MaterialType.IronBar, 5)),
+
+    GoldHoes(ItemType.UPGRADE,"Gold Hoe", null, null,
+            null, 1, 10000, createIngredients(MaterialType.GoldBar, 5)),
+    GoldPickaxe(ItemType.UPGRADE,"Gold Pickaxe", null, null,
+            null, 1, 10000, createIngredients(MaterialType.GoldBar, 5)),
+    GoldAxe(ItemType.UPGRADE,"Gold Axe", null, null,
+            null, 1, 10000, createIngredients(MaterialType.GoldBar, 5)),
+    GoldWaterCan(ItemType.UPGRADE,"Gold Watering Can", null, null,
+            null, 1, 10000, createIngredients(MaterialType.GoldBar, 5)),
+
+    IridiumHoes(ItemType.UPGRADE,"Iridium Hoe", null, null,
+            null, 1, 25000, createIngredients(MaterialType.IridiumBar, 5)),
+    IridiumPickaxe(ItemType.UPGRADE,"Iridium Pickaxe", null, null,
+            null, 1, 25000, createIngredients(MaterialType.IridiumBar, 5)),
+    IridiumAxe(ItemType.UPGRADE,"Iridium Axe", null, null,
+            null, 1, 25000, createIngredients(MaterialType.IridiumBar, 5)),
+    IridiumWaterCan(ItemType.UPGRADE,"Iridium Watering Can", null, null,
+            null, 1, 25000, createIngredients(MaterialType.IridiumBar, 5)),
+
+    CopperTrashCan(ItemType.UPGRADE,"Copper Trash Can", null, null,
+            null, 1, 1000, createIngredients(MaterialType.CopperBar, 5)),
+    SteelTrashCan(ItemType.UPGRADE,"Steel Trash Can", null, null,
+            null, 1, 2500, createIngredients(MaterialType.IronBar, 5)),
+    GoldTrashCan(ItemType.UPGRADE,"Gold Trash Can", null, null,
+            null, 1, 5000, createIngredients(MaterialType.GoldBar, 5)),
+    IridiumTrashCan(ItemType.UPGRADE,"Iridium Trash Can", null, null,
+            null, 1, 12500, createIngredients(MaterialType.IridiumBar, 5)),
+    ;
     public enum ItemType {
         STOCK,
         UPGRADE
@@ -28,26 +72,38 @@ public enum Blacksmith {
     private final ItemType type;
     private final String displayName;
     private final String description;
-    private final int price;
+    private final Integer price;
+    private final MaterialType materialType;
     private final int dailyLimit;
-    private final MaterialType ingredient;
     private final int upgradeCost;
+    private final Map<MaterialType, Integer> ingredient;
 
-    Blacksmith(ItemType type, String displayName, String description, int price, int dailyLimit, MaterialType ingredient, int upgradeCost) {
+    Blacksmith(ItemType type, String displayName, String description, Integer price,
+               MaterialType materialType,int dailyLimit, int upgradeCost, Map<MaterialType, Integer> ingredient) {
         this.type = type;
         this.displayName = displayName;
         this.description = description;
         this.price = price;
+        this.materialType = materialType;
         this.dailyLimit = dailyLimit;
-        this.ingredient = ingredient;
         this.upgradeCost = upgradeCost;
+        this.ingredient = (ingredient != null) ? ingredient : new HashMap<>();
+
+    }
+
+    private static Map<MaterialType, Integer> createIngredients(MaterialType type, int amount) {
+        Map<MaterialType, Integer> map = new HashMap<>();
+        map.put(type, amount);
+        return map;
     }
 
     public ItemType getType() { return type; }
     public String getDisplayName() { return displayName; }
     public String getDescription() { return description; }
     public int getPrice() { return price; }
+    public MaterialType getMaterialType() { return materialType; }
     public int getDailyLimit() { return dailyLimit; }
-    public MaterialType getIngredient() { return ingredient; }
     public int getUpgradeCost() { return upgradeCost; }
+    public Map<MaterialType, Integer> getIngredient() { return ingredient; }
+
 }
