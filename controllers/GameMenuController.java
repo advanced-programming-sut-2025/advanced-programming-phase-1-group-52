@@ -32,7 +32,7 @@ public class GameMenuController {
     public void setGame(Game game) {
         this.game = game;
     }
-
+k
     public void setMap(GameMap map) {
         this.map = map;
     }
