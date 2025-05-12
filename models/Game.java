@@ -26,18 +26,28 @@ public class Game {
         this.todayWeather = Weather.Sunny;
         this.tomorrowWeather = Weather.Rainy;
 
-        this.friendships.add(new Friendship(players.get(0), players.get(1)));
-        this.friendships.add(new Friendship(players.get(0), players.get(2)));
-        this.friendships.add(new Friendship(players.get(0), players.get(3)));
-        this.friendships.add(new Friendship(players.get(1), players.get(2)));
-        this.friendships.add(new Friendship(players.get(1), players.get(3)));
-        this.friendships.add(new Friendship(players.get(2), players.get(3)));
+        this.friendships.add(new Friendship(players.get(0).getPlayer(), players.get(1).getPlayer()));
+        this.friendships.add(new Friendship(players.get(0).getPlayer(), players.get(2).getPlayer()));
+        this.friendships.add(new Friendship(players.get(0).getPlayer(), players.get(3).getPlayer()));
+        this.friendships.add(new Friendship(players.get(1).getPlayer(), players.get(2).getPlayer()));
+        this.friendships.add(new Friendship(players.get(1).getPlayer(), players.get(3).getPlayer()));
+        this.friendships.add(new Friendship(players.get(2).getPlayer(), players.get(3).getPlayer()));
 
         this.NPCs.add(new NPC(NPCType.Abigail, players));
         this.NPCs.add(new NPC(NPCType.Harvey, players));
         this.NPCs.add(new NPC(NPCType.Lia, players));
         this.NPCs.add(new NPC(NPCType.Robin, players));
         this.NPCs.add(new NPC(NPCType.Sebastian, players));
+    }
+
+    public Friendship getFriendshipByPlayers(Player player1, Player player2) {
+        for (Friendship friendship : friendships) {
+            if (friendship.getPlayers().contains(player1) && friendship.getPlayers().contains(player2)) {
+                return friendship;
+            }
+        }
+        
+        return null;
     }
 
     public ArrayList<NPC> getNPCs() {

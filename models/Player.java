@@ -1,5 +1,6 @@
 package models;
 
+import enums.player.Skills;
 import enums.design.TileType;
 import enums.items.MineralType;
 import enums.player.Skills;
@@ -7,11 +8,12 @@ import models.building.House;
 import models.item.Mineral;
 import models.item.Tool;
 import models.item.WateringCan;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import models.building.House;
+import models.item.Tool;
 
 public class Player {
     private final String username;
@@ -38,6 +40,10 @@ public class Player {
             this.skills.put(skill, new SkillData());
         }
         giveStarterTools();
+    }
+
+    public ArrayList<Talk> getTalks() {
+        return this.talks;
     }
 
     public void addSkillExperience(Skills skill, int amount) {

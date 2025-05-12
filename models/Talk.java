@@ -9,6 +9,10 @@ public class Talk {
         this.message = message;
     }
 
+    public Player getReceiver() {
+        return receiver;
+    }
+
     @Override
     public String toString() {
         return receiver + ":\n" + message + "\n----------------------\n";

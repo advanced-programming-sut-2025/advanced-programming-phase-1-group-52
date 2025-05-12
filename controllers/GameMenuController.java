@@ -312,8 +312,7 @@ public class GameMenuController {
         if (!isPlayerNearSomething(npc.getX(), npc.getY())) {
             return new Result(false, "You are not near the NPC!");
         }
-
-        // todo : check if the item is in the inventory
+        
         // todo : check if the item is giftable
         // todo : check if the item is thier favorite
         return new Result(true, "You gifted " + itemName + " to " + NPCName);
@@ -343,16 +342,27 @@ public class GameMenuController {
         if (!isPlayerNearSomething(player.currentX(), player.currentY())) {
             return new Result(false, "You should be near" + receiverName);
         }
-        Talk talk = new Talk(player, message);
 
+        Talk talk = new Talk(player, message);
         game.getCurrentPlayer().addTalk(talk);
-        return new Result(true, "You talked to " + receiverName + "!");
+
+        Friendship friendship = game.getFriendshipByPlayers(game.getCurrentPlayer(), player);
+        friendship.addFriendshipPoints(10);
+        return new Result(true, game.getCurrentPlayer().username() + " sent a message to " + player.username() + ":\n" + message);
     }
 
     public Result talkHistory(String username) {
         Player player = game.getUserByUsername(username).getPlayer();
+        if (player == null) {
+            return new Result(false, "Player not found!");
+        }
+        
+        StringBuilder stringBuilder = new StringBuilder();
+        for (Talk talk : player.getTalks()) {
+            if (talk.getReceiver().equals(player)) stringBuilder.append(talk.toString());
+        }
 
-        // todo: get all player talks and add to stringBuilder
+        return new Result(true, stringBuilder.toString());
     }
 
     private boolean isPlayerNearSomething(int x, int y) {
@@ -362,6 +372,7 @@ public class GameMenuController {
 
         return Math.abs(playerX - x) <= 1 && Math.abs(playerY - y) <= 1;
     }
+
 
     public Result cheatSetEnergy(int value) {
         Player player = game.getCurrentPlayer();
