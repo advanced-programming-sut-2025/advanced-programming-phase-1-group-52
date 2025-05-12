@@ -8,4 +8,9 @@ public class Talk {
         this.receiver = receiver;
         this.message = message;
     }
+
+    @Override
+    public String toString() {
+        return receiver + ":\n" + message + "\n----------------------\n";
+    }
 }

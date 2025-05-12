@@ -8,7 +8,7 @@ public class Tile {
     private TileType type;
     private final Player owner;
 
-    public Tile(int x, int y,TileType type, Player owner) {
+    public Tile(int x, int y, TileType type, Player owner) {
         this.x = x;
         this.y = y;
         this.type = type;
