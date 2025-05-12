@@ -1,13 +1,11 @@
 package models;
 
-import models.building.House;
 import enums.player.Skills;
-import models.item.Item;
-import models.item.Tool;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import models.building.House;
+import models.item.Tool;
 
 public class Player {
     private final String username;
@@ -33,6 +31,10 @@ public class Player {
         for(Skills skill : Skills.values()){
             this.skills.put(skill, new SkillData());
         }
+    }
+
+    public ArrayList<Talk> getTalks() {
+        return this.talks;
     }
 
     public void addSkillExperience(Skills skill, int amount) {
@@ -147,7 +149,7 @@ public class Player {
         return trades;
     }
 
-    public Inventory inventory() {
+    public Inventory getInventory() {
         return inventory;
     }
 

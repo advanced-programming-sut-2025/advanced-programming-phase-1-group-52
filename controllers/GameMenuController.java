@@ -313,8 +313,7 @@ public class GameMenuController {
         if (!isPlayerNearSomething(npc.getX(), npc.getY())) {
             return new Result(false, "You are not near the NPC!");
         }
-
-        // todo : check if the item is in the inventory
+        
         // todo : check if the item is giftable
         // todo : check if the item is thier favorite
         return new Result(true, "You gifted " + itemName + " to " + NPCName);
@@ -344,10 +343,13 @@ public class GameMenuController {
         if (!isPlayerNearSomething(player.currentX(), player.currentY())) {
             return new Result(false, "You should be near" + receiverName);
         }
-        Talk talk = new Talk(player, message);
 
+        Talk talk = new Talk(player, message);
         game.getCurrentPlayer().addTalk(talk);
-        return new Result(true, "You talked to " + receiverName + "!");
+
+        Friendship friendship = game.getFriendshipByPlayers(game.getCurrentPlayer(), player);
+        friendship.addFriendshipPoints(10);
+        return new Result(true, game.getCurrentPlayer().username() + " sent a message to " + player.username() + ":\n" + message);
     }
 
     public Result talkHistory(String username) {
