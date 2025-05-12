@@ -1,7 +1,7 @@
 package models;
 
+import enums.design.NPCType;
 import enums.design.Weather;
-
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.Random;
@@ -15,6 +15,8 @@ public class Game {
     private Time time;
     private Weather todayWeather;
     private Weather tomorrowWeather;
+    private final ArrayList<Friendship> friendships = new ArrayList<>();
+    private final ArrayList<NPC> NPCs = new ArrayList<>();
 
     public Game(ArrayList<User> players) {
         this.time = new Time();
@@ -23,6 +25,40 @@ public class Game {
         this.currentPlayer = players.getFirst().getPlayer();
         this.todayWeather = Weather.Sunny;
         this.tomorrowWeather = Weather.Rainy;
+
+        this.friendships.add(new Friendship(players.get(0), players.get(1)));
+        this.friendships.add(new Friendship(players.get(0), players.get(2)));
+        this.friendships.add(new Friendship(players.get(0), players.get(3)));
+        this.friendships.add(new Friendship(players.get(1), players.get(2)));
+        this.friendships.add(new Friendship(players.get(1), players.get(3)));
+        this.friendships.add(new Friendship(players.get(2), players.get(3)));
+
+        this.NPCs.add(new NPC(NPCType.Abigail, players));
+        this.NPCs.add(new NPC(NPCType.Harvey, players));
+        this.NPCs.add(new NPC(NPCType.Lia, players));
+        this.NPCs.add(new NPC(NPCType.Robin, players));
+        this.NPCs.add(new NPC(NPCType.Sebastian, players));
+    }
+
+    public ArrayList<NPC> getNPCs() {
+        return NPCs;
+    }
+
+    public NPC getNPCByName(String name) {
+        for (NPC npc : NPCs) {
+            if (npc.getType().name().equalsIgnoreCase(name)) {
+                return npc;
+            }
+        }
+        return null;
+    }
+
+    public User getUserByUsername(String username) {
+        for (User user : this.players) {
+            if (user.getUsername().equals(username)) return user;
+        }
+
+        return null;
     }
 
     public boolean switchCurrentPlayer() {
@@ -102,7 +138,7 @@ public class Game {
         }
     }
 
-    public ArrayList<User> players() {
+    public ArrayList<User> getPlayers() {
         return players;
     }
 
@@ -114,7 +150,7 @@ public class Game {
         this.map = map;
     }
 
-    public GameMap map() {
+    public GameMap getMap() {
         return map;
     }
 
@@ -122,7 +158,7 @@ public class Game {
         this.map = map;
     }
 
-    public Player currentPlayer() {
+    public Player getCurrentPlayer() {
         return currentPlayer;
     }
 
@@ -130,7 +166,7 @@ public class Game {
         this.currentPlayer = currentPlayer;
     }
 
-    public Date date() {
+    public Date getDate() {
         return date;
     }
 
@@ -138,11 +174,11 @@ public class Game {
         this.date = date;
     }
 
-    public Time time() {
+    public Time getTime() {
         return time;
     }
 
-    public User mainPlayer() {
+    public User getMainPlayer() {
         return mainPlayer;
     }
 
@@ -150,7 +186,7 @@ public class Game {
         this.mainPlayer = mainPlayer;
     }
 
-    public Weather todayWeather() {
+    public Weather getTodayWeather() {
         return todayWeather;
     }
 
@@ -158,7 +194,7 @@ public class Game {
         this.todayWeather = todayWeather;
     }
 
-    public Weather tomorrowWeather() {
+    public Weather getTomorrowWeather() {
         return tomorrowWeather;
     }
 

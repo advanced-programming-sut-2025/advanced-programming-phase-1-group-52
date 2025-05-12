@@ -60,9 +60,13 @@ public enum MaterialType implements Items {
     Coal("Coal"),
     Fiber("Fiber"),
     Acorn("Acorn"),
+    Iron("Iron"),
+    HardWood("Hard wood"),
     MapleSeed("Maple seed"),
     PineCone("Pine cone"),
-    MahoganySeed("Mahogany seed");
+    MahoganySeed("Mahogany seed"),
+    GoldCoin("Gold coin"),
+    Diamond("Diamond");
 
     private final String name;
 

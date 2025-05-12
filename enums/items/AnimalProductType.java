@@ -1,6 +1,6 @@
 package enums.items;
 
-public enum AnimalProductType {
+public enum AnimalProductType implements Items {
     ChickenEgg("ChickenEgg",50),
     BigChickenEgg("BigChickenEgg",95),
     DuckEgg("DuckEgg",95),
