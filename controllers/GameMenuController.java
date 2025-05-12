@@ -32,7 +32,7 @@ public class GameMenuController {
     public void setGame(Game game) {
         this.game = game;
     }
-k
+
     public void setMap(GameMap map) {
         this.map = map;
     }
@@ -157,10 +157,10 @@ k
     public Result switchTurn() {
         boolean isPlayerAvailable = game.switchCurrentPlayer();
         if(isPlayerAvailable){
-            return new Result(true, "Game switched to " + game.getCurrentPlayer().username() + " ");
+            return new Result(true, "Game switched to " + game.currentPlayer().getUsername() + " ");
         }
         return new Result(false, "you can not switch to other players");
-    } 
+    }
 
     public Result showTime() {
         return new Result(true, "It's " + game.getTime().hour() + "O'clock");
@@ -299,6 +299,9 @@ k
         return new Result(true, "Map Info");
     }
 
+    public Result energyShow(){
+        Game game = App.getInstance().currentGame();
+        int playerEnergy = game.currentPlayer().getEnergy();
     public Result energyShow() {
         int playerEnergy = game.getCurrentPlayer().energy();
         return new Result(true, "Player energy: " + playerEnergy);
@@ -368,21 +371,21 @@ k
         Game game = App.getInstance().currentGame();
         Player player = game.currentPlayer();
         player.setEnergy(value);
-        return new Result(true, player.username() + "'s energy: is set to " + value);
+        return new Result(true, player.getUsername() + "'s energy: is set to " + value);
     }
 
     public Result cheatUnlimitedEnergy(){
         Game game = App.getInstance().currentGame();
         Player player = game.currentPlayer();
         player.setEnergy(Integer.MAX_VALUE);
-        return new Result(true, player.username() + "'s energy: is unlimited now! HA HA HA");
+        return new Result(true, player.getUsername() + "'s energy: is unlimited now! HA HA HA");
     }
 
     public Result showInventoryItems(){
         Game game = App.getInstance().currentGame();
         Player player = game.currentPlayer();
         StringBuilder items = new StringBuilder();
-        for(Item item: player.inventory().getItems()){
+        for(Item item: player.getInventory().getItems()){
             items.append(item.getName() + " x" + item.getNumber() + ", ");
         }
         items.delete(items.length() - 2, items.length());
@@ -393,7 +396,7 @@ k
         // todo : handle trim in view for now
         // todo : calculate return money
         Game game = App.getInstance().currentGame();
-        Inventory inventory = game.currentPlayer().inventory();
+        Inventory inventory = game.currentPlayer().getInventory();
         int itemNumber;
         Item item;
         if((item = findItem(itemName, inventory.getItems())) == null){
@@ -407,7 +410,7 @@ k
         }
 
         else{
-            inventory.removeItem(item);
+            inventory.getItems().remove(item);
             return new Result(true, "Item removed from inventory");
         }
     }
@@ -416,7 +419,7 @@ k
         Game game = App.getInstance().currentGame();
         Player player = game.currentPlayer();
         Tool tool;
-        if((tool = (Tool) findItem(toolName, player.inventory().getItems())) == null){
+        if((tool = (Tool) findItem(toolName, player.getInventory().getItems())) == null){
             return new Result(false, "Tool not found in your inventory");
         }
         player.setCurrentTool(tool);
@@ -435,8 +438,8 @@ k
     public Result showAllTools(){
         Game game = App.getInstance().currentGame();
         Player player = game.currentPlayer();
-        ArrayList<Item> tools = player.inventory().getItems();
-
+        ArrayList<Item> tools = player.getInventory().getItems();
+        return new Result(true, toolListMaker(tools));
     }
 
     private void onDayPassed(int days) {
@@ -544,7 +547,7 @@ k
         Player player = App.getInstance().currentPlayer();
         House  house  = player.getHouse();
         var    refrigerator = house.refrigerator();
-        var    inventory    = player.inventory();
+        var    inventory    = player.getInventory();
 
         CookingRecipes recipe;
         try { recipe = CookingRecipes.valueOf(recipeName); }
@@ -582,17 +585,20 @@ k
     private void eat(String foodName) {}
 
     private void calculateEnergy(int amount) {
+        Player player = App.getInstance().currentGame().currentPlayer();
+        player.setEnergy(player.getEnergy() + amount);
+        if(player.getEnergy() >= 200){
         Player player = game.getCurrentPlayer();
         player.setEnergy(player.energy() + amount);
         if(player.energy() >= 200){
             player.setEnergy(200);
         }
-        if(player.energy() <= 0){
+        if(player.getEnergy() <= 0){
             player.setFainted(true);
             switchTurn();
         }
     }
-    
+
     private Item findItem(String itemName, ArrayList<Item> items) {
         for(Item item : items){
             if(item.getName().equals(itemName)){
@@ -604,10 +610,17 @@ k
 
     private String toolListMaker(ArrayList<Item> tools) {
         StringBuilder toolList = new StringBuilder();
-        for(Item item : tools){
-            if(item.getItemType() == ToolType.PrimitiveHoe){}
+        for (Item item : tools) {
+            if (item instanceof Tool) {
+                Tool tool = (Tool) item;
+                toolList.append(tool.getToolType().name())
+                        .append(" x").append(tool.getNumber())
+                        .append("\n");
+            }
         }
+        return toolList.toString();
     }
+
 
     public void fishingAndDisplay(ToolType pole) {
     }

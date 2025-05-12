@@ -2,7 +2,7 @@ package enums.items;
 
 import enums.design.Season;
 
-public enum SeedType implements Items {
+public enum SeedType implements ItemType {
     JazzSeeds(Season.Spring),
     CarrotSeeds(Season.Spring),
     CauliflowerSeeds(Season.Spring),

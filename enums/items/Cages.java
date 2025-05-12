@@ -1,6 +1,6 @@
 package enums.items;
 
-public enum Cages implements Items {
+public enum Cages implements ItemType {
     // Cages:
     NormalCage(4),
     BigCage(8),

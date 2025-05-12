@@ -3,6 +3,7 @@ package models;
 public class SkillData {
     private int level;
     private int experience;
+
     public SkillData() {
         this.experience = 0;
         this.level = 0;

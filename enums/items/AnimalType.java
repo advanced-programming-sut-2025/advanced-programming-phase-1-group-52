@@ -2,7 +2,7 @@ package enums.items;
 
 import java.util.ArrayList;
 
-public enum AnimalType {
+public enum AnimalType implements ItemType{
     Chicken("Chicken",800) {
         {
             products.add(AnimalProductType.ChickenEgg);
@@ -72,5 +72,10 @@ public enum AnimalType {
 
     public int getPrice() {
         return price;
+    }
+
+    @Override
+    public boolean isTool() {
+        return false;
     }
 }

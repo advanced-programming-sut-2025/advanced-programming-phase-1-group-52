@@ -1,16 +1,20 @@
 package enums.items;
 
 
-public enum ToolType implements Items {
+public enum ToolType implements ItemType {
     // Hoes :
-    PrimitiveHoe(5),
-    CopperHoe(4),
-    IronicHoe(3),
-    GoldenHoe(2),
-    IridiumHoe(1),
-
+    PrimitiveHoe(5, true),
+    CopperHoe(4, false),
+    IronicHoe(3, false),
+    GoldenHoe(2, false),
+    IridiumHoe(1, false),
 
     // Pickaxes :
+    PrimitivePickaxe(5, true),
+    CopperPickaxe(4, false),
+    IronicPickaxe(3, false),
+    GoldenPickaxe(2, false),
+    IridiumPickaxe(1, false),
     PrimitivePickaxe(5),
     CopperPickaxe(4),
     IronicPickaxe(3),
@@ -18,32 +22,48 @@ public enum ToolType implements Items {
     IridiumPickaxe(1),
 
     // Axes :
-    PrimitiveAxe(5),
-    CopperAxe(4),
-    IronicAxe(3),
-    GoldenAxe(2),
-    IridiumAxe(1),
+    PrimitiveAxe(5, true),
+    CopperAxe(4, false),
+    IronicAxe(3, false),
+    GoldenAxe(2, false),
+    IridiumAxe(1, false),
 
     // Watering cans :
-    PrimitiveWateringCan(5),
-    CopperWateringCan(4),
-    IronicWateringCan(3),
-    GoldenWateringCan(2),
-    IridiumWateringCan(1),
+    PrimitiveWateringCan(5, true),
+    CopperWateringCan(4, false),
+    IronicWateringCan(3, false),
+    GoldenWateringCan(2, false),
+    IridiumWateringCan(1, false),
 
     // Fishing poles :
-    EducationalFishingPole(8),
-    BambooFishingPole(8),
-    FiberglassFishingPole(6),
-    IridiumFishingPole(4),
-    Seythe(2),
-    MilkPale(4),
-    Shear(4);
+    EducationalFishingPole(8, true),
+    BambooFishingPole(8, false),
+    FiberglassFishingPole(6, false),
+    IridiumFishingPole(4, false),
+
+    Scythe(2, true),
+    MilkPale(4, true),
+    Shear(4, true);
 
     private int energyConsumption;
+    private final boolean isStarter;
+
+    ToolType(int energyConsumption, boolean isStarter) {
+        this.energyConsumption = energyConsumption;
+        this.isStarter = isStarter;
+    }
 
     ToolType(int energyConsumption) {
-        this.energyConsumption = energyConsumption;
+        this(energyConsumption, false);
+    }
+
+    public boolean getIsStarter() {
+        return isStarter;
+    }
+
+    @Override
+    public boolean isTool() {
+        return true;
     }
 
     public int getEnergyConsumption() {

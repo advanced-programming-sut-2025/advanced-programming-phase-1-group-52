@@ -4,7 +4,7 @@ package enums.items;
 import models.item.Food;
 import models.item.Item;
 
-public enum FoodType implements Items {
+public enum FoodType implements ItemType {
     FriedEgg("Fried egg", 50, null, "Starter", 35),
     BakedFish("Baked Fish",75, null, "Starter", 100),
     Salad("Salad", 113, null, "Starter", 110),
@@ -53,6 +53,11 @@ public enum FoodType implements Items {
     public String getBuff() { return buff; }
     public String getSource() { return source; }
     public int getSellPrice() { return sellPrice; }
+
+    @Override
+    public boolean isTool() {
+        return false;
+    }
 
     public Item createItem(int count) {
         Food foodItem = new Food(MaterialType.valueOf(this.name()));
