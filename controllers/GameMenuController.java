@@ -352,8 +352,16 @@ public class GameMenuController {
 
     public Result talkHistory(String username) {
         Player player = game.getUserByUsername(username).getPlayer();
+        if (player == null) {
+            return new Result(false, "Player not found!");
+        }
+        
+        StringBuilder stringBuilder = new StringBuilder();
+        for (Talk talk : player.getTalks()) {
+            if (talk.getReceiver().equals(player)) stringBuilder.append(talk.toString());
+        }
 
-        // todo: get all player talks and add to stringBuilder
+        return new Result(true, stringBuilder.toString());
     }
 
     private boolean isPlayerNearSomething(int x, int y) {
