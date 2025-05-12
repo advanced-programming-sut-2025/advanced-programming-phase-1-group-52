@@ -14,7 +14,7 @@ import java.util.List;
 import java.util.Random;
 import java.util.stream.Collectors;
 
-public class Fish extends Item {
+public class  Fish extends Item {
     private double quality;
     private boolean legendary;
 
