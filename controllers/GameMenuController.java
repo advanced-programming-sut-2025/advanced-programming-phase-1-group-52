@@ -1,6 +1,7 @@
 package controllers;
 
 import enums.design.FarmThemes;
+import enums.design.NPCType;
 import enums.design.Season;
 import enums.items.CookingRecipes;
 import enums.items.FoodType;
@@ -329,7 +330,21 @@ public class GameMenuController {
                 stringBuilder.append(questsList.get(1).toString());
             }
 
-            // todo: show third quest by time passed
+            if (npc.getType() == NPCType.Abigail && game.getDaysPassed() >= 20) {
+                stringBuilder.append(questsList.get(2).toString());
+            }
+            else if (npc.getType() == NPCType.Harvey && game.getDaysPassed() >= 10) {
+                stringBuilder.append(questsList.get(2).toString());
+            }
+            else if (npc.getType() == NPCType.Lia && game.getDaysPassed() >= 15) {
+                stringBuilder.append(questsList.get(2).toString());
+            }
+            else if (npc.getType() == NPCType.Robin && game.getDaysPassed() >= 25) {
+                stringBuilder.append(questsList.get(2).toString());
+            }
+            else if (npc.getType() == NPCType.Sebastian && game.getDaysPassed() >= 15) {
+                stringBuilder.append(questsList.get(2).toString());
+            }
         }
 
         return new Result(true, stringBuilder.toString());

@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.Random;
 
 public class Game {
+    private int daysPassed = 0;
     private ArrayList<User> players;
     private User mainPlayer;
     private GameMap map;
@@ -38,6 +39,10 @@ public class Game {
         this.NPCs.add(new NPC(NPCType.Lia, players));
         this.NPCs.add(new NPC(NPCType.Robin, players));
         this.NPCs.add(new NPC(NPCType.Sebastian, players));
+    }
+
+    public int getDaysPassed() {
+        return daysPassed;
     }
 
     public Friendship getFriendshipByPlayers(Player player1, Player player2) {
@@ -101,6 +106,7 @@ public class Game {
     public void timePassed() {
         int dayPassed = this.time.addHours(1);
         if(dayPassed > 0){
+            this.daysPassed++;
             int seasonPassed = this.date.addDays(dayPassed);
             // todo : add page 22 conditions
             this.todayWeather = this.tomorrowWeather;
