@@ -79,7 +79,8 @@ public enum Blacksmith {
     private final int upgradeCost;
     private final Map<MaterialType, Integer> ingredient;
 
-    Blacksmith(ItemType type, String displayName, String description, int price, int dailyLimit, MaterialType ingredient, int upgradeCost, ShopType shopType) {
+    Blacksmith(ItemType type, String displayName, String description, Integer price,
+                MaterialType materialType, int dailyLimit, int upgradeCost, Map<MaterialType, Integer> ingredient) {
         this.type = type;
         this.displayName = displayName;
         this.description = description;
@@ -88,7 +89,6 @@ public enum Blacksmith {
         this.dailyLimit = dailyLimit;
         this.upgradeCost = upgradeCost;
         this.ingredient = (ingredient != null) ? ingredient : new HashMap<>();
-
     }
 
     private static Map<MaterialType, Integer> createIngredients(MaterialType type, int amount) {
