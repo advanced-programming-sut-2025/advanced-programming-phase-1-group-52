@@ -12,6 +12,11 @@ public enum Backpacks implements ItemType {
     }
 
     public int getCapacity() {
-        return value;
+        return size;
+    }
+
+    @Override
+    public boolean isTool() {
+        return false;
     }
 }

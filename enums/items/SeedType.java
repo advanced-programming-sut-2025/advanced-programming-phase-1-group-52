@@ -59,4 +59,9 @@ public enum SeedType implements ItemType {
     public Season getSeason() {
         return season;
     }
+
+    @Override
+    public boolean isTool() {
+        return false;
+    }
 }
