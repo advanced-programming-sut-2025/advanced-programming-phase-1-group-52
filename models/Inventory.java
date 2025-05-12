@@ -1,9 +1,8 @@
 package models;
 
 import enums.items.Backpacks;
-import models.item.Item;
-
 import java.util.ArrayList;
+import models.item.Item;
 
 public class Inventory {
     private Backpacks backpack = Backpacks.PrimitiveBackpack;

@@ -1,5 +1,6 @@
 package enums.design.Shop;
 
+import enums.design.ShopType;
 import enums.items.MaterialType;
 
 import java.util.HashMap;
@@ -78,8 +79,7 @@ public enum Blacksmith {
     private final int upgradeCost;
     private final Map<MaterialType, Integer> ingredient;
 
-    Blacksmith(ItemType type, String displayName, String description, Integer price,
-               MaterialType materialType,int dailyLimit, int upgradeCost, Map<MaterialType, Integer> ingredient) {
+    Blacksmith(ItemType type, String displayName, String description, int price, int dailyLimit, MaterialType ingredient, int upgradeCost, ShopType shopType) {
         this.type = type;
         this.displayName = displayName;
         this.description = description;

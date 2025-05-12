@@ -10,10 +10,10 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class Player {
-
-    private String username;
-    private Inventory inventory;
-    private ArrayList<Trade> trades;
+    private final String username;
+    private final Inventory inventory;
+    private final ArrayList<Trade> trades;
+    private final ArrayList<Talk> talks;
     private int energy = 200;
     private House house;
     private int originX;
@@ -28,6 +28,7 @@ public class Player {
         this.username = username;
         this.inventory = new Inventory();
         this.trades = new ArrayList<>();
+        this.talks = new ArrayList<>();
         this.skills = new HashMap<>();
         for(Skills skill : Skills.values()){
             this.skills.put(skill, new SkillData());
@@ -81,6 +82,14 @@ public class Player {
     public void backpackHandler(){}
     public void trashCanHandler(){}
     public House getHouse() { return house; }
+
+    public ArrayList<Talk> talks() {
+        return talks;
+    }
+
+    public void addTalk(Talk talk) {
+        this.talks.add(talk);
+    }
 
     public int currentY() {
         return currentY;
