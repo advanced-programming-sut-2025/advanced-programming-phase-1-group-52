@@ -64,4 +64,8 @@ public enum ToolType implements ItemType {
     public boolean isTool() {
         return true;
     }
+
+    public int getEnergyConsumption() {
+        return energyConsumption;
+    }
 }
