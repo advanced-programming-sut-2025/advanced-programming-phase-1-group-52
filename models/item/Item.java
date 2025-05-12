@@ -5,13 +5,14 @@ import enums.items.ToolType;
 
 public abstract class Item {
     private String name;
-    private int number = 0;
+    private int number;
     protected ItemType itemType;
     protected abstract int calculateEnergyConsumption();
 
-    public Item(ItemType itemType) {
+    public Item(ItemType itemType, int number) {
         this.name = itemType.toString();
         this.itemType = itemType;
+        this.number = number;
     }
 
     public boolean isTool() {

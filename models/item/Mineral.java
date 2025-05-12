@@ -1,11 +1,11 @@
 package models.item;
 
 import enums.items.MaterialType;
+import enums.items.MineralType;
 
 public class Mineral extends Item {
-    public Mineral(MaterialType material) {
-        super(material);
-        this.itemType = MaterialType.valueOf(material.name());
+    public Mineral(MineralType mineral,int number) {
+        super(mineral,number);
     }
     @Override
     protected int calculateEnergyConsumption()  {

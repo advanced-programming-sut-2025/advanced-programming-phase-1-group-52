@@ -35,7 +35,9 @@ public class Inventory {
     public void setNumOfItems(int numOfItems) {
         this.numOfItems = numOfItems;
     }
-
+    public void addNumOfItems(int numOfItems) {
+        this.numOfItems += numOfItems;
+    }
     public void removeItem(Item item) {
         items.remove(item);
     }

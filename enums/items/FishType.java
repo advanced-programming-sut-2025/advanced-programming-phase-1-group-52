@@ -2,7 +2,7 @@ package enums.items;
 
 import enums.design.Season;
 
-public enum FishType {
+public enum FishType implements ItemType {
     Salmon("Salmon", 75, Season.Fall),
     Sardine("Sardine", 40, Season.Fall),
     Shad("Shad", 60, Season.Fall),
@@ -32,5 +32,10 @@ public enum FishType {
         this.name = name;
         this.price = price;
         this.season = season;
+    }
+
+    @Override
+    public boolean isTool() {
+        return false;
     }
 }

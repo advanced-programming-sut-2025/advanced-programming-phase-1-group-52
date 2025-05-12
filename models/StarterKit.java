@@ -11,7 +11,7 @@ public class StarterKit {
         List<Tool> tools = new ArrayList<>();
         for (ToolType toolType : ToolType.values()) {
             if (toolType.getIsStarter()) {
-                tools.add(new Tool(toolType));
+                tools.add(new Tool(toolType,1));
             }
         }
         return tools;

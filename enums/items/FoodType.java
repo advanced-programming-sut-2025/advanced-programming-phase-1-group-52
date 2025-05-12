@@ -50,4 +50,9 @@ public enum FoodType implements ItemType {
     public String getBuff() { return buff; }
     public String getSource() { return source; }
     public int getSellPrice() { return sellPrice; }
+
+    @Override
+    public boolean isTool() {
+        return false;
+    }
 }

@@ -1,8 +1,11 @@
 package models;
 
 import enums.design.TileType;
+import enums.items.MineralType;
+import enums.items.ToolType;
 import enums.player.Skills;
 import models.item.Item;
+import models.item.Mineral;
 import models.item.Tool;
 
 import java.util.ArrayList;
@@ -56,6 +59,7 @@ public class Player {
     public void catchFish() {
         addSkillExperience(Skills.Fishing, 5);
     }
+
     public Result handleToolUse(Tile tile) {
         if (currentTool == null) {
             return new Result(false, "No tool selected");
@@ -104,6 +108,7 @@ public class Player {
     }
 
     public void shearHandler(){}
+
     public Result pickaxeHandler(Tile tile) {
         SkillData extractionData = skills.get(Skills.Extraction);
         int energyConsumption = currentTool.getToolType().getEnergyConsumption();
@@ -114,17 +119,61 @@ public class Player {
             return new Result(false, "You don't have enough energy to mine!(extract)");
         }
         this.energy -= energyConsumption;
+        Mineral newMineral;
         switch (tile.getType()){
             case NormalStone:
+                newMineral = new Mineral(MineralType.NormalStone,10);
+                break;
+                case CopperStone:
+                    newMineral = new Mineral(MineralType.CopperStone, 10);
+                    break;
+                        case GoldStone:
+                            newMineral = new Mineral(MineralType.GoldStone, 10);
+                            break;
+                                case IridiumStone:
+                                    newMineral = new Mineral(MineralType.IridiumStone, 10);
+                                    break;
+                                    case JewelStone:
+                                        newMineral = new Mineral(MineralType.JewelStone, 10);
+                                        break;
+                                        case IronStone:
+                                            newMineral = new Mineral(MineralType.IronStone, 10);
+                                            break;
+                                        case Shoveled:
+                                            default:
+                                                return new Result(false, "Tile can not be mined!");
+        }
+        this.inventory.addNumOfItems(1);
+        this.inventory.addItem(newMineral);
+        return new Result(true, "Tile with X: " + tile.getX() + " Y: " + tile.getY() + " has been mined!");
+    }
 
+    public Result axeHandler(Tile tile) {
+        SkillData foragingData = skills.get(Skills.Foraging);
+        int energyConsumption = currentTool.getToolType().getEnergyConsumption();
+        if(foragingData.getLevel() >= 4){
+            energyConsumption -= 1;
+        }
+        if(this.energy <= energyConsumption){
+            return new Result(false, "You don't have enough energy to mine!(extract)");
+        }
+        this.energy -= energyConsumption;
+        switch(tile.getType()){
+            case Tree:
+                
         }
     }
-    public void axeHandler(){}
+
     public void wateringCanHandler(){}
+
     public void fishingPoleHandler(){}
+
     public void seytheHandler(){}
+
     public void milkPaleHandler(){}
+
     public void backpackHandler(){}
+
     public void trashCanHandler(){}
 
     public int currentY() {

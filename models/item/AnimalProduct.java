@@ -1,11 +1,11 @@
 package models.item;
 
+import enums.items.AnimalType;
 import enums.items.MaterialType;
 
 public class AnimalProduct extends Item {
-    public AnimalProduct(MaterialType material) {
-        super(material);
-        this.itemType = MaterialType.valueOf(material.name());
+    public AnimalProduct(AnimalType animalType) {
+        super(animalType);
     }
     @Override
     protected int calculateEnergyConsumption() {
