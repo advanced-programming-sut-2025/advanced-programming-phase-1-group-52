@@ -25,10 +25,19 @@ public class Friendship {
     }
 
     public void addFriendshipPoints(int points) {
-        this.friendshipPoints += points;
-    }
+        if (friendshipPoints < 100 && friendshipPoints + points > 100) {
+            friendshipLevel = 1;
+        }
+        else if (friendshipPoints < 200 && friendshipPoints + points > 200) {
+            friendshipLevel = 2;
+        } 
+        else if (friendshipPoints < 300 && friendshipPoints + points > 300) {
+            friendshipLevel = 3;
+        } 
+        else if (friendshipPoints < 400 && friendshipPoints + points > 400) {
+            friendshipLevel = 4;
+        } 
 
-    public void upgradeLevel() {
-        this.friendshipLevel++;
+        this.friendshipPoints += points;
     }
 }

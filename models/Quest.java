@@ -1,15 +1,16 @@
 package models;
 
 import enums.design.NPCType;
-import enums.items.Items;
+import enums.items.ItemType;
 import java.util.HashMap;
 
 public class Quest {
     private final NPCType questGiver;
-    private final HashMap<Items, Integer> demands;
-    private final HashMap<Items, Integer> reward;
+    private final HashMap<ItemType, Integer> demands;
+    private final HashMap<ItemType, Integer> reward;
+    private int rate = 0;
 
-    public Quest(NPCType questGiver, Items demand, int demandAmount, Items reward, Integer rewardAmount) {
+    public Quest(NPCType questGiver, ItemType demand, int demandAmount, ItemType reward, Integer rewardAmount) {
         this.questGiver = questGiver;
         this.demands = new HashMap<>();
         this.reward = new HashMap<>();
@@ -18,11 +19,11 @@ public class Quest {
         this.reward.put(reward, rewardAmount);
     }
 
-    public HashMap<Items, Integer> getDemands() {
+    public HashMap<ItemType, Integer> getDemands() {
         return demands;
     }
 
-    public HashMap<Items, Integer> getReward() {
+    public HashMap<ItemType, Integer> getReward() {
         return reward;
     }
 
@@ -31,5 +32,9 @@ public class Quest {
         return this.questGiver.name() + "\'s quest: " + 
         this.demands.toString() + " for " + this.reward.toString()
         + "---------------------------\n";
+    }
+
+    public void rateGift(int rate) {
+        this.rate = rate;
     }
 }

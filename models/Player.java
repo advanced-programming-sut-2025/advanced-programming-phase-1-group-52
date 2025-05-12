@@ -29,6 +29,8 @@ public class Player {
     private boolean isFainted = false;
     private Map<Skills, SkillData> skills;
     private Tool currentTool = null;
+    private final HashMap<Integer, Gift> gifts;
+    private static int giftId = 1;
 
     public Player(String username) {
         this.username = username;
@@ -36,14 +38,24 @@ public class Player {
         this.trades = new ArrayList<>();
         this.talks = new ArrayList<>();
         this.skills = new HashMap<>();
+        this.gifts = new HashMap<>();
         for(Skills skill : Skills.values()){
             this.skills.put(skill, new SkillData());
         }
         giveStarterTools();
     }
 
+    public HashMap<Integer, Gift> getGifts() {
+        return gifts;
+    }
+
     public ArrayList<Talk> getTalks() {
         return this.talks;
+    }
+
+    public void addGift(Gift gift) {
+        this.gifts.put(giftId, gift);
+        giftId++;
     }
 
     public void addSkillExperience(Skills skill, int amount) {

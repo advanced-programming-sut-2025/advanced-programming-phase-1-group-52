@@ -1,11 +1,12 @@
 package enums.design;
 
+import enums.design.Shop.Blacksmith;
 import enums.items.AnimalProductType;
 import enums.items.CookingRecipes;
 import enums.items.FishType;
 import enums.items.FoodType;
 import enums.items.Handicrafts;
-import enums.items.Items;
+import enums.items.ItemType;
 import enums.items.MaterialType;
 import enums.items.ToolType;
 import java.util.ArrayList;
@@ -72,7 +73,7 @@ public enum NPCType {
         }
     };
 
-    public final ArrayList<Items> favorites = new ArrayList<>();
+    public final ArrayList<ItemType> favorites = new ArrayList<>();
     public final ArrayList<Quest> quests = new ArrayList<>();
     private final int houseCornerX;
     private final int houseCornerY;
@@ -92,5 +93,9 @@ public enum NPCType {
 
     public int getHouseCornerY() {
         return houseCornerY;
+    }
+
+    public ArrayList<ItemType> getFavorites() {
+        return favorites;
     }
 }

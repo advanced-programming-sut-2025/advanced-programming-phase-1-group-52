@@ -11,7 +11,7 @@ public class NPC {
     private final HashMap<Quest, Boolean> quests;
     private final ArrayList<NPCFriendship> friendships = new ArrayList<>();
 
-    public NPC(NPCType type, ArrayList<User> players) {
+    public NPC(NPCType type, ArrayList<Player> players) {
         this.type = type;
         this.quests = new HashMap<>();
         for (Quest quest : this.type.getQuests()) {
@@ -50,6 +50,14 @@ public class NPC {
     public Integer getFriendShipLevelWith(Player player) {
         for (NPCFriendship friendship : this.friendships) {
             if (friendship.getPlayer().getPlayer().equals(player)) return friendship.getFriendshipLevel();
+        }
+
+        return null;
+    }
+
+    public NPCFriendship getFriendShipWith(Player player) {
+        for (NPCFriendship friendship : this.friendships) {
+            if (friendship.getPlayer().equals(player)) return friendship;
         }
 
         return null;

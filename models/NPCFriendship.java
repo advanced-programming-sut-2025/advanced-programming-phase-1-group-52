@@ -2,11 +2,11 @@ package models;
 
 public class NPCFriendship {
     private final NPC npc;
-    private final User player;
+    private final Player player;
     private int friendshipLevel = 0;
     private int friendshipPoints = 0;
 
-    public NPCFriendship(NPC npc, User player) {
+    public NPCFriendship(NPC npc, Player player) {
         this.npc = npc;
         this.player = player;
     }
@@ -15,7 +15,7 @@ public class NPCFriendship {
         return npc;
     }
 
-    public User getPlayer() {
+    public Player getPlayer() {
         return player;
     }
 

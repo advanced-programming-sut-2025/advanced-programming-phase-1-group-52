@@ -34,11 +34,16 @@ public class Game {
         this.friendships.add(new Friendship(players.get(1).getPlayer(), players.get(3).getPlayer()));
         this.friendships.add(new Friendship(players.get(2).getPlayer(), players.get(3).getPlayer()));
 
-        this.NPCs.add(new NPC(NPCType.Abigail, players));
-        this.NPCs.add(new NPC(NPCType.Harvey, players));
-        this.NPCs.add(new NPC(NPCType.Lia, players));
-        this.NPCs.add(new NPC(NPCType.Robin, players));
-        this.NPCs.add(new NPC(NPCType.Sebastian, players));
+        ArrayList<Player> realPlayers = new ArrayList<>();
+        for (User user : this.players) {
+            realPlayers.add(user.getPlayer());
+        }
+
+        this.NPCs.add(new NPC(NPCType.Abigail, realPlayers));
+        this.NPCs.add(new NPC(NPCType.Harvey, realPlayers));
+        this.NPCs.add(new NPC(NPCType.Lia, realPlayers));
+        this.NPCs.add(new NPC(NPCType.Robin, realPlayers));
+        this.NPCs.add(new NPC(NPCType.Sebastian, realPlayers));
     }
 
     public int getDaysPassed() {
