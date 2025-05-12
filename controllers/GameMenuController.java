@@ -2,10 +2,24 @@ package controllers;
 
 import enums.design.FarmThemes;
 import enums.design.Season;
+import enums.items.CookingRecipes;
+import enums.items.FoodType;
+import enums.items.MaterialType;
 import enums.design.Weather;
+import enums.items.ToolType;
 import enums.regex.GameMenuCommands;
+import models.App;
+import models.Game;
+import models.Result;
+import models.User;
+import models.*;
+import models.building.House;
+import models.item.Fish;
+import models.item.Item;
+import models.item.Tool;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import models.*;
 
@@ -350,6 +364,81 @@ public class GameMenuController {
         return Math.abs(playerX - x) <= 1 && Math.abs(playerY - y) <= 1;
     }
 
+    public Result cheatSetEnergy(int value){
+        Game game = App.getInstance().currentGame();
+        Player player = game.currentPlayer();
+        player.setEnergy(value);
+        return new Result(true, player.username() + "'s energy: is set to " + value);
+    }
+
+    public Result cheatUnlimitedEnergy(){
+        Game game = App.getInstance().currentGame();
+        Player player = game.currentPlayer();
+        player.setEnergy(Integer.MAX_VALUE);
+        return new Result(true, player.username() + "'s energy: is unlimited now! HA HA HA");
+    }
+
+    public Result showInventoryItems(){
+        Game game = App.getInstance().currentGame();
+        Player player = game.currentPlayer();
+        StringBuilder items = new StringBuilder();
+        for(Item item: player.inventory().getItems()){
+            items.append(item.getName() + " x" + item.getNumber() + ", ");
+        }
+        items.delete(items.length() - 2, items.length());
+        return new Result(true, items.toString());
+    }
+
+    public Result removeItemFromInventory(String itemName, String itemNumberStr){
+        // todo : handle trim in view for now
+        // todo : calculate return money
+        Game game = App.getInstance().currentGame();
+        Inventory inventory = game.currentPlayer().inventory();
+        int itemNumber;
+        Item item;
+        if((item = findItem(itemName, inventory.getItems())) == null){
+            return new Result(false, "Item not found");
+        }
+
+        if(itemNumberStr != null && !itemNumberStr.isEmpty()){
+            itemNumber = Integer.parseInt(itemNumberStr);
+            item.setNumber(item.getNumber() - itemNumber);
+            return new Result(true,  "x" + itemNumber + item.getName() + " has been removed");
+        }
+
+        else{
+            inventory.removeItem(item);
+            return new Result(true, "Item removed from inventory");
+        }
+    }
+
+    public Result equipTool(String toolName){
+        Game game = App.getInstance().currentGame();
+        Player player = game.currentPlayer();
+        Tool tool;
+        if((tool = (Tool) findItem(toolName, player.inventory().getItems())) == null){
+            return new Result(false, "Tool not found in your inventory");
+        }
+        player.setCurrentTool(tool);
+        return new Result(true, tool.getName() + "'s tool has been equipped");
+    }
+
+    public Result showCurrentTool(){
+        Game game = App.getInstance().currentGame();
+        Tool tool = game.currentPlayer().getCurrentTool();
+        if(tool == null){
+            return new Result(false, "There is no tool in your hand!");
+        }
+        return new Result(true, tool.getName() + " is your current tool");
+    }
+
+    public Result showAllTools(){
+        Game game = App.getInstance().currentGame();
+        Player player = game.currentPlayer();
+        ArrayList<Item> tools = player.inventory().getItems();
+
+    }
+
     private void onDayPassed(int days) {
     }
 
@@ -400,6 +489,98 @@ public class GameMenuController {
         return true;
     }
 
+
+    private Result cookingRefrigeratorPut(String materialName, String quantityStr) {
+        Player player = App.getInstance().currentPlayer();
+        House house  = player.getHouse();
+        int quantity;
+        try { quantity = Integer.parseInt(quantityStr); }
+        catch (NumberFormatException e) {
+            return Result.failure("The value must be an integer: " + quantityStr);
+        }
+
+        MaterialType material;
+        try { material = MaterialType.valueOf(materialName); }
+        catch (IllegalArgumentException e) {
+            return Result.failure("Invalid raw material: " + materialName);
+        }
+
+        boolean ok = house.refrigerator().putMaterial(material, quantity);
+        return ok
+                ? Result.success(quantity + " × " + material + " It was placed in the refrigerator.")
+                : Result.failure("Error in placing the material in the refrigerator.");
+    }
+
+    private Result cookingRefrigeratorPick(String materialName, String quantityStr) {
+        Player player = App.getInstance().currentPlayer();
+        House  house  = player.getHouse();
+        int quantity;
+        try { quantity = Integer.parseInt(quantityStr); }
+        catch (NumberFormatException e) {
+            return Result.failure("The value must be an integer: " + quantityStr);
+        }
+
+        MaterialType mat;
+        try { mat = MaterialType.valueOf(materialName); }
+        catch (IllegalArgumentException e) {
+            return Result.failure("Invalid raw material: " + materialName);
+        }
+
+        boolean ok = house.refrigerator().pickMaterial(mat, quantity);
+        return ok
+                ? Result.success(quantity + " × " + mat + " Removed from the refrigerator.")
+                : Result.failure("There is not enough " + mat + " in the refrigerator.");
+    }
+
+    private Result cookingShowRecipes() {
+        StringBuilder sb = new StringBuilder("Cooking recipes:\n");
+        for (CookingRecipes r : CookingRecipes.values()) {
+            sb.append("- ").append(r.getDisplayName()).append("\n");
+        }
+        return Result.success(sb.toString());
+    }
+
+    private Result cookingPrepare(String recipeName) {
+        Player player = App.getInstance().currentPlayer();
+        House  house  = player.getHouse();
+        var    refrigerator = house.refrigerator();
+        var    inventory    = player.inventory();
+
+        CookingRecipes recipe;
+        try { recipe = CookingRecipes.valueOf(recipeName); }
+        catch (IllegalArgumentException e) {
+            return Result.failure("Invalid recipe: " + recipeName);
+        }
+
+        boolean ok = recipe.getIngredients().entrySet().stream()
+                .allMatch(e -> refrigerator.hasMaterial(e.getKey(), e.getValue()));
+        if (!ok) {
+            return Result.failure("There are not enough ingredients in the refrigerator.");
+        }
+
+        for (Map.Entry<MaterialType, Integer> e : recipe.getIngredients().entrySet()) {
+            refrigerator.pickMaterial(e.getKey(), e.getValue());
+        }
+
+        FoodType food;
+        try { food = FoodType.valueOf(recipeName); }
+        catch (IllegalArgumentException e) {
+            return Result.failure("Error converting to FoodType.");
+        }
+
+        boolean added = inventory.addItem(food.createItem(1));
+        if (!added) {
+            for (Map.Entry<MaterialType, Integer> e : recipe.getIngredients().entrySet()) {
+                refrigerator.putMaterial(e.getKey(), e.getValue());
+            }
+            return Result.failure("There is not enough space in the inventory.");
+        }
+
+        return Result.success(recipe.getDisplayName() + "Ready and added.");
+    }
+
+    private void eat(String foodName) {}
+
     private void calculateEnergy(int amount) {
         Player player = game.getCurrentPlayer();
         player.setEnergy(player.energy() + amount);
@@ -410,5 +591,24 @@ public class GameMenuController {
             player.setFainted(true);
             switchTurn();
         }
+    }
+    
+    private Item findItem(String itemName, ArrayList<Item> items) {
+        for(Item item : items){
+            if(item.getName().equals(itemName)){
+                return item;
+            }
+        }
+        return null;
+    }
+
+    private String toolListMaker(ArrayList<Item> tools) {
+        StringBuilder toolList = new StringBuilder();
+        for(Item item : tools){
+            if(item.getItemType() == ToolType.PrimitiveHoe){}
+        }
+    }
+
+    public void fishingAndDisplay(ToolType pole) {
     }
 }

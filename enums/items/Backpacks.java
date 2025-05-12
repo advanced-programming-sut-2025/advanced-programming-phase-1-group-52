@@ -5,9 +5,13 @@ public enum Backpacks implements Items {
     BigBackpack(24),
     DeluxeBackpack(Integer.MAX_VALUE);
 
-    private int value;
+    private int size;
 
-    Backpacks(int value) {
-        this.value = value;
+    Backpacks(int size) {
+        this.size = size;
+    }
+
+    public int getCapacity() {
+        return value;
     }
 }
