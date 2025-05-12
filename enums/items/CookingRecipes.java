@@ -187,4 +187,9 @@ public enum CookingRecipes implements ItemType {
         return displayName;
     }
 
+    @Override
+    public boolean isTool() {
+        return false;
+    }
+
 }

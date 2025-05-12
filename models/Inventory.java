@@ -10,35 +10,68 @@ public class Inventory {
     private ArrayList<Item> items = new ArrayList<>();
     private int numOfItems = 0;
 
-    public Inventory() {
 
+    public Inventory() {
+    }
+
+    private int getTotalItemCount() {
+        return items.stream()
+                .mapToInt(Item::getNumber)
+                .sum();
+    }
+
+    public boolean addItem(Item newItem) {
+        int total = getTotalItemCount();
+        if (total + newItem.getNumber() > backpack.getCapacity()) {
+            return false;
+        }
+        for (Item existing : items) {
+            if (existing.getClass().equals(newItem.getClass())) {
+                existing.setNumber(existing.getNumber() + newItem.getNumber());
+                return true;
+            }
+        }
+        items.add(newItem);
+        return true;
+    }
+
+    public boolean removeItem(Class<? extends Item> itemClass, int quantity) {
+        for (Item existing : items) {
+            if (existing.getClass().equals(itemClass)) {
+                if (existing.getNumber() < quantity) {
+                    return false;
+                }
+                if (existing.getNumber() == quantity) {
+                    items.remove(existing);
+                } else {
+                    existing.setNumber(existing.getNumber() - quantity);
+                }
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean hasItem(Class<? extends Item> itemClass, int quantity) {
+        return items.stream()
+                .filter(i -> i.getClass().equals(itemClass))
+                .anyMatch(i -> i.getNumber() >= quantity);
+    }
+
+    public void addNumOfItems(int num) {
+        this.numOfItems += num;
+    }
+
+    public ArrayList<Item> getItems() {
+        return new ArrayList<>(items);
     }
 
     public Backpacks getBackpack() {
         return backpack;
     }
+
     public void setBackpack(Backpacks backpack) {
         this.backpack = backpack;
     }
-    public ArrayList<Item> getItems() {
-        return items;
-    }
-    public void setItems(ArrayList<Item> items) {
-        this.items = items;
-    }
-    public void addItem(Item item) {
-        items.add(item);
-    }
-    public int getNumOfItems() {
-        return numOfItems;
-    }
-    public void setNumOfItems(int numOfItems) {
-        this.numOfItems = numOfItems;
-    }
-    public void addNumOfItems(int numOfItems) {
-        this.numOfItems += numOfItems;
-    }
-    public void removeItem(Item item) {
-        items.remove(item);
-    }
+
 }

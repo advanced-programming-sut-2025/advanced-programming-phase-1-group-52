@@ -36,7 +36,7 @@ public enum ToolType implements ItemType {
     FiberglassFishingPole(6, false),
     IridiumFishingPole(4, false),
 
-    Seythe(2, true),
+    Scythe(2, true),
     MilkPale(4, true),
     Shear(4, true);
 
@@ -50,10 +50,6 @@ public enum ToolType implements ItemType {
 
     ToolType(int energyConsumption) {
         this(energyConsumption, false);
-    }
-
-    public int getEnergyConsumption() {
-        return energyConsumption;
     }
 
     public boolean getIsStarter() {

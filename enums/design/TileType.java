@@ -12,6 +12,7 @@ public enum TileType {
     IridiumStone(true),
     JewelStone(true),
     NormalStone(true),
+    Stone(true),
 
     Branch(true),
     Wall(false),

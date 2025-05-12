@@ -7,7 +7,8 @@ public enum MineralType implements ItemType {
     GoldStone,
     IridiumStone,
     JewelStone,
-    NormalStone;
+    NormalStone,
+    Wood;
 
     MineralType() {
     }

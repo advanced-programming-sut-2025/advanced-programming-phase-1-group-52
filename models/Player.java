@@ -2,11 +2,11 @@ package models;
 
 import enums.design.TileType;
 import enums.items.MineralType;
-import enums.items.ToolType;
 import enums.player.Skills;
-import models.item.Item;
+import models.building.House;
 import models.item.Mineral;
 import models.item.Tool;
+import models.item.WateringCan;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -19,6 +19,7 @@ public class Player {
     private Inventory inventory;
     private ArrayList<Trade> trades;
     private int energy = 200;
+    private House house;
     private int originX;
     private int originY;
     private int currentX;
@@ -76,13 +77,13 @@ public class Player {
         } else if (typeName.endsWith("WateringCan")) {
             return wateringCanHandler(tile);
         } else if (typeName.endsWith("FishingPole")) {
-            return fishingPoleHandler(tile);
-        } else if (typeName.equals("Seythe")) {
+            return fishingPoleHandler();
+        } else if (typeName.equals("Scythe")) {
             return scytheHandler(tile);
         } else if (typeName.equals("MilkPale")) {
-            return milkPailHandler(tile);
+            return milkPaleHandler();
         } else if (typeName.equals("Shear")) {
-            return shearHandler(tile);
+            return shearHandler();
         } else {
             return new Result(false, "Unknown tool type");
         }
@@ -107,7 +108,7 @@ public class Player {
         return new Result(true, "Tile with X: " + tile.getX() + " Y: " + tile.getY() + " has been shoved");
     }
 
-    public void shearHandler(){}
+    public Result shearHandler(){}
 
     public Result pickaxeHandler(Tile tile) {
         SkillData extractionData = skills.get(Skills.Extraction);
@@ -158,23 +159,62 @@ public class Player {
             return new Result(false, "You don't have enough energy to mine!(extract)");
         }
         this.energy -= energyConsumption;
-        switch(tile.getType()){
-            case Tree:
-                
+        if(tile.getType().equals(TileType.Branch)){
+            tile.setType(TileType.Earth);
+            return new Result(true, "Branches on Tile with X: " + tile.getX() + " Y: " + tile.getY() + " has been removed!");
         }
+        else if(tile.getType().equals(TileType.Tree)){
+            // todo : after completing trees and seeds write this section
+        }
+        return new Result(false, "you can not use axe on this tile!");
     }
 
-    public void wateringCanHandler(){}
+    public Result wateringCanHandler(Tile tile){
+        SkillData farmingData = skills.get(Skills.Farming);
+        int energyConsumption = currentTool.getToolType().getEnergyConsumption();
+        if(farmingData.getLevel() >= 4){
+            energyConsumption -= 1;
+        }
+        if(this.energy <= energyConsumption){
+            return new Result(false, "You don't have enough energy to use watering can!");
+        }
+        this.energy -= energyConsumption;
+        WateringCan wateringCan = (WateringCan) this.currentTool;
+        if(tile.getType().equals(TileType.Water)){
+            wateringCan.fill();
+            return new Result(true, "Water can is full now!");
+        }
+        else if(tile.getType().equals(TileType.Tree)){
 
-    public void fishingPoleHandler(){}
+        }
+        // todo : after completing trees and seeds write this section
+        return new Result(false, "You can not use watering on this tile!");
+    }
 
-    public void seytheHandler(){}
+    public Result fishingPoleHandler(){}
 
-    public void milkPaleHandler(){}
+    public Result scytheHandler(Tile tile){
+        int energyConsumption = currentTool.getToolType().getEnergyConsumption();
+        if(this.energy <= energyConsumption){
+            return new Result(false, "You don't have enough energy to use scythe!");
+        }
+        this.energy -= energyConsumption;
 
-    public void backpackHandler(){}
+        if(tile.getType().equals(TileType.Grass)){
+            tile.setType(TileType.Earth);
+            return new Result(true, "tile with X: " + tile.getX() + " Y: " + tile.getY() + " has been changed to soil!");
+        }
+        else if(tile.getType().equals(TileType.Tree)){
+            // todo : after completing trees and seeds write this section
+        }
+        return new Result(false, "you can not use scythe on this tile!");
+    }
 
-    public void trashCanHandler(){}
+    public Result milkPaleHandler(){}
+
+    public Result backpackHandler(){}
+
+    public Result trashCanHandler(){}
 
     public int currentY() {
         return currentY;
@@ -275,5 +315,9 @@ public class Player {
         for (Tool tool : starterTools) {
             inventory.addItem(tool);
         }
+    }
+
+    public House getHouse() {
+        return this.house;
     }
 }
