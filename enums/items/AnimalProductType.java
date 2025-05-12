@@ -1,6 +1,6 @@
 package enums.items;
 
-public enum AnimalProductType implements Items {
+public enum AnimalProductType implements ItemType {
     ChickenEgg("ChickenEgg",50),
     BigChickenEgg("BigChickenEgg",95),
     DuckEgg("DuckEgg",95),
@@ -24,5 +24,10 @@ public enum AnimalProductType implements Items {
     }
     public int getPrice() {
         return price;
+    }
+
+    @Override
+    public boolean isTool() {
+        return false;
     }
 }

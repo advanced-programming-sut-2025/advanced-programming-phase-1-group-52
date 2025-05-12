@@ -6,7 +6,9 @@ import models.item.Item;
 
 public class Inventory {
     private Backpacks backpack = Backpacks.PrimitiveBackpack;
-    private final ArrayList<Item> items = new ArrayList<>();
+    private ArrayList<Item> items = new ArrayList<>();
+    private int numOfItems = 0;
+
 
     public Inventory() {
     }
@@ -55,6 +57,10 @@ public class Inventory {
                 .anyMatch(i -> i.getNumber() >= quantity);
     }
 
+    public void addNumOfItems(int num) {
+        this.numOfItems += num;
+    }
+
     public ArrayList<Item> getItems() {
         return new ArrayList<>(items);
     }
@@ -66,4 +72,5 @@ public class Inventory {
     public void setBackpack(Backpacks backpack) {
         this.backpack = backpack;
     }
+
 }

@@ -1,5 +1,5 @@
 package enums.items;
 
 
-public enum ProductType implements Items {
+public enum ProductType implements ItemType {
 }

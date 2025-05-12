@@ -66,10 +66,4 @@ public class App {
         this.users.add(user);
     }
 
-    public Player currentPlayer() {
-        if (currentGame == null) {
-            return null;
-        }
-        return currentGame.currentPlayer();
-    }
 }

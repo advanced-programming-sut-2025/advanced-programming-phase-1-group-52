@@ -4,7 +4,7 @@ package enums.items;
 import java.util.HashMap;
 import java.util.Map;
 
-public enum CookingRecipes implements Items {
+public enum CookingRecipes implements ItemType {
     FriedEgg("Fried egg") {
         {
             ingredients.put(MaterialType.Egg, 1);
@@ -185,6 +185,11 @@ public enum CookingRecipes implements Items {
 
     public String getDisplayName() {
         return displayName;
+    }
+
+    @Override
+    public boolean isTool() {
+        return false;
     }
 
 }

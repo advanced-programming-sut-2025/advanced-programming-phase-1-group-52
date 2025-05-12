@@ -1,6 +1,6 @@
 package enums.items;
 
-public enum TrashCans {
+public enum TrashCanType implements ItemType {
     PrimitiveTrashCan(0),
     CopperTrashCan(15),
     IronicTrashCan(30),
@@ -9,7 +9,12 @@ public enum TrashCans {
 
     private int percentage;
 
-    private TrashCans(int percentage) {
+    private TrashCanType(int percentage) {
         this.percentage = percentage;
+    }
+
+    @Override
+    public boolean isTool() {
+        return false;
     }
 }
