@@ -23,7 +23,7 @@ public class GameMap {
     private final ArrayList<GreenHouse> greenHouses;
 
     public GameMap(ArrayList<User> users, ArrayList<FarmThemes> themes) {
-        this.tiles = new Tile[90][90];
+        this.tiles = new Tile[90][60];
         this.currentWeather = Weather.Sunny;
         this.shops = new ArrayList<>();
         this.houses = new ArrayList<>();

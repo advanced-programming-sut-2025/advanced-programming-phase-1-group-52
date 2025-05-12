@@ -290,6 +290,66 @@ public class GameMenuController {
         return new Result(true, "Player energy: " + playerEnergy);
     }
 
+    public Result giftNPC(String NPCName, String itemName) {
+        NPC npc = game.getNPCByName(NPCName);
+
+        if (npc == null) {
+            return new Result(false, "NPC not found!");
+        }
+        if (!isPlayerNearSomething(npc.getX(), npc.getY())) {
+            return new Result(false, "You are not near the NPC!");
+        }
+
+        // todo : check if the item is in the inventory
+        // todo : check if the item is giftable
+        // todo : check if the item is thier favorite
+        return new Result(true, "You gifted " + itemName + " to " + NPCName);
+    }
+
+    public Result showQuests() {
+        StringBuilder stringBuilder = new StringBuilder();
+        for (NPC npc : game.getNPCs()) {
+            java.util.HashMap<Quest, Boolean> quests = npc.getQuests();
+            List<Quest> questsList = new ArrayList<>(quests.keySet());
+            stringBuilder.append(questsList.getFirst().toString());
+            if (npc.getFriendShipLevelWith(game.getCurrentPlayer()) >= 1) {
+                stringBuilder.append(questsList.get(1).toString());
+            }
+
+            // todo: show third quest by time passed
+        }
+
+        return new Result(true, stringBuilder.toString());
+    }
+
+    public Result talk(String receiverName, String message) {
+        Player player = game.getUserByUsername(receiverName).getPlayer();
+        if (player == null) {
+            return new Result(false, "Player not found!");
+        }
+        if (!isPlayerNearSomething(player.currentX(), player.currentY())) {
+            return new Result(false, "You should be near" + receiverName);
+        }
+        Talk talk = new Talk(player, message);
+
+        game.getCurrentPlayer().addTalk(talk);
+        return new Result(true, "You talked to " + receiverName + "!");
+    }
+
+    public Result talkHistory(String username) {
+        Player player = game.getUserByUsername(username).getPlayer();
+
+        // todo: get all player talks and add to stringBuilder
+    }
+
+    private boolean isPlayerNearSomething(int x, int y) {
+        Player player = game.getCurrentPlayer();
+        int playerX = player.currentX();
+        int playerY = player.currentY();
+
+        return Math.abs(playerX - x) <= 1 && Math.abs(playerY - y) <= 1;
+    }
+
     private void onDayPassed(int days) {
     }
 

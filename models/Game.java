@@ -1,5 +1,6 @@
 package models;
 
+import enums.design.NPCType;
 import enums.design.Weather;
 import java.util.ArrayList;
 import java.util.Map;
@@ -15,6 +16,7 @@ public class Game {
     private Weather todayWeather;
     private Weather tomorrowWeather;
     private final ArrayList<Friendship> friendships = new ArrayList<>();
+    private final ArrayList<NPC> NPCs = new ArrayList<>();
 
     public Game(ArrayList<User> players) {
         this.time = new Time();
@@ -23,12 +25,40 @@ public class Game {
         this.currentPlayer = players.getFirst().getPlayer();
         this.todayWeather = Weather.Sunny;
         this.tomorrowWeather = Weather.Rainy;
+
         this.friendships.add(new Friendship(players.get(0), players.get(1)));
         this.friendships.add(new Friendship(players.get(0), players.get(2)));
         this.friendships.add(new Friendship(players.get(0), players.get(3)));
         this.friendships.add(new Friendship(players.get(1), players.get(2)));
         this.friendships.add(new Friendship(players.get(1), players.get(3)));
         this.friendships.add(new Friendship(players.get(2), players.get(3)));
+
+        this.NPCs.add(new NPC(NPCType.Abigail, players));
+        this.NPCs.add(new NPC(NPCType.Harvey, players));
+        this.NPCs.add(new NPC(NPCType.Lia, players));
+        this.NPCs.add(new NPC(NPCType.Robin, players));
+        this.NPCs.add(new NPC(NPCType.Sebastian, players));
+    }
+
+    public ArrayList<NPC> getNPCs() {
+        return NPCs;
+    }
+
+    public NPC getNPCByName(String name) {
+        for (NPC npc : NPCs) {
+            if (npc.getType().name().equalsIgnoreCase(name)) {
+                return npc;
+            }
+        }
+        return null;
+    }
+
+    public User getUserByUsername(String username) {
+        for (User user : this.players) {
+            if (user.getUsername().equals(username)) return user;
+        }
+
+        return null;
     }
 
     public boolean switchCurrentPlayer() {

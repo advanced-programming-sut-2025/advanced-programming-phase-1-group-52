@@ -3,10 +3,10 @@ package models;
 import java.util.ArrayList;
 
 public class Player {
-
     private final String username;
     private final Inventory inventory;
     private final ArrayList<Trade> trades;
+    private final ArrayList<Talk> talks;
     private int energy = 200;
     private int originX;
     private int originY;
@@ -18,6 +18,7 @@ public class Player {
         this.username = username;
         this.inventory = new Inventory();
         this.trades = new ArrayList<>();
+        this.talks = new ArrayList<>();
     }
 
     public int energy() {
@@ -50,6 +51,14 @@ public class Player {
     public void milkPaleHandler(){}
     public void backpackHandler(){}
     public void trashCanHandler(){}
+
+    public ArrayList<Talk> talks() {
+        return talks;
+    }
+
+    public void addTalk(Talk talk) {
+        this.talks.add(talk);
+    }
 
     public int currentY() {
         return currentY;

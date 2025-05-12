@@ -46,4 +46,11 @@ public class NPCFriendship {
             this.friendshipLevel = 3;
         } 
     }
+
+    @Override
+    public String toString() {
+        return npc.getType().toString() + ":\n" +
+                "Friendship Level: " + friendshipLevel + "\n" +
+                "Friendship XP: " + friendshipPoints + "\n"; 
+    }
 }
