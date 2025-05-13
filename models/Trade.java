@@ -1,45 +1,36 @@
 package models;
 
-import models.item.Item;
 
-public class Trade {
-    private static int id = 1;
-    private final Player buyer;
-    private final Player seller;
-    private final Item toGiveItem;
-    private final int toGiveAmount;
-    private int price;
-    private Item toGetItem;
-    private int toGetAmount;
-    private boolean isAccepted;
-    private final int tradeId;
+public abstract class Trade {
+    protected static int tradeCounter = 1;
+    protected final Player buyer;
+    protected final Player seller;
+    protected final int tradeId;
+    protected boolean isAccepted = false;
 
-    public Trade(Player buyer, Player seller, Item toGiveItem, int toGiveAmount, int price) {
+    public Trade(Player buyer, Player seller) {
         this.buyer = buyer;
         this.seller = seller;
-        this.toGiveItem = toGiveItem;
-        this.toGiveAmount = toGiveAmount;
-        this.price = price;
-        this.tradeId = Trade.id;
-        Trade.id++;
-    }
-
-    public Trade(Player buyer, Player seller, Item toGiveItem, int toGiveAmount, Item toGetItem, int toGetAmount) {
-        this.buyer = buyer;
-        this.seller = seller;
-        this.toGiveItem = toGiveItem;
-        this.toGiveAmount = toGiveAmount;
-        this.toGetItem = toGetItem;
-        this.toGetAmount = toGetAmount;
-        this.tradeId = Trade.id;
-        Trade.id++;
-    }
-
-    public void setResponse(boolean isAccepted) {
-        this.isAccepted = isAccepted;
+        this.tradeId = tradeCounter++;
     }
 
     public Player getBuyer() {
         return buyer;
+    }
+
+    public Player getSeller() {
+        return seller;
+    }
+
+    public int getTradeId() {
+        return tradeId;
+    }
+
+    public boolean isAccepted() {
+        return isAccepted;
+    }
+
+    public void setAccepted(boolean accepted) {
+        isAccepted = accepted;
     }
 }

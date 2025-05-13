@@ -53,6 +53,10 @@ public class Player {
         giveStarterTools();
     }
 
+    public void addTrade(Trade trade) {
+        this.trades.add(trade);
+    }
+
     public void addEnergy(int amount) {
         if (this.energy + amount > 200) this.energy = 200;
         else this.energy += amount;
