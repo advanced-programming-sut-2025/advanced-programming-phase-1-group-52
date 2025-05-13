@@ -1,6 +1,6 @@
 package enums.items;
 
-public enum FruitType implements Growable{
+public enum FruitType implements Growable,ItemType{
     Apricot("Apricot"),
     Cherry("Cherry"),
     Banana("Banana"),
@@ -24,5 +24,10 @@ public enum FruitType implements Growable{
 
     public String getFruitName() {
         return fruitName;
+    }
+
+    @Override
+    public boolean isTool() {
+        return false;
     }
 }

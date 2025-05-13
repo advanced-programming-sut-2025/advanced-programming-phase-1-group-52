@@ -9,7 +9,6 @@ public class Inventory {
     private ArrayList<Item> items = new ArrayList<>();
     private int numOfItems = 0;
 
-
     public Inventory() {
     }
 
@@ -71,6 +70,14 @@ public class Inventory {
 
     public void setBackpack(Backpacks backpack) {
         this.backpack = backpack;
+    }
+
+    public void setNumOfItems(int numOfItems) {
+        this.numOfItems = numOfItems;
+    }
+
+    public int getNumOfItems() {
+        return numOfItems;
     }
 
 }
