@@ -58,25 +58,25 @@ public class GameMenuController {
         ArrayList<User> players = new ArrayList<>();
         User loggedInUser = App.getInstance().getCurrentUser();
 
-        Player player1 = new Player(loggedInUser.getUsername());
+        Player player1 = new Player(loggedInUser.getUsername(), loggedInUser.getGender());
         player1.setOriginX(10);
         player1.setOriginY(10);
         loggedInUser.setCurrentPlayer(player1);
         players.add(loggedInUser);
 
-        Player player2 = new Player(user1.getUsername());
+        Player player2 = new Player(user1.getUsername(), user1.getGender());
         player2.setOriginX(80);
         player2.setOriginY(10);
         user1.setCurrentPlayer(player2);
         players.add(user1);
 
-        Player player3 = new Player(user2.getUsername());
+        Player player3 = new Player(user2.getUsername(), user2.getGender());
         player3.setOriginX(10);
         player3.setOriginY(80);
         user2.setCurrentPlayer(player3);
         players.add(user2);
 
-        Player player4 = new Player(user3.getUsername());
+        Player player4 = new Player(user3.getUsername(), user3.getGender());
         player4.setOriginX(80);
         player4.setOriginY(80);
         user3.setCurrentPlayer(player4);
@@ -158,7 +158,9 @@ public class GameMenuController {
     public Result switchTurn() {
         boolean isPlayerAvailable = game.switchCurrentPlayer();
         if(isPlayerAvailable){
-            return new Result(true, "Game switched to " + game.getCurrentPlayer().username() + " ");
+            game.getCurrentPlayer().showNotifs();
+            game.getCurrentPlayer().resetNotifs();
+            return new Result(true, "Game switched to " + game.getCurrentPlayer().getUsername() + " ");
         }
         return new Result(false, "you can not switch to other players");
     } 
@@ -369,6 +371,7 @@ public class GameMenuController {
     }
 
     public Result talk(String receiverName, String message) {
+        Player currentPlayer = game.getCurrentPlayer();
         Player player = game.getUserByUsername(receiverName).getPlayer();
         if (player == null) {
             return new Result(false, "Player not found!");
@@ -378,10 +381,15 @@ public class GameMenuController {
         }
 
         Talk talk = new Talk(player, message);
-        game.getCurrentPlayer().addTalk(talk);
+        currentPlayer.addTalk(talk);
 
-        Friendship friendship = game.getFriendshipByPlayers(game.getCurrentPlayer(), player);
+        Friendship friendship = game.getFriendshipByPlayers(currentPlayer, player);
         friendship.addFriendshipPoints(10);
+        if (player.equals(currentPlayer.getSpouse())) {
+            player.addEnergy(50);
+            currentPlayer.addEnergy(50);
+        }
+
         return new Result(true, game.getCurrentPlayer().getUsername() + " sent a message to " + player.username() + ":\n" + message);
     }
 
@@ -439,10 +447,15 @@ public class GameMenuController {
             return new Result(false, "Invalid item amount");
         }
 
+        if (receiver.equals(game.getCurrentPlayer().getSpouse())) {
+            receiver.addEnergy(50);
+            game.getCurrentPlayer().addEnergy(50);
+        }
+
         Gift gift = new Gift(game.getCurrentPlayer(), receiver, item, itemAmount);
         receiver.addGift(gift);
         // todo: remove from giver's inventory and add to receiver's
-
+        receiver.addNotif(game.getCurrentPlayer(), game.getCurrentPlayer().getUsername() + " has gifted something to you!");
         return new Result(true, "You gifted " + itemName + " to " + username);
     }
 
@@ -515,8 +528,86 @@ public class GameMenuController {
             return new Result(false, "Your friendship level must at least be 2 to hug!");
         }
 
+        if (player.equals(game.getCurrentPlayer().getSpouse())) {
+            player.addEnergy(50);
+            game.getCurrentPlayer().addEnergy(50);
+        }
+
         friendship.addFriendshipPoints(60);
+        player.addNotif(game.getCurrentPlayer(), game.getCurrentPlayer().getUsername() + " has hugged you!");
         return new Result(true, "You hugged " + username);
+    }
+
+    public Result flowerSomeone(String username) {
+        Player player = game.getUserByUsername(username).getPlayer();
+        if (player == null) {
+            return new Result(false, "Invalid username!");
+        }
+        if (!isPlayerNearSomething(player.currentX(), player.currentY())) {
+            return new Result(false, "You should be near someone to give flower to them!");
+        }
+
+        Friendship friendship = game.getFriendshipByPlayers(game.getCurrentPlayer(), player);
+        if (friendship.getFriendshipPoints() < 300) {
+            return new Result(false, "Your friendship points must at least be 300!");
+        }
+
+        if (player.equals(game.getCurrentPlayer().getSpouse())) {
+            player.addEnergy(50);
+            game.getCurrentPlayer().addEnergy(50);
+        }
+
+        // todo: remove from giver's inventory and add to receiver's
+        friendship.setFriendshipLevel(3);
+        player.addNotif(game.getCurrentPlayer(), game.getCurrentPlayer().getUsername() + " has flowered you!");        
+        return new Result(true, "You have flowered " + username + "and your friendship level is now 3!");
+    }
+
+    public Result askMarriage(String username) {
+        Player player = game.getUserByUsername(username).getPlayer();
+        if (player == null) {
+            return new Result(false, "Invalid username!");
+        }
+        if (!isPlayerNearSomething(player.currentX(), player.currentY())) {
+            return new Result(false, "You should be near someone to ask them!");
+        }
+
+        Friendship friendship = game.getFriendshipByPlayers(game.getCurrentPlayer(), player);
+        if (friendship.getFriendshipPoints() < 400) {
+            return new Result(false, "Your friendship points must at least be 400!");
+        }
+        if (game.getCurrentPlayer().getGender().equals(player.getGender())) {
+            return new Result(false, "You can't be GAY in this game!");
+        }
+
+        // handle inventory
+        player.addNotif(game.getCurrentPlayer(), game.getCurrentPlayer().getUsername() + " has proposed to you!");
+        return new Result(true, "You have proposed! Wait for the answer!");
+    }
+
+    public Result respondToMarriage(String respond, String username) {
+        Player player = game.getUserByUsername(username).getPlayer();
+        if (player == null) {
+            return new Result(false, "Invalid username!");
+        }
+        
+        Friendship friendship = game.getFriendshipByPlayers(game.getCurrentPlayer(), player);
+        if (respond.equals("accept")) {
+            friendship.setFriendshipLevel(4);
+            game.getCurrentPlayer().setSpouse(player);
+            player.setSpouse(game.getCurrentPlayer());
+
+            game.getCurrentPlayer().getBankAccount().depsit(player.getBankAccount().getBalance());
+            player.setBankAccount(game.getCurrentPlayer().getBankAccount());
+            player.addNotif(game.getCurrentPlayer(), "You are now married to " + player.getUsername());
+
+            return new Result(true, "You are happily married!");
+        }
+        else {
+            friendship.resetFriendship();
+            player.addNotif(game.getCurrentPlayer(), "You have been dumped!");
+            return new Result(true, "You have rejected the proposal!");
+        }
     }
 
     private boolean isPlayerNearSomething(int x, int y) {
