@@ -1,10 +1,7 @@
 package controllers;
 
-import enums.design.Direction;
-import enums.design.FarmThemes;
-import enums.design.Season;
+import enums.design.*;
 import enums.items.*;
-import enums.design.Weather;
 import enums.regex.GameMenuCommands;
 import models.App;
 import models.Game;
@@ -12,9 +9,8 @@ import models.Result;
 import models.User;
 import models.*;
 import models.building.House;
-import models.item.Item;
-import models.item.Seed;
-import models.item.Tool;
+import models.item.*;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -471,22 +467,98 @@ public class GameMenuController {
         return new Result(true, info.toString());
     }
 
+    public Result treeInfo(String treeName) {
+        TreeType treeType;
+        if((treeType = findTreeType(treeName)) == null) {
+            return new Result(false, "tree not found");
+        }
+        StringBuilder info = new StringBuilder();
+        info.append("Name: " + treeType.name()).append("\nSource: " + treeType.getSource()).append("\nStages: ");
+        for(Integer stage : treeType.getStages()){
+            info.append(stage).append("-");
+        }
+        info.deleteCharAt(info.length() - 1);
+        info.append("\nTotal Harvest Time: " + treeType.getTotalHarvestTime()).
+                append("\nFruit: " + treeType.getProduct().getFruitName()).
+                append("\nHarvest cycle time: " + treeType.getHarvestCycle()).
+                append("\nBase Sell Price: " + treeType.getBaseSellPrice()).
+                append("\nIs Edible: " + treeType.isEdible()).
+                append("\nBase Energy: " + treeType.getEnergy()).
+                append(("\nSeason: "));
+        for(Season season : treeType.getSeasons()){
+            info.append(season.name()).append(", ");
+        }
+        info.deleteCharAt(info.length() - 1);
+        return new Result(true, info.toString());
+    }
+
     public void fishingAndDisplay(ToolType pole) {
     }
 
-    public Result plant(String seedName, String directionStr){
+    public Result plant(String seedName, String directionStr) {
         GameMap map = game.getMap();
         Player player = game.getCurrentPlayer();
-        Tile currrentTile = map.getTile(player.currentX(), player.currentY());
-        Tile targetTile = getTargetTile(currrentTile,directionStr,map);
-        Seed seed;
-        if((seed = findSeedInInventory(player.getInventory().getItems(),seedName)) == null) {
-            return new Result(false, "Seed not found");
-        }
-        if()
+        Tile currentTile = map.getTile(player.currentX(), player.currentY());
+        Tile targetTile = getTargetTile(currentTile, directionStr, map);
 
+        Crop crop = findCropSeedInInventory(player.getInventory().getItems(), seedName);
+        Fruit fruit = (crop == null) ? findFruitSeedInInventory(player.getInventory().getItems(), seedName) : null;
+
+        if (crop == null && fruit == null) {
+            return new Result(false, "Seed not found in inventory");
+        }
+
+        if (crop != null) {
+            if (!targetTile.getType().equals(TileType.Shoveled) ||
+                    targetTile.getType().equals(TileType.Planted)) {
+                return new Result(false, "Crops can only be planted on shoveled, unplanted soil");
+            }
+
+            targetTile.setType(TileType.Planted);
+            targetTile.setPlant(crop);
+            player.getInventory().getItems().remove(crop);
+            player.getInventory().addNumOfItems(-1);
+            return new Result(true, crop.getName() + " crop planted successfully");
+        }
+        else if (fruit != null) {
+            if (!targetTile.getType().equals(TileType.Shoveled)) {
+                return new Result(false, "Fruit trees can only be planted on shoveled");
+            }
+
+            targetTile.setType(TileType.Tree);
+            targetTile.setPlant(fruit);
+            player.getInventory().getItems().remove(fruit);
+            player.getInventory().addNumOfItems(-1);
+            return new Result(true, fruit.getName() + " tree planted successfully");
+        }
+
+        return new Result(false, "You can not plant in this tile");
     }
 
+    public Result showPlant(int x, int y){
+        GameMap map = game.getMap();
+        Tile targetTile = map.getTile(x,y);
+        StringBuilder plantInfo = new StringBuilder();
+        if(targetTile.getType().equals(TileType.Planted) || targetTile.getType().equals(TileType.Tree)) {
+            if(targetTile.getPlant() instanceof Crop){
+                plantInfo.append("Name: " + ((Crop) targetTile.getPlant()).getCropType().name());
+                plantInfo.append("\nRemaining time to harvest: " + ((Crop) targetTile.getPlant()).getDayRemaining());
+                plantInfo.append("\nCurrent stage: " + ((Crop) targetTile.getPlant()).getCurrentStage());
+                plantInfo.append("\nIs watered today? " + ((Crop) targetTile.getPlant()).isWatered());
+                plantInfo.append("\nIs fertilized today? " + ((Crop) targetTile.getPlant()).isFertilized());
+                return new Result(true, plantInfo.toString());
+            }
+            else if(targetTile.getPlant() instanceof Fruit){
+                plantInfo.append("Name: " + ((Fruit) targetTile.getPlant()).getFruitType().name());
+                plantInfo.append("\nRemaining time to harvest: " + ((Fruit) targetTile.getPlant()).getDayRemaining());
+                plantInfo.append("\nCurrent stage: " + ((Fruit) targetTile.getPlant()).getCurrentStage());
+                plantInfo.append("\nIs watered today? " + ((Fruit) targetTile.getPlant()).isWatered());
+                plantInfo.append("\nIs fertilized today? " + ((Fruit) targetTile.getPlant()).isFertilized());
+                return new Result(true, plantInfo.toString());
+            }
+        }
+        return new Result(false, "Target tile does not have a plant");
+    }
     private void onDayPassed(int days) {
     }
 
@@ -506,6 +578,15 @@ public class GameMenuController {
         for(CropType cropType : CropType.values()) {
             if (cropType.name().equals(cropName)) {
                 return cropType;
+            }
+        }
+        return null;
+    }
+
+    private TreeType findTreeType(String treeName) {
+        for (TreeType treeType : TreeType.values()) {
+            if (treeType.name().equals(treeName)) {
+                return treeType;
             }
         }
         return null;
@@ -691,12 +772,43 @@ public class GameMenuController {
         return targetTile;
     }
 
-    private Seed findSeedInInventory(ArrayList<Item> items, String name) {
-        for(Item item : items) {
-            if(item instanceof Seed) {
-                if(name.equals(((Seed) item).getName())) {
-                    return (Seed) item;
+    private Fruit findFruitSeedInInventory(ArrayList<Item> items, String seedName) {
+        for (Item item : items) {
+            if (item instanceof Seed && item.getName().equals(seedName)) {
+                FruitType fruitType = findFruitTypeBySeed(seedName);
+                if (fruitType != null) {
+                    return new Fruit(fruitType, 1);
                 }
+            }
+        }
+        return null;
+    }
+
+    private Crop findCropSeedInInventory(ArrayList<Item> items, String seedName) {
+        for (Item item : items) {
+            if (item instanceof Seed && item.getName().equals(seedName)) {
+                CropType cropType = findCropTypeBySeed(seedName);
+                if (cropType != null) {
+                    return new Crop(cropType, 1);
+                }
+            }
+        }
+        return null;
+    }
+
+    private CropType findCropTypeBySeed(String seedName) {
+        for(CropType cropType : CropType.values()) {
+            if(cropType.getSeedSource().name().equals(seedName)) {
+                return cropType;
+            }
+        }
+        return null;
+    }
+
+    private FruitType findFruitTypeBySeed(String seedName) {
+        for(FruitType fruitType : FruitType.values()) {
+            if(fruitType.getFruitName().equals(seedName)) {
+                return fruitType;
             }
         }
         return null;

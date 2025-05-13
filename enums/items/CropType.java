@@ -5,7 +5,7 @@ import enums.design.Season;
 import java.util.Arrays;
 import java.util.List;
 
-public enum CropType implements ItemType {
+public enum CropType implements ItemType, Growable {
     BlueJazz(
             ForagingSeedType.JazzSeeds, Arrays.asList(1,2,2,2), 7, true, null, 50,
             true, 45, 20, Arrays.asList(Season.Spring), false
@@ -162,7 +162,7 @@ public enum CropType implements ItemType {
             false, 0, 0, Arrays.asList(Season.Fall), false
     ),
     PowderMelon(
-            ForagingSeedType.PowdermelonSeeds, Arrays.asList(1, 2, 1, 2, 1), 7, true, 0, 60,
+            ForagingSeedType.PowderMelonSeeds, Arrays.asList(1, 2, 1, 2, 1), 7, true, 0, 60,
             true, 63, 28, Arrays.asList(Season.Winter), true
     ),
     AncientFruit(

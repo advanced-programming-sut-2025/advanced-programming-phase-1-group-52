@@ -28,7 +28,7 @@ public enum Direction {
             case "up_right" -> UP_RIGHT;
             case "down_left" -> DOWN_LEFT;
             case "down_right" -> DOWN_RIGHT;
-            default -> throw new IllegalArgumentException("جهت نامعتبر: " + input);
+            default -> null;
         };
     }
 }

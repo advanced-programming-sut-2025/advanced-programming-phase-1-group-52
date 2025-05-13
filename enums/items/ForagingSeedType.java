@@ -45,10 +45,26 @@ public enum ForagingSeedType implements ItemType, Growable {
     YamSeeds(Season.Fall),
     RareSeed(Season.Fall),
 
-    PowdermelonSeeds(Season.Winter),
+    PowderMelonSeeds(Season.Winter),
 
     AncientSeeds(Season.Special),
-    MixedSeeds(Season.Special);
+    MixedSeeds(Season.Special),
+
+    // trees seed and pierre's products
+    AppleSapling(Season.Special),
+    ApricotSapling(Season.Special),
+    CherrySapling(Season.Special),
+    OrangeSapling(Season.Special),
+    PeachSapling(Season.Special),
+    PomegranateSapling(Season.Special),
+    MapleSeed(Season.Special),
+    PineCone(Season.Special),
+    MahoganySeed(Season.Special),
+    MangoSapling(Season.Special),
+    BananaSapling(Season.Special),
+    Acorn(Season.Special),
+    MushroomTreeSeed(Season.Special),
+    MysticTreeSeed(Season.Special);
 
     private final Season season;
 

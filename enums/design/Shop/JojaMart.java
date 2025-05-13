@@ -1,6 +1,7 @@
 package enums.design.Shop;
 
 import enums.design.Season;
+import enums.design.ShopType;
 import enums.items.ForagingSeedType;
 
 public enum JojaMart {
@@ -11,6 +12,7 @@ public enum JojaMart {
             500, 1,null),
     GrassStarter(null, "Grass Starter", "Place this on your farm to start a new patch of grass.",
             125, Integer.MAX_VALUE,null),
+
     Sugar(null, "Sugar", "Adds sweetness to pastries and candies. Too much can be unhealthy.",
             125, Integer.MAX_VALUE,null),
     WheatFlour(null, "Wheat Flour", "A common cooking ingredient made from crushed wheat seeds.",
@@ -100,7 +102,7 @@ public enum JojaMart {
 
     // Winter Stock
     PowdermelonSeeds(Season.Winter, "Powdermelon Seeds", "Winter. Takes 7 days to grow.",
-            20, 10, ForagingSeedType.PowdermelonSeeds),;
+            20, 10, ForagingSeedType.PowderMelonSeeds),;
 
     private final Season season;
     private final String displayName;
