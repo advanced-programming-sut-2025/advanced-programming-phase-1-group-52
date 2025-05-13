@@ -8,14 +8,13 @@ public class Gift {
     private NPC receiverNPC;
     private final Item item;
     private int amount;
-    private final int rate;
+    private int rate = 0;
 
-    public Gift(Player sender, Player receiver, Item item, int amount, int rate) {
+    public Gift(Player sender, Player receiver, Item item, int amount) {
         this.sender = sender;
         this.receiver = receiver;
         this.item = item;
         this.amount = amount;
-        this.rate = rate;
     }
 
     public Gift(Player sender, NPC receiverNPC, Item item, int amount, int rate) {
@@ -25,7 +24,26 @@ public class Gift {
         this.rate = rate;
     }
 
+    public Player getSender() {
+        return this.sender;
+    }
+
     public Player getReceiver() {
         return receiver;
+    }
+
+    public int getRate() {
+        return this.rate;
+    }
+
+    public void setRate(int rate) {
+        this.rate = rate;
+    }
+
+    @Override
+    public String toString() {
+        return "Gift from " + sender.getUsername() + ":\n" + "Item: " + 
+        item.getName() + "\n" + "Amount: " + amount + "\n" + "Rate: " + 
+        rate + "\n------------------------\n";
     }
 }

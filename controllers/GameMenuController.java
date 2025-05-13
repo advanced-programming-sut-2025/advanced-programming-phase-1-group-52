@@ -407,6 +407,118 @@ public class GameMenuController {
         return new Result(true, stringBuilder.toString());
     }
 
+    public Result giftPlayer(String username, String itemName, String itemAmountStr) {
+        Player receiver = game.getUserByUsername(username).getPlayer();
+        if (receiver == null) {
+            return new Result(false, "Player not found!");
+        }
+        if (!isPlayerNearSomething(receiver.currentX(), receiver.currentY())) {
+            return new Result(false, "You should be near" + username);
+        }
+        Friendship friendship = game.getFriendshipByPlayers(game.getCurrentPlayer(), receiver);
+        if (friendship.getFriendshipLevel() < 1) {
+            return new Result(false, "Your friendship level must at least be 1!");
+        }
+
+        Item item = null;
+        for (Item i : game.getCurrentPlayer().getInventory().getItems()) {
+            if (i.getName().equals(itemName)) {
+                item = i;
+                break;
+            }
+        }
+        if (item == null) {
+            return new Result(false, "Item not found in your inventory!");
+        }
+
+        int itemAmount;
+        try {
+            itemAmount = Integer.parseInt(itemAmountStr);
+        }
+        catch (NumberFormatException e) {
+            return new Result(false, "Invalid item amount");
+        }
+
+        Gift gift = new Gift(game.getCurrentPlayer(), receiver, item, itemAmount);
+        receiver.addGift(gift);
+        // todo: remove from giver's inventory and add to receiver's
+
+        return new Result(true, "You gifted " + itemName + " to " + username);
+    }
+
+    public Result rateGift(String idString, String rateString) {
+        int giftId;
+        try {
+            giftId = Integer.parseInt(idString);
+        } 
+        catch (NumberFormatException e) {
+            return new Result(false, "Id format is invalid!");
+        }
+
+        Gift gift = game.getCurrentPlayer().getGiftById(giftId);
+        if (gift == null) {
+            return new Result(false, "There's no gift with the given id!");
+        }
+
+        if (gift.getRate() != 0) {
+            return new Result(false, "You have already rated this gift!");
+        }
+
+        int rate;
+        try {
+            rate = Integer.parseInt(rateString);
+        }
+        catch (NumberFormatException e) {
+            return new Result(false, "Rate format is invalid!");
+        }
+
+        if (rate < 1 || rate > 5) {
+            return new Result(false, "Rate should be between 1 to 5");
+        }
+
+        int friendshipXP = (rate - 3) * 30 + 15;
+        game.getFriendshipByPlayers(gift.getSender(), gift.getReceiver()).addFriendshipPoints(friendshipXP);
+        return new Result(true, "You have rated the gift!");
+    }
+
+    public Result showGiftsList() {
+        StringBuilder stringBuilder = new StringBuilder();
+        for (Gift gift : game.getCurrentPlayer().getGifts().values()) {
+            stringBuilder.append(gift.toString());
+        }
+
+        return new Result(true, stringBuilder.toString());
+    } 
+
+    public Result showGiftHistoryWith(String username) {
+        StringBuilder stringBuilder = new StringBuilder();
+        for (Gift gift : game.getCurrentPlayer().getGifts().values()) {
+            if (gift.getSender().getUsername().equals(username)) {
+                stringBuilder.append(gift.toString());
+            }
+        }
+
+        return new Result(true, stringBuilder.toString());
+    }
+
+    public Result hug(String username) {
+        Player player = game.getUserByUsername(username).getPlayer();
+        if (player == null) {
+            return new Result(false, "Invalid username!");
+        }
+        if (!isPlayerNearSomething(player.currentX(), player.currentY())) {
+            return new Result(false, "You should be near someone to hug them!");
+        }
+
+        Friendship friendship = game.getFriendshipByPlayers(game.getCurrentPlayer(), player);
+        if (friendship.getFriendshipLevel() < 2) {
+            return new Result(false, "Your friendship level must at least be 2 to hug!");
+        }
+
+        friendship.addFriendshipPoints(60);
+        return new Result(true, "You hugged " + username);
+    }
+
     private boolean isPlayerNearSomething(int x, int y) {
         Player player = game.getCurrentPlayer();
         int playerX = player.currentX();

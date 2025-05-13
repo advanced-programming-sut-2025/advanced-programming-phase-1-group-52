@@ -45,6 +45,14 @@ public class Player {
         giveStarterTools();
     }
 
+    public void rateGift(int id, int rate) {
+        this.gifts.get(id).setRate(rate);
+    }
+
+    public Gift getGiftById(int id) {
+        return this.gifts.get(id);
+    }
+
     public HashMap<Integer, Gift> getGifts() {
         return gifts;
     }
