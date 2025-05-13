@@ -1,5 +1,6 @@
 package controllers;
 
+import enums.Menu;
 import enums.design.FarmThemes;
 import enums.design.NPCType;
 import enums.design.Season;
@@ -608,6 +609,11 @@ public class GameMenuController {
             player.addNotif(game.getCurrentPlayer(), "You have been dumped!");
             return new Result(true, "You have rejected the proposal!");
         }
+    }
+
+    public Result goToTradeMenu() {
+        app.setCurrentMenu(Menu.TradeMenu);
+        return new Result(true, "You are now in trade menu!");
     }
 
     private boolean isPlayerNearSomething(int x, int y) {

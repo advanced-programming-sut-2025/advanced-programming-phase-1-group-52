@@ -13,6 +13,15 @@ public class Inventory {
     public Inventory() {
     }
 
+    public Item getItemByName(String name) {
+        for (Item item : items) {
+            if (item.getName().equals(name)) {
+                return item;
+            }
+        }
+        return null;
+    }
+
     private int getTotalItemCount() {
         return items.stream()
                 .mapToInt(Item::getNumber)
