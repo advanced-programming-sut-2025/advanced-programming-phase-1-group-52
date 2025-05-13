@@ -1,12 +1,10 @@
 package controllers;
 
+import enums.design.Direction;
 import enums.design.FarmThemes;
 import enums.design.Season;
-import enums.items.CookingRecipes;
-import enums.items.FoodType;
-import enums.items.MaterialType;
+import enums.items.*;
 import enums.design.Weather;
-import enums.items.ToolType;
 import enums.regex.GameMenuCommands;
 import models.App;
 import models.Game;
@@ -14,14 +12,13 @@ import models.Result;
 import models.User;
 import models.*;
 import models.building.House;
-import models.item.Fish;
 import models.item.Item;
+import models.item.Seed;
 import models.item.Tool;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
-import models.*;
 
 
 public class GameMenuController {
@@ -348,7 +345,7 @@ public class GameMenuController {
 
         Friendship friendship = game.getFriendshipByPlayers(game.getCurrentPlayer(), player);
         friendship.addFriendshipPoints(10);
-        return new Result(true, game.getCurrentPlayer().username() + " sent a message to " + player.username() + ":\n" + message);
+        return new Result(true, game.getCurrentPlayer().getUsername() + " sent a message to " + player.getUsername() + ":\n" + message);
     }
 
     public Result talkHistory(String username) {
@@ -372,7 +369,6 @@ public class GameMenuController {
 
         return Math.abs(playerX - x) <= 1 && Math.abs(playerY - y) <= 1;
     }
-
 
     public Result cheatSetEnergy(int value) {
         Player player = game.getCurrentPlayer();
@@ -440,6 +436,57 @@ public class GameMenuController {
         return new Result(true, toolListMaker(tools));
     }
 
+    public Result useTool(String directionStr){
+        GameMap map = game.getMap();
+        Player player = game.getCurrentPlayer();
+        Tile currrentTile = map.getTile(player.currentX(), player.currentY());
+        Tile targetTile = getTargetTile(currrentTile,directionStr,map);
+        return new Result(true, player.handleToolUse(targetTile).Message());
+    }
+
+    public Result craftInfo(String craftName) {
+        CropType cropType;
+        if((cropType = findCropType(craftName)) == null) {
+            return new Result(false, "Crop not found");
+        }
+        StringBuilder info = new StringBuilder();
+        info.append("Name: " + cropType.name()).append("\nSource: " + cropType.getSeedSource()).append("\nStages: ");
+        for(Integer stage : cropType.getGrowthStages()){
+            info.append(stage).append("-");
+        }
+        info.deleteCharAt(info.length() - 1);
+        info.append("\nTotal Harvest Time: " + cropType.getTotalHarvestTime()).
+                append("\nOne Time: " + cropType.isOneTimeHarvest()).
+                append("\nRegrowth Time: " + cropType.getRegrowthTime()).
+                append("\nBase Sell Price: " + cropType.getBaseSellPrice()).
+                append("\nIs Edible: " + cropType.isEdible()).
+                append("\nBase Energy: " + cropType.getEnergy()).
+                append("\nBase Health: " + cropType.getBaseHealth()).
+                append(("\nSeason: "));
+        for(Season season : cropType.getSeasons()){
+            info.append(season.name()).append(", ");
+        }
+        info.deleteCharAt(info.length() - 1);
+        info.append("\nCan Become Giant: " + cropType.canBecomeGiant());
+        return new Result(true, info.toString());
+    }
+
+    public void fishingAndDisplay(ToolType pole) {
+    }
+
+    public Result plant(String seedName, String directionStr){
+        GameMap map = game.getMap();
+        Player player = game.getCurrentPlayer();
+        Tile currrentTile = map.getTile(player.currentX(), player.currentY());
+        Tile targetTile = getTargetTile(currrentTile,directionStr,map);
+        Seed seed;
+        if((seed = findSeedInInventory(player.getInventory().getItems(),seedName)) == null) {
+            return new Result(false, "Seed not found");
+        }
+        if()
+
+    }
+
     private void onDayPassed(int days) {
     }
 
@@ -450,6 +497,15 @@ public class GameMenuController {
         for (User user : App.getInstance().getUsers()) {
             if (user.getUsername().equals(username)) {
                 return user;
+            }
+        }
+        return null;
+    }
+
+    private CropType findCropType(String cropName) {
+        for(CropType cropType : CropType.values()) {
+            if (cropType.name().equals(cropName)) {
+                return cropType;
             }
         }
         return null;
@@ -489,7 +545,6 @@ public class GameMenuController {
         }
         return true;
     }
-
 
     private Result cookingRefrigeratorPut(String materialName, String quantityStr) {
         Player player = game.getCurrentPlayer();
@@ -626,6 +681,24 @@ public class GameMenuController {
         return toolList.toString();
     }
 
-    public void fishingAndDisplay(ToolType pole) {
+    private Tile getTargetTile(Tile current, String directionInput, GameMap gameMap) {
+        Direction direction = Direction.fromString(directionInput);
+
+        int targetX = current.getX() + direction.dx;
+        int targetY = current.getY() + direction.dy;
+
+        Tile targetTile = gameMap.getTile(targetX, targetY);
+        return targetTile;
+    }
+
+    private Seed findSeedInInventory(ArrayList<Item> items, String name) {
+        for(Item item : items) {
+            if(item instanceof Seed) {
+                if(name.equals(((Seed) item).getName())) {
+                    return (Seed) item;
+                }
+            }
+        }
+        return null;
     }
 }
