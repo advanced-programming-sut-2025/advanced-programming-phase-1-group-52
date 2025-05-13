@@ -1,12 +1,14 @@
 package models;
 
 import enums.design.TileType;
+import enums.items.Growable;
 
 public class Tile {
     private final int x;
     private final int y;
     private TileType type;
     private final Player owner;
+    private Growable plant;
 
     public Tile(int x, int y, TileType type, Player owner) {
         this.x = x;

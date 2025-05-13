@@ -2,7 +2,7 @@ package enums.items;
 
 import enums.design.Season;
 
-public enum SeedType implements Items {
+public enum ForagingSeedType implements ItemType, Growable {
     JazzSeeds(Season.Spring),
     CarrotSeeds(Season.Spring),
     CauliflowerSeeds(Season.Spring),
@@ -52,11 +52,16 @@ public enum SeedType implements Items {
 
     private final Season season;
 
-    SeedType(Season season) {
+    ForagingSeedType(Season season) {
         this.season = season;
     }
 
     public Season getSeason() {
         return season;
+    }
+
+    @Override
+    public boolean isTool() {
+        return false;
     }
 }

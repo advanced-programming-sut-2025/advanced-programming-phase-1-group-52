@@ -1,4 +1,10 @@
 package enums.items;
 
-public enum GoodType implements Items {
+public enum GoodType implements ItemType {
+    ;
+
+    @Override
+    public boolean isTool() {
+        return false;
+    }
 }

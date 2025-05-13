@@ -3,16 +3,16 @@ package models;
 import java.util.ArrayList;
 
 public class Friendship {
-    private final ArrayList<User> players = new ArrayList<>();
+    private final ArrayList<Player> players = new ArrayList<>();
     private int friendshipLevel = 0;
     private int friendshipPoints = 0;
 
-    public Friendship(User firstPlayer, User secondPlayer) {
+    public Friendship(Player firstPlayer, Player secondPlayer) {
         this.players.add(firstPlayer);
         this.players.add(secondPlayer);
     }
 
-    public ArrayList<User> getPlayers() {
+    public ArrayList<Player> getPlayers() {
         return players;
     }
 

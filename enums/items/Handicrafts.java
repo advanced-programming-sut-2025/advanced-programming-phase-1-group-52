@@ -3,7 +3,7 @@ package enums.items;
 import java.util.HashMap;
 import java.util.Map;
 
-public enum Handicrafts implements Items {
+public enum Handicrafts implements ItemType {
     CherryBomb("Cherry Bomb", Map.of(
             MaterialType.CopperOre, 4,
             MaterialType.Coal, 1

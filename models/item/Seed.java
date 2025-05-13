@@ -1,10 +1,10 @@
 package models.item;
 
-import enums.items.MaterialType;
+import enums.items.ForagingSeedType;
 
 public class Seed extends Item{
-    public Seed(MaterialType material) {
-        this.itemType = MaterialType.valueOf(material.name());
+    public Seed(ForagingSeedType foragingSeedType, int number) {
+        super(foragingSeedType,number);
     }
     @Override
     protected int calculateEnergyConsumption() {

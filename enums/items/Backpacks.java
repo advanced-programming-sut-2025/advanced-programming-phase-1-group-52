@@ -1,6 +1,6 @@
 package enums.items;
 
-public enum Backpacks implements Items {
+public enum Backpacks implements ItemType {
     PrimitiveBackpack(12),
     BigBackpack(24),
     DeluxeBackpack(Integer.MAX_VALUE);
@@ -12,6 +12,11 @@ public enum Backpacks implements Items {
     }
 
     public int getCapacity() {
-        return value;
+        return size;
+    }
+
+    @Override
+    public boolean isTool() {
+        return false;
     }
 }
