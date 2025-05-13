@@ -1,46 +1,64 @@
 package enums.design;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
+import enums.items.CropType;
+import enums.items.ForagingSeedType;
+
+import java.util.*;
 
 public enum Season {
-    Spring("Spring", new HashMap<Weather, Double>() {{
-        put(Weather.Sunny, 0.5);
-        put(Weather.Rainy, 0.4);
-        put(Weather.Stormy, 0.1);
-    }}),
+    Spring("Spring",
+            new HashMap<Weather, Double>() {{
+                put(Weather.Sunny, 0.5);
+                put(Weather.Rainy, 0.4);
+                put(Weather.Stormy, 0.1);
+            }},
+            Arrays.asList(CropType.Cauliflower, CropType.Parsnip, CropType.Potato, CropType.BlueJazz, CropType.Tulip)
+    ),
 
-    Summer("Summer", new HashMap<Weather, Double>() {{
-        put(Weather.Sunny, 0.7);
-        put(Weather.Rainy, 0.2);
-        put(Weather.Stormy, 0.1);
-    }}),
+    Summer("Summer",
+            new HashMap<Weather, Double>() {{
+                put(Weather.Sunny, 0.7);
+                put(Weather.Rainy, 0.2);
+                put(Weather.Stormy, 0.1);
+            }},
+            Arrays.asList(CropType.Corn, CropType.HotPepper, CropType.Radish, CropType.WHEAT, CropType.Poppy, CropType.Sunflower, CropType.SummerSpangle)
+    ),
 
-    Fall("Fall", new HashMap<Weather, Double>() {{
-        put(Weather.Sunny, 0.4);
-        put(Weather.Rainy, 0.4);
-        put(Weather.Stormy, 0.2);
-    }}),
+    Fall("Fall",
+            new HashMap<Weather, Double>() {{
+                put(Weather.Sunny, 0.4);
+                put(Weather.Rainy, 0.4);
+                put(Weather.Stormy, 0.2);
+            }},
+            Arrays.asList(CropType.Artichoke, CropType.Corn, CropType.Eggplant, CropType.Pumpkin, CropType.Sunflower, CropType.FairyRose)
+    ),
 
-    Winter("Winter", new HashMap<Weather, Double>() {{
-        put(Weather.Sunny, 0.3);
-        put(Weather.Snowy, 0.7);
-    }}),
+    Winter("Winter",
+            new HashMap<Weather, Double>() {{
+                put(Weather.Sunny, 0.3);
+                put(Weather.Snowy, 0.7);
+            }},
+            Arrays.asList(CropType.PowderMelon)
+    ),
 
-    Special("Special", new HashMap<Weather, Double>() {{
-        put(Weather.Sunny, 0.3);
-        put(Weather.Rainy, 0.25);
-        put(Weather.Stormy, 0.25);
-        put(Weather.Snowy, 0.2);
-    }});
+    Special("Special",
+            new HashMap<Weather, Double>() {{
+                put(Weather.Sunny, 0.3);
+                put(Weather.Rainy, 0.25);
+                put(Weather.Stormy, 0.25);
+                put(Weather.Snowy, 0.2);
+            }},
+            new ArrayList<>()
+    );
 
     private final String name;
     private final HashMap<Weather, Double> weathers;
+    private final List<CropType> crops;
 
-    Season(String name, HashMap<Weather, Double> weathers) {
+    Season(String name, HashMap<Weather, Double> weathers, List<CropType> crops) {
         this.name = name;
         this.weathers = weathers;
+        this.crops = crops;
     }
 
     public Season getNextSeason() {
@@ -49,5 +67,9 @@ public enum Season {
 
     public Map<Weather, Double> weatherProbabilities() {
         return weathers;
+    }
+
+    public List<CropType> getPossibleCrops() {
+        return crops;
     }
 }

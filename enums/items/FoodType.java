@@ -60,7 +60,7 @@ public enum FoodType implements ItemType {
     }
 
     public Item createItem(int count) {
-        Food foodItem = new Food(MaterialType.valueOf(this.name()));
+        Food foodItem = new Food(FoodType.valueOf(this.name()), 1);
         foodItem.setNumber(count);
         return foodItem;
     }

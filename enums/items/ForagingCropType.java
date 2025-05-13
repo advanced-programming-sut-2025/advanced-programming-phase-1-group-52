@@ -3,7 +3,7 @@ package enums.items;
 
 import enums.design.Season;
 
-public enum ForagingCropType implements ItemType {
+public enum ForagingCropType implements ItemType, Growable{
     // All crops:
 
     // Foraging crops :
