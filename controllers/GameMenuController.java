@@ -471,6 +471,33 @@ public class GameMenuController {
         return new Result(true, info.toString());
     }
 
+    public Result treeInfo(String treeName) {
+        TreeType treeType;
+        if((treeType = findTreeType(treeName)) == null) {
+            return new Result(false, "tree not found");
+        }
+        StringBuilder info = new StringBuilder();
+        info.append("Name: " + treeType.name()).append("\nSource: " + treeType. ource()).append("\nStages: ");
+        for(Integer stage : treeType.getGrowthStages()){
+            info.append(stage).append("-");
+        }
+        info.deleteCharAt(info.length() - 1);
+        info.append("\nTotal Harvest Time: " + treeType.getTotalHarvestTime()).
+                append("\nOne Time: " + treeType.isOneTimeHarvest()).
+                append("\nRegrowth Time: " + treeType.getRegrowthTime()).
+                append("\nBase Sell Price: " + treeType.getBaseSellPrice()).
+                append("\nIs Edible: " + treeType.isEdible()).
+                append("\nBase Energy: " + treeType.getEnergy()).
+                append("\nBase Health: " + treeType.getBaseHealth()).
+                append(("\nSeason: "));
+        for(Season season : treeType.getSeasons()){
+            info.append(season.name()).append(", ");
+        }
+        info.deleteCharAt(info.length() - 1);
+        info.append("\nCan Become Giant: " + treeType.canBecomeGiant());
+        return new Result(true, info.toString());
+    }
+
     public void fishingAndDisplay(ToolType pole) {
     }
 
@@ -506,6 +533,15 @@ public class GameMenuController {
         for(CropType cropType : CropType.values()) {
             if (cropType.name().equals(cropName)) {
                 return cropType;
+            }
+        }
+        return null;
+    }
+
+    private TreeType findTreeType(String treeName) {
+        for (TreeType treeType : TreeType.values()) {
+            if (treeType.name().equals(treeName)) {
+                return treeType;
             }
         }
         return null;

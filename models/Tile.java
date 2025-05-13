@@ -2,6 +2,7 @@ package models;
 
 import enums.design.TileType;
 import enums.items.Growable;
+import models.item.Crop;
 
 public class Tile {
     private final int x;
@@ -9,6 +10,7 @@ public class Tile {
     private TileType type;
     private final Player owner;
     private Growable plant;
+    private Crop crop;
 
     public Tile(int x, int y, TileType type, Player owner) {
         this.x = x;
@@ -35,5 +37,21 @@ public class Tile {
 
     public void setType(TileType type) {
         this.type = type;
+    }
+
+    public Growable getPlant() {
+        return plant;
+    }
+
+    public void setPlant(Growable plant) {
+        this.plant = plant;
+    }
+
+    public Crop getCrop() {
+        return crop;
+    }
+
+    public void setCrop(Crop crop) {
+        this.crop = crop;
     }
 }
