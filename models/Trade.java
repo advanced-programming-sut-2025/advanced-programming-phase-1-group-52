@@ -7,11 +7,16 @@ public abstract class Trade {
     protected final Player seller;
     protected final int tradeId;
     protected boolean isAccepted = false;
+    protected boolean isAnswered = false;
 
     public Trade(Player buyer, Player seller) {
         this.buyer = buyer;
         this.seller = seller;
         this.tradeId = tradeCounter++;
+    }
+
+    public boolean isAnswered() {
+        return isAnswered;
     }
 
     public Player getBuyer() {
@@ -32,5 +37,9 @@ public abstract class Trade {
 
     public void setAccepted(boolean accepted) {
         isAccepted = accepted;
+    }
+
+    public void setAnswered(boolean answered) {
+        isAnswered = answered;
     }
 }

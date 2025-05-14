@@ -53,6 +53,14 @@ public class Player {
         giveStarterTools();
     }
 
+    public Trade getTradeById(int id) {
+        for (Trade trade : this.trades) {
+            if (trade.getTradeId() == id) return trade;
+        }
+
+        return null;
+    }
+
     public void addTrade(Trade trade) {
         this.trades.add(trade);
     }

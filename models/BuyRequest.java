@@ -23,4 +23,13 @@ public class BuyRequest extends Trade {
     public int getPrice() {
         return price;
     }
+
+    @Override
+    public String toString() {
+        return """
+               Buy Request:
+               Buyer: """ + this.buyer.getUsername() + "\nSeller: " + this.seller.getUsername() +
+            "\nGiving Item: " + this.itemName + "\nGiving Amount: " + this.amount + "\nPrice: " + this.price +
+            "\nId: " + this.tradeId + "\n-----------------------\n";
+    }
 }

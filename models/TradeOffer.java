@@ -29,4 +29,14 @@ public class TradeOffer extends Trade {
     public int getReceivingAmount() {
         return receivingAmount;
     }
+
+    @Override
+    public String toString() {
+        return """
+               Trade Offer:
+               Buyer: """ + this.buyer.getUsername() + "\nSeller: " + this.seller.getUsername() +
+            "\nGiving Item: " + this.givingItemName + "\nGiving Amount: " + this.givingAmount +
+            "\nReceiving Item: " + this.receivingItemName + "\nReceiving Amount: " + this.receivingAmount +
+            "\nId: " + this.tradeId + "\n-----------------------\n";
+    }
 }

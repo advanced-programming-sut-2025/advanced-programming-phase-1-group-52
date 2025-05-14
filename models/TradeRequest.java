@@ -13,4 +13,30 @@ public class TradeRequest extends Trade {
         this.receivingItemName = receivingItemName;
         this.receivingAmount = receivingAmount;
     }
+
+    public String getGivingItemName() {
+        return givingItemName;
+    }
+
+    public int getGivingAmount() {
+        return givingAmount;
+    }
+
+    public String getReceivingItemName() {
+        return receivingItemName;
+    }
+
+    public int getReceivingAMount() {
+        return receivingAmount;
+    }
+
+    @Override
+    public String toString() {
+        return """
+               Trade Request:
+               Buyer: """ + this.buyer.getUsername() + "\nSeller: " + this.seller.getUsername() +
+            "\nGiving Item: " + this.givingItemName + "\nGiving Amount: " + this.givingAmount +
+            "\nReceiving Item: " + this.receivingItemName + "\nReceiving Amount: " + this.receivingAmount +
+            "\nId: " + this.tradeId + "\n-----------------------\n";
+    }
 }
