@@ -6,140 +6,34 @@ import java.util.HashMap;
 import java.util.Map;
 
 public enum ArtisanMachineProducts implements ItemType {
-    CherryBomb("Cherry Bomb", Map.of(
-            MaterialType.CopperOre, 4,
-            MaterialType.Coal, 1
-    ), 50),
+    CHERRY_BOMB("Cherry Bomb", null),
+    BOMB("Bomb", null),
+    MEGA_BOMB("Mega Bomb", null),
+    SPRINKLER("Sprinkler", null),
+    QUALITY_SPRINKLER("Quality Sprinkler", null),
+    IRIDIUM_SPRINKLER("Iridium Sprinkler", null),
+    CHARCOAL_KILN("Charcoal Kiln", null),
+    FURNACE("Furnace", null),
+    SCARECROW("Scarecrow", null),
+    DELUXE_SCARECROW("Deluxe Scarecrow", null),
+    BEE_HOUSE("Bee House", null),
+    CHEESE_PRESS("Cheese Press", null),
+    KEG("Keg", null),
+    LOOM("Loom", null),
+    MAYONNAISE_MACHINE("Mayonnaise Machine", null),
+    OIL_MAKER("Oil Maker", null),
+    PRESERVES_JAR("Preserves Jar", null),
+    DEHYDRATOR("Dehydrator", null),
+    GRASS_STARTER("Grass Starter", null),
+    FISH_SMOKER("Fish Smoker", null),
+    MYSTIC_TREE_SEED("Mystic Tree Seed", null);
 
-    Bomb("Bomb", Map.of(
-            MaterialType.IronOre, 4,
-            MaterialType.Coal, 1
-    ), 50 ),
+    private final String productName;
+    private final Integer price;
 
-    MegaBomb("Mega Bomb", Map.of(
-            MaterialType.GoldOre, 4,
-            MaterialType.Coal, 1
-    ), 50 ),
-
-    Sprinkler("Sprinkler", Map.of (
-            MaterialType.CopperBar, 1,
-            MaterialType.IronBar, 1
-    ), 0 ),
-
-    QualitySprinkler("Quality Sprinkler", Map.of(
-            MaterialType.IronBar, 1,
-            MaterialType.GoldBar, 1
-    ), 0 ),
-
-    IridiumSprinkler("Iridium Sprinkler", Map.of(
-            MaterialType.GoldBar, 1,
-            MaterialType.IridiumBar, 1
-    ), 0 ),
-
-    CharcoalKiln("Charcoal Kiln", Map.of(
-            MaterialType.Wood, 20,
-            MaterialType.CopperBar, 2
-    ), 0 ),
-
-    Furnace("Furnace", Map.of(
-            MaterialType.CopperOre, 20,
-            MaterialType.Stone, 25
-    ), 0),
-
-    Scarecrow("Scarecrow", Map.of(
-            MaterialType.Wood, 50,
-            MaterialType.Coal, 1,
-            MaterialType.Fiber, 20
-    ), 0),
-
-    DeluxeScarecrow("Deluxe Scarecrow", Map.of(
-            MaterialType.Wood, 50,
-            MaterialType.Coal, 1,
-            MaterialType.Fiber, 20,
-            MaterialType.IridiumOre, 1
-    ), 0 ),
-
-    BeeHouse("Bee House", Map.of(
-            MaterialType.Wood, 40,
-            MaterialType.Coal, 8,
-            MaterialType.IronBar, 1
-    ), 0 ),
-
-    CheesePress("Cheese Press", Map.of(
-            MaterialType.Wood, 45,
-            MaterialType.Stone, 45,
-            MaterialType.CopperBar, 1
-    ), 0 ),
-
-    Keg("Keg", Map.of(
-            MaterialType.Wood, 30,
-            MaterialType.CopperBar, 1,
-            MaterialType.IronBar, 1
-    ), 0 ),
-
-    Loom("Loom", Map.of(
-            MaterialType.Wood, 60,
-            MaterialType.Fiber, 30
-    ), 0 ),
-
-    MayonnaiseMachine("Mayonnaise Machine", Map.of(
-            MaterialType.Wood, 15,
-            MaterialType.Stone, 15,
-            MaterialType.CopperBar, 1
-    ), 0),
-
-    OilMaker("Oil Maker", Map.of(
-            MaterialType.Wood, 100,
-            MaterialType.GoldBar, 1,
-            MaterialType.IronBar, 1
-    ), 0 ),
-
-    PreservesJar("Preserves Jar", Map.of(
-            MaterialType.Wood, 50,
-            MaterialType.Stone, 40,
-            MaterialType.Coal, 8
-    ), 0),
-
-    Dehydrator("Dehydrator", Map.of(
-            MaterialType.Wood, 30,
-            MaterialType.Stone, 20,
-            MaterialType.Fiber, 30
-    ), 0),
-
-    FishSmoker("Fish Smoker", Map.of(
-            MaterialType.Wood, 50,
-            MaterialType.IronBar, 3,
-            MaterialType.Coal, 10
-    ), 0),
-
-    MysticTreeSeed("Mystic Tree Seed", Map.of(
-            MaterialType.Acorn, 5,
-            MaterialType.MapleSeed, 5,
-            MaterialType.PineCone, 5,
-            MaterialType.MahoganySeed, 5
-    ), 100);
-
-    private final String displayName;
-    private final Map<MaterialType, Integer> ingredients;
-    private final int price;
-
-    ArtisanMachineProducts(String displayName, Map<MaterialType, Integer> ingredients,
-                           int price) {
-        this.displayName = displayName;
-        this.ingredients = new HashMap<>(ingredients);
+    ArtisanMachineProducts(String productName, Integer price) {
+        this.productName = productName;
         this.price = price;
-    }
-
-    public String getDisplayName() {
-        return displayName;
-    }
-
-    public Map<ItemType, Integer> getIngredients() {
-        return new HashMap<>(ingredients);
-    }
-
-    public int getPrice() {
-        return price;
     }
 
     @Override
