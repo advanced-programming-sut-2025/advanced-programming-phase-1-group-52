@@ -1,7 +1,6 @@
 package models.item;
 
 import enums.items.AnimalType;
-import enums.items.MaterialType;
 
 public class AnimalProduct extends Item {
     public AnimalProduct(AnimalType animalType, int number) {
@@ -10,5 +9,9 @@ public class AnimalProduct extends Item {
     @Override
     protected int calculateEnergyConsumption() {
         return 0;
+    }
+
+    public AnimalType getAnimalType() {
+        return (AnimalType) itemType;
     }
 }

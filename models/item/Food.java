@@ -1,7 +1,6 @@
 package models.item;
 
 import enums.items.FoodType;
-import enums.items.MaterialType;
 
 public class Food extends Item {
     public Food(FoodType foodType, int number) {
@@ -10,5 +9,9 @@ public class Food extends Item {
     @Override
     protected int calculateEnergyConsumption() {
         return 0;
+    }
+
+    public FoodType getFoodType() {
+        return (FoodType) itemType;
     }
 }

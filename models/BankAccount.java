@@ -7,7 +7,7 @@ public class BankAccount {
         return this.balance;
     }
     
-    public void depsit(int amount) {
+    public void deposit(int amount) {
         this.balance += amount;
     }
 

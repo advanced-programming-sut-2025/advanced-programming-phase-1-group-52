@@ -26,14 +26,14 @@ public class TradeRequest extends Trade {
         return receivingItemName;
     }
 
-    public int getReceivingAMount() {
+    public int getReceivingAmount() {
         return receivingAmount;
     }
 
     @Override
     public String toString() {
         return """
-               Trade Request:
+               Trade Offer:
                Buyer: """ + this.buyer.getUsername() + "\nSeller: " + this.seller.getUsername() +
             "\nGiving Item: " + this.givingItemName + "\nGiving Amount: " + this.givingAmount +
             "\nReceiving Item: " + this.receivingItemName + "\nReceiving Amount: " + this.receivingAmount +

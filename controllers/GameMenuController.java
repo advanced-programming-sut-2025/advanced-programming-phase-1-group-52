@@ -649,26 +649,24 @@ public class GameMenuController {
         items.delete(items.length() - 2, items.length());
         return new Result(true, items.toString());
     }
-
-    public Result removeItemFromInventory(String itemName, String itemNumberStr){
+    
+    public Result removeItemFromInventory(String itemName, String itemNumberStr) {
         // todo : handle trim in view for now
         // todo : calculate return money
-        Game game = App.getInstance().getCurrentGame();
         Inventory inventory = game.getCurrentPlayer().getInventory();
         int itemNumber;
         Item item;
-        if((item = findItem(itemName, inventory.getItems())) == null){
+        if ((item = findItem(itemName, inventory.getItems())) == null) {
             return new Result(false, "Item not found");
         }
 
-        if(itemNumberStr != null && !itemNumberStr.isEmpty()){
+        if (itemNumberStr != null && !itemNumberStr.isEmpty()) {
             itemNumber = Integer.parseInt(itemNumberStr);
             item.setNumber(item.getNumber() - itemNumber);
-            return new Result(true,  "x" + itemNumber + item.getName() + " has been removed");
-        }
-
-        else{
-            inventory.removeItem(item);
+            return new Result(true, "x" + itemNumber + item.getName() + " has been removed");
+        } else {
+            inventory.getItems().remove(item);
+            inventory.addNumOfItems(-1);
             return new Result(true, "Item removed from inventory");
         }
     }
@@ -694,10 +692,9 @@ public class GameMenuController {
     }
 
     public Result showAllTools(){
-        Game game = App.getInstance().getCurrentGame();
         Player player = game.getCurrentPlayer();
         ArrayList<Item> tools = player.getInventory().getItems();
-
+        return new Result(true, toolListMaker(tools));
     }
 
     public Result useTool(String directionStr){
@@ -940,7 +937,7 @@ public class GameMenuController {
     }
 
     private Result cookingRefrigeratorPut(String materialName, String quantityStr) {
-        Player player = App.getInstance().currentPlayer();
+        Player player = game.getCurrentPlayer();
         House house  = player.getHouse();
         int quantity;
         try { quantity = Integer.parseInt(quantityStr); }
@@ -961,7 +958,7 @@ public class GameMenuController {
     }
 
     private Result cookingRefrigeratorPick(String materialName, String quantityStr) {
-        Player player = App.getInstance().currentPlayer();
+        Player player = game.getCurrentPlayer();
         House  house  = player.getHouse();
         int quantity;
         try { quantity = Integer.parseInt(quantityStr); }
@@ -990,7 +987,7 @@ public class GameMenuController {
     }
 
     private Result cookingPrepare(String recipeName) {
-        Player player = App.getInstance().currentPlayer();
+        Player player = game.getCurrentPlayer();
         House  house  = player.getHouse();
         var    refrigerator = house.refrigerator();
         var    inventory    = player.inventory();
@@ -1032,11 +1029,11 @@ public class GameMenuController {
 
     private void calculateEnergy(int amount) {
         Player player = game.getCurrentPlayer();
-        player.setEnergy(player.energy() + amount);
-        if(player.energy() >= 200){
+        player.setEnergy(player.getEnergy() + amount);
+        if(player.getEnergy() >= 200){
             player.setEnergy(200);
         }
-        if(player.energy() <= 0){
+        if(player.getEnergy() <= 0){
             player.setFainted(true);
             switchTurn();
         }
