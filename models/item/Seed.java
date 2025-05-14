@@ -3,7 +3,7 @@ package models.item;
 import enums.items.ForagingSeedType;
 import enums.items.Growable;
 
-public class Seed extends Item implements Growable {
+public class Seed extends Item {
     private ForagingSeedType foragingSeedType;
     public Seed(ForagingSeedType foragingSeedType, int number) {
         super(foragingSeedType,number);

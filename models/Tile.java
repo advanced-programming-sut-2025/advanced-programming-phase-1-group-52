@@ -3,6 +3,7 @@ package models;
 import enums.design.TileType;
 import enums.items.Growable;
 import models.item.Crop;
+import models.item.Seed;
 
 public class Tile {
     private final int x;
@@ -10,7 +11,8 @@ public class Tile {
     private TileType type;
     private final Player owner;
     private Growable plant;
-    private Crop crop;
+    private Tree tree = null;
+    private Seed seed = null;
 
     public Tile(int x, int y, TileType type, Player owner) {
         this.x = x;
@@ -47,11 +49,19 @@ public class Tile {
         this.plant = plant;
     }
 
-    public Crop getCrop() {
-        return crop;
+    public Tree getTree() {
+        return tree;
     }
 
-    public void setCrop(Crop crop) {
-        this.crop = crop;
+    public void setTree(Tree tree) {
+        this.tree = tree;
+    }
+
+    public Seed getSeed() {
+        return seed;
+    }
+
+    public void setSeed(Seed seed) {
+        this.seed = seed;
     }
 }

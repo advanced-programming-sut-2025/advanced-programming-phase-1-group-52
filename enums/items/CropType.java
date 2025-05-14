@@ -5,7 +5,7 @@ import enums.design.Season;
 import java.util.Arrays;
 import java.util.List;
 
-public enum CropType implements ItemType, Growable {
+public enum CropType implements ItemType {
     BlueJazz(
             ForagingSeedType.JazzSeeds, Arrays.asList(1,2,2,2), 7, true, null, 50,
             true, 45, 20, Arrays.asList(Season.Spring), false
