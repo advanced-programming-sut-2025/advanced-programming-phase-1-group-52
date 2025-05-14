@@ -10,7 +10,7 @@ public class Tile {
     private TileType type;
     private final Player owner;
     private Growable plant;
-    private Crop crop;
+    private Tree tree;
 
     public Tile(int x, int y, TileType type, Player owner) {
         this.x = x;
@@ -47,11 +47,11 @@ public class Tile {
         this.plant = plant;
     }
 
-    public Crop getCrop() {
-        return crop;
+    public Tree getTree() {
+        return tree;
     }
 
-    public void setCrop(Crop crop) {
-        this.crop = crop;
+    public void setTree(Tree tree) {
+        this.tree = tree;
     }
 }

@@ -8,6 +8,7 @@ public enum TileType {
     Water(false, ANSI.BLUE + "~" + ANSI.RESET),
     Shoveled(true, ANSI.YELLOW + "~" + ANSI.RESET),
     Planted(true, ANSI.GREEN + "~" + ANSI.RESET),
+    Branch(true, ANSI.BLUE + "~" + ANSI.RESET),
     CopperStone(true, ANSI.BLACK + "#" + ANSI.RESET),
     IronStone(true, ANSI.BLACK + "#" + ANSI.RESET),
     GoldStone(true, ANSI.BLACK + "#" + ANSI.RESET),

@@ -11,6 +11,7 @@ public class Crop extends Item implements Growable {
     private boolean isFertilizedToday = false;
     private boolean needsWaterToday = false;
     private int currentStage = 0;
+    private boolean isReadyToHarvest = false;
 
     public Crop(CropType cropType, int number) {
         super(cropType, number);
@@ -80,6 +81,16 @@ public class Crop extends Item implements Growable {
     @Override
     public void setCurrentStage(int currentStage) {
         this.currentStage = currentStage;
+    }
+
+    @Override
+    public boolean isReadyToHarvest() {
+        return isReadyToHarvest;
+    }
+
+    @Override
+    public void setReadyToHarvest(boolean readyToHarvest) {
+        this.isReadyToHarvest = readyToHarvest;
     }
 
     @Override

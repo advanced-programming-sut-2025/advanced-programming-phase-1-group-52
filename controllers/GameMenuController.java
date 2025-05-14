@@ -594,6 +594,15 @@ public class GameMenuController {
         return new Result(true, "Fertilizer fertilized successfully");
     }
 
+    public Result wateringCanFilled(){
+        Player player = game.getCurrentPlayer();
+        WateringCan wateringCan = findWateringCanInInventory(player.getInventory().getItems());
+        if(wateringCan == null) {
+            return new Result(false, "There is no watering can inventory 0o0");
+        }
+        return new Result(true, "There is " + wateringCan.getFilledCapacity() + "liter in watering can");
+    }
+
     private void onDayPassed(int days) {
     }
 
@@ -867,4 +876,12 @@ public class GameMenuController {
         return null;
     }
 
+    private WateringCan findWateringCanInInventory(ArrayList<Item> items) {
+        for (Item item : items) {
+            if (item instanceof WateringCan) {
+                return (WateringCan) item;
+            }
+        }
+        return null;
+    }
 }

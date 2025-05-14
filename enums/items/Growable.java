@@ -19,5 +19,8 @@ public interface Growable {
     int getCurrentStage();
     void setCurrentStage(int currentStage);
 
+    boolean isReadyToHarvest();
+    void setReadyToHarvest(boolean readyToHarvest);
+
     void growFaster();
 }
