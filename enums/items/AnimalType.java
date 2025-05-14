@@ -78,4 +78,9 @@ public enum AnimalType implements ItemType{
     public boolean isTool() {
         return false;
     }
+
+    @Override
+    public String getName() {
+        return this.name;
+    }
 }

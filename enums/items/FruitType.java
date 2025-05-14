@@ -22,7 +22,8 @@ public enum FruitType implements ItemType{
         this.fruitName = fruitName;
     }
 
-    public String getFruitName() {
+    @Override
+    public String getName() {
         return fruitName;
     }
 

@@ -8,6 +8,7 @@ public class Inventory {
     private Backpacks backpack = Backpacks.PrimitiveBackpack;
     private ArrayList<Item> items = new ArrayList<>();
     private int numOfItems = 0;
+    private boolean isFull = false;
 
     public Inventory() {
     }
@@ -69,8 +70,10 @@ public class Inventory {
         this.numOfItems += num;
         if(this.numOfItems >= backpack.getCapacity()) {
             this.numOfItems -= 1;
+            this.isFull = true;
             return false;
         }
+        this.isFull = false;
         return true;
     }
 
@@ -94,4 +97,11 @@ public class Inventory {
         return numOfItems;
     }
 
+    public boolean isFull() {
+        return isFull;
+    }
+
+    public void setFull(boolean full) {
+        isFull = full;
+    }
 }

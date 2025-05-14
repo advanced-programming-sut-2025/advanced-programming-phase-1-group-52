@@ -3,73 +3,80 @@ package enums.items;
 import enums.design.Season;
 
 public enum ForagingSeedType implements ItemType {
-    JazzSeeds(Season.Spring, true),
-    CarrotSeeds(Season.Spring, true),
-    CauliflowerSeeds(Season.Spring, true),
-    CoffeeBean(Season.Spring, true),
-    GarlicSeeds(Season.Spring, true),
-    BeanStarter(Season.Spring, true),
-    KaleSeeds(Season.Spring, true),
-    ParsnipSeeds(Season.Spring, true),
-    PotatoSeeds(Season.Spring, true),
-    RhubarbSeeds(Season.Spring, true),
-    StrawberrySeeds(Season.Spring, true),
-    TulipBulb(Season.Spring, true),
-    RiceShoot(Season.Spring, true),
+    // Spring seeds
+    JazzSeeds("jazz seeds", Season.Spring, true),
+    CarrotSeeds("carrot seeds", Season.Spring, true),
+    CauliflowerSeeds("cauliflower seeds", Season.Spring, true),
+    CoffeeBean("coffee bean", Season.Spring, true),
+    GarlicSeeds("garlic seeds", Season.Spring, true),
+    BeanStarter("bean starter", Season.Spring, true),
+    KaleSeeds("kale seeds", Season.Spring, true),
+    ParsnipSeeds("parsnip seeds", Season.Spring, true),
+    PotatoSeeds("potato seeds", Season.Spring, true),
+    RhubarbSeeds("rhubarb seeds", Season.Spring, true),
+    StrawberrySeeds("strawberry seeds", Season.Spring, true),
+    TulipBulb("tulip bulb", Season.Spring, true),
+    RiceShoot("rice shoot", Season.Spring, true),
 
-    BlueberrySeeds(Season.Summer, true),
-    CornSeeds(Season.Summer, true),
-    HopsStarter(Season.Summer, true),
-    PepperSeeds(Season.Summer, true),
-    MelonSeeds(Season.Summer, true),
-    PoppySeeds(Season.Summer, true),
-    RadishSeeds(Season.Summer, true),
-    RedCabbageSeeds(Season.Summer, true),
-    StarfruitSeeds(Season.Summer, true),
-    SpangleSeeds(Season.Summer, true),
-    SummerSquashSeeds(Season.Summer, true),
-    SunflowerSeeds(Season.Summer, true),
-    TomatoSeeds(Season.Summer, true),
-    WheatSeeds(Season.Summer, true),
+    // Summer seeds
+    BlueberrySeeds("blueberry seeds", Season.Summer, true),
+    CornSeeds("corn seeds", Season.Summer, true),
+    HopsStarter("hops starter", Season.Summer, true),
+    PepperSeeds("pepper seeds", Season.Summer, true),
+    MelonSeeds("melon seeds", Season.Summer, true),
+    PoppySeeds("poppy seeds", Season.Summer, true),
+    RadishSeeds("radish seeds", Season.Summer, true),
+    RedCabbageSeeds("red cabbage seeds", Season.Summer, true),
+    StarfruitSeeds("starfruit seeds", Season.Summer, true),
+    SpangleSeeds("spangle seeds", Season.Summer, true),
+    SummerSquashSeeds("summer squash seeds", Season.Summer, true),
+    SunflowerSeeds("sunflower seeds", Season.Summer, true),
+    TomatoSeeds("tomato seeds", Season.Summer, true),
+    WheatSeeds("wheat seeds", Season.Summer, true),
 
-    AmaranthSeeds(Season.Fall, true),
-    ArtichokeSeeds(Season.Fall, true),
-    BeetSeeds(Season.Fall, true),
-    BokChoySeeds(Season.Fall, true),
-    BroccoliSeeds(Season.Fall, true),
-    CranberrySeeds(Season.Fall, true),
-    EggplantSeeds(Season.Fall, true),
-    FairySeeds(Season.Fall, true),
-    GrapeStarter(Season.Fall, true),
-    PumpkinSeeds(Season.Fall, true),
-    YamSeeds(Season.Fall, true),
-    RareSeed(Season.Fall, true),
+    // Fall seeds
+    AmaranthSeeds("amaranth seeds", Season.Fall, true),
+    ArtichokeSeeds("artichoke seeds", Season.Fall, true),
+    BeetSeeds("beet seeds", Season.Fall, true),
+    BokChoySeeds("bok choy seeds", Season.Fall, true),
+    BroccoliSeeds("broccoli seeds", Season.Fall, true),
+    CranberrySeeds("cranberry seeds", Season.Fall, true),
+    EggplantSeeds("eggplant seeds", Season.Fall, true),
+    FairySeeds("fairy seeds", Season.Fall, true),
+    GrapeStarter("grape starter", Season.Fall, true),
+    PumpkinSeeds("pumpkin seeds", Season.Fall, true),
+    YamSeeds("yam seeds", Season.Fall, true),
+    RareSeed("rare seed", Season.Fall, true),
 
-    PowderMelonSeeds(Season.Winter, true),
+    // Winter seeds
+    PowderMelonSeeds("powder melon seeds", Season.Winter, true),
 
-    AncientSeeds(Season.Special, true),
-    MixedSeeds(Season.Special, true),
+    // Special seeds
+    AncientSeeds("ancient seeds", Season.Special, true),
+    MixedSeeds("mixed seeds", Season.Special, true),
 
-    // trees seed and pierre's products
-    AppleSapling(Season.Special, false),
-    ApricotSapling(Season.Special, false),
-    CherrySapling(Season.Special, false),
-    OrangeSapling(Season.Special, false),
-    PeachSapling(Season.Special, false),
-    PomegranateSapling(Season.Special, false),
-    MapleSeed(Season.Special, true),
-    PineCone(Season.Special, true),
-    MahoganySeed(Season.Special, true),
-    MangoSapling(Season.Special, false),
-    BananaSapling(Season.Special, false),
-    Acorn(Season.Special, true),
-    MushroomTreeSeed(Season.Special, true),
-    MysticTreeSeed(Season.Special, false);
+    // Tree saplings and seeds
+    AppleSapling("apple sapling", Season.Special, false),
+    ApricotSapling("apricot sapling", Season.Special, false),
+    CherrySapling("cherry sapling", Season.Special, false),
+    OrangeSapling("orange sapling", Season.Special, false),
+    PeachSapling("peach sapling", Season.Special, false),
+    PomegranateSapling("pomegranate sapling", Season.Special, false),
+    MapleSeed("maple seed", Season.Special, true),
+    PineCone("pine cone", Season.Special, true),
+    MahoganySeed("mahogany seed", Season.Special, true),
+    MangoSapling("mango sapling", Season.Special, false),
+    BananaSapling("banana sapling", Season.Special, false),
+    Acorn("acorn", Season.Special, true),
+    MushroomTreeSeed("mushroom tree seed", Season.Special, true),
+    MysticTreeSeed("mystic tree seed", Season.Special, false);
 
+    private final String name;
     private final Season season;
     private final boolean isForaging;
 
-    ForagingSeedType(Season season, boolean isForaging) {
+    ForagingSeedType(String name, Season season, boolean isForaging) {
+        this.name = name;
         this.season = season;
         this.isForaging = isForaging;
     }
@@ -85,5 +92,10 @@ public enum ForagingSeedType implements ItemType {
     @Override
     public boolean isTool() {
         return false;
+    }
+
+    @Override
+    public String getName() {
+        return this.name;
     }
 }

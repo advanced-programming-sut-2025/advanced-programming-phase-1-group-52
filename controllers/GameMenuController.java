@@ -745,7 +745,7 @@ public class GameMenuController {
         }
         info.deleteCharAt(info.length() - 1);
         info.append("\nTotal Harvest Time: " + treeType.getTotalHarvestTime()).
-                append("\nFruit: " + treeType.getProduct().getFruitName()).
+                append("\nFruit: " + treeType.getProduct().getName()).
                 append("\nHarvest cycle time: " + treeType.getHarvestCycle()).
                 append("\nBase Sell Price: " + treeType.getBaseSellPrice()).
                 append("\nIs Edible: " + treeType.isEdible()).
@@ -899,11 +899,97 @@ public class GameMenuController {
         if(recipeType == null) {
             return new Result(false, "error");
         }
+
         CraftingRecipe recipe;
+
         if((recipe = findCraftingRecipeInInventory(player.getCraftingRecipe(), recipeType)) == null) {
-            return new Result(false, "There is no crafting recipe in inventory");
+            return new Result(false, "The crafting recipe is not in your inventory");
+        }
+
+        if(player.getInventory().isFull()){
+            return new Result(false, "your inventory is full");
+        }
+
+        Result result = isInventoryReadyToCraft(recipeType);
+
+        if(!result.isSuccessful()){
+            return result;
+        }
+
+        ArtisanMachineProduct artisanProduct = new ArtisanMachineProduct(recipeType.getProduct(),10);
+        player.getInventory().getItems().add(artisanProduct);
+        player.getInventory().addNumOfItems(1);
+        return new Result(true,artisanProduct.getName() + " crafted successfully");
+    }
+
+    public Result placeItem(String itemName, String directionStr) {
+        Player player = game.getCurrentPlayer();
+        GameMap map = game.getMap();
+        Tile currentTile = map.getTile(player.currentX(), player.currentY());
+        Tile targetTile = getTargetTile(currentTile, directionStr, map);
+        if(targetTile.getItem() != null) {
+            return new Result(false, "ypu can not put item on this tile, it has another item");
+        }
+        Item item = findItem(itemName, player.getInventory().getItems());
+        targetTile.setItem(item);
+        player.getInventory().getItems().remove(item);
+        player.getInventory().addNumOfItems(-1);
+        return new Result(true,item.getName() + " placed successfully");
+    }
+
+    public Result pickItem(String directionStr) {
+        GameMap map = game.getMap();
+        Player player = game.getCurrentPlayer();
+        Tile currrentTile = map.getTile(player.currentX(), player.currentY());
+        Tile targetTile = getTargetTile(currrentTile,directionStr,map);
+        if(!player.getCurrentTool().getToolType().name().endsWith("Pickaxe")){
+            return new Result(false, "you can not pick an item, change your current tool to pickaxe");
+        }
+        if(targetTile.getItem() == null) {
+            return new Result(false, "this tile doesn't have any item to pick");
+        }
+        if(player.getInventory().isFull()){
+            return new Result(false, "your inventory is full");
+        }
+        player.getInventory().addItem(targetTile.getItem());
+        targetTile.setItem(null);
+        player.getInventory().addNumOfItems(1);
+        return new Result(true, targetTile.getItem().getName() + " x" + targetTile.getItem().getNumber() + " picked successfully");
+    }
+
+    public Result cheatAddItem(String itemName, String quantityStr) {
+        try {
+            Player player = game.getCurrentPlayer();
+            int quantity;
+            try {
+                quantity = Integer.parseInt(quantityStr);
+                if (quantity <= 0) {
+                    return new Result(false, "Quantity must be positive");
+                }
+            } catch (NumberFormatException e) {
+                return new Result(false, "Invalid quantity format");
+            }
+            Item item;
+            try {
+                item = ItemFactory.createItemOrThrow(itemName, quantity);
+            } catch (IllegalArgumentException e) {
+                return new Result(false, "Item '" + itemName + "' doesn't exist");
+            }
+
+            if (player.getInventory().isFull()) {
+                return new Result(false, "Your inventory is full");
+            }
+
+            player.getInventory().addItem(item);
+            player.getInventory().addNumOfItems(1);
+
+            return new Result(true, item.getName() + " added successfully!");
+
+        } catch (Exception e) {
+            return new Result(false, "An unexpected error occurred");
         }
     }
+
     private void onDayPassed(int days) {
     }
 
@@ -1084,6 +1170,15 @@ public class GameMenuController {
         return null;
     }
 
+    private Item findItem(ItemType itemType, ArrayList<Item> items) {
+        for(Item item : items){
+            if(item.getItemType().equals(itemType)){
+                return item;
+            }
+        }
+        return null;
+    }
+
     private String toolListMaker(ArrayList<Item> tools) {
         StringBuilder toolList = new StringBuilder();
         for (Item item : tools) {
@@ -1142,7 +1237,7 @@ public class GameMenuController {
 
     private FruitType findFruitTypeBySeed(String seedName) {
         for(FruitType fruitType : FruitType.values()) {
-            if(fruitType.getFruitName().equals(seedName)) {
+            if(fruitType.getName().equals(seedName)) {
                 return fruitType;
             }
         }
@@ -1192,5 +1287,49 @@ public class GameMenuController {
             }
         }
         return null;
+    }
+
+    private Result isInventoryReadyToCraft(CraftingRecipes craftingRecipe) {
+        Player player = game.getCurrentPlayer();
+        Map<ItemType, Integer> neededIngredients = craftingRecipe.getIngredients();
+        ArrayList<Item> playerItems = player.getInventory().getItems();
+        ItemType itemType;
+        Integer quantity;
+        Item item;
+        Result result = isReadySecond(craftingRecipe);
+
+        if(!result.isSuccessful()){
+            return result;
+        }
+
+        for(Map.Entry<ItemType, Integer> entry : neededIngredients.entrySet()) {
+            itemType = entry.getKey();
+            quantity = entry.getValue();
+            item = findItem(itemType,playerItems);
+            item.setNumber(item.getNumber() - quantity);
+        }
+        return result;
+    }
+
+    private Result isReadySecond(CraftingRecipes craftingRecipe){
+        Player player = game.getCurrentPlayer();
+        Map<ItemType, Integer> neededIngredients = craftingRecipe.getIngredients();
+        ArrayList<Item> playerItems = player.getInventory().getItems();
+        ItemType itemType;
+        Integer quantity;
+        Item item;
+
+        for(Map.Entry<ItemType, Integer> entry : neededIngredients.entrySet()) {
+            itemType = entry.getKey();
+            quantity = entry.getValue();
+            item = findItem(itemType,playerItems);
+            if(item == null) {
+                return new Result(false, "Item not found in your inventory");
+            }
+            if(item.getNumber() < quantity){
+                return new Result(false, "Not enough items in your inventory");
+            }
+        }
+        return new Result(true, "All items in your inventory");
     }
 }

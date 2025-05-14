@@ -15,7 +15,7 @@ import models.item.Animal;
 import models.item.AnimalProduct;
 import models.item.Fish;
 import models.item.Food;
-import models.item.Good;
+import models.item.ArtisanMachineProduct;
 import models.item.Item;
 import models.item.Material;
 import models.item.Mineral;
@@ -255,7 +255,7 @@ public class TradeMenuController {
         else if (item instanceof Food) {
 
         }
-        else if (item instanceof Good) {
+        else if (item instanceof ArtisanMachineProduct) {
 
         }
         else if (item instanceof Material) {
