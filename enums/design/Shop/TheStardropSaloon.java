@@ -3,7 +3,7 @@ package enums.design.Shop;
 import enums.items.CookingRecipes;
 import enums.items.FoodType;
 
-public enum TheStardropSaloon {
+public enum TheStardropSaloon implements ShopEntry {
 
     // Permanent Stock
     Beer(FoodType.Beer, null, "Beer", "Drink in moderation.",
@@ -60,8 +60,8 @@ public enum TheStardropSaloon {
 
     public FoodType getFoodType() { return foodType; }
     public CookingRecipes getCookingRecipes() { return cookingRecipes; }
-    public String getName() { return name; }
-    public String getDescription() { return description; }
-    public int getPrice() { return price; }
-    public int getDailyLimit() { return dailyLimit; }
+    @Override public String getDisplayName() { return name; }
+    @Override public String getDescription() { return description; }
+    @Override public int getPrice() { return price; }
+    @Override public int getDailyLimit() { return dailyLimit; }
 }
