@@ -3,34 +3,18 @@ package enums.design;
 import models.ANSI;
 
 public enum TileType {
-    Earth(true),
-    Shoveled(true),
-    Grass(true),
-    Water(false),
-
-    CopperStone(true),
-    IronStone(true),
-    GoldStone(true),
-    IridiumStone(true),
-    JewelStone(true),
-    NormalStone(true),
-    Stone(true),
-
-    Branch(true),
-    Wall(false),
-    Door(true),
-    House(true),
-    GreenHouse(true),
-    BrokenGreenHouse(false),
-    Quarry(true),
-    Tree(false),
-    Shop(true),
-    NPCHouse(true);
-
     Earth(true, ANSI.YELLOW + " " + ANSI.RESET),
     Grass(true, ANSI.GREEN + "^" + ANSI.RESET),
     Water(false, ANSI.BLUE + "~" + ANSI.RESET),
-    Stone(false, ANSI.BLACK + "#" + ANSI.RESET),
+    Shoveled(true, ANSI.YELLOW + "~" + ANSI.RESET),
+    Planted(true, ANSI.GREEN + "~" + ANSI.RESET),
+    Branch(true, ANSI.BLUE + "~" + ANSI.RESET),
+    CopperStone(true, ANSI.BLACK + "#" + ANSI.RESET),
+    IronStone(true, ANSI.BLACK + "#" + ANSI.RESET),
+    GoldStone(true, ANSI.BLACK + "#" + ANSI.RESET),
+    IridiumStone(true, ANSI.BLACK + "#" + ANSI.RESET),
+    JewelStone(true, ANSI.BLACK + "#" + ANSI.RESET),
+    Stone(true, ANSI.BLACK + "#" + ANSI.RESET),
     Wall(false, ANSI.RED + "/" + ANSI.RESET),
     Door(true, ANSI.YELLOW + "%" + ANSI.RESET),
     House(true, ANSI.YELLOW + "@" + ANSI.RESET),

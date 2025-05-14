@@ -5,6 +5,7 @@
     public class WateringCan extends Tool {
         private int capacity;
         private int filledCapacity;
+
         public WateringCan(ToolType toolType, int number) {
             super(toolType, number);
             if(toolType.equals(ToolType.PrimitiveWateringCan)){
@@ -27,6 +28,26 @@
 
         public void fill(){
             this.filledCapacity = capacity;
+        }
+
+        public int getCapacity() {
+            return capacity;
+        }
+
+        public void setCapacity(int capacity) {
+            this.capacity = capacity;
+        }
+
+        public int getFilledCapacity() {
+            return filledCapacity;
+        }
+
+        public void setFilledCapacity(int filledCapacity) {
+            this.filledCapacity = filledCapacity;
+        }
+
+        public void useCan(){
+            this.filledCapacity--;
         }
 
         @Override

@@ -140,4 +140,8 @@ public enum Handicrafts implements ItemType {
         return price;
     }
 
+    @Override
+    public boolean isTool() {
+        return false;
+    }
 }

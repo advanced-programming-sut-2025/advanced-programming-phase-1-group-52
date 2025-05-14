@@ -1,14 +1,14 @@
 package models;
 
+import enums.items.MaterialType;
 import enums.player.Skills;
 import enums.design.TileType;
 import enums.items.MineralType;
 import enums.player.Gender;
 import enums.player.Skills;
 import models.building.House;
-import models.item.Mineral;
-import models.item.Tool;
-import models.item.WateringCan;
+import models.item.*;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -253,7 +253,16 @@ public class Player {
             return new Result(true, "Branches on Tile with X: " + tile.getX() + " Y: " + tile.getY() + " has been removed!");
         }
         else if(tile.getType().equals(TileType.Tree)){
-            // todo : after completing trees and seeds write this section
+            tile.setType(TileType.Earth);
+            // wood sizes be checked!
+            Material wood = new Material(MaterialType.Wood,20);
+            if(this.inventory.addNumOfItems(1)){
+                this.inventory.addItem(wood);
+                return new Result(true, "Tree has been removed and you claimed 20 woods");
+            }
+            else{
+                return new Result(false, "Tree has been removed, but you can not claim any woods, your inventory is full!");
+            }
         }
         return new Result(false, "you can not use axe on this tile!");
     }
@@ -273,10 +282,11 @@ public class Player {
             wateringCan.fill();
             return new Result(true, "Water can is full now!");
         }
-        else if(tile.getType().equals(TileType.Tree)){
-
+        else if(tile.getType().equals(TileType.Tree) || tile.getType().equals(TileType.Planted)){
+            tile.getPlant().setWateredToday(true);
+            wateringCan.useCan();
+            return new Result(true, "Tile with X: " + tile.getX() + " Y: " + tile.getY() + " has been watered!");
         }
-        // todo : after completing trees and seeds write this section
         return new Result(false, "You can not use watering on this tile!");
     }
 
@@ -294,7 +304,44 @@ public class Player {
             return new Result(true, "tile with X: " + tile.getX() + " Y: " + tile.getY() + " has been changed to soil!");
         }
         else if(tile.getType().equals(TileType.Tree)){
-            // todo : after completing trees and seeds write this section
+            if(tile.getPlant().isReadyToHarvest()){
+                if(tile.getPlant() instanceof Fruit){
+                    Fruit newFruit = new Fruit(((Fruit) tile.getPlant()).getFruitType(),1);
+                    if(this.inventory.addNumOfItems(1)){
+                        this.inventory.addItem(newFruit);
+                        return new Result(true, "Fruit has been added to the inventory!");
+                    }
+                    else{
+                        return new Result(false, "Fruit has not been added to the inventory!, your inventory is full!");
+                    }
+                }
+                else{
+                    return new Result(false, "some problem in harvesting (type casting) come to scytheHandler");
+                }
+            }
+            else{
+                return new Result(false,"This tree is not ready to harvest!");
+            }
+        }
+        else if(tile.getType().equals(TileType.Planted)){
+            if(tile.getPlant().isReadyToHarvest()){
+                if(tile.getPlant() instanceof Crop){
+                    Crop newCrop = new Crop(((Crop) tile.getPlant()).getCropType(),1);
+                    if(this.inventory.addNumOfItems(1)){
+                        this.inventory.addItem(newCrop);
+                        return new Result(true, "Crop has been added to the inventory!");
+                    }
+                    else{
+                        return new Result(false, "Crop has not been added to the inventory!, your inventory is full!");
+                    }
+                }
+                else{
+                    return new Result(false, "some problem in harvesting (type casting) come to scytheHandler");
+                }
+            }
+            else{
+                return new Result(false,"This seed is not ready to harvest!");
+            }
         }
         return new Result(false, "you can not use scythe on this tile!");
     }

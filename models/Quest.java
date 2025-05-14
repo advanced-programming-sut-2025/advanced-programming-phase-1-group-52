@@ -10,6 +10,7 @@ public class Quest {
     private final HashMap<ItemType, Integer> reward;
     private int rate = 0;
 
+
     public Quest(NPCType questGiver, ItemType demand, int demandAmount, ItemType reward, Integer rewardAmount) {
         this.questGiver = questGiver;
         this.demands = new HashMap<>();

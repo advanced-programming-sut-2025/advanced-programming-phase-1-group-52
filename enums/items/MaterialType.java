@@ -59,14 +59,54 @@ public enum MaterialType implements ItemType {
     Stone("Stone"),
     Coal("Coal"),
     Fiber("Fiber"),
-    Acorn("Acorn"),
     Iron("Iron"),
     HardWood("Hard wood"),
-    MapleSeed("Maple seed"),
-    PineCone("Pine cone"),
-    MahoganySeed("Mahogany seed"),
     GoldCoin("Gold coin"),
-    Diamond("Diamond");
+    Diamond("Diamond"),
+
+    // pierre's remainings
+    Bouquet("Bouquet"),
+    WeddingRing("Wedding Ring"),
+    DehydratorRecipe("Dehydrator recipe"),
+    GrassStarterRecipe("Grass Starter recipe"),
+    Vinegar("Vinegar"),
+    DeluxeRetainingSoil("Deluxe retaining Soil"),
+    GrassStarter("Grass Starter"),
+    SpeedGro("Speed-Gro"),
+    BasicRetainingSoil("Basic retaining Soil"),
+    QualityRetainingSoil("Quality-Retaining Soil"),
+
+    // Joja's remainings
+    JojaCola("Joja Cola"),
+
+    // Carpenter's items
+    Barn("Barn"),
+    BigBarn("Big Barn"),
+    DeluxeBarn("Deluxe Barn"),
+    Coop("Coop"),
+    BigCoop("Big Coop"),
+    DeluxeCoop("Deluxe Coop"),
+    Well("Well"),
+    ShippingBin("Shipping Bin"),
+
+    // StarDrop Saloon
+    Beer("Beer"),
+    Salad("Salad"),
+    Spaghetti("Spaghetti"),
+    Pizza("Pizza"),
+
+    // Marine's Ranch items:
+    Hay("Hay"),
+    MilkPail("Milk Pail"),
+    Shears("Shears"),
+
+    // Fishing poles :
+    FishSmokerRecipe( "Fish Smoker recipe"),
+    TroutSoup( "Trout Soup"),
+    BambooPole( "Bamboo Pole"),
+    TrainingRod("Training Rod"),
+    FiberglassRod("Fiberglass Rod"),
+    IridiumRod("Iridium Rod");
 
     private final String name;
 

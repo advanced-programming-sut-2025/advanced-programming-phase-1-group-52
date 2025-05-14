@@ -9,7 +9,6 @@ public class Inventory {
     private ArrayList<Item> items = new ArrayList<>();
     private int numOfItems = 0;
 
-
     public Inventory() {
     }
 
@@ -66,8 +65,13 @@ public class Inventory {
                 .anyMatch(i -> i.getNumber() >= quantity);
     }
 
-    public void addNumOfItems(int num) {
+    public boolean addNumOfItems(int num) {
         this.numOfItems += num;
+        if(this.numOfItems >= backpack.getCapacity()) {
+            this.numOfItems -= 1;
+            return false;
+        }
+        return true;
     }
 
     public ArrayList<Item> getItems() {
@@ -80,6 +84,14 @@ public class Inventory {
 
     public void setBackpack(Backpacks backpack) {
         this.backpack = backpack;
+    }
+
+    public void setNumOfItems(int numOfItems) {
+        this.numOfItems = numOfItems;
+    }
+
+    public int getNumOfItems() {
+        return numOfItems;
     }
 
 }

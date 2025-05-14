@@ -1,5 +1,6 @@
 package controllers;
 
+
 import enums.Menu;
 import enums.design.FarmThemes;
 import enums.design.NPCType;
@@ -9,6 +10,8 @@ import enums.items.FoodType;
 import enums.items.MaterialType;
 import enums.design.Weather;
 import enums.items.ToolType;
+import enums.design.*;
+import enums.items.*;
 import enums.regex.GameMenuCommands;
 import models.App;
 import models.Game;
@@ -16,14 +19,12 @@ import models.Result;
 import models.User;
 import models.*;
 import models.building.House;
-import models.item.Fish;
-import models.item.Item;
-import models.item.Tool;
+import models.item.*;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
-import models.*;
 
 
 public class GameMenuController {
@@ -386,12 +387,13 @@ public class GameMenuController {
 
         Friendship friendship = game.getFriendshipByPlayers(currentPlayer, player);
         friendship.addFriendshipPoints(10);
+
         if (player.equals(currentPlayer.getSpouse())) {
             player.addEnergy(50);
             currentPlayer.addEnergy(50);
         }
 
-        return new Result(true, game.getCurrentPlayer().getUsername() + " sent a message to " + player.username() + ":\n" + message);
+        return new Result(true, game.getCurrentPlayer().getUsername() + " sent a message to " + player.getUsername() + ":\n" + message);
     }
 
     public Result talkHistory(String username) {
@@ -624,8 +626,7 @@ public class GameMenuController {
         return Math.abs(playerX - x) <= 1 && Math.abs(playerY - y) <= 1;
     }
 
-    public Result cheatSetEnergy(int value){
-        Game game = App.getInstance().getCurrentGame();
+    public Result cheatSetEnergy(int value) {
         Player player = game.getCurrentPlayer();
         player.setEnergy(value);
         return new Result(true, player.getUsername() + "'s energy: is set to " + value);
@@ -699,6 +700,177 @@ public class GameMenuController {
 
     }
 
+    public Result useTool(String directionStr){
+        GameMap map = game.getMap();
+        Player player = game.getCurrentPlayer();
+        Tile currrentTile = map.getTile(player.currentX(), player.currentY());
+        Tile targetTile = getTargetTile(currrentTile,directionStr,map);
+        return new Result(true, player.handleToolUse(targetTile).Message());
+    }
+
+    public Result craftInfo(String craftName) {
+        CropType cropType;
+        if((cropType = findCropType(craftName)) == null) {
+            return new Result(false, "Crop not found");
+        }
+        StringBuilder info = new StringBuilder();
+        info.append("Name: " + cropType.name()).append("\nSource: " + cropType.getSeedSource()).append("\nStages: ");
+        for(Integer stage : cropType.getGrowthStages()){
+            info.append(stage).append("-");
+        }
+        info.deleteCharAt(info.length() - 1);
+        info.append("\nTotal Harvest Time: " + cropType.getTotalHarvestTime()).
+                append("\nOne Time: " + cropType.isOneTimeHarvest()).
+                append("\nRegrowth Time: " + cropType.getRegrowthTime()).
+                append("\nBase Sell Price: " + cropType.getBaseSellPrice()).
+                append("\nIs Edible: " + cropType.isEdible()).
+                append("\nBase Energy: " + cropType.getEnergy()).
+                append("\nBase Health: " + cropType.getBaseHealth()).
+                append(("\nSeason: "));
+        for(Season season : cropType.getSeasons()){
+            info.append(season.name()).append(", ");
+        }
+        info.deleteCharAt(info.length() - 1);
+        info.append("\nCan Become Giant: " + cropType.canBecomeGiant());
+        return new Result(true, info.toString());
+    }
+
+    public Result treeInfo(String treeName) {
+        TreeType treeType;
+        if((treeType = findTreeType(treeName)) == null) {
+            return new Result(false, "tree not found");
+        }
+        StringBuilder info = new StringBuilder();
+        info.append("Name: " + treeType.name()).append("\nSource: " + treeType.getSource()).append("\nStages: ");
+        for(Integer stage : treeType.getStages()){
+            info.append(stage).append("-");
+        }
+        info.deleteCharAt(info.length() - 1);
+        info.append("\nTotal Harvest Time: " + treeType.getTotalHarvestTime()).
+                append("\nFruit: " + treeType.getProduct().getFruitName()).
+                append("\nHarvest cycle time: " + treeType.getHarvestCycle()).
+                append("\nBase Sell Price: " + treeType.getBaseSellPrice()).
+                append("\nIs Edible: " + treeType.isEdible()).
+                append("\nBase Energy: " + treeType.getEnergy()).
+                append(("\nSeason: "));
+        for(Season season : treeType.getSeasons()){
+            info.append(season.name()).append(", ");
+        }
+        info.deleteCharAt(info.length() - 1);
+        return new Result(true, info.toString());
+    }
+
+    public void fishingAndDisplay(ToolType pole) {
+    }
+
+    public Result plant(String seedName, String directionStr) {
+        GameMap map = game.getMap();
+        Player player = game.getCurrentPlayer();
+        Tile currentTile = map.getTile(player.currentX(), player.currentY());
+        Tile targetTile = getTargetTile(currentTile, directionStr, map);
+
+        Crop crop = findCropSeedInInventory(player.getInventory().getItems(), seedName);
+        Fruit fruit = (crop == null) ? findFruitSeedInInventory(player.getInventory().getItems(), seedName) : null;
+        Seed seed = findSeedInInventory(player.getInventory().getItems(), seedName);
+
+        if (crop == null && fruit == null) {
+            return new Result(false, "Seed not found in inventory (fruit and crop)");
+        }
+
+        if(seed == null) {
+            return new Result(false, "Seed not found in inventory");
+        }
+
+        if (crop != null) {
+            if (!targetTile.getType().equals(TileType.Shoveled) ||
+                    targetTile.getType().equals(TileType.Planted)) {
+                return new Result(false, "Crops can only be planted on shoveled, unplanted soil");
+            }
+
+            targetTile.setType(TileType.Planted);
+            targetTile.setPlant(crop);
+            player.getInventory().getItems().remove(seed);
+            player.getInventory().addNumOfItems(-1);
+            return new Result(true, crop.getName() + " crop planted successfully");
+        }
+        else if (fruit != null) {
+            if (!targetTile.getType().equals(TileType.Shoveled)) {
+                return new Result(false, "Fruit trees can only be planted on shoveled");
+            }
+
+            targetTile.setType(TileType.Tree);
+            targetTile.setPlant(fruit);
+            player.getInventory().getItems().remove(seed);
+            player.getInventory().addNumOfItems(-1);
+            return new Result(true, fruit.getName() + " tree planted successfully");
+        }
+
+        return new Result(false, "You can not plant in this tile");
+    }
+
+    public Result showPlant(int x, int y){
+        GameMap map = game.getMap();
+        Tile targetTile = map.getTile(x,y);
+        StringBuilder plantInfo = new StringBuilder();
+        if(targetTile.getType().equals(TileType.Planted) || targetTile.getType().equals(TileType.Tree)) {
+            if(targetTile.getPlant() instanceof Crop){
+                plantInfo.append("Name: " + ((Crop) targetTile.getPlant()).getCropType().name());
+                plantInfo.append("\nRemaining time to harvest: " + ((Crop) targetTile.getPlant()).getDayRemaining());
+                plantInfo.append("\nCurrent stage: " + ((Crop) targetTile.getPlant()).getCurrentStage());
+                plantInfo.append("\nIs watered today? " + ((Crop) targetTile.getPlant()).isWateredToday());
+                plantInfo.append("\nIs fertilized today? " + ((Crop) targetTile.getPlant()).isFertilizedToday());
+                return new Result(true, plantInfo.toString());
+            }
+            else if(targetTile.getPlant() instanceof Fruit){
+                plantInfo.append("Name: " + ((Fruit) targetTile.getPlant()).getFruitType().name());
+                plantInfo.append("\nRemaining time to harvest: " + ((Fruit) targetTile.getPlant()).getDayRemaining());
+                plantInfo.append("\nCurrent stage: " + ((Fruit) targetTile.getPlant()).getCurrentStage());
+                plantInfo.append("\nIs watered today? " + ((Fruit) targetTile.getPlant()).isWateredToday());
+                plantInfo.append("\nIs fertilized today? " + ((Fruit) targetTile.getPlant()).isFertilizedToday());
+                return new Result(true, plantInfo.toString());
+            }
+        }
+        return new Result(false, "Target tile does not have a plant");
+    }
+
+    public Result fertilize(String fertilizedName, String directionStr) {
+        GameMap map = game.getMap();
+        Player player = game.getCurrentPlayer();
+        Tile currentTile = map.getTile(player.currentX(), player.currentY());
+        Tile targetTile = map.getTile(currentTile.getX(), currentTile.getY());
+        Material fertilizer;
+
+        if(!(targetTile.getType().equals(TileType.Shoveled) || targetTile.getType().equals(TileType.Planted) || targetTile.getType().equals(TileType.Tree))) {
+            return new Result(false, "You can not fertilize this tile");
+        }
+
+        if((fertilizer = findFertilizerInInventory(player.getInventory().getItems(), fertilizedName)) == null) {
+            return new Result(false, "Fertilizer not found in inventory");
+        }
+
+        if(fertilizer.getMaterialName().equals(MaterialType.BasicRetainingSoil.getDisplayName())){
+            targetTile.getPlant().setFertilizedToday(true);
+        }
+        else if(fertilizer.getMaterialName().equals(MaterialType.QualityRetainingSoil.getDisplayName())){
+            targetTile.getPlant().setFertilizedToday(true);
+            targetTile.getPlant().growFaster();
+        }
+        else if(fertilizer.getMaterialName().equals(MaterialType.DeluxeRetainingSoil.getDisplayName())){
+            targetTile.getPlant().setFertilizedToday(true);
+            targetTile.getPlant().setWateredToday(true);
+        }
+        return new Result(true, "Fertilizer fertilized successfully");
+    }
+
+    public Result wateringCanFilled(){
+        Player player = game.getCurrentPlayer();
+        WateringCan wateringCan = findWateringCanInInventory(player.getInventory().getItems());
+        if(wateringCan == null) {
+            return new Result(false, "There is no watering can inventory 0o0");
+        }
+        return new Result(true, "There is " + wateringCan.getFilledCapacity() + "liter in watering can");
+    }
+
     private void onDayPassed(int days) {
     }
 
@@ -709,6 +881,24 @@ public class GameMenuController {
         for(User user : App.getInstance().getUsers()){
             if(user.getUsername().equals(username)){
                 return user;
+            }
+        }
+        return null;
+    }
+
+    private CropType findCropType(String cropName) {
+        for(CropType cropType : CropType.values()) {
+            if (cropType.name().equals(cropName)) {
+                return cropType;
+            }
+        }
+        return null;
+    }
+
+    private TreeType findTreeType(String treeName) {
+        for (TreeType treeType : TreeType.values()) {
+            if (treeType.name().equals(treeName)) {
+                return treeType;
             }
         }
         return null;
@@ -748,7 +938,6 @@ public class GameMenuController {
         }
         return true;
     }
-
 
     private Result cookingRefrigeratorPut(String materialName, String quantityStr) {
         Player player = App.getInstance().currentPlayer();
@@ -869,6 +1058,82 @@ public class GameMenuController {
         }
     }
 
-    public void fishingAndDisplay(ToolType pole) {
+    private Tile getTargetTile(Tile current, String directionInput, GameMap gameMap) {
+        Direction direction = Direction.fromString(directionInput);
+
+        int targetX = current.getX() + direction.dx;
+        int targetY = current.getY() + direction.dy;
+
+        Tile targetTile = gameMap.getTile(targetX, targetY);
+        return targetTile;
+    }
+
+    private Fruit findFruitSeedInInventory(ArrayList<Item> items, String seedName) {
+        for (Item item : items) {
+            if (item instanceof Seed && item.getName().equals(seedName)) {
+                FruitType fruitType = findFruitTypeBySeed(seedName);
+                if (fruitType != null) {
+                    return new Fruit(fruitType, 1);
+                }
+            }
+        }
+        return null;
+    }
+
+    private Crop findCropSeedInInventory(ArrayList<Item> items, String seedName) {
+        for (Item item : items) {
+            if (item instanceof Seed && item.getName().equals(seedName)) {
+                CropType cropType = findCropTypeBySeed(seedName);
+                if (cropType != null) {
+                    return new Crop(cropType, 1);
+                }
+            }
+        }
+        return null;
+    }
+
+    private CropType findCropTypeBySeed(String seedName) {
+        for(CropType cropType : CropType.values()) {
+            if(cropType.getSeedSource().name().equals(seedName)) {
+                return cropType;
+            }
+        }
+        return null;
+    }
+
+    private FruitType findFruitTypeBySeed(String seedName) {
+        for(FruitType fruitType : FruitType.values()) {
+            if(fruitType.getFruitName().equals(seedName)) {
+                return fruitType;
+            }
+        }
+        return null;
+    }
+
+    private Seed findSeedInInventory(ArrayList<Item> items, String seedName) {
+        for (Item item : items) {
+            if (item instanceof Seed && item.getName().equals(seedName)) {
+                return (Seed) item;
+            }
+        }
+        return null;
+    }
+
+    private Material findFertilizerInInventory(ArrayList<Item> items, String fertilizer) {
+        for (Item item : items) {
+            if (item instanceof Material && item.getName().equals(fertilizer)) {
+                return (Material) item;
+            }
+        }
+        return null;
+    }
+
+    private WateringCan findWateringCanInInventory(ArrayList<Item> items) {
+        for (Item item : items) {
+            if (item instanceof WateringCan) {
+                return (WateringCan) item;
+            }
+        }
+        return null;
     }
 }

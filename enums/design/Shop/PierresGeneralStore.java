@@ -3,7 +3,7 @@ package enums.design.Shop;
 
 import enums.design.Season;
 
-public enum PierresGeneralStore {
+public enum PierresGeneralStore implements ShopEntry {
     // Year-Round Stock
     Rice(null, "Rice", "A basic grain often served under vegetables.",
             200, Integer.MAX_VALUE),
@@ -122,7 +122,8 @@ public enum PierresGeneralStore {
     WheatSeeds_Fall(Season.Fall, "Wheat Seeds", "Fall crop. Takes 4 days.",
             15, 5),
     ArtichokeSeeds(Season.Fall, "Artichoke Seeds", "Fall crop. Takes 8 days.",
-            45, 5);
+            45, 5),
+    ;
 
 
     private final Season season;
@@ -140,8 +141,8 @@ public enum PierresGeneralStore {
     }
 
     public Season getSeason() { return season; }
-    public String getName() { return name; }
-    public String getDescription() { return description; }
-    public int getPrice() { return price; }
-    public int getDailyLimit() { return dailyLimit; }
+    @Override public String getDisplayName() { return name; }
+    @Override public String getDescription() { return description; }
+    @Override public int getPrice() { return price; }
+    @Override public int getDailyLimit() { return dailyLimit; }
 }

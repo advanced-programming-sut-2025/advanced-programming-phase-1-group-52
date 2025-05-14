@@ -15,11 +15,6 @@ public enum ToolType implements ItemType {
     IronicPickaxe(3, false),
     GoldenPickaxe(2, false),
     IridiumPickaxe(1, false),
-    PrimitivePickaxe(5),
-    CopperPickaxe(4),
-    IronicPickaxe(3),
-    GoldenPickaxe(2),
-    IridiumPickaxe(1),
 
     // Axes :
     PrimitiveAxe(5, true),

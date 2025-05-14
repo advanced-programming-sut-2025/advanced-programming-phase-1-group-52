@@ -8,7 +8,7 @@ public enum ShopType {
     Blacksmith("Clint", 32, 2),
     JojaMart("Morris", 42, 2),
     PierresGeneralStore("Pierre", 52, 2),
-    ArpentersShop("Robin", 32, 12),
+    CarpentersShop("Robin", 32, 12),
     FishShop("Willy", 42, 12),
     MarniesRanch("Marnie", 52, 12),
     TheStardropSaloon("Gus", 32, 22);
