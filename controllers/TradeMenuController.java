@@ -3,16 +3,18 @@ package controllers;
 import enums.items.ItemType;
 import javax.tools.Tool;
 import models.App;
+import models.Buy;
 import models.BuyOffer;
 import models.BuyRequest;
 import models.Game;
 import models.Player;
 import models.Result;
 import models.Trade;
-import models.TradeOffer;
+import models.TradeRequest;
 import models.TradeRequest;
 import models.item.Animal;
 import models.item.AnimalProduct;
+import models.item.Crop;
 import models.item.Fish;
 import models.item.Food;
 import models.item.Good;
@@ -54,7 +56,7 @@ public class TradeMenuController {
             return new Result(false, "Insufficient funds.");
         }
 
-        BuyRequest buyRequest = new BuyRequest(buyer, seller, itemName, amount, price);
+        Buy buyRequest = new Buy(buyer, seller, itemName, amount, price);
         buyer.addTrade(buyRequest);
         seller.addTrade(buyRequest);
         seller.addNotif(buyer, "Buy request received!");
@@ -99,7 +101,7 @@ public class TradeMenuController {
             return new Result(false, "Not enough items in inventory.");
         }
 
-        BuyOffer buyOffer = new BuyOffer(buyer, seller, itemName, amount, price);
+        Buy buyOffer = new Buy(buyer, seller, itemName, amount, price);
         buyer.addTrade(buyOffer);
         seller.addTrade(buyOffer);
         buyer.addNotif(seller, "Buy offer received!");
@@ -215,66 +217,360 @@ public class TradeMenuController {
             return new Result(true, "Trade rejected!");
         }
 
-        if (trade instanceof BuyRequest) {
-
+        if (trade instanceof Buy buy) {
+            return acceptBuy(buy);
         }
-        else if (trade instanceof BuyOffer) {
-
-        }
-        else if (trade instanceof TradeOffer) {
-
+        else {
+            return acceptTrade((TradeRequest) trade);
         } 
-        else if (trade instanceof TradeRequest) {
-
-        }
     }
 
-    private Result acceptBuyRequest(BuyRequest buyRequest) {
-        Item item = game.getCurrentPlayer().getInventory().getItemByName(buyRequest.getItemName());
+    private Result acceptBuy(Buy trade) {
+        Player buyer = trade.getBuyer();
+        Player seller = trade.getSeller();
+        Item item = seller.getInventory().getItemByName(trade.getItemName());
+
         if (item == null) {
-            buyRequest.setAnswered(true);
-            buyRequest.getBuyer().addNotif(game.getCurrentPlayer(), game.getCurrentPlayer().getUsername() + " don't have the wanted item!");
+            trade.setAnswered(true);
+            buyer.addNotif(seller, seller.getUsername() + " don't have the wanted item!");
             return new Result(false, "You don't have the wanted item!");
         }
-        if (buyRequest.getAmount() > item.getNumber()) {
-            buyRequest.setAnswered(true);
-            buyRequest.getBuyer().addNotif(game.getCurrentPlayer(), game.getCurrentPlayer().getUsername() + " don't have enough items!");
+        if (trade.getAmount() > item.getNumber()) {
+            trade.setAnswered(true);
+            buyer.addNotif(seller, seller.getUsername() + " don't have enough items!");
             return new Result(false, "Insufficient item amount!");
         }
 
-        ItemType itemType = item.getItemType();
-        if (item instanceof Animal) {
-
+        switch (item) {
+            case AnimalProduct animalProduct -> {
+                seller.getInventory().removeItem(animalProduct.getClass(), trade.getAmount());
+                AnimalProduct newAnimalProduct = new AnimalProduct(animalProduct.getAnimalType(), trade.getAmount());
+                
+                buyer.getInventory().addItem(newAnimalProduct);
+                buyer.getBankAccount().withdraw(trade.getPrice());
+                
+                seller.getBankAccount().deposit(trade.getPrice());
+                buyer.addNotif(seller, "You bought " + trade.getAmount() + " " + item.getName() + " for " + trade.getPrice() + "$");
+                
+                trade.setAccepted(true);
+                trade.setAnswered(true);
+                return new Result(true, "Trade completed!");
+            }
+            case Fish fish -> {
+                seller.getInventory().removeItem(fish.getClass(), trade.getAmount());
+                Fish newFish = new Fish(fish.getFishType(), trade.getAmount());
+                
+                buyer.getInventory().addItem(newFish);
+                buyer.getBankAccount().withdraw(trade.getPrice());
+                
+                seller.getBankAccount().deposit(trade.getPrice());
+                buyer.addNotif(seller, "You bought " + trade.getAmount() + " " + item.getName() + " for " + trade.getPrice() + "$");
+                
+                trade.setAccepted(true);
+                trade.setAnswered(true);
+                return new Result(true, "Trade completed!");
+            }
+            case Crop crop -> {
+                seller.getInventory().removeItem(crop.getClass(), trade.getAmount());
+                Crop newCrop = new Crop(crop.getCropType(), trade.getAmount());
+                
+                buyer.getInventory().addItem(newCrop);
+                buyer.getBankAccount().withdraw(trade.getPrice());
+                
+                seller.getBankAccount().deposit(trade.getPrice());
+                buyer.addNotif(seller, "You bought " + trade.getAmount() + " " + item.getName() + " for " + trade.getPrice() + "$");
+                
+                trade.setAccepted(true);
+                trade.setAnswered(true);
+                return new Result(true, "Trade completed!");
+            }
+            case Food food -> {
+                seller.getInventory().removeItem(food.getClass(), trade.getAmount());
+                Food newFood = new Food(food.getFoodType(), trade.getAmount());
+                
+                buyer.getInventory().addItem(newFood);
+                buyer.getBankAccount().withdraw(trade.getPrice());
+                
+                seller.getBankAccount().deposit(trade.getPrice());
+                buyer.addNotif(seller, "You bought " + trade.getAmount() + " " + item.getName() + " for " + trade.getPrice() + "$");
+                
+                trade.setAccepted(true);
+                trade.setAnswered(true);
+                return new Result(true, "Trade completed!");
+            }
+            case Good good -> {
+                seller.getInventory().removeItem(good.getClass(), trade.getAmount());
+                Good newGood = new Good(good.getGoodType(), trade.getAmount());
+                
+                buyer.getInventory().addItem(newGood);
+                buyer.getBankAccount().withdraw(trade.getPrice());
+                
+                seller.getBankAccount().deposit(trade.getPrice());
+                buyer.addNotif(seller, "You bought " + trade.getAmount() + " " + item.getName() + " for " + trade.getPrice() + "$");
+                
+                trade.setAccepted(true);
+                trade.setAnswered(true);
+                return new Result(true, "Trade completed!");
+            }
+            case Material material -> {
+                seller.getInventory().removeItem(material.getClass(), trade.getAmount());
+                Material newMaterial = new Material(material.getMaterialType(), trade.getAmount());
+                
+                buyer.getInventory().addItem(newMaterial);
+                buyer.getBankAccount().withdraw(trade.getPrice());
+                
+                seller.getBankAccount().deposit(trade.getPrice());
+                buyer.addNotif(seller, "You bought " + trade.getAmount() + " " + item.getName() + " for " + trade.getPrice() + "$");
+                
+                trade.setAccepted(true);
+                trade.setAnswered(true);
+                return new Result(true, "Trade completed!");
+            }
+            case Mineral mineral -> {
+                seller.getInventory().removeItem(mineral.getClass(), trade.getAmount());
+                Mineral newMineral = new Mineral(mineral.getMineralType(), trade.getAmount());
+                
+                buyer.getInventory().addItem(newMineral);
+                buyer.getBankAccount().withdraw(trade.getPrice());
+                
+                seller.getBankAccount().deposit(trade.getPrice());
+                buyer.addNotif(seller, "You bought " + trade.getAmount() + " " + item.getName() + " for " + trade.getPrice() + "$");
+                
+                trade.setAccepted(true);
+                trade.setAnswered(true);
+                return new Result(true, "Trade completed!");
+            }
+            case Seed seed -> {
+                seller.getInventory().removeItem(seed.getClass(), trade.getAmount());
+                Seed newSeed = new Seed(seed.getForagingSeedType(), trade.getAmount());
+                
+                buyer.getInventory().addItem(newSeed);
+                buyer.getBankAccount().withdraw(trade.getPrice());
+                
+                seller.getBankAccount().deposit(trade.getPrice());
+                buyer.addNotif(seller, "You bought " + trade.getAmount() + " " + item.getName() + " for " + trade.getPrice() + "$");
+                
+                trade.setAccepted(true);
+                trade.setAnswered(true);
+                return new Result(true, "Trade completed!");
+            }
+            case TrashCan trashCan -> {
+                seller.getInventory().removeItem(trashCan.getClass(), trade.getAmount());
+                TrashCan newTrashCan = new TrashCan(trashCan.getTrashCanType(), trade.getAmount());
+                
+                buyer.getInventory().addItem(newTrashCan);
+                buyer.getBankAccount().withdraw(trade.getPrice());
+                
+                seller.getBankAccount().deposit(trade.getPrice());
+                buyer.addNotif(seller, "You bought " + trade.getAmount() + " " + item.getName() + " for " + trade.getPrice() + "$");
+                
+                trade.setAccepted(true);
+                trade.setAnswered(true);
+                return new Result(true, "Trade completed!");
+            }
+            default -> {
+                trade.setAnswered(true);
+                return new Result(false, "Untradeable item!");
+            }
         }
-        else if (item instanceof AnimalProduct) {
+    }
 
+    private Result acceptTrade(TradeRequest trade) {
+        Player buyer = trade.getBuyer();
+        Player seller = trade.getSeller();
+        Item givingItem = buyer.getInventory().getItemByName(trade.getGivingItemName());
+        Item receivingItem = seller.getInventory().getItemByName(trade.getReceivingItemName());
+
+        if (buyer.equals(game.getCurrentPlayer())) {
+            if (givingItem == null) {
+                trade.setAnswered(true);
+                seller.addNotif(buyer, buyer.getUsername() + " doesn't have the wanted item!");
+                return new Result(false, "You don't have the wanted item!");
+            }
+            if (givingItem.getNumber() < trade.getGivingAmount()) {
+                trade.setAnswered(true);
+                seller.addNotif(buyer, buyer.getUsername() + " doesn't have enough items!");
+                return new Result(false, "Insufficient item amount!");
+            }
         }
-        else if (item instanceof Fish) {
-
+        else {
+            if (receivingItem == null) {
+                trade.setAnswered(true);
+                buyer.addNotif(seller, seller.getUsername() + " doesn't have the wanted item!");
+                return new Result(false, "You don't have the wanted item!");
+            }
+            if (receivingItem.getNumber() < trade.getReceivingAmount()) {
+                trade.setAnswered(true);
+                buyer.addNotif(seller, seller.getUsername() + " doesn't have enough items!");
+                return new Result(false, "Insufficient item amount!");
+            }
         }
-        else if (item instanceof Food) {
 
+        switch (givingItem) {
+            case AnimalProduct animalProduct -> {
+                buyer.getInventory().removeItem(animalProduct.getClass(), trade.getGivingAmount());
+                AnimalProduct newAnimalProduct = new AnimalProduct(animalProduct.getAnimalType(), trade.getGivingAmount());
+                
+                seller.getInventory().addItem(newAnimalProduct);
+                buyer.addNotif(seller, "You got " + trade.getGivingAmount() + " " + givingItem.getName());
+                
+                trade.setAccepted(true);
+                trade.setAnswered(true);
+            }
+            case Fish fish -> {
+                buyer.getInventory().removeItem(fish.getClass(), trade.getGivingAmount());
+                Fish newFish = new Fish(fish.getFishType(), trade.getGivingAmount());
+                
+                seller.getInventory().addItem(newFish);
+                buyer.addNotif(seller, "You got " + trade.getGivingAmount() + " " + givingItem.getName());
+                
+                trade.setAccepted(true);
+                trade.setAnswered(true);
+            }
+            case Crop crop -> {
+                buyer.getInventory().removeItem(crop.getClass(), trade.getGivingAmount());
+                Crop newCrop = new Crop(crop.getCropType(), trade.getGivingAmount());
+                
+                seller.getInventory().addItem(newCrop);
+                buyer.addNotif(seller, "You got " + trade.getGivingAmount() + " " + givingItem.getName());
+                
+                trade.setAccepted(true);
+                trade.setAnswered(true);
+            }
+            case Food food -> {
+                buyer.getInventory().removeItem(food.getClass(), trade.getGivingAmount());
+                Food newFood = new Food(food.getFoodType(), trade.getGivingAmount());
+                
+                seller.getInventory().addItem(newFood);
+                buyer.addNotif(seller, "You got " + trade.getGivingAmount() + " " + givingItem.getName());
+                
+                trade.setAccepted(true);
+                trade.setAnswered(true);
+            }
+            case Good good -> {
+                buyer.getInventory().removeItem(good.getClass(), trade.getGivingAmount());
+                Good newGood = new Good(good.getGoodType(), trade.getGivingAmount());
+                
+                seller.getInventory().addItem(newGood);
+                buyer.addNotif(seller, "You got " + trade.getGivingAmount() + " " + givingItem.getName());
+                
+                trade.setAccepted(true);
+                trade.setAnswered(true);
+            }
+            case Material material -> {
+                buyer.getInventory().removeItem(material.getClass(), trade.getGivingAmount());
+                Material newMaterial = new Material(material.getMaterialType(), trade.getGivingAmount());
+                
+                seller.getInventory().addItem(newMaterial);
+                buyer.addNotif(seller, "You got " + trade.getGivingAmount() + " " + givingItem.getName());
+                
+                trade.setAccepted(true);
+                trade.setAnswered(true);
+            }
+            case Mineral mineral -> {
+                buyer.getInventory().removeItem(mineral.getClass(), trade.getGivingAmount());
+                Mineral newMineral = new Mineral(mineral.getMineralType(), trade.getGivingAmount());
+                
+                seller.getInventory().addItem(newMineral);
+                buyer.addNotif(seller, "You got " + trade.getGivingAmount() + " " + givingItem.getName());
+                
+                trade.setAccepted(true);
+                trade.setAnswered(true);
+            }
+            case Seed seed -> {
+                buyer.getInventory().removeItem(seed.getClass(), trade.getGivingAmount());
+                Seed newSeed = new Seed(seed.getForagingSeedType(), trade.getGivingAmount());
+                
+                seller.getInventory().addItem(newSeed);
+                buyer.addNotif(seller, "You got " + trade.getGivingAmount() + " " + givingItem.getName());
+                
+                trade.setAccepted(true);
+                trade.setAnswered(true);
+            }
+            case TrashCan trashCan -> {
+                buyer.getInventory().removeItem(trashCan.getClass(), trade.getGivingAmount());
+                TrashCan newTrashCan = new TrashCan(trashCan.getTrashCanType(), trade.getGivingAmount());
+                
+                seller.getInventory().addItem(newTrashCan);
+                buyer.addNotif(seller, "You got " + trade.getGivingAmount() + " " + givingItem.getName());
+                
+                trade.setAccepted(true);
+                trade.setAnswered(true);
+            }
+            default -> {
+                trade.setAnswered(true);
+                return new Result(false, "Untradeable item!");
+            }
         }
-        else if (item instanceof Good) {
 
-        }
-        else if (item instanceof Material) {
+        switch (receivingItem) {
+            case AnimalProduct animalProduct -> {
+                seller.getInventory().removeItem(animalProduct.getClass(), trade.getReceivingAmount());
+                AnimalProduct newAnimalProduct = new AnimalProduct(animalProduct.getAnimalType(), trade.getReceivingAmount());
+                buyer.getInventory().addItem(newAnimalProduct);
 
-        }
-        else if (item instanceof Mineral) {
+                return new Result(true, "Trade completed!");
+            }
+            case Fish fish -> {
+                seller.getInventory().removeItem(fish.getClass(), trade.getReceivingAmount());
+                Fish newFish = new Fish(fish.getFishType(), trade.getReceivingAmount());
+                buyer.getInventory().addItem(newFish);
 
-        }
-        else if (item instanceof Seed) {
+                return new Result(true, "Trade completed!");
+            }
+            case Crop crop -> {
+                seller.getInventory().removeItem(crop.getClass(), trade.getReceivingAmount());
+                Crop newCrop = new Crop(crop.getCropType(), trade.getReceivingAmount());
+                buyer.getInventory().addItem(newCrop);
 
-        }
-        else if (item instanceof Tool) {
+                return new Result(true, "Trade completed!");
+            }
+            case Food food -> {
+                seller.getInventory().removeItem(food.getClass(), trade.getReceivingAmount());
+                Food newFood = new Food(food.getFoodType(), trade.getReceivingAmount());
+                buyer.getInventory().addItem(newFood);
 
-        }
-        else if (item instanceof TrashCan) {
+                return new Result(true, "Trade completed!");
+            }
+            case Good good -> {
+                seller.getInventory().removeItem(good.getClass(), trade.getReceivingAmount());
+                Good newGood = new Good(good.getGoodType(), trade.getReceivingAmount());
+                buyer.getInventory().addItem(newGood);
 
-        }
-        else if (item instanceof WateringCan) {
+                return new Result(true, "Trade completed!");
+            }
+            case Material material -> {
+                seller.getInventory().removeItem(material.getClass(), trade.getReceivingAmount());
+                Material newMaterial = new Material(material.getMaterialType(), trade.getReceivingAmount());
+                buyer.getInventory().addItem(newMaterial);
 
+                return new Result(true, "Trade completed!");
+            }
+            case Mineral mineral -> {
+                seller.getInventory().removeItem(mineral.getClass(), trade.getReceivingAmount());
+                Mineral newMineral = new Mineral(mineral.getMineralType(), trade.getReceivingAmount());
+                buyer.getInventory().addItem(newMineral);
+
+                return new Result(true, "Trade completed!");
+            }
+            case Seed seed -> {
+                seller.getInventory().removeItem(seed.getClass(), trade.getReceivingAmount());
+                Seed newSeed = new Seed(seed.getForagingSeedType(), trade.getReceivingAmount());
+                buyer.getInventory().addItem(newSeed);
+
+                return new Result(true, "Trade completed!");
+            }
+            case TrashCan trashCan -> {
+                seller.getInventory().removeItem(trashCan.getClass(), trade.getReceivingAmount());
+                TrashCan newTrashCan = new TrashCan(trashCan.getTrashCanType(), trade.getReceivingAmount());
+                buyer.getInventory().addItem(newTrashCan);
+
+                return new Result(true, "Trade completed!");
+            }
+            default -> {
+                trade.setAnswered(true);
+                return new Result(false, "Untradeable item!");
+            }
         }
     }
 }

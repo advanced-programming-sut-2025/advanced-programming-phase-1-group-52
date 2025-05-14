@@ -1,11 +1,11 @@
 package models;
 
-public class BuyRequest extends Trade {
+public class Buy extends Trade {
     private final String itemName;
     private final int amount;
     private final int price;
 
-    public BuyRequest(Player buyer, Player seller, String itemName, int amount, int price) {
+    public Buy(Player buyer, Player seller, String itemName, int amount, int price) {
         super(buyer, seller);
         this.itemName = itemName;
         this.amount = amount;
@@ -27,7 +27,7 @@ public class BuyRequest extends Trade {
     @Override
     public String toString() {
         return """
-               Buy Request:
+               Buy:
                Buyer: """ + this.buyer.getUsername() + "\nSeller: " + this.seller.getUsername() +
             "\nGiving Item: " + this.itemName + "\nGiving Amount: " + this.amount + "\nPrice: " + this.price +
             "\nId: " + this.tradeId + "\n-----------------------\n";

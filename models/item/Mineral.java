@@ -1,6 +1,5 @@
 package models.item;
 
-import enums.items.MaterialType;
 import enums.items.MineralType;
 
 public class Mineral extends Item {
@@ -10,5 +9,9 @@ public class Mineral extends Item {
     @Override
     protected int calculateEnergyConsumption()  {
         return 0;
+    }
+
+    public MineralType getMineralType() {
+        return (MineralType) itemType;
     }
 }
