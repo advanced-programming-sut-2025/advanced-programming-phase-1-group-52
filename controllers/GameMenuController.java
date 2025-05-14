@@ -21,6 +21,7 @@ import models.*;
 import models.building.House;
 import models.item.*;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -650,25 +651,23 @@ public class GameMenuController {
         return new Result(true, items.toString());
     }
 
-    public Result removeItemFromInventory(String itemName, String itemNumberStr){
+    public Result removeItemFromInventory(String itemName, String itemNumberStr) {
         // todo : handle trim in view for now
         // todo : calculate return money
-        Game game = App.getInstance().getCurrentGame();
         Inventory inventory = game.getCurrentPlayer().getInventory();
         int itemNumber;
         Item item;
-        if((item = findItem(itemName, inventory.getItems())) == null){
+        if ((item = findItem(itemName, inventory.getItems())) == null) {
             return new Result(false, "Item not found");
         }
 
-        if(itemNumberStr != null && !itemNumberStr.isEmpty()){
+        if (itemNumberStr != null && !itemNumberStr.isEmpty()) {
             itemNumber = Integer.parseInt(itemNumberStr);
             item.setNumber(item.getNumber() - itemNumber);
-            return new Result(true,  "x" + itemNumber + item.getName() + " has been removed");
-        }
-
-        else{
-            inventory.removeItem(item);
+            return new Result(true, "x" + itemNumber + item.getName() + " has been removed");
+        } else {
+            inventory.getItems().remove(item);
+            inventory.addNumOfItems(-1);
             return new Result(true, "Item removed from inventory");
         }
     }
@@ -693,11 +692,10 @@ public class GameMenuController {
         return new Result(true, tool.getName() + " is your current tool");
     }
 
-    public Result showAllTools(){
-        Game game = App.getInstance().getCurrentGame();
+    public Result showAllTools() {
         Player player = game.getCurrentPlayer();
         ArrayList<Item> tools = player.getInventory().getItems();
-
+        return new Result(true, toolListMaker(tools));
     }
 
     public Result useTool(String directionStr){
@@ -871,6 +869,41 @@ public class GameMenuController {
         return new Result(true, "There is " + wateringCan.getFilledCapacity() + "liter in watering can");
     }
 
+    public Result showCraftingRecipes(){
+        Player player = game.getCurrentPlayer();
+        ArrayList<CraftingRecipe> playerCraftingRecipes = player.getCraftingRecipe();
+        StringBuilder recipeString = new StringBuilder();
+        recipeString.append(player.getUsername() + "'s crafting recipes:\n");
+        for(CraftingRecipe craftingRecipe : playerCraftingRecipes) {
+            recipeString.append(craftingRecipe.getRecipeType().getDisplayName() + "\n");
+        }
+        recipeString.deleteCharAt(recipeString.length() - 1);
+        return new Result(true, recipeString.toString());
+    }
+
+    public Result showCookingRecipes(){
+        Player player = game.getCurrentPlayer();
+        ArrayList<CookingRecipe> playerCookingRecipes = player.getCookingRecipe();
+        StringBuilder recipeString = new StringBuilder();
+        recipeString.append(player.getUsername() + "'s cooking recipes:\n");
+        for(CookingRecipe cookingRecipe : playerCookingRecipes) {
+            recipeString.append(cookingRecipe.getRecipeType().getDisplayName() + "\n");
+        }
+        recipeString.deleteCharAt(recipeString.length() - 1);
+        return new Result(true, recipeString.toString());
+    }
+
+    public Result craftItem(String itemName) {
+        Player player = game.getCurrentPlayer();
+        CraftingRecipes recipeType = findCraftingRecipeType(itemName);
+        if(recipeType == null) {
+            return new Result(false, "error");
+        }
+        CraftingRecipe recipe;
+        if((recipe = findCraftingRecipeInInventory(player.getCraftingRecipe(), recipeType)) == null) {
+            return new Result(false, "There is no crafting recipe in inventory");
+        }
+    }
     private void onDayPassed(int days) {
     }
 
@@ -940,7 +973,7 @@ public class GameMenuController {
     }
 
     private Result cookingRefrigeratorPut(String materialName, String quantityStr) {
-        Player player = App.getInstance().currentPlayer();
+        Player player = game.getCurrentPlayer();
         House house  = player.getHouse();
         int quantity;
         try { quantity = Integer.parseInt(quantityStr); }
@@ -961,7 +994,7 @@ public class GameMenuController {
     }
 
     private Result cookingRefrigeratorPick(String materialName, String quantityStr) {
-        Player player = App.getInstance().currentPlayer();
+        Player player = game.getCurrentPlayer();
         House  house  = player.getHouse();
         int quantity;
         try { quantity = Integer.parseInt(quantityStr); }
@@ -990,10 +1023,10 @@ public class GameMenuController {
     }
 
     private Result cookingPrepare(String recipeName) {
-        Player player = App.getInstance().currentPlayer();
+        Player player = game.getCurrentPlayer();
         House  house  = player.getHouse();
         var    refrigerator = house.refrigerator();
-        var    inventory    = player.inventory();
+        var    inventory    = player.getInventory();
 
         CookingRecipes recipe;
         try { recipe = CookingRecipes.valueOf(recipeName); }
@@ -1032,11 +1065,11 @@ public class GameMenuController {
 
     private void calculateEnergy(int amount) {
         Player player = game.getCurrentPlayer();
-        player.setEnergy(player.energy() + amount);
-        if(player.energy() >= 200){
+        player.setEnergy(player.getEnergy() + amount);
+        if(player.getEnergy() >= 200){
             player.setEnergy(200);
         }
-        if(player.energy() <= 0){
+        if(player.getEnergy() <= 0){
             player.setFainted(true);
             switchTurn();
         }
@@ -1053,9 +1086,15 @@ public class GameMenuController {
 
     private String toolListMaker(ArrayList<Item> tools) {
         StringBuilder toolList = new StringBuilder();
-        for(Item item : tools){
-            if(item.getItemType() == ToolType.PrimitiveHoe){}
+        for (Item item : tools) {
+            if (item instanceof Tool) {
+                Tool tool = (Tool) item;
+                toolList.append(tool.getToolType().name())
+                        .append(" x").append(tool.getNumber())
+                        .append("\n");
+            }
         }
+        return toolList.toString();
     }
 
     private Tile getTargetTile(Tile current, String directionInput, GameMap gameMap) {
@@ -1132,6 +1171,24 @@ public class GameMenuController {
         for (Item item : items) {
             if (item instanceof WateringCan) {
                 return (WateringCan) item;
+            }
+        }
+        return null;
+    }
+
+    private CraftingRecipes findCraftingRecipeType(String recipeName) {
+        for(CraftingRecipes craftingRecipe : CraftingRecipes.values()) {
+            if(craftingRecipe.name().equals(recipeName)) {
+                return craftingRecipe;
+            }
+        }
+        return null;
+    }
+
+    private CraftingRecipe findCraftingRecipeInInventory(ArrayList<CraftingRecipe> recipes, CraftingRecipes craftingRecipeType) {
+        for(CraftingRecipe craftingRecipe : recipes) {
+            if(craftingRecipe.getRecipeType().equals(craftingRecipeType)) {
+                return craftingRecipe;
             }
         }
         return null;

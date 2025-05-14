@@ -137,7 +137,7 @@ public enum CraftingRecipes implements ItemType {
     }
 
     public Map<ItemType, Integer> getIngredients() {
-        return new HashMap<>(ingredients);
+        return this.ingredients;
     }
 
     public int getPrice() {
