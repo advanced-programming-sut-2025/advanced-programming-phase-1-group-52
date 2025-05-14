@@ -1,6 +1,6 @@
 package enums.items;
 
-public enum FruitType implements Growable,ItemType{
+public enum FruitType implements ItemType{
     Apricot("Apricot"),
     Cherry("Cherry"),
     Banana("Banana"),

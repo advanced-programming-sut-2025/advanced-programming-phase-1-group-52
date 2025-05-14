@@ -4,7 +4,7 @@ import enums.design.Season;
 
 import java.util.List;
 
-public enum TreeType implements Growable {
+public enum TreeType implements ItemType{
     APRICOT_TREE(ForagingSeedType.ApricotSapling, List.of(7, 7, 7, 7), 28, FruitType.Apricot, 1, 59, true, 38, List.of(Season.Spring)),
     CHERRY_TREE(ForagingSeedType.CherrySapling, List.of(7, 7, 7, 7), 28, FruitType.Cherry, 1, 80, true, 38, List.of(Season.Spring)),
     BANANA_TREE(ForagingSeedType.BananaSapling, List.of(7, 7, 7, 7), 28, FruitType.Banana, 1, 150, true, 75, List.of(Season.Summer)),
@@ -78,5 +78,10 @@ public enum TreeType implements Growable {
 
     public ForagingSeedType getSource() {
         return source;
+    }
+
+    @Override
+    public boolean isTool() {
+        return false;
     }
 }

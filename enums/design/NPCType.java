@@ -1,7 +1,7 @@
 package enums.design;
 
 import enums.items.*;
-import enums.items.Items;
+import enums.items.ItemType;
 
 import java.util.ArrayList;
 import models.Quest;
@@ -62,7 +62,7 @@ public enum NPCType {
         }
         {
             this.quests.add(new Quest(this, MaterialType.Wood, 80, MaterialType.GoldCoin, 1000));
-            this.quests.add(new Quest(this, MaterialType.IronBar, 10, Handicrafts.BeeHouse, 3));
+            this.quests.add(new Quest(this, MaterialType.IronBar, 10, ArtisanMachineProducts.BeeHouse, 3));
             this.quests.add(new Quest(this, MaterialType.Wood, 1000, MaterialType.GoldCoin, 25000));
         }
     };

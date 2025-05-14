@@ -1,9 +1,11 @@
-package enums.items;
+package enums.design;
 
+import enums.items.ItemType;
+import enums.items.MaterialType;
 import java.util.HashMap;
 import java.util.Map;
 
-public enum Handicrafts implements ItemType {
+public enum ArtisanMachineProducts implements ItemType {
     CherryBomb("Cherry Bomb", Map.of(
             MaterialType.CopperOre, 4,
             MaterialType.Coal, 1
@@ -12,32 +14,32 @@ public enum Handicrafts implements ItemType {
     Bomb("Bomb", Map.of(
             MaterialType.IronOre, 4,
             MaterialType.Coal, 1
-    ), 50),
+    ), 50 ),
 
     MegaBomb("Mega Bomb", Map.of(
             MaterialType.GoldOre, 4,
             MaterialType.Coal, 1
-    ), 50),
+    ), 50 ),
 
-    Sprinkler("Sprinkler", Map.of(
+    Sprinkler("Sprinkler", Map.of (
             MaterialType.CopperBar, 1,
             MaterialType.IronBar, 1
-    ), 0),
+    ), 0 ),
 
     QualitySprinkler("Quality Sprinkler", Map.of(
             MaterialType.IronBar, 1,
             MaterialType.GoldBar, 1
-    ), 0),
+    ), 0 ),
 
     IridiumSprinkler("Iridium Sprinkler", Map.of(
             MaterialType.GoldBar, 1,
             MaterialType.IridiumBar, 1
-    ), 0),
+    ), 0 ),
 
     CharcoalKiln("Charcoal Kiln", Map.of(
             MaterialType.Wood, 20,
             MaterialType.CopperBar, 2
-    ), 0),
+    ), 0 ),
 
     Furnace("Furnace", Map.of(
             MaterialType.CopperOre, 20,
@@ -55,30 +57,30 @@ public enum Handicrafts implements ItemType {
             MaterialType.Coal, 1,
             MaterialType.Fiber, 20,
             MaterialType.IridiumOre, 1
-    ), 0),
+    ), 0 ),
 
     BeeHouse("Bee House", Map.of(
             MaterialType.Wood, 40,
             MaterialType.Coal, 8,
             MaterialType.IronBar, 1
-    ), 0),
+    ), 0 ),
 
     CheesePress("Cheese Press", Map.of(
             MaterialType.Wood, 45,
             MaterialType.Stone, 45,
             MaterialType.CopperBar, 1
-    ), 0),
+    ), 0 ),
 
     Keg("Keg", Map.of(
             MaterialType.Wood, 30,
             MaterialType.CopperBar, 1,
             MaterialType.IronBar, 1
-    ), 0),
+    ), 0 ),
 
     Loom("Loom", Map.of(
             MaterialType.Wood, 60,
             MaterialType.Fiber, 30
-    ), 0),
+    ), 0 ),
 
     MayonnaiseMachine("Mayonnaise Machine", Map.of(
             MaterialType.Wood, 15,
@@ -90,7 +92,7 @@ public enum Handicrafts implements ItemType {
             MaterialType.Wood, 100,
             MaterialType.GoldBar, 1,
             MaterialType.IronBar, 1
-    ), 0),
+    ), 0 ),
 
     PreservesJar("Preserves Jar", Map.of(
             MaterialType.Wood, 50,
@@ -121,8 +123,8 @@ public enum Handicrafts implements ItemType {
     private final Map<MaterialType, Integer> ingredients;
     private final int price;
 
-    Handicrafts(String displayName, Map<MaterialType, Integer> ingredients,
-                  int price) {
+    ArtisanMachineProducts(String displayName, Map<MaterialType, Integer> ingredients,
+                           int price) {
         this.displayName = displayName;
         this.ingredients = new HashMap<>(ingredients);
         this.price = price;
@@ -132,7 +134,7 @@ public enum Handicrafts implements ItemType {
         return displayName;
     }
 
-    public Map<MaterialType, Integer> getIngredients() {
+    public Map<ItemType, Integer> getIngredients() {
         return new HashMap<>(ingredients);
     }
 

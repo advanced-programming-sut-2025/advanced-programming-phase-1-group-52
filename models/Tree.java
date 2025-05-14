@@ -3,7 +3,7 @@ package models;
 import enums.items.Growable;
 import enums.items.TreeType;
 
-public class Tree implements Growable {
+public class Tree {
     TreeType type;
 
     public Tree(TreeType type) {

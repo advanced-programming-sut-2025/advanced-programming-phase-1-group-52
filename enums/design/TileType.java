@@ -14,7 +14,6 @@ public enum TileType {
     GoldStone(true, ANSI.BLACK + "#" + ANSI.RESET),
     IridiumStone(true, ANSI.BLACK + "#" + ANSI.RESET),
     JewelStone(true, ANSI.BLACK + "#" + ANSI.RESET),
-    NormalStone(true, ANSI.BLACK + "#" + ANSI.RESET),
     Stone(true, ANSI.BLACK + "#" + ANSI.RESET),
     Wall(false, ANSI.RED + "/" + ANSI.RESET),
     Door(true, ANSI.YELLOW + "%" + ANSI.RESET),
