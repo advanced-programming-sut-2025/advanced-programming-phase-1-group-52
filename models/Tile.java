@@ -2,7 +2,6 @@ package models;
 
 import enums.design.TileType;
 import enums.items.Growable;
-import models.item.Crop;
 import models.item.Seed;
 
 public class Tile {
