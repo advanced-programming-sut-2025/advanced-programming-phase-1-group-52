@@ -3,7 +3,7 @@ package enums.design.Shop;
 import enums.items.MaterialType;
 
 
-public enum FishShop {
+public enum FishShop implements ShopEntry{
 
     FishSmokerRecipe(MaterialType.FishSmokerRecipe, "Fish Smoker (Recipe)",
             "A recipe to make Fish Smoker", 10000, -1, 1),
@@ -37,9 +37,9 @@ public enum FishShop {
     }
 
     public MaterialType getMaterialType() { return materialType; }
-    public String getDisplayName() { return displayName; }
-    public String getDescription() { return description; }
-    public int getPrice() { return price; }
+    @Override public String getDisplayName() { return displayName; }
+    @Override public String getDescription() { return description; }
+    @Override public int getPrice() { return price; }
     public int getFishingSkillRequired() { return fishingSkillRequired; }
-    public int getDailyLimit() { return dailyLimit; }
+    @Override public int getDailyLimit() { return dailyLimit; }
 }

@@ -4,7 +4,7 @@ import enums.items.MaterialType;
 import java.util.HashMap;
 import java.util.Map;
 
-public enum CarpentersShop {
+public enum CarpentersShop implements ShopEntry{
 
     // Permanent Stock
     Wood(ItemType.Permanent, "Wood", "A sturdy, yet flexible plant material with a wide variety of uses.",
@@ -84,34 +84,26 @@ public enum CarpentersShop {
     public ItemType getType() {
         return type;
     }
-
-    public String getName() {
+    @Override public String getDisplayName() {
         return name;
     }
-
-    public String getDescription() {
+    @Override public String getDescription() {
         return description;
     }
-
-    public int getPrice() {
+    @Override public int getPrice() {
         return price;
     }
-
-    public int getDailyLimit() {
+    @Override public int getDailyLimit() {
         return dailyLimit;
     }
-
     public Map<MaterialType, Integer> getMaterial1() {
         return material1;
     }
-
     public Map<MaterialType, Integer> getMaterial2() {
         return material2;
     }
-
     public String getSize() {
         return size;
     }
-
     public MaterialType getMaterialType() { return materialType; }
 }

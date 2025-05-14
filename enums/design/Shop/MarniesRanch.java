@@ -3,7 +3,7 @@ package enums.design.Shop;
 import enums.items.AnimalType;
 import enums.items.MaterialType;
 
-public enum MarniesRanch {
+public enum MarniesRanch implements ShopEntry{
 
     // Shop
     Hay(MaterialType.Hay, null, "Hay",
@@ -64,9 +64,9 @@ public enum MarniesRanch {
 
     public MaterialType getMaterialType() { return materialType; }
     public AnimalType getAnimalType() { return animalType; }
-    public String getName() { return name; }
-    public String getDescription() { return description; }
-    public int getPrice() { return price; }
-    public int getDailyLimit() { return dailyLimit; }
+    @Override public String getDisplayName() { return name; }
+    @Override public String getDescription() { return description; }
+    @Override public int getPrice() { return price; }
+    @Override public int getDailyLimit() { return dailyLimit; }
     public String getBuildingRequired() { return buildingRequired; }
 }

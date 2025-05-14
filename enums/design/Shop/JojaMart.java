@@ -4,7 +4,7 @@ import enums.design.Season;
 import enums.design.ShopType;
 import enums.items.ForagingSeedType;
 
-public enum JojaMart {
+public enum JojaMart implements ShopEntry{
     // Permanent Stock
     JojaCola(null, "Joja Cola", "The flagship product of Joja corporation.",
             75, Integer.MAX_VALUE,null),
@@ -121,9 +121,9 @@ public enum JojaMart {
     }
 
     public Season getSeason() { return season; }
-    public String getDisplayName() { return displayName; }
-    public String getDescription() { return description; }
-    public int getPrice() { return price; }
-    public int getDailyLimit() { return dailyLimit; }
+    @Override public String getDisplayName() { return displayName; }
+    @Override public String getDescription() { return description; }
+    @Override public int getPrice() { return price; }
+    @Override public int getDailyLimit() { return dailyLimit; }
     public ForagingSeedType getSeed() { return seed; }
 }

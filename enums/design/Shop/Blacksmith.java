@@ -6,7 +6,7 @@ import enums.items.MaterialType;
 import java.util.HashMap;
 import java.util.Map;
 
-public enum Blacksmith {
+public enum Blacksmith implements ShopEntry{
     // Stock items
     CopperOre(ItemType.STOCK, "Copper Ore", "A common ore that can be smelted into bars.",
             75, MaterialType.CopperOre, Integer.MAX_VALUE,0, null),
@@ -98,11 +98,11 @@ public enum Blacksmith {
     }
 
     public ItemType getType() { return type; }
-    public String getDisplayName() { return displayName; }
-    public String getDescription() { return description; }
-    public int getPrice() { return price; }
+    @Override public String getDisplayName() { return displayName; }
+    @Override public String getDescription() { return description; }
+    @Override public int getPrice() { return price; }
     public MaterialType getMaterialType() { return materialType; }
-    public int getDailyLimit() { return dailyLimit; }
+    @Override public int getDailyLimit() { return dailyLimit; }
     public int getUpgradeCost() { return upgradeCost; }
     public Map<MaterialType, Integer> getIngredient() { return ingredient; }
 
