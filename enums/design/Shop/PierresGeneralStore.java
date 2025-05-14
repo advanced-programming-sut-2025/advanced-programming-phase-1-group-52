@@ -122,7 +122,8 @@ public enum PierresGeneralStore {
     WheatSeeds_Fall(Season.Fall, "Wheat Seeds", "Fall crop. Takes 4 days.",
             15, 5),
     ArtichokeSeeds(Season.Fall, "Artichoke Seeds", "Fall crop. Takes 8 days.",
-            45, 5);
+            45, 5),
+    ;
 
 
     private final Season season;
