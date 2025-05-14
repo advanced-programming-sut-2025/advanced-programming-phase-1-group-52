@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.Random;
 
 public class Game {
+    private int daysPassed = 0;
     private ArrayList<User> players;
     private User mainPlayer;
     private GameMap map;
@@ -33,11 +34,20 @@ public class Game {
         this.friendships.add(new Friendship(players.get(1).getPlayer(), players.get(3).getPlayer()));
         this.friendships.add(new Friendship(players.get(2).getPlayer(), players.get(3).getPlayer()));
 
-        this.NPCs.add(new NPC(NPCType.Abigail, players));
-        this.NPCs.add(new NPC(NPCType.Harvey, players));
-        this.NPCs.add(new NPC(NPCType.Lia, players));
-        this.NPCs.add(new NPC(NPCType.Robin, players));
-        this.NPCs.add(new NPC(NPCType.Sebastian, players));
+        ArrayList<Player> realPlayers = new ArrayList<>();
+        for (User user : this.players) {
+            realPlayers.add(user.getPlayer());
+        }
+
+        this.NPCs.add(new NPC(NPCType.Abigail, realPlayers));
+        this.NPCs.add(new NPC(NPCType.Harvey, realPlayers));
+        this.NPCs.add(new NPC(NPCType.Lia, realPlayers));
+        this.NPCs.add(new NPC(NPCType.Robin, realPlayers));
+        this.NPCs.add(new NPC(NPCType.Sebastian, realPlayers));
+    }
+
+    public int getDaysPassed() {
+        return daysPassed;
     }
 
     public Friendship getFriendshipByPlayers(Player player1, Player player2) {
@@ -101,6 +111,7 @@ public class Game {
     public void timePassed() {
         int dayPassed = this.time.addHours(1);
         if(dayPassed > 0){
+            this.daysPassed++;
             int seasonPassed = this.date.addDays(dayPassed);
             // todo : add page 22 conditions
             this.todayWeather = this.tomorrowWeather;

@@ -24,11 +24,23 @@ public class Friendship {
         return friendshipPoints;
     }
 
-    public void addFriendshipPoints(int points) {
-        this.friendshipPoints += points;
+    public void setFriendshipLevel(int level) {
+        this.friendshipLevel = level;
     }
 
-    public void upgradeLevel() {
-        this.friendshipLevel++;
+    public void resetFriendship() {
+        this.friendshipLevel = 0;
+        this.friendshipPoints = 0;
+    }
+
+    public void addFriendshipPoints(int points) {
+        if (friendshipPoints < 100 && friendshipPoints + points > 100) {
+            friendshipLevel = 1;
+        }
+        else if (friendshipPoints < 200 && friendshipPoints + points > 200) {
+            friendshipLevel = 2;
+        }
+
+        this.friendshipPoints += points;
     }
 }

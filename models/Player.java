@@ -4,6 +4,7 @@ import enums.items.MaterialType;
 import enums.player.Skills;
 import enums.design.TileType;
 import enums.items.MineralType;
+import enums.player.Gender;
 import enums.player.Skills;
 import models.building.House;
 import models.item.*;
@@ -29,21 +30,102 @@ public class Player {
     private boolean isFainted = false;
     private Map<Skills, SkillData> skills;
     private Tool currentTool = null;
+    private final HashMap<Integer, Gift> gifts;
+    private static int giftId = 1;
+    private final Gender gender;
+    private ArrayList<Notification> notifications;
+    private BankAccount bankAccount;
+    private Player spouse = null;
 
-    public Player(String username) {
+    public Player(String username, Gender gender) {
         this.username = username;
+        this.gender = gender;
         this.inventory = new Inventory();
         this.trades = new ArrayList<>();
         this.talks = new ArrayList<>();
         this.skills = new HashMap<>();
+        this.gifts = new HashMap<>();
+        this.bankAccount = new BankAccount();
+        this.notifications = new ArrayList<>();
         for(Skills skill : Skills.values()){
             this.skills.put(skill, new SkillData());
         }
         giveStarterTools();
     }
 
+    public Trade getTradeById(int id) {
+        for (Trade trade : this.trades) {
+            if (trade.getTradeId() == id) return trade;
+        }
+
+        return null;
+    }
+
+    public void addTrade(Trade trade) {
+        this.trades.add(trade);
+    }
+
+    public void addEnergy(int amount) {
+        if (this.energy + amount > 200) this.energy = 200;
+        else this.energy += amount;
+    }
+
+    public BankAccount getBankAccount() {
+        return this.bankAccount;
+    }
+
+    public void setBankAccount(BankAccount bankAccount) {
+        this.bankAccount = bankAccount;
+    }
+
+    public Player getSpouse() {
+        return this.spouse;
+    }
+
+    public void setSpouse(Player player) {
+        this.spouse = spouse;
+    }
+
+    public void addNotif(Player sender, String message) {
+        this.notifications.add(new Notification(sender, message));
+    }
+
+    public void showNotifs() {
+        StringBuilder stringBuilder = new StringBuilder();
+        for (Notification notif : this.notifications) {
+            stringBuilder.append(notif.getMessage());
+        }
+
+        System.out.println(stringBuilder.toString());
+    }
+
+    public void resetNotifs() {
+        this.notifications = new ArrayList<>();
+    }
+
+    public Gender getGender() {
+        return this.gender;
+    }
+
+    public void rateGift(int id, int rate) {
+        this.gifts.get(id).setRate(rate);
+    }
+
+    public Gift getGiftById(int id) {
+        return this.gifts.get(id);
+    }
+
+    public HashMap<Integer, Gift> getGifts() {
+        return gifts;
+    }
+
     public ArrayList<Talk> getTalks() {
         return this.talks;
+    }
+
+    public void addGift(Gift gift) {
+        this.gifts.put(giftId, gift);
+        giftId++;
     }
 
     public void addSkillExperience(Skills skill, int amount) {

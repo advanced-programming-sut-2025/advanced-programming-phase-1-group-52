@@ -1,8 +1,16 @@
 package enums.design;
 
+import enums.design.Shop.Blacksmith;
+import enums.items.AnimalProductType;
+import enums.items.CookingRecipes;
+import enums.items.FishType;
+import enums.items.FoodType;
+import enums.items.Handicrafts;
+import enums.items.ItemType;
+import enums.items.MaterialType;
+import enums.items.ToolType;
 import enums.items.*;
 import enums.items.ItemType;
-
 import java.util.ArrayList;
 import models.Quest;
 
@@ -87,5 +95,9 @@ public enum NPCType {
 
     public int getHouseCornerY() {
         return houseCornerY;
+    }
+
+    public ArrayList<ItemType> getFavorites() {
+        return favorites;
     }
 }
