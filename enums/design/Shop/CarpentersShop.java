@@ -8,35 +8,43 @@ public enum CarpentersShop {
 
     // Permanent Stock
     Wood(ItemType.Permanent, "Wood", "A sturdy, yet flexible plant material with a wide variety of uses.",
-            10, Integer.MAX_VALUE, null, null, null),
+            10, Integer.MAX_VALUE, null, null, null, MaterialType.Wood),
 
     Stone(ItemType.Permanent, "Stone", "A common material with many uses in crafting and building.",
-            20, Integer.MAX_VALUE, null, null, null),
+            20, Integer.MAX_VALUE, null, null, null, MaterialType.Stone),
 
     // Farm Buildings
     Barn(ItemType.FarmBuilding, "Barn", "Houses 4 barn-dwelling animals.",
-            6000, 1, createMaterial(MaterialType.Wood, 350), createMaterial(MaterialType.Stone, 150), "7x4"),
+            6000, 1, createMaterial(MaterialType.Wood, 350),
+            createMaterial(MaterialType.Stone, 150), "7x4",null),
 
     BigBarn(ItemType.FarmBuilding, "Big Barn", "Houses 8 barn-dwelling animals. Unlocks goats.",
-            12000, 1, createMaterial(MaterialType.Wood, 450), createMaterial(MaterialType.Stone, 200), "7x4"),
+            12000, 1, createMaterial(MaterialType.Wood, 450),
+            createMaterial(MaterialType.Stone, 200), "7x4", null),
 
     DeluxeBarn(ItemType.FarmBuilding, "Deluxe Barn", "Houses 12 barn-dwelling animals. Unlocks sheep and pigs.",
-            25000, 1, createMaterial(MaterialType.Wood, 550), createMaterial(MaterialType.Stone, 300), "7x4"),
+            25000, 1, createMaterial(MaterialType.Wood, 550),
+            createMaterial(MaterialType.Stone, 300), "7x4", null),
 
     Coop(ItemType.FarmBuilding, "Coop", "Houses 4 coop-dwelling animals.",
-            4000, 1, createMaterial(MaterialType.Wood, 300), createMaterial(MaterialType.Stone, 100), "6x3"),
+            4000, 1, createMaterial(MaterialType.Wood, 300),
+            createMaterial(MaterialType.Stone, 100), "6x3", null),
 
     BigCoop(ItemType.FarmBuilding, "Big Coop", "Houses 8 coop-dwelling animals. Unlocks ducks.",
-            10000, 1, createMaterial(MaterialType.Wood, 400), createMaterial(MaterialType.Stone, 150), "6x3"),
+            10000, 1, createMaterial(MaterialType.Wood, 400),
+            createMaterial(MaterialType.Stone, 150), "6x3", null),
 
     DeluxeCoop(ItemType.FarmBuilding, "Deluxe Coop", "Houses 12 coop-dwelling animals. Unlocks rabbits.",
-            20000, 1, createMaterial(MaterialType.Wood, 500), createMaterial(MaterialType.Stone, 200), "6x3"),
+            20000, 1, createMaterial(MaterialType.Wood, 500),
+            createMaterial(MaterialType.Stone, 200), "6x3", null),
 
     Well(ItemType.FarmBuilding, "Well", "Provides a place for you to refill your watering can.",
-            1000, 1, null, createMaterial(MaterialType.Stone, 75), "3x3"),
+            1000, 1, null,
+            createMaterial(MaterialType.Stone, 75), "3x3", null),
 
     ShippingBin(ItemType.FarmBuilding, "Shipping Bin", "Items placed in it will be included in the nightly shipment.",
-            250, Integer.MAX_VALUE, createMaterial(MaterialType.Wood, 150), null, "1x1");
+            250, Integer.MAX_VALUE, createMaterial(MaterialType.Wood, 150),
+            null, "1x1", null);
 
     public enum ItemType {
         Permanent,
@@ -51,9 +59,11 @@ public enum CarpentersShop {
     private final Map<MaterialType, Integer> material1;
     private final Map<MaterialType, Integer> material2;
     private final String size;
+    private final MaterialType materialType;
 
     CarpentersShop(ItemType type, String name, String description, int price, int dailyLimit,
-                   Map<MaterialType, Integer> material1, Map<MaterialType, Integer> material2, String size) {
+                   Map<MaterialType, Integer> material1,
+                   Map<MaterialType, Integer> material2, String size, MaterialType materialType) {
         this.type = type;
         this.name = name;
         this.description = description;
@@ -62,6 +72,7 @@ public enum CarpentersShop {
         this.material1 = (material1 != null) ? material1 : new HashMap<>();
         this.material2 = (material2 != null) ? material2 : new HashMap<>();
         this.size = size;
+        this.materialType = materialType;
     }
 
     private static Map<MaterialType, Integer> createMaterial(MaterialType type, int amount) {
@@ -101,4 +112,6 @@ public enum CarpentersShop {
     public String getSize() {
         return size;
     }
+
+    public MaterialType getMaterialType() { return materialType; }
 }
