@@ -291,20 +291,6 @@ public class TradeMenuController {
                 trade.setAnswered(true);
                 return new Result(true, "Trade completed!");
             }
-            case Good good -> {
-                seller.getInventory().removeItem(good.getClass(), trade.getAmount());
-                Good newGood = new Good(good.getGoodType(), trade.getAmount());
-                
-                buyer.getInventory().addItem(newGood);
-                buyer.getBankAccount().withdraw(trade.getPrice());
-                
-                seller.getBankAccount().deposit(trade.getPrice());
-                buyer.addNotif(seller, "You bought " + trade.getAmount() + " " + item.getName() + " for " + trade.getPrice() + "$");
-                
-                trade.setAccepted(true);
-                trade.setAnswered(true);
-                return new Result(true, "Trade completed!");
-            }
             case Material material -> {
                 seller.getInventory().removeItem(material.getClass(), trade.getAmount());
                 Material newMaterial = new Material(material.getMaterialType(), trade.getAmount());
@@ -440,16 +426,6 @@ public class TradeMenuController {
                 trade.setAccepted(true);
                 trade.setAnswered(true);
             }
-            case Good good -> {
-                buyer.getInventory().removeItem(good.getClass(), trade.getGivingAmount());
-                Good newGood = new Good(good.getGoodType(), trade.getGivingAmount());
-                
-                seller.getInventory().addItem(newGood);
-                buyer.addNotif(seller, "You got " + trade.getGivingAmount() + " " + givingItem.getName());
-                
-                trade.setAccepted(true);
-                trade.setAnswered(true);
-            }
             case Material material -> {
                 buyer.getInventory().removeItem(material.getClass(), trade.getGivingAmount());
                 Material newMaterial = new Material(material.getMaterialType(), trade.getGivingAmount());
@@ -522,13 +498,6 @@ public class TradeMenuController {
                 seller.getInventory().removeItem(food.getClass(), trade.getReceivingAmount());
                 Food newFood = new Food(food.getFoodType(), trade.getReceivingAmount());
                 buyer.getInventory().addItem(newFood);
-
-                return new Result(true, "Trade completed!");
-            }
-            case Good good -> {
-                seller.getInventory().removeItem(good.getClass(), trade.getReceivingAmount());
-                Good newGood = new Good(good.getGoodType(), trade.getReceivingAmount());
-                buyer.getInventory().addItem(newGood);
 
                 return new Result(true, "Trade completed!");
             }

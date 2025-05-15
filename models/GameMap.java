@@ -489,13 +489,13 @@ public class GameMap {
     }
 
     public void generatePlantsFromSeeds() {
-        // both trees and crops but we need the refrence to them in seeds enum
         for (int i = 0; i < 90; i++) {
             for (int j = 0; j < 60; j++) {
-                if (tiles[i][j].getSeed() != null) {
-                    tiles[i][j].setType(TileType.Planted);
-                    tiles[i][j].setPlant(new Crop(/*get Type from seed */, j));
-                    tiles[i][j].setSeed(null);
+                Tile targetTile = tiles[i][j];
+                if (targetTile.getSeed() != null) {
+                    targetTile.setType(TileType.Planted);
+                    targetTile.setPlant(new Crop(targetTile.getSeed().getForagingSeedType().getPlantType(), 1));
+                    targetTile.setSeed(null);
                 }
             }
         }
