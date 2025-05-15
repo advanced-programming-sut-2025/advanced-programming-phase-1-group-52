@@ -37,9 +37,13 @@ public enum FishType implements ItemType {
         this.type = type;
     }
 
+    @Override
     public String getName() { return name; }
+
     public int getPrice() { return price; }
+
     public Season getSeason() { return season; }
+
     public String getType() { return type; }
 
     @Override

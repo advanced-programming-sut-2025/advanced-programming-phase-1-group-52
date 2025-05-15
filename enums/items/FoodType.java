@@ -40,7 +40,9 @@ public enum FoodType implements ItemType {
     }
 
     // Getters
+    @Override
     public String getName() { return name; }
+
     public int getEnergy() { return energy; }
 
     @Override

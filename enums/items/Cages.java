@@ -2,20 +2,31 @@ package enums.items;
 
 public enum Cages implements ItemType {
     // Cages:
-    NormalCage(4),
-    BigCage(8),
-    DeluxeCage(12),
+    NormalCage("normal cage", 4),
+    BigCage("big cage", 8),
+    DeluxeCage("deluxe cage", 12),
 
     // Stables:
-    NormalStable(4),
-    BigStable(8),
-    DeluxeStable(12);
+    NormalStable("normal stable", 4),
+    BigStable("big stable", 8),
+    DeluxeStable("deluxe stable", 12);
 
+    private final String name;
     private final int capacity;
 
-    Cages(int capacity) {
+    Cages(String name, int capacity) {
+        this.name = name;
         this.capacity = capacity;
     }
 
+    @Override
+    public boolean isTool() {
+        return false;
+    }
+
+    @Override
+    public String getName() {
+        return this.name;
+    }
 }
 

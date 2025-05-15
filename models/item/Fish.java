@@ -1,6 +1,8 @@
 package models.item;
 
 import enums.items.FishType;
+import enums.items.MaterialType;
+
 
 public class  Fish extends Item {
     private double quality;
