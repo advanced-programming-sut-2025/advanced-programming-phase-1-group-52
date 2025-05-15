@@ -289,6 +289,7 @@ public class Player {
         }
         else if(tile.getType().equals(TileType.Tree) || tile.getType().equals(TileType.Planted)){
             tile.getPlant().setWateredToday(true);
+            tile.getPlant().setNotWateredForTwoDays(false);
             wateringCan.useCan();
             return new Result(true, "Tile with X: " + tile.getX() + " Y: " + tile.getY() + " has been watered!");
         }

@@ -1,7 +1,10 @@
 package models;
 
 import enums.design.NPCType;
+import enums.design.TileType;
 import enums.design.Weather;
+import models.item.Crop;
+
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.Random;
@@ -113,7 +116,7 @@ public class Game {
         if(dayPassed > 0){
             this.daysPassed++;
             int seasonPassed = this.date.addDays(dayPassed);
-            // todo : add page 22 conditions
+            // todo : add thor
             this.todayWeather = this.tomorrowWeather;
             randomizeTomorrowWeather();
             handlePlayersCoordinateInMorning();
@@ -221,5 +224,23 @@ public class Game {
 
     public void setTomorrowWeather(Weather tomorrowWeather) {
         this.tomorrowWeather = tomorrowWeather;
+    }
+
+    private void updateCrop(){
+        for(int i = 0; i < 90; i++){
+            for(int j = 0; j < 60; j++){
+                Tile tile = map.getTile(i, j);
+                if(tile.getType().equals(TileType.Planted)){
+                    if(tile.getPlant() == null){
+                        System.out.println("error in crops");
+                    }
+                    else{
+                        if(tile.getPlant() instanceof Crop plant){
+                            if(plant.getDayPassed() >= plant.getCropType())
+                        }
+                    }
+                }
+            }
+        }
     }
 }

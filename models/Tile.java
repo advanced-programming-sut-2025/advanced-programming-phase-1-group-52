@@ -2,11 +2,8 @@ package models;
 
 import enums.design.TileType;
 import enums.items.Growable;
-<<<<<<< HEAD
-=======
 import models.item.Crop;
 import models.item.Item;
->>>>>>> c34bf35cb5f0af9958c35800bdbe93681d8a9226
 import models.item.Seed;
 
 public class Tile {
@@ -14,7 +11,7 @@ public class Tile {
     private final int y;
     private TileType type;
     private final Player owner;
-    private Growable plant;
+    private Growable plant = null;
     private Tree tree = null;
     private Seed seed = null;
     private Item item = null;
