@@ -9,7 +9,7 @@ public abstract class Item {
     protected abstract int calculateEnergyConsumption();
 
     public Item(ItemType itemType, int number) {
-        this.name = itemType.toString();
+        this.name = itemType.getName();
         this.itemType = itemType;
         this.number = number;
     }

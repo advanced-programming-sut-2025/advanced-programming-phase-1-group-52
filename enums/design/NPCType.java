@@ -9,10 +9,8 @@ import enums.items.ItemType;
 import enums.items.MaterialType;
 import enums.items.MineralType;
 import enums.items.ToolType;
-
 import java.util.ArrayList;
 import models.Quest;
-import models.item.Mineral;
 
 public enum NPCType {
     Sebastian(42, 32) {

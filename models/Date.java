@@ -46,15 +46,15 @@ public class Date {
         return currentDay == DAYS_PER_SEASON;
     }
 
-    public Season currentSeason() {
+    public Season getCurrentSeason() {
         return currentSeason;
     }
 
-    public Weekday currentWeekday() {
+    public Weekday getCurrentWeekday() {
         return currentWeekday;
     }
 
-    public int currentDay() {
+    public int getCurrentDay() {
         return currentDay;
     }
 

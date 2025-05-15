@@ -477,8 +477,9 @@ public class GameMap {
                 Random rand = new Random();
                 int prob = rand.nextInt(10);
                 if (tiles[i][j].getType().equals(TileType.Shoveled) && prob == 0) {
+                    Game game = App.getInstance().getCurrentGame();
                     List<ForagingSeedType> seeds = Arrays.stream(ForagingSeedType.values())
-                                .filter(ForagingSeedType::isForaging)
+                                .filter(seed -> seed.isForaging() && seed.getSeasons().contains(game.getDate().getCurrentSeason()))
                                 .collect(Collectors.toList());
                     ForagingSeedType seedType = seeds.get(rand.nextInt(seeds.size()));
 
