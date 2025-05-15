@@ -650,7 +650,6 @@ public class GameMenuController {
         items.delete(items.length() - 2, items.length());
         return new Result(true, items.toString());
     }
-
     public Result removeItemFromInventory(String itemName, String itemNumberStr) {
         // todo : handle trim in view for now
         // todo : calculate return money
@@ -692,7 +691,8 @@ public class GameMenuController {
         return new Result(true, tool.getName() + " is your current tool");
     }
 
-    public Result showAllTools() {
+
+    public Result showAllTools(){
         Player player = game.getCurrentPlayer();
         ArrayList<Item> tools = player.getInventory().getItems();
         return new Result(true, toolListMaker(tools));

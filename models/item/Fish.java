@@ -3,6 +3,7 @@ package models.item;
 import enums.items.FishType;
 import enums.items.MaterialType;
 
+
 public class  Fish extends Item {
     private double quality;
     private boolean legendary;
@@ -16,4 +17,7 @@ public class  Fish extends Item {
         return 0;
     }
 
+    public FishType getFishType() {
+        return (FishType) itemType;
+    }
 }
