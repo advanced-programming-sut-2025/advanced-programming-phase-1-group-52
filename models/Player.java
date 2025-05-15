@@ -14,6 +14,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import models.building.House;
 import models.item.Tool;
 
@@ -214,32 +215,39 @@ public class Player {
             return new Result(false, "You don't have enough energy to mine!(extract)");
         }
         this.energy -= energyConsumption;
-        Mineral newMineral;
+        Material newMaterial = null;
+        Mineral newMineral = null;
         switch (tile.getType()){
-            case NormalStone:
-                newMineral = new Mineral(MineralType.NormalStone,10);
-                break;
-                case CopperStone:
-                    newMineral = new Mineral(MineralType.CopperStone, 10);
-                    break;
-                        case GoldStone:
-                            newMineral = new Mineral(MineralType.GoldStone, 10);
-                            break;
-                                case IridiumStone:
-                                    newMineral = new Mineral(MineralType.IridiumStone, 10);
-                                    break;
-                                    case JewelStone:
-                                        newMineral = new Mineral(MineralType.JewelStone, 10);
-                                        break;
-                                        case IronStone:
-                                            newMineral = new Mineral(MineralType.IronStone, 10);
-                                            break;
-                                        case Shoveled:
-                                            default:
-                                                return new Result(false, "Tile can not be mined!");
+            case Stone -> newMaterial = new Material(MaterialType.Stone,10);
+            case CopperStone -> newMineral = new Mineral(MineralType.COPPER, 10);
+            case GoldStone -> newMineral = new Mineral(MineralType.GOLD, 10);
+            case IridiumStone -> newMineral = new Mineral(MineralType.IRIDIUM, 10);
+            case JewelStone -> {
+                Random rand = new Random();
+                int prob = rand.nextInt(10);
+                if (prob < 5) {
+                    newMineral = new Mineral(MineralType.QUARTZ, 10);
+                }
+                else if (prob < 8) {
+                    newMineral = new Mineral(MineralType.EMERALD, 10);
+                }
+                else {
+                    newMineral = new Mineral(MineralType.DIAMOND, 10);
+                }
+            }
+            case IronStone -> newMineral = new Mineral(MineralType.IRON, 10);
+            case Shoveled -> tile.setType(TileType.Earth);
+            default -> {
+                return new Result(false, "Tile can not be mined!");
+            }
         }
         this.inventory.addNumOfItems(1);
-        this.inventory.addItem(newMineral);
+        if (newMineral != null) {
+            this.inventory.addItem(newMineral);
+        }
+        else {
+            this.inventory.addItem(newMaterial);
+        }
         return new Result(true, "Tile with X: " + tile.getX() + " Y: " + tile.getY() + " has been mined!");
     }
 
@@ -304,48 +312,52 @@ public class Player {
         }
         this.energy -= energyConsumption;
 
-        if(tile.getType().equals(TileType.Grass)){
-            tile.setType(TileType.Earth);
-            return new Result(true, "tile with X: " + tile.getX() + " Y: " + tile.getY() + " has been changed to soil!");
-        }
-        else if(tile.getType().equals(TileType.Tree)){
-            if(tile.getPlant().isReadyToHarvest()){
-                if(tile.getPlant() instanceof Fruit){
-                    Fruit newFruit = new Fruit(((Fruit) tile.getPlant()).getFruitType(),1);
-                    if(this.inventory.addNumOfItems(1)){
-                        this.inventory.addItem(newFruit);
-                        return new Result(true, "Fruit has been added to the inventory!");
+        switch (tile.getType()) {
+            case Grass -> {
+                tile.setType(TileType.Earth);
+                return new Result(true, "tile with X: " + tile.getX() + " Y: " + tile.getY() + " has been changed to soil!");
+            }
+            case Tree -> {
+                if(tile.getPlant().isReadyToHarvest()){
+                    if(tile.getPlant() instanceof Fruit fruit){
+                        Fruit newFruit = new Fruit(fruit.getFruitType(),1);
+                        if(this.inventory.addNumOfItems(1)){
+                            this.inventory.addItem(newFruit);
+                            return new Result(true, "Fruit has been added to the inventory!");
+                        }
+                        else{
+                            return new Result(false, "Fruit has not been added to the inventory!, your inventory is full!");
+                        }
                     }
                     else{
-                        return new Result(false, "Fruit has not been added to the inventory!, your inventory is full!");
+                        return new Result(false, "some problem in harvesting (type casting) come to scytheHandler");
                     }
                 }
                 else{
-                    return new Result(false, "some problem in harvesting (type casting) come to scytheHandler");
+                    return new Result(false,"This tree is not ready to harvest!");
                 }
             }
-            else{
-                return new Result(false,"This tree is not ready to harvest!");
-            }
-        }
-        else if(tile.getType().equals(TileType.Planted)){
-            if(tile.getPlant().isReadyToHarvest()){
-                if(tile.getPlant() instanceof Crop){
-                    Crop newCrop = new Crop(((Crop) tile.getPlant()).getCropType(),1);
-                    if(this.inventory.addNumOfItems(1)){
-                        this.inventory.addItem(newCrop);
-                        return new Result(true, "Crop has been added to the inventory!");
+            case Planted -> {
+                if(tile.getPlant().isReadyToHarvest()){
+                    if(tile.getPlant() instanceof Crop crop){
+                        Crop newCrop = new Crop(crop.getCropType(),1);
+                        if(this.inventory.addNumOfItems(1)){
+                            this.inventory.addItem(newCrop);
+                            return new Result(true, "Crop has been added to the inventory!");
+                        }
+                        else{
+                            return new Result(false, "Crop has not been added to the inventory!, your inventory is full!");
+                        }
                     }
                     else{
-                        return new Result(false, "Crop has not been added to the inventory!, your inventory is full!");
+                        return new Result(false, "some problem in harvesting (type casting) come to scytheHandler");
                     }
                 }
                 else{
-                    return new Result(false, "some problem in harvesting (type casting) come to scytheHandler");
+                    return new Result(false,"This seed is not ready to harvest!");
                 }
             }
-            else{
-                return new Result(false,"This seed is not ready to harvest!");
+            default -> {
             }
         }
         return new Result(false, "you can not use scythe on this tile!");

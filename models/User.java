@@ -2,7 +2,6 @@ package models;
 
 import enums.player.Gender;
 import enums.regex.SecurityQuestion;
-
 import java.util.HashMap;
 
 public class User {
@@ -49,7 +48,7 @@ public class User {
     }
 
     public Player getPlayer() {
-        return this.userPlayers.get(App.getInstance().currentGame());
+        return this.userPlayers.get(App.getInstance().getCurrentGame());
     }
 
     public SecurityQuestion getSecurityQuestion() { return securityQuestion; }
