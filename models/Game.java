@@ -3,7 +3,11 @@ package models;
 import enums.design.NPCType;
 import enums.design.TileType;
 import enums.design.Weather;
+import enums.items.CropType;
 import models.item.Crop;
+import models.item.Fruit;
+import models.item.Good;
+import models.item.Item;
 
 import java.util.ArrayList;
 import java.util.Map;
@@ -113,6 +117,7 @@ public class Game {
 
     public void timePassed() {
         int dayPassed = this.time.addHours(1);
+        updateArtisanProduct();
         if(dayPassed > 0){
             this.daysPassed++;
             int seasonPassed = this.date.addDays(dayPassed);
@@ -121,6 +126,8 @@ public class Game {
             randomizeTomorrowWeather();
             handlePlayersCoordinateInMorning();
             handleFaintedPlayers();
+            eraseCrops();
+            updateCrops();
         }
     }
 
@@ -226,7 +233,21 @@ public class Game {
         this.tomorrowWeather = tomorrowWeather;
     }
 
-    private void updateCrop(){
+    private void eraseCrops(){
+        for(int i = 0; i < 90; i++) {
+            for (int j = 0; j < 60; j++) {
+                Tile tile = map.getTile(i, j);
+                if(tile.getPlant().isNotWateredForTwoDays()){
+                    tile.setPlant(null);
+                }
+                if(!tile.getPlant().isFertilizedToday()){
+                    tile.setPlant(null);
+                }
+            }
+        }
+    }
+
+    private void updateCrops(){
         for(int i = 0; i < 90; i++){
             for(int j = 0; j < 60; j++){
                 Tile tile = map.getTile(i, j);
@@ -236,9 +257,58 @@ public class Game {
                     }
                     else{
                         if(tile.getPlant() instanceof Crop plant){
-                            if(plant.getDayPassed() >= plant.getCropType())
+                            if(plant.getCropType() instanceof CropType type){
+                                if(plant.getDayPassed() >= type.getTotalHarvestTime()){
+                                    plant.setReadyToHarvest(true);
+                                    if(type.isOneTimeHarvest()){
+                                        plant.setCanBeHarvestAgain(false);
+                                    }
+                                }
+                                else{
+                                    plant.setDayPassed(plant.getDayPassed() + 1);
+                                    plant.setWateredToday(false);
+                                }
+                            }
+                            else {
+                                System.out.println("error 1");
+                            }
+                        }
+                        else{
+                            System.out.println("error 2");
                         }
                     }
+                }
+                else if(tile.getType().equals(TileType.Tree)){
+                    if(tile.getPlant() == null){
+                        System.out.println("error in tree");
+                    }
+                    else{
+                        if(tile.getPlant() instanceof Fruit fruit){
+                            if(fruit.getDayPassed() >= tile.getTree().getType().getTotalHarvestTime()){
+                                fruit.setReadyToHarvest(true);
+                            }
+                            else{
+                                fruit.setDayPassed(fruit.getDayPassed() + 1);
+                                fruit.setWateredToday(false);
+                            }
+                        }
+                        else {
+                            System.out.println("error 3");
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private void updateArtisanProduct(){
+        for(Item item : this.currentPlayer.getInventory().getItems()){
+            if(item instanceof Good good){
+                if(good.getTimePassed() >= good.getProductType().getProcessingTime()){
+                    good.setReadyToUSe(true);
+                }
+                else{
+                    good.setTimePassed(good.getTimePassed() + 1);
                 }
             }
         }

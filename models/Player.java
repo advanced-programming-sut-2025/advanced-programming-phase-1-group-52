@@ -1,6 +1,7 @@
 package models;
 
 import enums.items.CraftingRecipes;
+import enums.items.CropType;
 import enums.items.MaterialType;
 import enums.player.Skills;
 import enums.design.TileType;
@@ -312,9 +313,10 @@ public class Player {
         else if(tile.getType().equals(TileType.Tree)){
             if(tile.getPlant().isReadyToHarvest()){
                 if(tile.getPlant() instanceof Fruit){
-                    Fruit newFruit = new Fruit(((Fruit) tile.getPlant()).getFruitType(),1);
+                    Fruit newFruit = new Fruit(((Fruit) tile.getPlant()).getFruitType(),10);
                     if(this.inventory.addNumOfItems(1)){
                         this.inventory.addItem(newFruit);
+                        tile.setPlant(new Fruit(((Fruit) tile.getPlant()).getFruitType(),1));
                         return new Result(true, "Fruit has been added to the inventory!");
                     }
                     else{
@@ -332,14 +334,26 @@ public class Player {
         else if(tile.getType().equals(TileType.Planted)){
             if(tile.getPlant().isReadyToHarvest()){
                 if(tile.getPlant() instanceof Crop){
-                    Crop newCrop = new Crop(((Crop) tile.getPlant()).getCropType(),1);
-                    if(this.inventory.addNumOfItems(1)){
-                        this.inventory.addItem(newCrop);
-                        return new Result(true, "Crop has been added to the inventory!");
+                    if(((Crop) tile.getPlant()).canBeHarvestAgain()){
+                        Crop newCrop = new Crop(((Crop) tile.getPlant()).getCropType(),1);
+                        if(this.inventory.addNumOfItems(1)){
+                            this.inventory.addItem(newCrop);
+                            if(((Crop) tile.getPlant()).getCropType() instanceof CropType type){
+                                if(type.isOneTimeHarvest()){
+                                    tile.setPlant(null);
+                                }
+                                else{
+                                    tile.setPlant(new Crop(type,1));
+                                }
+                            }
+                            return new Result(true, "Crop has been added to the inventory!");
+                        }
+                        else{
+                            return new Result(false, "Crop has not been added to the inventory!, your inventory is full!");
+                        }
                     }
-                    else{
-                        return new Result(false, "Crop has not been added to the inventory!, your inventory is full!");
-                    }
+                    return new Result(false, "this crop can not be harvested again!");
+
                 }
                 else{
                     return new Result(false, "some problem in harvesting (type casting) come to scytheHandler");

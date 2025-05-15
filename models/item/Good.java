@@ -5,6 +5,7 @@ import enums.items.ArtisanProductType;
 public class Good extends Item{
     ArtisanProductType productType;
     private boolean isReadyToUse = false;
+    private int timePassed = 0;
 
     public Good(ArtisanProductType artisanProductType, int number) {
         super(artisanProductType, number);
@@ -26,5 +27,13 @@ public class Good extends Item{
 
     public void setReadyToUSe(boolean isReadyToUse) {
         this.isReadyToUse = isReadyToUse;
+    }
+
+    public int getTimePassed() {
+        return timePassed;
+    }
+
+    public void setTimePassed(int timePassed) {
+        this.timePassed = timePassed;
     }
 }

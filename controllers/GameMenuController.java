@@ -811,7 +811,7 @@ public class GameMenuController {
         StringBuilder plantInfo = new StringBuilder();
         if(targetTile.getType().equals(TileType.Planted) || targetTile.getType().equals(TileType.Tree)) {
             if(targetTile.getPlant() instanceof Crop){
-                plantInfo.append("Name: " + ((Crop) targetTile.getPlant()).getCropType().name());
+                plantInfo.append("Name: " + ((Crop) targetTile.getPlant()).getCropType().getName());
                 plantInfo.append("\nRemaining time to harvest: " + ((Crop) targetTile.getPlant()).getDayRemaining());
                 plantInfo.append("\nCurrent stage: " + ((Crop) targetTile.getPlant()).getCurrentStage());
                 plantInfo.append("\nIs watered today? " + ((Crop) targetTile.getPlant()).isWateredToday());
