@@ -1,12 +1,11 @@
 package models.item;
 
-import enums.design.ArtisanMachineProductType;
 import enums.items.ItemType;
 
-public class ArtisanMachineProduct extends Item{
+public class CraftingMachine extends Item{
     ItemType productType;
 
-    public ArtisanMachineProduct(ItemType itemType, int number) {
+    public CraftingMachine(ItemType itemType, int number) {
         super(itemType, number);
         this.productType = itemType;
     }

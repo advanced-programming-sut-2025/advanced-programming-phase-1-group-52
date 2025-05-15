@@ -1,8 +1,6 @@
-package enums.design;
+package enums.items;
 
-import enums.items.ItemType;
-
-public enum ArtisanMachineProductType implements ItemType {
+public enum CraftingMachineType implements ItemType {
     CHERRY_BOMB("Cherry Bomb", 50),
     BOMB("Bomb", 50),
     MEGA_BOMB("Mega Bomb", 50),
@@ -28,7 +26,7 @@ public enum ArtisanMachineProductType implements ItemType {
     private final String productName;
     private final Integer price;
 
-    ArtisanMachineProductType(String productName, Integer price) {
+    CraftingMachineType(String productName, Integer price) {
         this.productName = productName;
         this.price = price;
     }
@@ -36,5 +34,10 @@ public enum ArtisanMachineProductType implements ItemType {
     @Override
     public boolean isTool() {
         return false;
+    }
+
+    @Override
+    public String getName() {
+        return this.productName;
     }
 }

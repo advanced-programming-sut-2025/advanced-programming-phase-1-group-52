@@ -1,12 +1,6 @@
 package enums.design;
 
-import enums.items.AnimalProductType;
-import enums.items.CookingRecipes;
-import enums.items.FishType;
-import enums.items.FoodType;
-import enums.items.ItemType;
-import enums.items.MaterialType;
-import enums.items.ToolType;
+import enums.items.*;
 
 import java.util.ArrayList;
 import models.Quest;
@@ -67,7 +61,7 @@ public enum NPCType {
         }
         {
             this.quests.add(new Quest(this, MaterialType.Wood, 80, MaterialType.GoldCoin, 1000));
-            this.quests.add(new Quest(this, MaterialType.IronBar, 10, ArtisanMachineProductType.BEE_HOUSE, 3));
+            this.quests.add(new Quest(this, MaterialType.IronBar, 10, CraftingMachineType.BEE_HOUSE, 3));
             this.quests.add(new Quest(this, MaterialType.Wood, 1000, MaterialType.GoldCoin, 25000));
         }
     };

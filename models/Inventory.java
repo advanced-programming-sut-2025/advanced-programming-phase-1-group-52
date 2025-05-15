@@ -68,7 +68,7 @@ public class Inventory {
 
     public boolean addNumOfItems(int num) {
         this.numOfItems += num;
-        if(this.numOfItems >= backpack.getCapacity()) {
+        if(this.numOfItems > backpack.getCapacity()) {
             this.numOfItems -= 1;
             this.isFull = true;
             return false;
@@ -104,4 +104,5 @@ public class Inventory {
     public void setFull(boolean full) {
         isFull = full;
     }
+
 }
