@@ -5,10 +5,14 @@ import enums.Menu;
 import enums.design.*;
 import enums.items.*;
 import enums.regex.GameMenuCommands;
+import enums.regex.NPCDialogs;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.regex.Matcher;
+import java.util.stream.Collectors;
 import models.*;
 import models.building.House;
 import models.item.*;
@@ -294,6 +298,26 @@ public class GameMenuController {
     public Result energyShow() {
         int playerEnergy = game.getCurrentPlayer().getEnergy();
         return new Result(true, "Player energy: " + playerEnergy);
+    }
+
+    public Result meetNPC(String NPCName) {
+        NPC npc = game.getNPCByName(NPCName);
+        if (npc == null) {
+            return new Result(false, "NPC not found!");
+        }
+        if (!isPlayerNearSomething(npc.getX(), npc.getY())) {
+            return new Result(false, "You are not near the NPC!");
+        }
+        
+        ArrayList<NPCDialogs> dialogs = Arrays.stream(NPCDialogs.values())
+                .filter(dialog -> dialog.getLevel() == npc.getFriendShipLevelWith(game.getCurrentPlayer()))
+                .filter(dialog -> dialog.getWeather() == null || dialog.getWeather() == game.getTodayWeather())
+                .filter(dialog -> dialog.getSeason() == null || dialog.getSeason() == game.getDate().getCurrentSeason())
+                .collect(Collectors.toCollection(ArrayList::new));
+                
+        Random rand = new Random();
+        npc.getFriendShipWith(game.getCurrentPlayer()).addFriendshipPoints(20);
+        return new Result(true, npc.getType().toString() + " says: " + dialogs.get(rand.nextInt(dialogs.size())).getDialog());
     }
 
     public Result giftNPC(String NPCName, String itemName) {
