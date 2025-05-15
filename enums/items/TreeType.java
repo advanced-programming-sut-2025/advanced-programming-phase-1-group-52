@@ -16,12 +16,12 @@ public enum TreeType implements ItemType{
     POMEGRANATE_TREE("pomegranate tree", ForagingSeedType.PomegranateSapling, List.of(7, 7, 7, 7), 28, FruitType.Pomegranate, 1, 140, true, 38, List.of(Season.Fall), false),
 
     // Special trees
-    OAK_TREE("oak tree", ForagingSeedType.Acorn, List.of(7, 7, 7, 7), 28, FruitType.OakResin, 7, 150, false, -1, List.of(Season.Special), true),
-    MAPLE_TREE("maple tree", ForagingSeedType.MapleSeed, List.of(7, 7, 7, 7), 28, FruitType.MapleSyrup, 9, 200, false, -1, List.of(Season.Special), true),
-    PINE_TREE("pine tree", ForagingSeedType.PineCone, List.of(7, 7, 7, 7), 28, FruitType.PineTar, 5, 100, false, -1, List.of(Season.Special), true),
-    MAHOGANY_TREE("mahogany tree", ForagingSeedType.MahoganySeed, List.of(7, 7, 7, 7), 28, FruitType.Sap, 1, 2, true, -2, List.of(Season.Special), true),
-    MUSHROOM_TREE("mushroom tree", ForagingSeedType.MushroomTreeSeed, List.of(7, 7, 7, 7), 28, FruitType.CommonMushroom, 1, 40, true, 38, List.of(Season.Special), true),
-    MYSTIC_TREE("mystic tree", ForagingSeedType.MysticTreeSeed, List.of(7, 7, 7, 7), 28, FruitType.MysticSyrup, 7, 1000, true, 500, List.of(Season.Special), false);
+    OAK_TREE("oak tree", ForagingSeedType.Acorn, List.of(7, 7, 7, 7), 28, FruitType.OakResin, 7, 150, false, -1, List.of(Season.Spring, Season.Summer, Season.Fall, Season.Winter), true),
+    MAPLE_TREE("maple tree", ForagingSeedType.MapleSeed, List.of(7, 7, 7, 7), 28, FruitType.MapleSyrup, 9, 200, false, -1, List.of(Season.Spring, Season.Summer, Season.Fall, Season.Winter), true),
+    PINE_TREE("pine tree", ForagingSeedType.PineCone, List.of(7, 7, 7, 7), 28, FruitType.PineTar, 5, 100, false, -1, List.of(Season.Spring, Season.Summer, Season.Fall, Season.Winter), true),
+    MAHOGANY_TREE("mahogany tree", ForagingSeedType.MahoganySeed, List.of(7, 7, 7, 7), 28, FruitType.Sap, 1, 2, true, -2, List.of(Season.Spring, Season.Summer, Season.Fall, Season.Winter), true),
+    MUSHROOM_TREE("mushroom tree", ForagingSeedType.MushroomTreeSeed, List.of(7, 7, 7, 7), 28, FruitType.CommonMushroom, 1, 40, true, 38, List.of(Season.Spring, Season.Summer, Season.Fall, Season.Winter), true),
+    MYSTIC_TREE("mystic tree", ForagingSeedType.MysticTreeSeed, List.of(7, 7, 7, 7), 28, FruitType.MysticSyrup, 7, 1000, true, 500, List.of(Season.Spring, Season.Summer, Season.Fall, Season.Winter), false);
 
     private final String name;
     private final ForagingSeedType source;
