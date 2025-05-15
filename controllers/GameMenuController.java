@@ -609,7 +609,7 @@ public class GameMenuController {
         }
         else {
             friendship.resetFriendship();
-            player.addNotif(game.getCurrentPlayer(), "You have been dumped!");
+            player.addNotif(game.getCurrentPlayer(), "You have been dumped! Go hit the gym!");
             return new Result(true, "You have rejected the proposal!");
         }
     }

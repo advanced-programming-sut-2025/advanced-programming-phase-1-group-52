@@ -1,18 +1,12 @@
 package controllers;
 
-import enums.items.ItemType;
-import javax.tools.Tool;
 import models.App;
 import models.Buy;
-import models.BuyOffer;
-import models.BuyRequest;
 import models.Game;
 import models.Player;
 import models.Result;
 import models.Trade;
 import models.TradeRequest;
-import models.TradeRequest;
-import models.item.Animal;
 import models.item.AnimalProduct;
 import models.item.Crop;
 import models.item.Fish;
@@ -23,7 +17,6 @@ import models.item.Material;
 import models.item.Mineral;
 import models.item.Seed;
 import models.item.TrashCan;
-import models.item.WateringCan;
 
 public class TradeMenuController {
     App app = App.getInstance();

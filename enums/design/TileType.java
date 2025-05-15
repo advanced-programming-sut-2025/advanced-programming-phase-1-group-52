@@ -20,7 +20,7 @@ public enum TileType {
     House(true, ANSI.YELLOW + "@" + ANSI.RESET),
     GreenHouse(true, ANSI.GREEN + "G" + ANSI.RESET),
     BrokenGreenHouse(false, ANSI.GREEN + "B" + ANSI.RESET),
-    Quarry(true, ANSI.PURPLE + "Q" + ANSI.RESET),
+    Quarry(true, ANSI.BLACK + "Q" + ANSI.RESET),
     Tree(false, ANSI.GREEN + "T" + ANSI.RESET),
     Shop(true, ANSI.BLUE + "$" + ANSI.RESET),
     NPCHouse(true, ANSI.CYAN + "H" + ANSI.RESET);

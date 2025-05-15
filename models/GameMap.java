@@ -5,14 +5,21 @@ import enums.design.NPCType;
 import enums.design.ShopType;
 import enums.design.TileType;
 import enums.design.Weather;
+import enums.items.ForagingCropType;
+import enums.items.ForagingSeedType;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Queue;
 import java.util.Random;
+import java.util.stream.Collectors;
 import models.building.GreenHouse;
 import models.building.House;
 import models.building.NPCHouse;
 import models.building.Shop;
+import models.item.Crop;
+import models.item.Seed;
 
 public class GameMap {
     private final Tile[][] tiles;
@@ -141,15 +148,31 @@ public class GameMap {
         for (int i = 0; i < 30; i++) {
             for (int j = 0; j < 30; j++) {
                 if (tiles[i][j] == null) {
-                    int tileProb = rand.nextInt(10);
-                    if (tileProb < 4) {
+                    int tileProb = rand.nextInt(20);
+                    if (tileProb < 9) {
                         tiles[i][j] = new Tile(i, j, TileType.Earth, players.get(0));
                     }
-                    else if (tileProb < 7) {
+                    else if (tileProb < 12) {
                         tiles[i][j] = new Tile(i, j, TileType.Stone, players.get(0));
                     }
-                    else {
+                    else if (tileProb < 15) {
                         tiles[i][j] = new Tile(i, j, TileType.Tree, players.get(0));
+                    }
+                    else if (tileProb < 18) {
+                        List<ForagingCropType> crops = Arrays.asList(ForagingCropType.values());
+                        ForagingCropType cropType = crops.get(rand.nextInt(crops.size()));
+
+                        tiles[i][j] = new Tile(i, j, TileType.Planted, players.get(0));
+                        tiles[i][j].setPlant(new Crop(cropType, 1));
+                    }
+                    else {
+                        List<ForagingSeedType> seeds = Arrays.stream(ForagingSeedType.values())
+                                .filter(ForagingSeedType::isForaging)
+                                .collect(Collectors.toList());
+                        ForagingSeedType seedType = seeds.get(rand.nextInt(seeds.size()));
+
+                        tiles[i][j] = new Tile(i, j, TileType.Shoveled, players.get(0));
+                        tiles[i][j].setSeed(new Seed(seedType, 1));
                     }
                 }
             }
@@ -158,15 +181,31 @@ public class GameMap {
         for (int i = 60; i < 90; i++) {
             for (int j = 0; j < 30; j++) {
                 if (tiles[i][j] == null) {
-                    int tileProb = rand.nextInt(10);
-                    if (tileProb < 4) {
+                    int tileProb = rand.nextInt(20);
+                    if (tileProb < 9) {
                         tiles[i][j] = new Tile(i, j, TileType.Earth, players.get(1));
                     }
-                    else if (tileProb < 7) {
+                    else if (tileProb < 12) {
                         tiles[i][j] = new Tile(i, j, TileType.Stone, players.get(1));
                     }
-                    else {
+                    else if (tileProb < 15) {
                         tiles[i][j] = new Tile(i, j, TileType.Tree, players.get(1));
+                    }
+                    else if (tileProb < 18) {
+                        List<ForagingCropType> crops = Arrays.asList(ForagingCropType.values());
+                        ForagingCropType cropType = crops.get(rand.nextInt(crops.size()));
+
+                        tiles[i][j] = new Tile(i, j, TileType.Planted, players.get(1));
+                        tiles[i][j].setPlant(new Crop(cropType, 1));
+                    }
+                    else {
+                        List<ForagingSeedType> seeds = Arrays.stream(ForagingSeedType.values())
+                                .filter(ForagingSeedType::isForaging)
+                                .collect(Collectors.toList());
+                        ForagingSeedType seedType = seeds.get(rand.nextInt(seeds.size()));
+
+                        tiles[i][j] = new Tile(i, j, TileType.Shoveled, players.get(1));
+                        tiles[i][j].setSeed(new Seed(seedType, 1));
                     }
                 }
             }
@@ -175,15 +214,31 @@ public class GameMap {
         for (int i = 0; i < 30; i++) {
             for (int j = 30; j < 60; j++) {
                 if (tiles[i][j] == null) {
-                    int tileProb = rand.nextInt(10);
-                    if (tileProb < 4) {
+                    int tileProb = rand.nextInt(20);
+                    if (tileProb < 9) {
                         tiles[i][j] = new Tile(i, j, TileType.Earth, players.get(2));
                     }
-                    else if (tileProb < 7) {
+                    else if (tileProb < 12) {
                         tiles[i][j] = new Tile(i, j, TileType.Stone, players.get(2));
                     }
-                    else {
+                    else if (tileProb < 15) {
                         tiles[i][j] = new Tile(i, j, TileType.Tree, players.get(2));
+                    }
+                    else if (tileProb < 18) {
+                        List<ForagingCropType> crops = Arrays.asList(ForagingCropType.values());
+                        ForagingCropType cropType = crops.get(rand.nextInt(crops.size()));
+
+                        tiles[i][j] = new Tile(i, j, TileType.Planted, players.get(2));
+                        tiles[i][j].setPlant(new Crop(cropType, 1));
+                    }
+                    else {
+                        List<ForagingSeedType> seeds = Arrays.stream(ForagingSeedType.values())
+                                .filter(ForagingSeedType::isForaging)
+                                .collect(Collectors.toList());
+                        ForagingSeedType seedType = seeds.get(rand.nextInt(seeds.size()));
+
+                        tiles[i][j] = new Tile(i, j, TileType.Shoveled, players.get(2));
+                        tiles[i][j].setSeed(new Seed(seedType, 1));
                     }
                 }
             }
@@ -192,15 +247,31 @@ public class GameMap {
         for (int i = 60; i < 90; i++) {
             for (int j = 30; j < 60; j++) {
                 if (tiles[i][j] == null) {
-                    int tileProb = rand.nextInt(10);
-                    if (tileProb < 4) {
+                    int tileProb = rand.nextInt(20);
+                    if (tileProb < 9) {
                         tiles[i][j] = new Tile(i, j, TileType.Earth, players.get(3));
                     }
-                    else if (tileProb < 7) {
+                    else if (tileProb < 12) {
                         tiles[i][j] = new Tile(i, j, TileType.Stone, players.get(3));
                     }
-                    else {
+                    else if (tileProb < 15) {
                         tiles[i][j] = new Tile(i, j, TileType.Tree, players.get(3));
+                    }
+                    else if (tileProb < 18) {
+                        List<ForagingCropType> crops = Arrays.asList(ForagingCropType.values());
+                        ForagingCropType cropType = crops.get(rand.nextInt(crops.size()));
+
+                        tiles[i][j] = new Tile(i, j, TileType.Planted, players.get(3));
+                        tiles[i][j].setPlant(new Crop(cropType, 1));
+                    }
+                    else {
+                        List<ForagingSeedType> seeds = Arrays.stream(ForagingSeedType.values())
+                                .filter(ForagingSeedType::isForaging)
+                                .collect(Collectors.toList());
+                        ForagingSeedType seedType = seeds.get(rand.nextInt(seeds.size()));
+
+                        tiles[i][j] = new Tile(i, j, TileType.Shoveled, players.get(3));
+                        tiles[i][j].setSeed(new Seed(seedType, 1));
                     }
                 }
             }
@@ -227,9 +298,34 @@ public class GameMap {
             owner = null;
         }
 
-        for (int i = xStart + 1; i < xEnd; i++) {
-            for (int j = yStart + 1; j < yEnd; j++) {
-                tiles[i][j] = new Tile(i, j, buildingType, owner);
+        if (buildingType == TileType.Quarry) {
+            Random rand = new Random();
+            for (int i = xStart + 1; i < xEnd; i++) {
+                for (int j = yStart + 1; j < yEnd; j++) {
+                    int stoneProb = rand.nextInt(20);
+                    if (stoneProb < 7) {
+                        tiles[i][j] = new Tile(i, j, TileType.CopperStone, owner);
+                    }
+                    else if (stoneProb < 12) {
+                        tiles[i][j] = new Tile(i, j, TileType.IronStone, owner);
+                    }
+                    else if (stoneProb < 16) {
+                        tiles[i][j] = new Tile(i, j, TileType.GoldStone, owner);
+                    }
+                    else if (stoneProb < 18) {
+                        tiles[i][j] = new Tile(i, j, TileType.IridiumStone, owner);
+                    }
+                    else {
+                        tiles[i][j] = new Tile(i, j, TileType.JewelStone, owner);
+                    }
+                }
+            }
+        }
+        else {
+            for (int i = xStart + 1; i < xEnd; i++) {
+                for (int j = yStart + 1; j < yEnd; j++) {
+                    tiles[i][j] = new Tile(i, j, buildingType, owner);
+                }
             }
         }
 
@@ -346,8 +442,12 @@ public class GameMap {
     }
 
     private boolean isWalkable(int x, int y) {
+        App app = App.getInstance();
+        Game game = app.getCurrentGame();
+        Player currentPlayer = game.getCurrentPlayer();
         Tile tile = tiles[x][y];
-        return tile.getType().isReachable();
+        return tile.getType().isReachable() && (tile.getOwner().equals(currentPlayer) || 
+            (currentPlayer.getSpouse() != null && tile.getOwner().equals(currentPlayer.getSpouse())));
     }
 
     public String showMap(int x, int y, int size) {
@@ -369,5 +469,35 @@ public class GameMap {
         }
         
         return mapString.toString();
+    }
+
+    public void generateRandomForagingSeeds() {
+        for (int i = 0; i < 90; i++) {
+            for (int j = 0; j < 60; j++) {
+                Random rand = new Random();
+                int prob = rand.nextInt(10);
+                if (tiles[i][j].getType().equals(TileType.Shoveled) && prob == 0) {
+                    List<ForagingSeedType> seeds = Arrays.stream(ForagingSeedType.values())
+                                .filter(ForagingSeedType::isForaging)
+                                .collect(Collectors.toList());
+                    ForagingSeedType seedType = seeds.get(rand.nextInt(seeds.size()));
+
+                    tiles[i][j].setSeed(new Seed(seedType, 1));
+                }
+            }
+        }
+    }
+
+    public void generatePlantsFromSeeds() {
+        // both trees and crops but we need the refrence to them in seeds enum
+        for (int i = 0; i < 90; i++) {
+            for (int j = 0; j < 60; j++) {
+                if (tiles[i][j].getSeed() != null) {
+                    tiles[i][j].setType(TileType.Planted);
+                    tiles[i][j].setPlant(new Crop(/*get Type from seed */, j));
+                    tiles[i][j].setSeed(null);
+                }
+            }
+        }
     }
 }

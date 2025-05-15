@@ -2,9 +2,10 @@ package models.item;
 
 import enums.items.CropType;
 import enums.items.Growable;
+import enums.items.ItemType;
 
 public class Crop extends Item implements Growable {
-    private CropType cropType;
+    private ItemType cropType;
     private int dayPassed = 0;
     private int dayRemaining = 0;
     private boolean isWateredToday = false;
@@ -13,7 +14,7 @@ public class Crop extends Item implements Growable {
     private int currentStage = 0;
     private boolean isReadyToHarvest = false;
 
-    public Crop(CropType cropType, int number) {
+    public Crop(ItemType cropType, int number) {
         super(cropType, number);
         this.cropType = cropType;
     }
