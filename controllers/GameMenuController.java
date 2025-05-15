@@ -601,7 +601,7 @@ public class GameMenuController {
             game.getCurrentPlayer().setSpouse(player);
             player.setSpouse(game.getCurrentPlayer());
 
-            game.getCurrentPlayer().getBankAccount().depsit(player.getBankAccount().getBalance());
+            game.getCurrentPlayer().getBankAccount().deposit(player.getBankAccount().getBalance());
             player.setBankAccount(game.getCurrentPlayer().getBankAccount());
             player.addNotif(game.getCurrentPlayer(), "You are now married to " + player.getUsername());
 
