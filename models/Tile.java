@@ -2,6 +2,11 @@ package models;
 
 import enums.design.TileType;
 import enums.items.Growable;
+<<<<<<< HEAD
+=======
+import models.item.Crop;
+import models.item.Item;
+>>>>>>> c34bf35cb5f0af9958c35800bdbe93681d8a9226
 import models.item.Seed;
 
 public class Tile {
@@ -12,6 +17,7 @@ public class Tile {
     private Growable plant;
     private Tree tree = null;
     private Seed seed = null;
+    private Item item = null;
 
     public Tile(int x, int y, TileType type, Player owner) {
         this.x = x;
@@ -62,5 +68,13 @@ public class Tile {
 
     public void setSeed(Seed seed) {
         this.seed = seed;
+    }
+
+    public Item getItem() {
+        return item;
+    }
+
+    public void setItem(Item item) {
+        this.item = item;
     }
 }

@@ -1,14 +1,11 @@
 package enums.design;
 
 import enums.items.ItemType;
-import enums.items.MaterialType;
-import java.util.HashMap;
-import java.util.Map;
 
-public enum ArtisanMachineProducts implements ItemType {
-    CHERRY_BOMB("Cherry Bomb", null),
-    BOMB("Bomb", null),
-    MEGA_BOMB("Mega Bomb", null),
+public enum ArtisanMachineProductType implements ItemType {
+    CHERRY_BOMB("Cherry Bomb", 50),
+    BOMB("Bomb", 50),
+    MEGA_BOMB("Mega Bomb", 50),
     SPRINKLER("Sprinkler", null),
     QUALITY_SPRINKLER("Quality Sprinkler", null),
     IRIDIUM_SPRINKLER("Iridium Sprinkler", null),
@@ -26,12 +23,12 @@ public enum ArtisanMachineProducts implements ItemType {
     DEHYDRATOR("Dehydrator", null),
     GRASS_STARTER("Grass Starter", null),
     FISH_SMOKER("Fish Smoker", null),
-    MYSTIC_TREE_SEED("Mystic Tree Seed", null);
+    MYSTIC_TREE_SEED("Mystic Tree Seed", 100);
 
     private final String productName;
     private final Integer price;
 
-    ArtisanMachineProducts(String productName, Integer price) {
+    ArtisanMachineProductType(String productName, Integer price) {
         this.productName = productName;
         this.price = price;
     }

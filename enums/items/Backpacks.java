@@ -1,13 +1,15 @@
 package enums.items;
 
 public enum Backpacks implements ItemType {
-    PrimitiveBackpack(12),
-    BigBackpack(24),
-    DeluxeBackpack(Integer.MAX_VALUE);
+    PrimitiveBackpack("primitive backpack", 12),
+    BigBackpack("big backpack", 24),
+    DeluxeBackpack("deluxe backpack", Integer.MAX_VALUE);
 
-    private int size;
+    private final String name;
+    private final int size;
 
-    Backpacks(int size) {
+    Backpacks(String name, int size) {
+        this.name = name;
         this.size = size;
     }
 
@@ -18,5 +20,10 @@ public enum Backpacks implements ItemType {
     @Override
     public boolean isTool() {
         return false;
+    }
+
+    @Override
+    public String getName() {
+        return this.name;
     }
 }

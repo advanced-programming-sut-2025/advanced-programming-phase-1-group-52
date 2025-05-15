@@ -220,7 +220,13 @@ public enum CookingRecipes implements ItemType {
     public int getEffectiveTime() {
         return effectiveTime;
     }
+
     public int getSellPrice() {
         return sellPrice;
+    }
+
+    @Override
+    public String getName() {
+        return this.displayName;
     }
 }

@@ -1,5 +1,6 @@
 package models;
 
+import enums.items.CraftingRecipes;
 import enums.items.MaterialType;
 import enums.player.Skills;
 import enums.design.TileType;
@@ -21,6 +22,8 @@ public class Player {
     private final Inventory inventory;
     private final ArrayList<Trade> trades;
     private final ArrayList<Talk> talks;
+    private ArrayList<CraftingRecipe> craftingRecipes;
+    private ArrayList<CookingRecipe> cookingRecipes;
     private int energy = 200;
     private House house;
     private int originX;
@@ -47,6 +50,8 @@ public class Player {
         this.gifts = new HashMap<>();
         this.bankAccount = new BankAccount();
         this.notifications = new ArrayList<>();
+        this.craftingRecipes = new ArrayList<>();
+        this.cookingRecipes = new ArrayList<>();
         for(Skills skill : Skills.values()){
             this.skills.put(skill, new SkillData());
         }
@@ -447,6 +452,9 @@ public class Player {
             data.deductExperience(expNeeded);
             data.levelUp();
             data.deductExperience(expNeeded);
+            addForagingRecipes();
+            addFarmingRecipes();
+            addMiningRecipes();
         }
     }
 
@@ -464,4 +472,122 @@ public class Player {
     public House getHouse() {
         return this.house;
     }
+
+    public void addCookingRecipe(CookingRecipe recipe) {
+        this.cookingRecipes.add(recipe);
+    }
+
+    public void addCraftingRecipe(CraftingRecipe recipe) {
+        this.craftingRecipes.add(recipe);
+    }
+
+    public ArrayList<CookingRecipe> getCookingRecipe() {
+        return cookingRecipes;
+    }
+
+    public ArrayList<CraftingRecipe> getCraftingRecipe() {
+        return craftingRecipes;
+    }
+
+    private void addMiningRecipes() {
+        SkillData skillData = findSkillData(Skills.Extraction);
+        int level = skillData.getLevel();
+
+        if (level >= 1) {
+            if (!hasRecipe(CraftingRecipes.CherryBombRecipe)) {
+                craftingRecipes.add(new CraftingRecipe(CraftingRecipes.CherryBombRecipe));
+            }
+        }
+
+        if (level >= 2) {
+            if (!hasRecipe(CraftingRecipes.BombRecipe)) {
+                craftingRecipes.add(new CraftingRecipe(CraftingRecipes.BombRecipe));
+            }
+        }
+
+        if (level >= 3) {
+            if (!hasRecipe(CraftingRecipes.MegaBombRecipe)) {
+                craftingRecipes.add(new CraftingRecipe(CraftingRecipes.MegaBombRecipe));
+            }
+        }
+    }
+
+    private void addFarmingRecipes() {
+        SkillData skillData = findSkillData(Skills.Farming);
+        int level = skillData.getLevel();
+
+        if (level >= 1) {
+            if (!this.craftingRecipes.contains(CraftingRecipes.SprinklerRecipe)) {
+                this.craftingRecipes.add(new CraftingRecipe(CraftingRecipes.SprinklerRecipe));
+            }
+            if (!this.craftingRecipes.contains(CraftingRecipes.BeeHouseRecipe)) {
+                this.craftingRecipes.add(new CraftingRecipe(CraftingRecipes.BeeHouseRecipe));
+            }
+        }
+
+        else if (level >= 2) {
+            if (!this.craftingRecipes.contains(CraftingRecipes.QualitySprinklerRecipe)) {
+                this.craftingRecipes.add(new CraftingRecipe(CraftingRecipes.QualitySprinklerRecipe));
+            }
+            if (!this.craftingRecipes.contains(CraftingRecipes.CheesePressRecipe)) {
+                this.craftingRecipes.add(new CraftingRecipe(CraftingRecipes.CheesePressRecipe));
+            }
+            if (!this.craftingRecipes.contains(CraftingRecipes.PreservesJarRecipe)) {
+                this.craftingRecipes.add(new CraftingRecipe(CraftingRecipes.PreservesJarRecipe));
+            }
+            if (!this.craftingRecipes.contains(CraftingRecipes.DeluxeScarecrowRecipe)) {
+                this.craftingRecipes.add(new CraftingRecipe(CraftingRecipes.DeluxeScarecrowRecipe));
+            }
+        }
+
+        else if (level >= 3) {
+            if (!this.craftingRecipes.contains(CraftingRecipes.IridiumSprinklerRecipe)) {
+                this.craftingRecipes.add(new CraftingRecipe(CraftingRecipes.IridiumSprinklerRecipe));
+            }
+            if (!this.craftingRecipes.contains(CraftingRecipes.KegRecipe)) {
+                this.craftingRecipes.add(new CraftingRecipe(CraftingRecipes.KegRecipe));
+            }
+            if (!this.craftingRecipes.contains(CraftingRecipes.LoomRecipe)) {
+                this.craftingRecipes.add(new CraftingRecipe(CraftingRecipes.LoomRecipe));
+            }
+            if (!this.craftingRecipes.contains(CraftingRecipes.OilMakerRecipe)) {
+                this.craftingRecipes.add(new CraftingRecipe(CraftingRecipes.OilMakerRecipe));
+            }
+        }
+    }
+
+    private void addForagingRecipes() {
+        SkillData skillData = findSkillData(Skills.Foraging);
+        int level = skillData.getLevel();
+
+        if (level >= 1) {
+            if (!this.craftingRecipes.contains(CraftingRecipes.CharcoalKilnRecipe)) {
+                this.craftingRecipes.add(new CraftingRecipe(CraftingRecipes.CharcoalKilnRecipe));
+            }
+        }
+
+        if (level >= 4) {
+            if (!this.craftingRecipes.contains(CraftingRecipes.MysticTreeSeedRecipe)) {
+                this.craftingRecipes.add(new CraftingRecipe(CraftingRecipes.MysticTreeSeedRecipe));
+            }
+        }
+    }
+
+    private SkillData findSkillData(Skills skill) {
+        SkillData data = this.skills.get(skill);
+        if (data == null) {
+            throw new IllegalArgumentException("Skill not found: " + skill);
+        }
+        return data;
+    }
+
+    private boolean hasRecipe(CraftingRecipes recipeType) {
+        for (CraftingRecipe recipe : this.craftingRecipes) {
+            if (recipe.getRecipeType() == recipeType) {
+                return true;
+            }
+        }
+        return false;
+    }
+
 }
