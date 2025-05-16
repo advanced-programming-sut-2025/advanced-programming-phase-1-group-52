@@ -5,12 +5,12 @@ import java.util.regex.Pattern;
 
 public enum SignUpMenuCommands{
     Register("register -u (?<username>[\\S\\s]+) " +
-            "-p (?<password>[\\S\\s]+) (?<passwordConfirm>[\\S\\s]+) " +
+            "-p (?<password>[\\S\\s]+) -rp (?<passwordConfirm>[\\S\\s]+) " +
             "-n (?<nickname>[\\S\\s]+) -e (?<email>[\\S\\s]+) -g (?<gender>\\S+)"),
     PickQuestion("pick question -q (?<questionNumber>[\\S\\s]+) " +
             "-a (?<answer>[\\S\\s]+) -c (?<answerConfirm>\\S+)"),
-    ShowCurrentMenu("show current menu"),
-    MenuExit("menu exit"),
+    ShowCurrentMenu("(\\s*)show(\\s+)current(\\s+)menu(\\s*)"),
+    MenuExit("(\\s*)menu(\\s+)exit(\\s*)"),
     ValidUsername("[A-Za-z0-9_]+"),
     ValidDigit("(?=.*[0-9])"),
     ValidLower( "(?=.*[a-z])"),

@@ -4,10 +4,10 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public enum MainMenuCommands {
-    MenuEnter("(\\s*)menu(\\s+)enter(?<menu_name>\\S+)(\\s*)"),
-    MenuExit("(\\s*)menu(\\s+)exit(\\s*)"),
-    ShowCurrentMenu("(\\s*)show(\\s+)current(\\s+)menu(\\s*)"),
-    UserLogout("(\\s*)user(\\s+)logout(\\s*)");
+    MenuEnter("menu enter(?<menuName>\\S+)"),
+    MenuExit("menu exit"),
+    ShowCurrentMenu("show current menu"),
+    UserLogout("user logout");
 
     private final String pattern;
 

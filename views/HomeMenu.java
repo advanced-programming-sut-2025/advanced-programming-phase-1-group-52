@@ -2,26 +2,27 @@
 
 // import java.util.Scanner;
 
-// import controllers.GameMenuController;
-// import enums.regex.HomeMenuCommands;
+import controllers.GameMenuController;
+import controllers.HomeMenuController;
+import enums.regex.HomeMenuCommands;
 
 // import java.util.regex.Matcher;
 
-// public class HomeMenu implements AppMenu {
-//     private final GameMenuController controller = new GameMenuController();
+public class HomeMenu implements AppMenu {
+    private final HomeMenuController controller = new HomeMenuController();
 
 //     @Override
 //     public void checkInput(Scanner scanner) {
 //         String input = scanner.nextLine();
 //         Matcher matcher;
 
-//         if ((matcher = HomeMenuCommands.CraftingShowRecipes.getMatcher(input)) != null) {
-        
-//         } 
-//         else if ((matcher = HomeMenuCommands.Crafting.getMatcher(input)) != null) {
-            
-//         } 
-//         else if ((matcher = HomeMenuCommands.CookingRefrigerator.getMatcher(input)) != null) {
+        if ((matcher = HomeMenuCommands.CraftingShowRecipes.getMatcher(input)) != null) {
+            System.out.println(controller.showCraftingRecipes().Message());
+        } 
+        else if ((matcher = HomeMenuCommands.Crafting.getMatcher(input)) != null) {
+            System.out.println(controller.craftItem(matcher.group("itemName")).Message());
+        } 
+        else if ((matcher = HomeMenuCommands.CookingRefrigerator.getMatcher(input)) != null) {
             
 //         } 
 //         else if ((matcher = HomeMenuCommands.CookingShowRecipes.getMatcher(input)) != null) {

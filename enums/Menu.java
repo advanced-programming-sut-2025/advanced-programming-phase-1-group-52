@@ -13,7 +13,8 @@ public enum Menu {
     MainMenu(new MainMenu()),
     GameMenu(new GameMenu()),
     InventoryMenu(new InventoryMenu()),
-    TradeMenu(new TradeMenu());
+    TradeMenu(new TradeMenu()),
+    HomeMenu(new HomeMenu());
 
     private final AppMenu menu;
 

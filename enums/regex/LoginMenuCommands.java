@@ -4,13 +4,13 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public enum LoginMenuCommands{
-    Login("(\\s*)login(\\s+)-u(\\s+)(?<username>[\\S\\s]+)(\\s+)" +
-            "-p(?<password>[\\S\\s]+)(\\s+)–stay(\\s+)-logged(\\s+)-in(\\s*)"),
-    ForgetPassword("(\\s*)forget(\\s+)password(\\s+)-u(?<username>\\S+)(\\s*)"),
-    Answer("(\\s*)answer(\\s+)-a(\\s+)(?<answer>\\S+)(\\s*)"),
-    ResetPassword("(\\s*)-p(\\s+)(?<resetPassword>\\S+)(\\s*)"),
-    ShowCurrentMenu("(\\s*)show(\\s+)current(\\s+)menu(\\s*)"),
-    MenuExit("(\\s*)menu(\\s+)exit(\\s*)");
+    Login("login -u (?<username>[\\S\\s]+) " +
+            "-p (?<password>[\\S\\s]+) –stay -logged -in"),
+    ForgetPassword("forget password -u (?<username>\\S+)"),
+    Answer("answer -a (?<answer>\\S+)"),
+    ResetPassword("-p (?<resetPassword>\\S+)"),
+    ShowCurrentMenu("show current menu"),
+    MenuExit("menu exit");
 
     private final String pattern;
 
