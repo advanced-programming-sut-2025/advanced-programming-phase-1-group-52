@@ -1,8 +1,6 @@
 package enums.items;
 
 
-import enums.design.ArtisanMachineProductType;
-
 import java.util.HashMap;
 import java.util.Map;
 
@@ -10,108 +8,108 @@ public enum CraftingRecipes implements ItemType {
     CherryBombRecipe("Cherry Bomb", Map.of(
         MaterialType.CopperOre, 4,
         MaterialType.Coal, 1
-    ), 50, ArtisanMachineProductType.CHERRY_BOMB),
+    ), 50, CraftingMachineType.CHERRY_BOMB),
 
     BombRecipe("Bomb", Map.of(
             MaterialType.IronOre, 4,
             MaterialType.Coal, 1
-    ), 50, ArtisanMachineProductType.BOMB ),
+    ), 50, CraftingMachineType.BOMB ),
 
     MegaBombRecipe("Mega Bomb", Map.of(
             MaterialType.GoldOre, 4,
             MaterialType.Coal, 1
-    ), 50 , ArtisanMachineProductType.MEGA_BOMB),
+    ), 50 , CraftingMachineType.MEGA_BOMB),
 
     SprinklerRecipe("Sprinkler", Map.of (
             MaterialType.CopperBar, 1,
             MaterialType.IronBar, 1
-    ), 0 , ArtisanMachineProductType.SPRINKLER),
+    ), 0 , CraftingMachineType.SPRINKLER),
 
     QualitySprinklerRecipe("Quality Sprinkler", Map.of(
             MaterialType.IronBar, 1,
             MaterialType.GoldBar, 1
-    ), 0 , ArtisanMachineProductType.QUALITY_SPRINKLER),
+    ), 0 , CraftingMachineType.QUALITY_SPRINKLER),
 
     IridiumSprinklerRecipe("Iridium Sprinkler", Map.of(
             MaterialType.GoldBar, 1,
             MaterialType.IridiumBar, 1
-    ), 0 , ArtisanMachineProductType.IRIDIUM_SPRINKLER),
+    ), 0 , CraftingMachineType.IRIDIUM_SPRINKLER),
 
     CharcoalKilnRecipe("Charcoal Kiln", Map.of(
             MaterialType.Wood, 20,
             MaterialType.CopperBar, 2
-    ), 0 , ArtisanMachineProductType.CHARCOAL_KILN),
+    ), 0 , CraftingMachineType.CHARCOAL_KILN),
 
     FurnaceRecipe("Furnace", Map.of(
             MaterialType.CopperOre, 20,
             MaterialType.Stone, 25
-    ), 0, ArtisanMachineProductType.FURNACE),
+    ), 0, CraftingMachineType.FURNACE),
 
     ScarecrowRecipe("Scarecrow", Map.of(
             MaterialType.Wood, 50,
             MaterialType.Coal, 1,
             MaterialType.Fiber, 20
-    ), 0, ArtisanMachineProductType.SCARECROW),
+    ), 0, CraftingMachineType.SCARECROW),
 
     DeluxeScarecrowRecipe("Deluxe Scarecrow", Map.of(
             MaterialType.Wood, 50,
             MaterialType.Coal, 1,
             MaterialType.Fiber, 20,
             MaterialType.IridiumOre, 1
-    ), 0 , ArtisanMachineProductType.DELUXE_SCARECROW),
+    ), 0 , CraftingMachineType.DELUXE_SCARECROW),
 
     BeeHouseRecipe("Bee House", Map.of(
             MaterialType.Wood, 40,
             MaterialType.Coal, 8,
             MaterialType.IronBar, 1
-    ), 0 , ArtisanMachineProductType.BEE_HOUSE),
+    ), 0 , CraftingMachineType.BEE_HOUSE),
 
     CheesePressRecipe("Cheese Press", Map.of(
             MaterialType.Wood, 45,
             MaterialType.Stone, 45,
             MaterialType.CopperBar, 1
-    ), 0, ArtisanMachineProductType.CHEESE_PRESS ),
+    ), 0, CraftingMachineType.CHEESE_PRESS ),
 
     KegRecipe("Keg", Map.of(
             MaterialType.Wood, 30,
             MaterialType.CopperBar, 1,
             MaterialType.IronBar, 1
-    ), 0 , ArtisanMachineProductType.KEG),
+    ), 0 , CraftingMachineType.KEG),
 
     LoomRecipe("Loom", Map.of(
             MaterialType.Wood, 60,
             MaterialType.Fiber, 30
-    ), 0, ArtisanMachineProductType.LOOM ),
+    ), 0, CraftingMachineType.LOOM ),
 
     MayonnaiseMachineRecipe("Mayonnaise Machine", Map.of(
             MaterialType.Wood, 15,
             MaterialType.Stone, 15,
             MaterialType.CopperBar, 1
-    ), 0, ArtisanMachineProductType.MAYONNAISE_MACHINE),
+    ), 0, CraftingMachineType.MAYONNAISE_MACHINE),
 
     OilMakerRecipe("Oil Maker", Map.of(
             MaterialType.Wood, 100,
             MaterialType.GoldBar, 1,
             MaterialType.IronBar, 1
-    ), 0, ArtisanMachineProductType.OIL_MAKER),
+    ), 0, CraftingMachineType.OIL_MAKER),
 
     PreservesJarRecipe("Preserves Jar", Map.of(
             MaterialType.Wood, 50,
             MaterialType.Stone, 40,
             MaterialType.Coal, 8
-    ), 0, ArtisanMachineProductType.PRESERVES_JAR),
+    ), 0, CraftingMachineType.PRESERVES_JAR),
 
     DehydratorRecipe("Dehydrator", Map.of(
             MaterialType.Wood, 30,
             MaterialType.Stone, 20,
             MaterialType.Fiber, 30
-    ), 0, ArtisanMachineProductType.DEHYDRATOR),
+    ), 0, CraftingMachineType.DEHYDRATOR),
 
     FishSmokerRecipe("Fish Smoker", Map.of(
             MaterialType.Wood, 50,
             MaterialType.IronBar, 3,
             MaterialType.Coal, 10
-    ), 0, ArtisanMachineProductType.FISH_SMOKER),
+    ), 0, CraftingMachineType.FISH_SMOKER),
 
     MysticTreeSeedRecipe("Mystic Tree Seed", Map.of(
             ForagingSeedType.Acorn, 5,

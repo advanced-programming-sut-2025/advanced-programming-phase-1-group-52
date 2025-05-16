@@ -11,7 +11,6 @@ import models.item.AnimalProduct;
 import models.item.Crop;
 import models.item.Fish;
 import models.item.Food;
-import models.item.ArtisanMachineProduct;
 import models.item.Item;
 import models.item.Material;
 import models.item.Mineral;

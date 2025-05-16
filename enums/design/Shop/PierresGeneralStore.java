@@ -43,7 +43,7 @@ public enum PierresGeneralStore implements ShopEntry {
             6000, Integer.MAX_VALUE),
     BasicRetainingSoil(null, "Basic Retaining Soil", "Chance of staying watered overnight.",
             100, Integer.MAX_VALUE),
-    QualityRetainingSoil(null, "Quality Retaining Soil", "ArtisanMachineProduct chance of staying watered overnight.",
+    QualityRetainingSoil(null, "Quality Retaining Soil", "CraftingMachine chance of staying watered overnight.",
             150, Integer.MAX_VALUE),
 
     // Backpacks

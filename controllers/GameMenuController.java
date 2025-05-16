@@ -5,7 +5,14 @@ import enums.Menu;
 import enums.design.*;
 import enums.items.*;
 import enums.regex.GameMenuCommands;
-import enums.regex.NPCDialogs;
+import models.App;
+import models.Game;
+import models.Result;
+import models.User;
+import models.*;
+import models.building.House;
+import models.item.*;
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -995,10 +1002,11 @@ public class GameMenuController {
             return result;
         }
 
-        ArtisanMachineProduct artisanProduct = new ArtisanMachineProduct(recipeType.getProduct(),10);
-        player.getInventory().getItems().add(artisanProduct);
+        CraftingMachine craftingProduct = new CraftingMachine(recipeType.getProduct(),10);
+        player.getInventory().getItems().add(craftingProduct);
         player.getInventory().addNumOfItems(1);
-        return new Result(true,artisanProduct.getName() + " crafted successfully");
+        player.addEnergy(-2);
+        return new Result(true,craftingProduct.getName() + " crafted successfully");
     }
 
     public Result placeItem(String itemName, String directionStr) {
@@ -1067,6 +1075,40 @@ public class GameMenuController {
         } catch (Exception e) {
             return new Result(false, "An unexpected error occurred");
         }
+    }
+
+    public Result useArtisanMachine(String machineName, String goodName) {
+        Player player = game.getCurrentPlayer();
+        CraftingMachineType machineType = findMachineType(machineName);
+        if(machineType == null) {
+            return new Result(false, "no such artisan machine");
+        }
+        CraftingMachine machine = findCraftingMachineInInventory(machineType,player.getInventory().getItems());
+        if(machine == null) {
+            return new Result(false, "you do not have this machine in your inventory");
+        }
+        if(player.getInventory().isFull()){
+            return new Result(false, "your inventory is full");
+        }
+        Good newGood = createGood(goodName);
+        if(newGood == null){
+            return new Result(false, "oh shit good didn't created");
+        }
+        player.getInventory().getItems().add(newGood);
+        return new Result(true, newGood.getName() + " will be added to your inventory");
+    }
+
+    public Result getArtisanProduct(String machineName) {
+        Player player = game.getCurrentPlayer();
+        Good good = findGoodInInventory(machineName);
+        if(good == null) {
+            return new Result(false, "you do not have this good");
+        }
+        if(!good.canBeUsed()){
+            return new Result(false,"The good is not ready to use");
+        }
+        player.getInventory().addNumOfItems(1);
+        return new Result(true, good.getName() + " added to your inventory");
     }
 
     private void onDayPassed(int days) {
@@ -1410,5 +1452,45 @@ public class GameMenuController {
             }
         }
         return new Result(true, "All items in your inventory");
+    }
+
+    private CraftingMachineType findMachineType(String machineName) {
+        for(CraftingMachineType craftingProductType : CraftingMachineType.values()) {
+            if(craftingProductType.getName().equals(machineName)) {
+                return craftingProductType;
+            }
+        }
+        return null;
+    }
+
+    private CraftingMachine findCraftingMachineInInventory(CraftingMachineType craftingProductType, ArrayList<Item> items) {
+        for(Item item : items) {
+            if(item instanceof CraftingMachine) {
+                if(item.getItemType().equals(craftingProductType)) {
+                    return (CraftingMachine) item;
+                }
+            }
+        }
+        return null;
+    }
+
+    private Good createGood(String goodName) {
+        for(ArtisanProductType productType : ArtisanProductType.values()) {
+            if(productType.getName().equals(goodName)) {
+                return new Good(productType, 10);
+            }
+        }
+        return null;
+    }
+
+    private Good findGoodInInventory(String machineName) {
+        for(Item item : game.getCurrentPlayer().getInventory().getItems()) {
+            if(item instanceof Good) {
+                if(((Good) item).getProductType().getMachine().getName().equals(machineName)) {
+                    return (Good) item;
+                }
+            }
+        }
+        return null;
     }
 }
