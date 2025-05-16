@@ -122,7 +122,7 @@ public class Game {
     }
 
     public void randomizeTomorrowWeather() {
-        Map<Weather, Double> probabilities = date.currentSeason().weatherProbabilities();
+        Map<Weather, Double> probabilities = date.getCurrentSeason().weatherProbabilities();
 
         double random = new Random().nextDouble();
         double cumulative = 0.0;

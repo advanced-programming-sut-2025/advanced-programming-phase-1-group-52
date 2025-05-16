@@ -1,7 +1,6 @@
 package enums.design;
 
 import enums.items.*;
-
 import java.util.ArrayList;
 import models.Quest;
 
@@ -15,7 +14,7 @@ public enum NPCType {
         {
             this.quests.add(new Quest(this, MaterialType.Iron, 50, MaterialType.Diamond, 2));
             this.quests.add(new Quest(this, FoodType.PumpkinPie, 1, MaterialType.GoldCoin, 5000));
-            this.quests.add(new Quest(this, MaterialType.Stone, 150, /*Quartz */, 50));
+            this.quests.add(new Quest(this, MaterialType.Stone, 150, MineralType.QUARTZ, 50));
         }
     },
     Abigail(52, 32) {
@@ -44,12 +43,12 @@ public enum NPCType {
     Lia(42, 42) {
         {
             this.favorites.add(FoodType.Salad);
-            this.favorites.add() // todo: add grapes and wine
+            this.favorites.add(CropType.Grape); // todo: add grapes and wine
         }
         {
             this.quests.add(new Quest(this, MaterialType.HardWood, 10, MaterialType.GoldCoin, 500));
             this.quests.add(new Quest(this, FishType.Salmon, 1, CookingRecipes.SalmonDinner, 1));
-            this.quests.add(new Quest(this, MaterialType.Wood, 200, Handicrafts.DeluxeScarecrow, 3));
+            this.quests.add(new Quest(this, MaterialType.Wood, 200, ArtisanMachineProductType.DELUXE_SCARECROW, 3));
 
         }
     },

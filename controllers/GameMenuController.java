@@ -2,14 +2,6 @@ package controllers;
 
 
 import enums.Menu;
-import enums.design.FarmThemes;
-import enums.design.NPCType;
-import enums.design.Season;
-import enums.items.CookingRecipes;
-import enums.items.FoodType;
-import enums.items.MaterialType;
-import enums.design.Weather;
-import enums.items.ToolType;
 import enums.design.*;
 import enums.items.*;
 import enums.regex.GameMenuCommands;
@@ -20,11 +12,17 @@ import models.User;
 import models.*;
 import models.building.House;
 import models.item.*;
-
+import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.regex.Matcher;
+import java.util.stream.Collectors;
+import models.*;
+import models.building.House;
+import models.item.*;
 
 
 public class GameMenuController {
@@ -172,8 +170,8 @@ public class GameMenuController {
     }
 
     public Result showDate() {
-        return new Result(true,"Season: " + game.getDate().currentSeason().name() +
-                "\nDay: " + game.getDate().currentDay());
+        return new Result(true,"Season: " + game.getDate().getCurrentSeason().name() +
+                "\nDay: " + game.getDate().getCurrentDay());
     }
 
     public Result showDateAndTime() {
@@ -181,7 +179,7 @@ public class GameMenuController {
     }
 
     public Result showDayOfWeek() {
-        return new Result(true,"It's " + game.getDate().currentWeekday().name());
+        return new Result(true,"It's " + game.getDate().getCurrentWeekday().name());
     }
 
     public Result changeTime(int hours) {
@@ -208,8 +206,8 @@ public class GameMenuController {
             return new Result(false, "Days must be positive");
         }
         Date date = game.getDate();
-        int originalDay = date.currentDay();
-        Season originalSeason = date.currentSeason();
+        int originalDay = date.getCurrentDay();
+        Season originalSeason = date.getCurrentSeason();
 
         int seasonsPassed = date.addDays(days);
 
@@ -221,7 +219,7 @@ public class GameMenuController {
     }
 
     public Result showSeason() {
-        return new Result(true,game.getDate().currentSeason().name());
+        return new Result(true,game.getDate().getCurrentSeason().name());
     }
 
     public Result lightningHandling() {
@@ -309,6 +307,26 @@ public class GameMenuController {
         return new Result(true, "Player energy: " + playerEnergy);
     }
 
+    public Result meetNPC(String NPCName) {
+        NPC npc = game.getNPCByName(NPCName);
+        if (npc == null) {
+            return new Result(false, "NPC not found!");
+        }
+        if (!isPlayerNearSomething(npc.getX(), npc.getY())) {
+            return new Result(false, "You are not near the NPC!");
+        }
+        
+        ArrayList<NPCDialogs> dialogs = Arrays.stream(NPCDialogs.values())
+                .filter(dialog -> dialog.getLevel() == npc.getFriendShipLevelWith(game.getCurrentPlayer()))
+                .filter(dialog -> dialog.getWeather() == null || dialog.getWeather() == game.getTodayWeather())
+                .filter(dialog -> dialog.getSeason() == null || dialog.getSeason() == game.getDate().getCurrentSeason())
+                .collect(Collectors.toCollection(ArrayList::new));
+                
+        Random rand = new Random();
+        npc.getFriendShipWith(game.getCurrentPlayer()).addFriendshipPoints(20);
+        return new Result(true, npc.getType().toString() + " says: " + dialogs.get(rand.nextInt(dialogs.size())).getDialog());
+    }
+
     public Result giftNPC(String NPCName, String itemName) {
         NPC npc = game.getNPCByName(NPCName);
 
@@ -339,6 +357,7 @@ public class GameMenuController {
             npc.getFriendShipWith(game.getCurrentPlayer()).addFriendshipPoints(50);
         }
 
+        game.getCurrentPlayer().getInventory().removeItem(item.getClass(), 1);
         return new Result(true, "You gifted " + itemName + " to " + NPCName);
     }
 
@@ -450,6 +469,57 @@ public class GameMenuController {
             return new Result(false, "Invalid item amount");
         }
 
+        if (itemAmount > item.getNumber()) {
+            return new Result(false, "You don't have enough items!");
+        }
+
+        
+        switch (item) {
+            case AnimalProduct animalProduct -> {
+                game.getCurrentPlayer().getInventory().removeItem(animalProduct.getClass(), itemAmount);
+                AnimalProduct newAnimalProduct = new AnimalProduct(animalProduct.getAnimalType(), itemAmount);
+                receiver.getInventory().addItem(newAnimalProduct);
+            }
+            case Fish fish -> {
+                game.getCurrentPlayer().getInventory().removeItem(fish.getClass(), itemAmount);
+                Fish newFish = new Fish(fish.getFishType(), itemAmount);
+                receiver.getInventory().addItem(newFish);
+            }
+            case Crop crop -> {
+                game.getCurrentPlayer().getInventory().removeItem(crop.getClass(), itemAmount);
+                Crop newCrop = new Crop(crop.getCropType(), itemAmount);
+                receiver.getInventory().addItem(newCrop);
+            }
+            case Food food -> {
+                game.getCurrentPlayer().getInventory().removeItem(food.getClass(), itemAmount);
+                Food newFood = new Food(food.getFoodType(), itemAmount);
+                receiver.getInventory().addItem(newFood);
+            }
+            case Material material -> {
+                game.getCurrentPlayer().getInventory().removeItem(material.getClass(), itemAmount);
+                Material newMaterial = new Material(material.getMaterialType(), itemAmount);
+                receiver.getInventory().addItem(newMaterial);
+            }
+            case Mineral mineral -> {
+                game.getCurrentPlayer().getInventory().removeItem(mineral.getClass(), itemAmount);
+                Mineral newMineral = new Mineral(mineral.getMineralType(), itemAmount);
+                receiver.getInventory().addItem(newMineral);
+            }
+            case Seed seed -> {
+                game.getCurrentPlayer().getInventory().removeItem(seed.getClass(), itemAmount);
+                Seed newSeed = new Seed(seed.getForagingSeedType(), itemAmount);
+                receiver.getInventory().addItem(newSeed);
+            }
+            case TrashCan trashCan -> {
+                game.getCurrentPlayer().getInventory().removeItem(trashCan.getClass(), itemAmount);
+                TrashCan newTrashCan = new TrashCan(trashCan.getTrashCanType(), itemAmount);
+                receiver.getInventory().addItem(newTrashCan);
+            }
+            default -> {
+                return new Result(false, "Item is not giftable!");
+            }
+        }
+        
         if (receiver.equals(game.getCurrentPlayer().getSpouse())) {
             receiver.addEnergy(50);
             game.getCurrentPlayer().addEnergy(50);
@@ -457,7 +527,6 @@ public class GameMenuController {
 
         Gift gift = new Gift(game.getCurrentPlayer(), receiver, item, itemAmount);
         receiver.addGift(gift);
-        // todo: remove from giver's inventory and add to receiver's
         receiver.addNotif(game.getCurrentPlayer(), game.getCurrentPlayer().getUsername() + " has gifted something to you!");
         return new Result(true, "You gifted " + itemName + " to " + username);
     }
@@ -542,6 +611,7 @@ public class GameMenuController {
     }
 
     public Result flowerSomeone(String username) {
+        Player currentPlayer = game.getCurrentPlayer();
         Player player = game.getUserByUsername(username).getPlayer();
         if (player == null) {
             return new Result(false, "Invalid username!");
@@ -550,23 +620,32 @@ public class GameMenuController {
             return new Result(false, "You should be near someone to give flower to them!");
         }
 
-        Friendship friendship = game.getFriendshipByPlayers(game.getCurrentPlayer(), player);
+        Material flower = (Material) currentPlayer.getInventory().getItemByName("Bouquet");
+        if (flower == null) {
+            return new Result(false, "You don't have any flower!");
+        }
+
+        Friendship friendship = game.getFriendshipByPlayers(currentPlayer, player);
         if (friendship.getFriendshipPoints() < 300) {
             return new Result(false, "Your friendship points must at least be 300!");
         }
 
-        if (player.equals(game.getCurrentPlayer().getSpouse())) {
+        if (player.equals(currentPlayer.getSpouse())) {
             player.addEnergy(50);
-            game.getCurrentPlayer().addEnergy(50);
+            currentPlayer.addEnergy(50);
         }
 
-        // todo: remove from giver's inventory and add to receiver's
+        currentPlayer.getInventory().removeItem(flower.getClass(), 1);
+        Material newFlower = new Material(MaterialType.Bouquet, 1);
+        player.getInventory().addItem(newFlower);
+
         friendship.setFriendshipLevel(3);
-        player.addNotif(game.getCurrentPlayer(), game.getCurrentPlayer().getUsername() + " has flowered you!");        
+        player.addNotif(currentPlayer, currentPlayer.getUsername() + " has flowered you!");        
         return new Result(true, "You have flowered " + username + "and your friendship level is now 3!");
     }
 
     public Result askMarriage(String username) {
+        Player currentPlayer = game.getCurrentPlayer();
         Player player = game.getUserByUsername(username).getPlayer();
         if (player == null) {
             return new Result(false, "Invalid username!");
@@ -575,16 +654,20 @@ public class GameMenuController {
             return new Result(false, "You should be near someone to ask them!");
         }
 
-        Friendship friendship = game.getFriendshipByPlayers(game.getCurrentPlayer(), player);
+        Material ring = (Material) currentPlayer.getInventory().getItemByName("Wedding Ring");
+        if (ring == null) {
+            return new Result(false, "You need a ring to propose!");
+        }
+
+        Friendship friendship = game.getFriendshipByPlayers(currentPlayer, player);
         if (friendship.getFriendshipPoints() < 400) {
             return new Result(false, "Your friendship points must at least be 400!");
         }
-        if (game.getCurrentPlayer().getGender().equals(player.getGender())) {
+        if (currentPlayer.getGender().equals(player.getGender())) {
             return new Result(false, "You can't be GAY in this game!");
         }
 
-        // handle inventory
-        player.addNotif(game.getCurrentPlayer(), game.getCurrentPlayer().getUsername() + " has proposed to you!");
+        player.addNotif(currentPlayer, currentPlayer.getUsername() + " has proposed to you!");
         return new Result(true, "You have proposed! Wait for the answer!");
     }
 
@@ -603,6 +686,10 @@ public class GameMenuController {
             game.getCurrentPlayer().getBankAccount().deposit(player.getBankAccount().getBalance());
             player.setBankAccount(game.getCurrentPlayer().getBankAccount());
             player.addNotif(game.getCurrentPlayer(), "You are now married to " + player.getUsername());
+
+            player.getInventory().removeItem(player.getInventory().getItemByName("Wedding Ring").getClass(), 1);
+            Material newRing = new Material(MaterialType.WeddingRing, 1);
+            player.getInventory().addItem(newRing);
 
             return new Result(true, "You are happily married!");
         }

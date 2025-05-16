@@ -7,6 +7,7 @@ import enums.design.TileType;
 import enums.design.Weather;
 import enums.items.ForagingCropType;
 import enums.items.ForagingSeedType;
+import enums.items.TreeType;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
@@ -19,6 +20,7 @@ import models.building.House;
 import models.building.NPCHouse;
 import models.building.Shop;
 import models.item.Crop;
+import models.item.Fruit;
 import models.item.Seed;
 
 public class GameMap {
@@ -477,8 +479,9 @@ public class GameMap {
                 Random rand = new Random();
                 int prob = rand.nextInt(10);
                 if (tiles[i][j].getType().equals(TileType.Shoveled) && prob == 0) {
+                    Game game = App.getInstance().getCurrentGame();
                     List<ForagingSeedType> seeds = Arrays.stream(ForagingSeedType.values())
-                                .filter(ForagingSeedType::isForaging)
+                                .filter(seed -> seed.isForaging() && seed.getSeasons().contains(game.getDate().getCurrentSeason()))
                                 .collect(Collectors.toList());
                     ForagingSeedType seedType = seeds.get(rand.nextInt(seeds.size()));
 
@@ -489,13 +492,20 @@ public class GameMap {
     }
 
     public void generatePlantsFromSeeds() {
-        // both trees and crops but we need the refrence to them in seeds enum
         for (int i = 0; i < 90; i++) {
             for (int j = 0; j < 60; j++) {
-                if (tiles[i][j].getSeed() != null) {
-                    tiles[i][j].setType(TileType.Planted);
-                    tiles[i][j].setPlant(new Crop(/*get Type from seed */, j));
-                    tiles[i][j].setSeed(null);
+                Tile targetTile = tiles[i][j];
+                if (targetTile.getSeed() != null) {
+                    if (targetTile.getSeed().getForagingSeedType().getPlantType() instanceof TreeType treeType) {
+                        targetTile.setType(TileType.Tree);
+                        targetTile.setPlant(new Fruit(treeType.getProduct(), 1));
+                        targetTile.setSeed(null);
+                    }
+                    else {
+                        targetTile.setType(TileType.Planted);
+                        targetTile.setPlant(new Crop(targetTile.getSeed().getForagingSeedType().getPlantType(), 1));
+                        targetTile.setSeed(null);
+                    }
                 }
             }
         }
