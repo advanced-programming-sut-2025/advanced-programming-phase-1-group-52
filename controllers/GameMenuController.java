@@ -1681,19 +1681,20 @@ public class GameMenuController {
         Shop ranch = new Shop(ShopType.MarniesRanch);
         ShopEntry entry = ranch.findEntry(animalKey);
         if (!(entry instanceof MarniesRanch ranchEnum)) {
-            return new Result(false, "'" + animalKey + "' is not sold at Marnie's Ranch.");
+            return Result.failure("'" + animalKey + "' is not sold at Marnie's Ranch.");
         }
 
         AnimalType animalType = ranchEnum.getAnimalType();
         if (animalType == null) {
-            return new Result(false, "'" + animalKey + "' is not an animal.");
+            return Result.failure("'" + animalKey + "' is not an animal.");
         }
 
         Player player = game.getCurrentPlayer();
         BankAccount account = player.getBankAccount();
         int price = ranchEnum.getPrice();
+
         if (account.getBalance() < price) {
-            return new Result(false, "Insufficient funds to buy " + animalType.getName() + ".");
+            return Result.failure("Insufficient funds to buy " + animalType.getName() + ".");
         }
 
         Housing target = null;
@@ -1704,32 +1705,31 @@ public class GameMenuController {
             }
         }
         if (target == null) {
-            return new Result(false, "No housing found with ID " + housingId + ".");
+            return Result.failure("No housing found with ID " + housingId + ".");
         }
 
         String requiredBuilding = ranchEnum.getBuildingRequired();
         if (!target.getType().getName().toLowerCase().contains(requiredBuilding.toLowerCase())) {
-            return new Result(false,
-                    animalType.getName() + " must live in a " + requiredBuilding + ".");
+            return Result.failure(animalType.getName() + " must live in a " + requiredBuilding + ".");
         }
 
         PurchasedAnimal newAnimal = new PurchasedAnimal(animalType, givenName);
-        if (!target.addAnimal(newAnimal)) {
-            return new Result(false,
-                    "The capacity of " + target.getType().getName() +
-                            " number " + housingId + " is full.");
+        Result addResult = player.addAnimalToHousing(housingId, newAnimal);
+        if (!addResult.isSuccessful()) {
+            return addResult;
         }
 
         account.withdraw(price);
-
-        return new Result(true,
+        return Result.success(
                 animalType.getName() +
                         " named \"" + givenName + "\" purchased for " +
-                        price + "g and added to " +
+                        price + "g and assigned to " +
                         target.getType().getName() +
                         " #" + housingId + "."
         );
     }
+
+
 
 
 }
