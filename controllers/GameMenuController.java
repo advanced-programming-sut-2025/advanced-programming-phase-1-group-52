@@ -6,6 +6,7 @@ import enums.design.*;
 import enums.design.Shop.CarpentersShop;
 import enums.design.Shop.ShopEntry;
 import enums.items.*;
+import enums.player.Skills;
 import enums.regex.GameMenuCommands;
 import enums.regex.NPCDialogs;
 import models.App;
@@ -29,11 +30,9 @@ import java.util.regex.Matcher;
 import java.util.stream.Collectors;
 
 import models.building.Housing;
-import views.HomeMenu;
 
 
 public class GameMenuController {
-    private final App app = App.getInstance();
     private Game game;
     private GameMap map;
 
@@ -94,7 +93,7 @@ public class GameMenuController {
         App.getInstance().addGame(newGame);
         App.getInstance().setCurrentGame(newGame);
         this.setGame(game);
-        return new Result(true, "Now Choose your map!");
+        return new Result(true, "Now Choose your map!:" + "\n1.Neutral\n2.Miner\n3.Fisher" + "choose map for users in order:");
     }
 
     public Result mapSelector(String user1FarmStr, String user2FarmStr, String user3FarmStr, String user4FarmStr) {
@@ -150,12 +149,21 @@ public class GameMenuController {
     public Result exitGame() {
         User loggedInUser = App.getInstance().getCurrentUser();
         if(game.getMainPlayer().equals(loggedInUser)){
+            for(User user : App.getInstance().getCurrentGame().getPlayers()){
+                user.setHighScore(user.currentPlayer().getBankAccount().getBalance());
+                user.addNumPlayed();
+            }
             App.getInstance().setCurrentMenu(Menu.MainMenu);
             return new Result(true, "you are in main menu.");
         }
         else{
             return new Result(false, "You are not the creator of this game");
         }
+    }
+
+    public Result gotoMainMenu(){
+        App.getInstance().setCurrentMenu(Menu.MainMenu);
+        return new Result(true, "You are in main menu now!");
     }
 
     public Result terminateGame() {
@@ -864,7 +872,7 @@ public class GameMenuController {
     }
 
     public Result goToTradeMenu() {
-        app.setCurrentMenu(Menu.TradeMenu);
+        App.getInstance().setCurrentMenu(Menu.TradeMenu);
         return new Result(true, "You are now in trade menu!");
     }
 
@@ -1335,8 +1343,11 @@ public class GameMenuController {
         Matcher usernameMatcher = GameMenuCommands.CreateNewGame.getMatcher(command);
         List<String> usernames = new ArrayList<>();
 
-        while (usernameMatcher.find()) {
-            usernames.add(usernameMatcher.group(1));
+        usernames.add(usernameMatcher.group("username1"));
+        usernames.add(usernameMatcher.group("username2"));
+        usernames.add(usernameMatcher.group("username3"));
+        for(String username : usernames){
+            System.out.println(username);
         }
 
         // Validate username count
@@ -1351,7 +1362,7 @@ public class GameMenuController {
     }
 
     private boolean isUserAvailable(User user) {
-        for(Game game : app.getGames()){
+        for(Game game : App.getInstance().getGames()){
             if(game.getPlayers().contains(user)){
                 return false;
             }
@@ -1448,7 +1459,62 @@ public class GameMenuController {
         return Result.success(recipe.getDisplayName() + "Ready and added.");
     }
 
-    public Result eat(String foodName) {}
+    public Result eat(String foodName) {
+        return new Result(true, "eating");
+    }
+
+    public Result fishing(String fishingPoleName) {
+        Player player = game.getCurrentPlayer();
+        Tool fishingPole = player.getInventory().getTool(fishingPoleName);
+        if(fishingPole == null){
+            return new Result(false, "No fishing pole found");
+        }
+        Tile currentTile = map.getTile(player.currentX(), player.currentY());
+        if(!isAdjacentToWater(currentTile)){
+            return new Result(false, "You are not adjacent to water");
+        }
+        if(player.getInventory().isFull()){
+            return new Result(false, "Your inventory is full");
+        }
+        List<Fish> possibleFish = new ArrayList<>();
+        double r;
+        double m;
+        Random random = new Random();
+        for (FishType fish : FishType.values()) {
+            if (fish.getSeason().equals(game.getDate().getCurrentSeason()) && fish.getType().equals("Ordinary")) {
+                do {
+                    r = Math.random();
+                } while (r == 0.0);
+                m = seasonRate();
+                int fishCount = (int) Math.ceil(2 + player.getSkillLevel(Skills.Fishing) * m * r);
+                fishCount = Math.min(fishCount, 6);
+                Fish newFish = new Fish(fish, fishCount);
+                possibleFish.add(newFish);
+            }
+            if(fish.getSeason().equals(game.getDate().getCurrentSeason()) && fish.getType().equals("Legendary") && (player.getSkillLevel(Skills.Fishing) >= 4)){
+                do {
+                    r = Math.random();
+                } while (r == 0.0);
+                m = seasonRate();
+                int fishCount = (int) Math.ceil(2 + player.getSkillLevel(Skills.Fishing) * m * r);
+                fishCount = Math.min(fishCount, 6);
+                Fish newFish = new Fish(fish, fishCount);
+                possibleFish.add(newFish);
+            }
+        }
+        do {
+            r = Math.random();
+        } while (r == 0.0);
+        m = seasonRate();
+        int index = random.nextInt(possibleFish.size());
+        Fish fish = possibleFish.get(index);
+        double quality = (r *  (player.getSkillLevel(Skills.Fishing) + 2) * poleRate(fishingPoleName));
+        quality /= (7-m);
+        fish.setQuality(quality);
+        player.getInventory().addItem(fish);
+        player.catchFish();
+        return new Result(true, fish.getNumber() + "x of" + fish.getFishType().getName() + "added to your inventory");
+    }
 
     private void calculateEnergy(int amount) {
         Player player = game.getCurrentPlayer();
@@ -1793,7 +1859,7 @@ public class GameMenuController {
     }
 
     public Result showCurrentMenu() {
-        return new Result(true, "Current menu: " + app.getCurrentMenu().name());
+        return new Result(true, "Current menu: " + App.getInstance().getCurrentMenu().name());
     }
 
     public Result gotoHomeMenu() {
@@ -1802,7 +1868,7 @@ public class GameMenuController {
         if(!tile.getType().equals(TileType.House)){
             return new Result(false, "To use home menu you should be at home.");
         }
-        app.setCurrentMenu(Menu.HomeMenu);
+        App.getInstance().setCurrentMenu(Menu.HomeMenu);
         return new Result(true, "you are in home menu");
     }
 
@@ -1810,4 +1876,58 @@ public class GameMenuController {
         App.getInstance().setCurrentMenu(Menu.ExitMenu);
     }
 
+    private boolean isAdjacentToWater(Tile tile) {
+        Tile[][] tiles = map.getTiles();
+        int x = tile.getX();
+        int y = tile.getY();
+        int rows = tiles.length;
+        int cols = tiles[0].length;
+        int[][] directions = {
+                {-1, -1}, {-1, 0}, {-1, 1},
+                {0, -1},          {0, 1},
+                {1, -1},  {1, 0},  {1, 1}
+        };
+
+        for (int[] dir : directions) {
+            int newX = x + dir[0];
+            int newY = y + dir[1];
+            if (newX >= 0 && newX < rows && newY >= 0 && newY < cols) {
+                if (tiles[newX][newY].getType().equals(TileType.Water)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private double seasonRate(){
+        if(game.getTodayWeather().equals(Weather.Sunny)){
+            return 1.5;
+        }
+        else if(game.getTodayWeather().equals(Weather.Rainy)){
+            return 1.2;
+        }
+        else if(game.getTodayWeather().equals(Weather.Stormy)){
+            return 0.5;
+        }
+        else {
+            return 1;
+        }
+    }
+
+    private double poleRate(String fishingPoleName){
+        fishingPoleName = fishingPoleName.toLowerCase();
+        if(fishingPoleName.startsWith("training")){
+            return 0.1;
+        }
+        else if(fishingPoleName.startsWith("bamboo")){
+            return 0.5;
+        }
+        else if(fishingPoleName.startsWith("fiberglass")){
+            return 0.9;
+        }
+        else {
+            return 1.2;
+        }
+    }
 }

@@ -16,7 +16,7 @@ public class GameMenu implements AppMenu {
             System.out.println(controller.startNewGame(input).Message());
         }
         else if ((matcher = GameMenuCommands.GameMap.getMatcher(input)) != null) {
-
+            System.out.println(controller.mapSelector(matcher.group("map1"),matcher.group("map2"),matcher.group("map3"),matcher.group("map4")).Message());
         }
         else if ((matcher = GameMenuCommands.ExitGame.getMatcher(input)) != null) {
             System.out.println(controller.exitGame().Message());
@@ -139,7 +139,7 @@ public class GameMenu implements AppMenu {
 
         }
         else if ((matcher = GameMenuCommands.Fishing.getMatcher(input)) != null) {
-
+            System.out.println(controller.fishing(matcher.group("fishingPole")).Message());
         }
         else if ((matcher = GameMenuCommands.ArtisanUse.getMatcher(input)) != null) {
             System.out.println(controller.useArtisanMachine(matcher.group("artisanName"),matcher.group("itemName")).Message());
@@ -221,6 +221,9 @@ public class GameMenu implements AppMenu {
         }
         else if((matcher = GameMenuCommands.TreeInfo.getMatcher(input)) != null) {
             System.out.println(controller.treeInfo(matcher.group("name")).Message());
+        }
+        else if((matcher = GameMenuCommands.ExitGame.getMatcher(input)) != null) {
+            System.out.println(controller.exitGame().Message());
         }
         else {
             System.out.println("Invalid command");
