@@ -519,4 +519,8 @@ public class GameMap {
             }
         }
     }
+
+    public Tile[][] getTiles() {
+        return tiles;
+    }
 }

@@ -7,7 +7,6 @@ import enums.items.MaterialType;
 import enums.player.Skills;
 import enums.design.TileType;
 import enums.player.Gender;
-import enums.player.Skills;
 import models.building.House;
 import models.building.Housing;
 import models.item.*;
@@ -17,7 +16,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
-import models.building.House;
+
 import models.item.Tool;
 
 public class Player {
@@ -175,8 +174,6 @@ public class Player {
             return axeHandler(tile);
         } else if (typeName.endsWith("WateringCan")) {
             return wateringCanHandler(tile);
-        } else if (typeName.endsWith("FishingPole")) {
-            return fishingPoleHandler();
         } else if (typeName.equals("Scythe")) {
             return scytheHandler(tile);
         } else if (typeName.equals("MilkPail")) {
@@ -220,31 +217,40 @@ public class Player {
         if(this.energy <= energyConsumption){
             return new Result(false, "You don't have enough energy to mine!(extract)");
         }
+        int add = 0;
+        if(getSkillLevel(Skills.Extraction) >= 2){
+            add = 2;
+        }
         this.energy -= energyConsumption;
         Material newMaterial = null;
         Mineral newMineral = null;
         switch (tile.getType()){
-            case Stone -> newMaterial = new Material(MaterialType.Stone,10);
-            case CopperStone -> newMineral = new Mineral(MineralType.COPPER, 10);
-            case GoldStone -> newMineral = new Mineral(MineralType.GOLD, 10);
-            case IridiumStone -> newMineral = new Mineral(MineralType.IRIDIUM, 10);
+            case Stone -> {
+                foraging();
+                newMaterial = new Material(MaterialType.Stone,10 + add);
+            }
+            case CopperStone -> newMineral = new Mineral(MineralType.COPPER, 10 + add);
+            case GoldStone -> newMineral = new Mineral(MineralType.GOLD, 10 + add);
+            case IridiumStone -> newMineral = new Mineral(MineralType.IRIDIUM, 10 + add);
             case JewelStone -> {
                 Random rand = new Random();
                 int prob = rand.nextInt(10);
                 if (prob < 5) {
-                    newMineral = new Mineral(MineralType.QUARTZ, 10);
+                    newMineral = new Mineral(MineralType.QUARTZ, 10 + add);
                 }
                 else if (prob < 8) {
-                    newMineral = new Mineral(MineralType.EMERALD, 10);
+                    newMineral = new Mineral(MineralType.EMERALD, 10 + add);
                 }
                 else {
-                    newMineral = new Mineral(MineralType.DIAMOND, 10);
+                    newMineral = new Mineral(MineralType.DIAMOND, 10 + add);
                 }
             }
-            case IronStone -> newMineral = new Mineral(MineralType.IRON, 10);
+            case IronStone -> newMineral = new Mineral(MineralType.IRON, 10 + add);
             case Shoveled -> tile.setType(TileType.Earth);
-            default -> {
-                return new Result(false, "Tile can not be mined!");
+            case Earth -> {
+                if(tile.getItem() != null){
+                    this.getInventory().addItem(tile.getItem());
+                }
             }
         }
         this.inventory.addNumOfItems(1);
@@ -254,6 +260,7 @@ public class Player {
         else {
             this.inventory.addItem(newMaterial);
         }
+        extract();
         return new Result(true, "Tile with X: " + tile.getX() + " Y: " + tile.getY() + " has been mined!");
     }
 
@@ -268,12 +275,15 @@ public class Player {
         }
         this.energy -= energyConsumption;
         if(tile.getType().equals(TileType.Branch)){
+            this.inventory.addItem(new Material(MaterialType.Wood, 50));
+            foraging();
             tile.setType(TileType.Earth);
             return new Result(true, "Branches on Tile with X: " + tile.getX() + " Y: " + tile.getY() + " has been removed!");
         }
         else if(tile.getType().equals(TileType.Tree)){
             tile.setType(TileType.Earth);
             // wood sizes be checked!
+            foraging();
             Material wood = new Material(MaterialType.Wood,20);
             if(this.inventory.addNumOfItems(1)){
                 this.inventory.addItem(wood);
@@ -309,10 +319,6 @@ public class Player {
         return new Result(false, "You can not use watering on this tile!");
     }
 
-    public Result fishingPoleHandler(){
-        return new Result(true, "You are fishing pole!");
-    }
-
     public Result scytheHandler(Tile tile){
         int energyConsumption = currentTool.getToolType().getEnergyConsumption();
         if(this.energy <= energyConsumption){
@@ -331,6 +337,7 @@ public class Player {
                         Fruit newFruit = new Fruit(fruit.getFruitType(),1);
                         if(this.inventory.addNumOfItems(1)){
                             this.inventory.addItem(newFruit);
+                            harvestCrop();
                             return new Result(true, "Fruit has been added to the inventory!");
                         }
                         else{
@@ -351,6 +358,7 @@ public class Player {
                         Crop newCrop = new Crop(crop.getCropType(),1);
                         if(this.inventory.addNumOfItems(1)){
                             this.inventory.addItem(newCrop);
+                            harvestCrop();
                             return new Result(true, "Crop has been added to the inventory!");
                         }
                         else{
@@ -611,7 +619,6 @@ public class Player {
         }
         return false;
     }
-
 
     public void addHousing(Cages cageType) {
         Housing h = new Housing(nextHousingId++, cageType);

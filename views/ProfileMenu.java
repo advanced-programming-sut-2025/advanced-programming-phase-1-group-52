@@ -17,11 +17,11 @@ public class ProfileMenu implements AppMenu {
         if ((matcher = ProfileMenuCommands.ChangeUsername.getMatcher(input)) != null ) {
             System.out.println(controller.changeUsername(
                     matcher.group("username")
-            ).toString());
+            ).Message());
         } else if ((matcher = ProfileMenuCommands.ChangeNickname.getMatcher(input)) != null ) {
             System.out.println(controller.changeNickname(
                     matcher.group("nickname")
-            ).toString());
+            ).Message());
         } else if ((matcher = ProfileMenuCommands.ChangeEmail.getMatcher(input)) != null ) {
             System.out.println(controller.changeEmail(
                     matcher.group("email")
@@ -30,14 +30,18 @@ public class ProfileMenu implements AppMenu {
             System.out.println(controller.changePassword(
                     matcher.group("newPassword"),
                     matcher.group("oldPassword")
-            ).toString());
+            ).Message());
         } else if ((matcher = ProfileMenuCommands.UserInfo.getMatcher(input)) != null ) {
-            controller.userInfo();
+            System.out.println(controller.userInfo().Message());
         } else if ((matcher = ProfileMenuCommands.ShowCurrentMenu.getMatcher(input)) != null ) {
             controller.showCurrentMenu();
         } else if ((matcher = ProfileMenuCommands.MenuExit.getMatcher(input)) != null ) {
             controller.menuExit();
-        } else {
+        }
+        else if((matcher = ProfileMenuCommands.GoToMainMenu.getMatcher(input)) != null ) {
+            System.out.println(controller.gotoMainMenu().Message());
+        }
+        else {
             System.out.println("Invalid command");
         }
     }

@@ -9,7 +9,7 @@ public class MainMenuController {
             Menu menu = Menu.valueOf(menuName);
             if (menu == Menu.GameMenu || menu == Menu.ProfileMenu) {
                 App.getInstance().setCurrentMenu(menu);
-                return new Result(true, "Entered " + menuName + " successfully.");
+                return new Result(true, "Entered " + menu.name() + " successfully.");
             } else {
                 return new Result(false, "Invalid menu entered.");
             }
@@ -23,8 +23,9 @@ public class MainMenuController {
         System.out.println("Current menu: " + App.getInstance().getCurrentMenu().name());
     }
 
-    public void userLogout() {
+    public Result userLogout() {
         App.getInstance().setCurrentUser(null);
         App.getInstance().setCurrentMenu(Menu.LoginMenu);
+        return new Result(true, "You are logged out.");
     }
 }
