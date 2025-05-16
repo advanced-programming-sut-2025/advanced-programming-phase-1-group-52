@@ -4,13 +4,13 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public enum SignUpMenuCommands{
-    Register("(\\s*)register(\\s+)-u(\\s+)(?<username>[\\S\\s]+)(\\s+)" +
-            "-p(?<password>[\\S\\s]+)(\\s+)(?<password_confirm>[\\S\\s]+)(\\s+)" +
-            "-n(?<nickname>[\\S\\s]+)(\\s+)-e(\\s+)(?<email>[\\S\\s]+)(\\s+)-g(?<gender>\\S+)(\\s*)"),
-    PickQuestion("(\\s*)pick(\\s+)question(\\s+)-q(?<question_number>[\\S\\s]+)(\\s+)" +
-            "-a(?<answer>[\\S\\s]+)(\\s+)-c(?<answer_confirm>\\S+)(\\s*)"),
-    ShowCurrentMenu("(\\s*)show(\\s+)current(\\s+)menu(\\s*)"),
-    MenuExit("(\\s*)menu(\\s+)exit(\\s*)"),
+    Register("register -u (?<username>[\\S\\s]+) " +
+            "-p (?<password>[\\S\\s]+) (?<passwordConfirm>[\\S\\s]+) " +
+            "-n (?<nickname>[\\S\\s]+) -e (?<email>[\\S\\s]+) -g (?<gender>\\S+)"),
+    PickQuestion("pick question -q (?<questionNumber>[\\S\\s]+) " +
+            "-a (?<answer>[\\S\\s]+) -c (?<answerConfirm>\\S+)"),
+    ShowCurrentMenu("show current menu"),
+    MenuExit("menu exit"),
     ValidUsername("[A-Za-z0-9_]+"),
     ValidDigit("(?=.*[0-9])"),
     ValidLower( "(?=.*[a-z])"),

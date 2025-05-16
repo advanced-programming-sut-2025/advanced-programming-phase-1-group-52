@@ -1,24 +1,18 @@
 package models;
 
 
-import enums.items.*;
-import enums.items.CraftingRecipes;
-import enums.items.MaterialType;
-import enums.player.Skills;
 import enums.design.TileType;
+import enums.items.*;
 import enums.player.Gender;
 import enums.player.Skills;
-import models.building.House;
-import models.building.Housing;
-import models.item.*;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import models.building.House;
-import models.item.Tool;
+import models.building.Housing;
+import models.item.*;
 
 public class Player {
     private final String username;
@@ -175,14 +169,14 @@ public class Player {
             return axeHandler(tile);
         } else if (typeName.endsWith("WateringCan")) {
             return wateringCanHandler(tile);
-        } else if (typeName.endsWith("FishingPole")) {
-            return fishingPoleHandler();
+        // } else if (typeName.endsWith("FishingPole")) {
+        //     return fishingPoleHandler();
         } else if (typeName.equals("Scythe")) {
             return scytheHandler(tile);
-        } else if (typeName.equals("MilkPail")) {
-            return milkPaleHandler();
-        } else if (typeName.equals("Shear")) {
-            return shearHandler();
+        // } else if (typeName.equals("MilkPail")) {
+        //     return milkPaleHandler();
+        // } else if (typeName.equals("Shear")) {
+        //     return shearHandler();
         } else {
             return new Result(false, "Unknown tool type");
         }
@@ -207,7 +201,7 @@ public class Player {
         return new Result(true, "Tile with X: " + tile.getX() + " Y: " + tile.getY() + " has been shoved");
     }
 
-    public Result shearHandler(){}
+    // public Result shearHandler(){}
 
     public Result pickaxeHandler(Tile tile) {
         SkillData extractionData = skills.get(Skills.Extraction);
@@ -307,7 +301,7 @@ public class Player {
         return new Result(false, "You can not use watering on this tile!");
     }
 
-    public Result fishingPoleHandler(){}
+    // public Result fishingPoleHandler(){}
 
     public Result scytheHandler(Tile tile){
         int energyConsumption = currentTool.getToolType().getEnergyConsumption();
@@ -367,11 +361,11 @@ public class Player {
         return new Result(false, "you can not use scythe on this tile!");
     }
 
-    public Result milkPaleHandler(){}
+    // public Result milkPaleHandler(){}
 
-    public Result backpackHandler(){}
+    // public Result backpackHandler(){}
 
-    public Result trashCanHandler(){}
+    // public Result trashCanHandler(){}
 
     public ArrayList<Talk> talks() {
         return talks;

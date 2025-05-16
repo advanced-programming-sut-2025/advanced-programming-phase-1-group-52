@@ -68,5 +68,8 @@ public enum MarniesRanch implements ShopEntry{
     @Override public String getDescription() { return description; }
     @Override public int getPrice() { return price; }
     @Override public int getDailyLimit() { return dailyLimit; }
+//     @Override public ItemType getItemType() {
+//         return this.animalType;
+//     }
     public String getBuildingRequired() { return buildingRequired; }
 }

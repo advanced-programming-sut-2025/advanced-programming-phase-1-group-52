@@ -2,15 +2,15 @@ package models.item;
 
 import enums.items.Cages;
 
-public class Animal extends Item {
+// public class Animal extends Item {
 
-    Cages cage;
+//     Cages cage;
 
-    public Animal(Cages cage) {
-        this.cage = cage;
-    }
-    @Override
-    protected int calculateEnergyConsumption() {
-        return 0;
-    }
-}
+//     public Animal(Cages cage) {
+//         this.cage = cage;
+//     }
+//     @Override
+//     protected int calculateEnergyConsumption() {
+//         return 0;
+//     }
+// }

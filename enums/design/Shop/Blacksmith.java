@@ -1,8 +1,6 @@
 package enums.design.Shop;
 
-import enums.items.ItemType;
 import enums.items.MaterialType;
-
 import java.util.HashMap;
 import java.util.Map;
 
@@ -104,10 +102,10 @@ public enum Blacksmith implements ShopEntry{
     public MaterialType getMaterialType() { return materialType; }
     @Override public int getDailyLimit() { return dailyLimit; }
 
-    @Override
-    public ItemType getItemType() {
-        return this.materialType;
-    }
+//     @Override
+//     public ItemType getItemType() {
+//         return this.materialType;
+//     }
 
     public int getUpgradeCost() { return upgradeCost; }
     public Map<MaterialType, Integer> getIngredient() { return ingredient; }

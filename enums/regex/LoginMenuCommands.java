@@ -8,7 +8,7 @@ public enum LoginMenuCommands{
             "-p(?<password>[\\S\\s]+)(\\s+)–stay(\\s+)-logged(\\s+)-in(\\s*)"),
     ForgetPassword("(\\s*)forget(\\s+)password(\\s+)-u(?<username>\\S+)(\\s*)"),
     Answer("(\\s*)answer(\\s+)-a(\\s+)(?<answer>\\S+)(\\s*)"),
-    ResetPassword("(\\s*)-p(?<resetPassword>\\S+)(\\s*)>)"),
+    ResetPassword("(\\s*)-p(\\s+)(?<resetPassword>\\S+)(\\s*)"),
     ShowCurrentMenu("(\\s*)show(\\s+)current(\\s+)menu(\\s*)"),
     MenuExit("(\\s*)menu(\\s+)exit(\\s*)");
 

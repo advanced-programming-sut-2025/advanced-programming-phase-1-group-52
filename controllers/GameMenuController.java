@@ -1266,64 +1266,6 @@ public class GameMenuController {
         return new Result(true, good.getName() + " added to your inventory");
     }
 
-    public Result buildBarnOrCoop(String buildingKey, int x, int y) {
-        if (!map.inBounds(x, y)) {
-            return new Result(false, "Coordinates are out of farm bounds.");
-        }
-
-        Shop carpShop = new Shop(ShopType.CarpentersShop);
-        ShopEntry entry = carpShop.findEntry(buildingKey);
-        if (!(entry instanceof CarpentersShop carpEnum) ||
-                !(carpEnum.getDisplayName().contains("Barn") || carpEnum.getDisplayName().contains("Coop"))) {
-            return new Result(false, "'" + buildingKey + "' is not a valid barn or coop building.");
-        }
-
-        var player = game.getCurrentPlayer();
-        var inv    = player.getInventory();
-        var req1   = carpEnum.getMaterial1();
-        var req2   = carpEnum.getMaterial2();
-
-        for (var e1 : req1.entrySet()) {
-            if (inv.getCount(e1.getKey()) < e1.getValue())
-                return new Result(false, "Insufficient " + e1.getKey() + ".");
-        }
-        for (var e2 : req2.entrySet()) {
-            if (inv.getCount(e2.getKey()) < e2.getValue())
-                return new Result(false, "Insufficient " + e2.getKey() + ".");
-        }
-
-        req1.forEach((mat, amt) -> inv.remove(mat, amt));
-        req2.forEach((mat, amt) -> inv.remove(mat, amt));
-
-        try {
-            var playersList = new java.util.ArrayList<>(game.getPlayers().size());
-            for (var u : game.getPlayers()) playersList.add(u.getPlayer());
-            int idx = playersList.indexOf(player);
-            var tileType = enums.design.TileType.valueOf(buildingKey);
-            var size     = entry.getDisplayName().split("x");
-            int width    = Integer.parseInt(size[0]);
-            int height   = Integer.parseInt(size[1]);
-
-            var gen = GameMap.class.getDeclaredMethod(
-                    "generateBuilding",
-                    java.util.ArrayList.class,
-                    int.class,
-                    enums.design.TileType.class,
-                    int.class, int.class, int.class, int.class
-            );
-            gen.setAccessible(true);
-            gen.invoke(map, playersList, idx, tileType,
-                    x, x + width, y, y + height);
-        } catch (Exception ex) {
-            return new Result(false, "Error constructing building: " + ex.getMessage());
-        }
-
-        return new Result(true,
-                carpEnum.getDisplayName() +
-                        " successfully built at (" + x + "," + y + ")."
-        );
-    }
-
     private void onDayPassed(int days) {
     }
 

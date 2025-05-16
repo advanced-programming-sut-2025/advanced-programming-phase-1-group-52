@@ -2,7 +2,6 @@ package views;
 
 import controllers.SignUpMenuController;
 import enums.regex.SignUpMenuCommands;
-
 import java.util.Scanner;
 import java.util.regex.Matcher;
 
@@ -18,16 +17,16 @@ public class SignUpMenu implements AppMenu {
             System.out.println(controller.register(
                     matcher.group("username"),
                     matcher.group("password"),
-                    matcher.group("password_confirm"),
+                    matcher.group("passwordConfirm"),
                     matcher.group("nickname"),
                     matcher.group("email"),
                     matcher.group("gender")
             ).toString());
         } else if ((matcher = SignUpMenuCommands.PickQuestion.getMatcher(input)) != null) {
             System.out.println(controller.pickQuestion(
-                    matcher.group("question_number"),
+                    matcher.group("questionNumber"),
                     matcher.group("answer"),
-                    matcher.group("answer_confirm")
+                    matcher.group("answerConfirm")
             ).toString());
         } else if ((matcher = SignUpMenuCommands.ShowCurrentMenu.getMatcher(input)) != null) {
             controller.showCurrentMenu();
