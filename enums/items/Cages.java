@@ -28,5 +28,7 @@ public enum Cages implements ItemType {
     public String getName() {
         return this.name;
     }
+
+    public int getCapacity() { return this.capacity; }
 }
 
