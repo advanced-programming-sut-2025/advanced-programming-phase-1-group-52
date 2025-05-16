@@ -13,6 +13,8 @@ public class Crop extends Item implements Growable {
     private boolean needsWaterToday = false;
     private int currentStage = 0;
     private boolean isReadyToHarvest = false;
+    private boolean isNotWateredForTwoDays = false;
+    private boolean canBeHarvestAgain = true;
 
     public Crop(ItemType cropType, int number) {
         super(cropType, number);
@@ -99,11 +101,31 @@ public class Crop extends Item implements Growable {
         this.dayRemaining -= 1;
     }
 
+    public ItemType getCropType() {
+        return cropType;
     public CropType getCropType() {
         return (CropType) cropType;
     }
 
     public void setCropType(CropType cropType) {
         this.cropType = cropType;
+    }
+
+    @Override
+    public boolean isNotWateredForTwoDays() {
+        return isNotWateredForTwoDays;
+    }
+
+    @Override
+    public void setNotWateredForTwoDays(boolean notWateredForTwoDays) {
+        isNotWateredForTwoDays = notWateredForTwoDays;
+    }
+
+    public boolean canBeHarvestAgain() {
+        return canBeHarvestAgain;
+    }
+
+    public void setCanBeHarvestAgain(boolean canBeHarvestAgain) {
+        this.canBeHarvestAgain = canBeHarvestAgain;
     }
 }

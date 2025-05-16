@@ -13,6 +13,7 @@ public class Fruit extends Item implements Growable {
     private boolean isFertilizedToday = false;
     private boolean needsWaterToday = false;
     private boolean isReadyToHarvest = false;
+    private boolean isNotWateredForTwoDays = false;
 
     public Fruit(FruitType fruitType, int number) {
         super(fruitType, number);
@@ -28,6 +29,16 @@ public class Fruit extends Item implements Growable {
     @Override
     public void growFaster() {
         this.dayRemaining -= 1;
+    }
+
+    @Override
+    public boolean isNotWateredForTwoDays() {
+        return this.isNotWateredForTwoDays;
+    }
+
+    @Override
+    public void setNotWateredForTwoDays(boolean notWateredForTwoDays) {
+        this.isNotWateredForTwoDays = notWateredForTwoDays;
     }
 
     private TreeType findTreeType() {

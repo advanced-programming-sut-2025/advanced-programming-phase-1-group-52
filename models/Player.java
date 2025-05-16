@@ -1,6 +1,7 @@
 package models;
 
 import enums.items.CraftingRecipes;
+import enums.items.CropType;
 import enums.items.MaterialType;
 import enums.player.Skills;
 import enums.design.TileType;
@@ -297,6 +298,7 @@ public class Player {
         }
         else if(tile.getType().equals(TileType.Tree) || tile.getType().equals(TileType.Planted)){
             tile.getPlant().setWateredToday(true);
+            tile.getPlant().setNotWateredForTwoDays(false);
             wateringCan.useCan();
             return new Result(true, "Tile with X: " + tile.getX() + " Y: " + tile.getY() + " has been watered!");
         }
@@ -311,6 +313,19 @@ public class Player {
             return new Result(false, "You don't have enough energy to use scythe!");
         }
         this.energy -= energyConsumption;
+
+        if(tile.getType().equals(TileType.Grass)){
+            tile.setType(TileType.Earth);
+            return new Result(true, "tile with X: " + tile.getX() + " Y: " + tile.getY() + " has been changed to soil!");
+        }
+        else if(tile.getType().equals(TileType.Tree)){
+            if(tile.getPlant().isReadyToHarvest()){
+                if(tile.getPlant() instanceof Fruit){
+                    Fruit newFruit = new Fruit(((Fruit) tile.getPlant()).getFruitType(),10);
+                    if(this.inventory.addNumOfItems(1)){
+                        this.inventory.addItem(newFruit);
+                        tile.setPlant(new Fruit(((Fruit) tile.getPlant()).getFruitType(),1));
+                        return new Result(true, "Fruit has been added to the inventory!");
 
         switch (tile.getType()) {
             case Grass -> {
@@ -337,6 +352,25 @@ public class Player {
                     return new Result(false,"This tree is not ready to harvest!");
                 }
             }
+            else{
+                return new Result(false,"This tree is not ready to harvest!");
+            }
+        }
+        else if(tile.getType().equals(TileType.Planted)){
+            if(tile.getPlant().isReadyToHarvest()){
+                if(tile.getPlant() instanceof Crop){
+                    if(((Crop) tile.getPlant()).canBeHarvestAgain()){
+                        Crop newCrop = new Crop(((Crop) tile.getPlant()).getCropType(),1);
+                        if(this.inventory.addNumOfItems(1)){
+                            this.inventory.addItem(newCrop);
+                            if(((Crop) tile.getPlant()).getCropType() instanceof CropType type){
+                                if(type.isOneTimeHarvest()){
+                                    tile.setPlant(null);
+                                }
+                                else{
+                                    tile.setPlant(new Crop(type,1));
+                                }
+                            }
             case Planted -> {
                 if(tile.getPlant().isReadyToHarvest()){
                     if(tile.getPlant() instanceof Crop crop){
@@ -348,10 +382,13 @@ public class Player {
                         else{
                             return new Result(false, "Crop has not been added to the inventory!, your inventory is full!");
                         }
+
                     }
                     else{
                         return new Result(false, "some problem in harvesting (type casting) come to scytheHandler");
                     }
+                    return new Result(false, "this crop can not be harvested again!");
+
                 }
                 else{
                     return new Result(false,"This seed is not ready to harvest!");
