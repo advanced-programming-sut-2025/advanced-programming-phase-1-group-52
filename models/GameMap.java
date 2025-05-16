@@ -7,6 +7,7 @@ import enums.design.TileType;
 import enums.design.Weather;
 import enums.items.ForagingCropType;
 import enums.items.ForagingSeedType;
+import enums.items.TreeType;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
@@ -19,6 +20,7 @@ import models.building.House;
 import models.building.NPCHouse;
 import models.building.Shop;
 import models.item.Crop;
+import models.item.Fruit;
 import models.item.Seed;
 
 public class GameMap {
@@ -494,9 +496,16 @@ public class GameMap {
             for (int j = 0; j < 60; j++) {
                 Tile targetTile = tiles[i][j];
                 if (targetTile.getSeed() != null) {
-                    targetTile.setType(TileType.Planted);
-                    targetTile.setPlant(new Crop(targetTile.getSeed().getForagingSeedType().getPlantType(), 1));
-                    targetTile.setSeed(null);
+                    if (targetTile.getSeed().getForagingSeedType().getPlantType() instanceof TreeType treeType) {
+                        targetTile.setType(TileType.Tree);
+                        targetTile.setPlant(new Fruit(treeType.getProduct(), 1));
+                        targetTile.setSeed(null);
+                    }
+                    else {
+                        targetTile.setType(TileType.Planted);
+                        targetTile.setPlant(new Crop(targetTile.getSeed().getForagingSeedType().getPlantType(), 1));
+                        targetTile.setSeed(null);
+                    }
                 }
             }
         }
