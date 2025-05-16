@@ -42,5 +42,11 @@ public abstract class Item {
         this.itemType = itemType;
     }
 
+    public boolean remove(int quantity) {
+        if (quantity <= 0) return false;
+        if (this.number < quantity) return false;
 
+        this.number -= quantity;
+        return true;
+    }
 }

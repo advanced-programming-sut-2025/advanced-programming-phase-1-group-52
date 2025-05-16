@@ -18,12 +18,14 @@ public class Shop extends Building {
     private final ShopType shopType;
     private final List<ShopEntry> entries;
     private final Map<String, Integer> dailyLimits;
+    private Map<String, Integer> availableStocks;
 
     public Shop(ShopType shopType) {
         this.shopType = shopType;
         this.entries = new ArrayList<>();
         this.dailyLimits = new HashMap<>();
         initializeStock();
+        this.availableStocks = new HashMap<>(dailyLimits);
     }
 
     private void initializeStock() {
@@ -67,5 +69,22 @@ public class Shop extends Building {
 
     public int getDailyLimit(String name) {
         return dailyLimits.getOrDefault(name, 0);
+    }
+
+    public int getAvailableStock(String name) {
+        return availableStocks.getOrDefault(name, 0);
+    }
+
+    public boolean purchase(String itemName, int quantity) {
+        int available = getAvailableStock(itemName);
+        if (available >= quantity) {
+            availableStocks.put(itemName, available - quantity);
+            return true;
+        }
+        return false;
+    }
+
+    public void resetStock() {
+        this.availableStocks = new HashMap<>(dailyLimits);
     }
 }

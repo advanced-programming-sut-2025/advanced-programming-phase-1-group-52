@@ -397,9 +397,11 @@ public class GameMap {
             }
         }
     }
+
     public Tile getTile(int x, int y) {
         return tiles[x][y];
     }
+
     public ArrayList<Tile> findWalkPath(int startX, int startY, int destX, int destY) {
         boolean[][] visited = new boolean[tiles.length][tiles[0].length];
         Tile[][] previous = new Tile[tiles.length][tiles[0].length];
@@ -439,7 +441,7 @@ public class GameMap {
         return null;
     }
 
-    private boolean inBounds(int x, int y) {
+    public boolean inBounds(int x, int y) {
         return x >= 0 && y >= 0 && x < tiles.length && y < tiles[0].length;
     }
 

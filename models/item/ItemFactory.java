@@ -9,7 +9,7 @@ import models.item.Crop;
 import models.item.*;
 
 public class ItemFactory {
-    // Map each ItemType class to its corresponding Item constructor
+    // Map each Type class to its corresponding Item constructor
     private static final Map<Class<? extends ItemType>, BiFunction<ItemType, Integer, Item>> ITEM_CONSTRUCTORS =
             new HashMap<>();
 
@@ -24,7 +24,7 @@ public class ItemFactory {
         ITEM_CONSTRUCTORS.put(TrashCanType.class, (type, number) -> new TrashCan((TrashCanType) type, number));
     }
 
-    // List all enum classes that implement ItemType
+    // List all enum classes that implement Type
     private static final List<Class<? extends Enum<?>>> ITEM_ENUMS = Arrays.asList(
             CropType.class,
             ForagingCropType.class,
@@ -55,7 +55,7 @@ public class ItemFactory {
     }
 
     /**
-     * Finds an ItemType by name across all enums
+     * Finds an Type by name across all enums
      */
     private static Optional<ItemType> findItemTypeByName(String name) {
         for (Class<? extends Enum<?>> enumClass : ITEM_ENUMS) {

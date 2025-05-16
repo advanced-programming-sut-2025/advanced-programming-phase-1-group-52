@@ -7,7 +7,6 @@ public class House extends Building {
     private final Player owner;
     private final int cornerX;
     private final int cornerY;
-
     private final Refrigerator refrigerator;
 
 
