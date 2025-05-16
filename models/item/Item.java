@@ -51,8 +51,4 @@ public abstract class Item {
         this.number -= quantity;
         return true;
     }
-
-        this.number -= quantity;
-        return true;
-    }
 }

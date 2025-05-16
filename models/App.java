@@ -14,7 +14,7 @@ public class App {
     private App() {
         users = new ArrayList<>();
         games = new ArrayList<>();
-        currentMenu = Menu.LoginMenu;
+        currentMenu = Menu.SignUpMenu;
     }
 
     public static App getInstance() {

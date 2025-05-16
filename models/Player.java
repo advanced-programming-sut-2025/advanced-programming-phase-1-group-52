@@ -207,7 +207,9 @@ public class Player {
         return new Result(true, "Tile with X: " + tile.getX() + " Y: " + tile.getY() + " has been shoved");
     }
 
-    public Result shearHandler(){}
+    public Result shearHandler(){
+        return new Result(true, "You are sheared");
+    }
 
     public Result pickaxeHandler(Tile tile) {
         SkillData extractionData = skills.get(Skills.Extraction);
@@ -307,7 +309,9 @@ public class Player {
         return new Result(false, "You can not use watering on this tile!");
     }
 
-    public Result fishingPoleHandler(){}
+    public Result fishingPoleHandler(){
+        return new Result(true, "You are fishing pole!");
+    }
 
     public Result scytheHandler(Tile tile){
         int energyConsumption = currentTool.getToolType().getEnergyConsumption();
@@ -367,11 +371,13 @@ public class Player {
         return new Result(false, "you can not use scythe on this tile!");
     }
 
-    public Result milkPaleHandler(){}
+    public Result milkPaleHandler(){
+        return new Result(true, "You are milk pale!");
+    }
 
-    public Result backpackHandler(){}
+    public void backpackHandler(){}
 
-    public Result trashCanHandler(){}
+    public void trashCanHandler(){}
 
     public ArrayList<Talk> talks() {
         return talks;

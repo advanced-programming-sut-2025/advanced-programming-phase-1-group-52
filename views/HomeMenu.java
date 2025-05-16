@@ -3,12 +3,13 @@ package views;
 import java.util.Scanner;
 
 import controllers.GameMenuController;
+import controllers.HomeMenuController;
 import enums.regex.HomeMenuCommands;
 
 import java.util.regex.Matcher;
 
 public class HomeMenu implements AppMenu {
-    private final GameMenuController controller = new GameMenuController();
+    private final HomeMenuController controller = new HomeMenuController();
 
     @Override
     public void checkInput(Scanner scanner) {
@@ -16,10 +17,10 @@ public class HomeMenu implements AppMenu {
         Matcher matcher;
 
         if ((matcher = HomeMenuCommands.CraftingShowRecipes.getMatcher(input)) != null) {
-        
+            System.out.println(controller.showCraftingRecipes().Message());
         } 
         else if ((matcher = HomeMenuCommands.Crafting.getMatcher(input)) != null) {
-            
+            System.out.println(controller.craftItem(matcher.group("itemName")).Message());
         } 
         else if ((matcher = HomeMenuCommands.CookingRefrigerator.getMatcher(input)) != null) {
             

@@ -57,6 +57,17 @@ public class Game {
         return daysPassed;
     }
 
+    public ArrayList<Friendship> getFriendshipsByPlayer(Player player) {
+        ArrayList<Friendship> friendships = new ArrayList<>();
+        for (Friendship friendship : this.friendships) {
+            if (friendship.getPlayers().contains(player)) {
+                friendships.add(friendship);
+            }
+        }
+
+        return friendships;
+    }
+
     public Friendship getFriendshipByPlayers(Player player1, Player player2) {
         for (Friendship friendship : friendships) {
             if (friendship.getPlayers().contains(player1) && friendship.getPlayers().contains(player2)) {

@@ -4,11 +4,11 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public enum SignUpMenuCommands{
-    Register("(\\s*)register(\\s+)-u(\\s+)(?<username>[\\S\\s]+)(\\s+)" +
-            "-p(?<password>[\\S\\s]+)(\\s+)(?<password_confirm>[\\S\\s]+)(\\s+)" +
-            "-n(?<nickname>[\\S\\s]+)(\\s+)-e(\\s+)(?<email>[\\S\\s]+)(\\s+)-g(?<gender>\\S+)(\\s*)"),
-    PickQuestion("(\\s*)pick(\\s+)question(\\s+)-q(?<question_number>[\\S\\s]+)(\\s+)" +
-            "-a(?<answer>[\\S\\s]+)(\\s+)-c(?<answer_confirm>\\S+)(\\s*)"),
+    Register("register -u (?<username>[\\S\\s]+) " +
+            "-p (?<password>[\\S\\s]+) -rp (?<passwordConfirm>[\\S\\s]+) " +
+            "-n (?<nickname>[\\S\\s]+) -e (?<email>[\\S\\s]+) -g (?<gender>\\S+)"),
+    PickQuestion("pick question -q (?<questionNumber>[\\S\\s]+) " +
+            "-a (?<answer>[\\S\\s]+) -c (?<answerConfirm>\\S+)"),
     ShowCurrentMenu("(\\s*)show(\\s+)current(\\s+)menu(\\s*)"),
     MenuExit("(\\s*)menu(\\s+)exit(\\s*)"),
     ValidUsername("[A-Za-z0-9_]+"),

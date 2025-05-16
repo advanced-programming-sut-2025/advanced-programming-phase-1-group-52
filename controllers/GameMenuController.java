@@ -3,7 +3,6 @@ package controllers;
 
 import enums.Menu;
 import enums.design.*;
-import enums.design.Shop.Blacksmith;
 import enums.design.Shop.CarpentersShop;
 import enums.design.Shop.ShopEntry;
 import enums.items.*;
@@ -17,13 +16,9 @@ import models.*;
 import models.building.House;
 import models.building.Shop;
 import models.item.*;
-import java.lang.reflect.Array;
 
-import enums.design.Shop.CarpentersShop;
 import enums.design.Shop.MarniesRanch;
-import enums.items.*;
-import enums.regex.GameMenuCommands;
-import enums.regex.NPCDialogs;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -32,12 +27,9 @@ import java.util.Map;
 import java.util.Random;
 import java.util.regex.Matcher;
 import java.util.stream.Collectors;
-import enums.design.Shop.ShopEntry;
-import models.*;
-import models.building.House;
+
 import models.building.Housing;
-import models.building.Shop;
-import models.item.*;
+import views.HomeMenu;
 
 
 public class GameMenuController {
@@ -158,8 +150,8 @@ public class GameMenuController {
     public Result exitGame() {
         User loggedInUser = App.getInstance().getCurrentUser();
         if(game.getMainPlayer().equals(loggedInUser)){
-            // todo : exit the game and go to game menu
-            return new Result(true, "You are in game menu now");
+            App.getInstance().setCurrentMenu(Menu.MainMenu);
+            return new Result(true, "you are in main menu.");
         }
         else{
             return new Result(false, "You are not the creator of this game");
@@ -197,7 +189,8 @@ public class GameMenuController {
         return new Result(true,"It's " + game.getDate().getCurrentWeekday().name());
     }
 
-    public Result changeTime(int hours) {
+    public Result changeTime(String hoursStr) {
+        int hours = Integer.parseInt(hoursStr);
         if (hours <= 0) {
             return new Result(false, "Hours must be positive");
         }
@@ -216,7 +209,8 @@ public class GameMenuController {
         return new Result(true, "time changed!");
     }
 
-    public Result changeDate(int days) {
+    public Result changeDate(String daysStr) {
+        int days = Integer.parseInt(daysStr);
         if (days <= 0) {
             return new Result(false, "Days must be positive");
         }
@@ -241,7 +235,7 @@ public class GameMenuController {
         return new Result(true, "Lightning handling");
     }
 
-    public Result cheatLightning(int x, int y) {
+    public Result cheatLightning(String xString, String yString) {
         return new Result(true, "Lightning handling");
     }
 
@@ -336,7 +330,19 @@ public class GameMenuController {
     }
 
     public Result mapInfo() {
-        return new Result(true, "Map Info");
+        return new Result(true, "earth : blank space\n" +
+                "grass : ^\n" +
+                "water, shoveled, planted, branch : ~\n" +
+                "all kinds of stone : #\n" +
+                "wall : /\n" +
+                "door : %\n" +
+                "house : @\n" +
+                "greenhouse : G\n" +
+                "broken green house : B\n" +
+                "quarry : Q\n" +
+                "tree : T\n" +
+                "shop : $\n" +
+                "NPC house : H");
     }
 
     public Result energyShow() {
@@ -582,6 +588,15 @@ public class GameMenuController {
         for (NPC npc : game.getNPCs()) {
             stringBuilder.append(npc.getFriendShipWith(game.getCurrentPlayer()).toString());
         }
+        return new Result(true, stringBuilder.toString());
+    }
+
+    public Result showAllFriendShips() {
+        StringBuilder stringBuilder = new StringBuilder();
+        for (Friendship friendship : game.getFriendshipsByPlayer(game.getCurrentPlayer())) {
+            stringBuilder.append(friendship.toString());
+        }
+
         return new Result(true, stringBuilder.toString());
     }
 
@@ -861,7 +876,8 @@ public class GameMenuController {
         return Math.abs(playerX - x) <= 1 && Math.abs(playerY - y) <= 1;
     }
 
-    public Result cheatSetEnergy(int value) {
+    public Result cheatSetEnergy(String valueStr) {
+        int value = Integer.parseInt(valueStr);
         Player player = game.getCurrentPlayer();
         player.setEnergy(value);
         return new Result(true, player.getUsername() + "'s energy: is set to " + value);
@@ -1040,7 +1056,9 @@ public class GameMenuController {
         return new Result(false, "You can not plant in this tile");
     }
 
-    public Result showPlant(int x, int y){
+    public Result showPlant(String xStr, String yStr){
+        int x = Integer.parseInt(xStr);
+        int y = Integer.parseInt(yStr);
         GameMap map = game.getMap();
         Tile targetTile = map.getTile(x,y);
         StringBuilder plantInfo = new StringBuilder();
@@ -1102,7 +1120,7 @@ public class GameMenuController {
         }
         return new Result(true, "There is " + wateringCan.getFilledCapacity() + "liter in watering can");
     }
-
+    // todo : delete below functions
     public Result showCraftingRecipes(){
         Player player = game.getCurrentPlayer();
         ArrayList<CraftingRecipe> playerCraftingRecipes = player.getCraftingRecipe();
@@ -1266,62 +1284,11 @@ public class GameMenuController {
         return new Result(true, good.getName() + " added to your inventory");
     }
 
-    public Result buildBarnOrCoop(String buildingKey, int x, int y) {
-        if (!map.inBounds(x, y)) {
-            return new Result(false, "Coordinates are out of farm bounds.");
-        }
-
-        Shop carpShop = new Shop(ShopType.CarpentersShop);
-        ShopEntry entry = carpShop.findEntry(buildingKey);
-        if (!(entry instanceof CarpentersShop carpEnum) ||
-                !(carpEnum.getDisplayName().contains("Barn") || carpEnum.getDisplayName().contains("Coop"))) {
-            return new Result(false, "'" + buildingKey + "' is not a valid barn or coop building.");
-        }
-
-        var player = game.getCurrentPlayer();
-        var inv    = player.getInventory();
-        var req1   = carpEnum.getMaterial1();
-        var req2   = carpEnum.getMaterial2();
-
-        for (var e1 : req1.entrySet()) {
-            if (inv.getCount(e1.getKey()) < e1.getValue())
-                return new Result(false, "Insufficient " + e1.getKey() + ".");
-        }
-        for (var e2 : req2.entrySet()) {
-            if (inv.getCount(e2.getKey()) < e2.getValue())
-                return new Result(false, "Insufficient " + e2.getKey() + ".");
-        }
-
-        req1.forEach((mat, amt) -> inv.remove(mat, amt));
-        req2.forEach((mat, amt) -> inv.remove(mat, amt));
-
-        try {
-            var playersList = new java.util.ArrayList<>(game.getPlayers().size());
-            for (var u : game.getPlayers()) playersList.add(u.getPlayer());
-            int idx = playersList.indexOf(player);
-            var tileType = enums.design.TileType.valueOf(buildingKey);
-            var size     = entry.getDisplayName().split("x");
-            int width    = Integer.parseInt(size[0]);
-            int height   = Integer.parseInt(size[1]);
-
-            var gen = GameMap.class.getDeclaredMethod(
-                    "generateBuilding",
-                    java.util.ArrayList.class,
-                    int.class,
-                    enums.design.TileType.class,
-                    int.class, int.class, int.class, int.class
-            );
-            gen.setAccessible(true);
-            gen.invoke(map, playersList, idx, tileType,
-                    x, x + width, y, y + height);
-        } catch (Exception ex) {
-            return new Result(false, "Error constructing building: " + ex.getMessage());
-        }
-
-        return new Result(true,
-                carpEnum.getDisplayName() +
-                        " successfully built at (" + x + "," + y + ")."
-        );
+    public Result cheatAddBalance(String amountStr) {
+        int amount = Integer.parseInt(amountStr);
+        Player player = game.getCurrentPlayer();
+        player.getBankAccount().deposit(amount);
+        return new Result(true, amount + " added successfully :)");
     }
 
     private void onDayPassed(int days) {
@@ -1365,7 +1332,7 @@ public class GameMenuController {
         }
 
         // Extract usernames
-        Matcher usernameMatcher = GameMenuCommands.ExtractUsernames.getMatcher(command);
+        Matcher usernameMatcher = GameMenuCommands.CreateNewGame.getMatcher(command);
         List<String> usernames = new ArrayList<>();
 
         while (usernameMatcher.find()) {
@@ -1481,7 +1448,7 @@ public class GameMenuController {
         return Result.success(recipe.getDisplayName() + "Ready and added.");
     }
 
-    private void eat(String foodName) {}
+    public Result eat(String foodName) {}
 
     private void calculateEnergy(int amount) {
         Player player = game.getCurrentPlayer();
@@ -1777,19 +1744,20 @@ public class GameMenuController {
         Shop ranch = new Shop(ShopType.MarniesRanch);
         ShopEntry entry = ranch.findEntry(animalKey);
         if (!(entry instanceof MarniesRanch ranchEnum)) {
-            return new Result(false, "'" + animalKey + "' is not sold at Marnie's Ranch.");
+            return Result.failure("'" + animalKey + "' is not sold at Marnie's Ranch.");
         }
 
         AnimalType animalType = ranchEnum.getAnimalType();
         if (animalType == null) {
-            return new Result(false, "'" + animalKey + "' is not an animal.");
+            return Result.failure("'" + animalKey + "' is not an animal.");
         }
 
         Player player = game.getCurrentPlayer();
         BankAccount account = player.getBankAccount();
         int price = ranchEnum.getPrice();
+
         if (account.getBalance() < price) {
-            return new Result(false, "Insufficient funds to buy " + animalType.getName() + ".");
+            return Result.failure("Insufficient funds to buy " + animalType.getName() + ".");
         }
 
         Housing target = null;
@@ -1800,32 +1768,46 @@ public class GameMenuController {
             }
         }
         if (target == null) {
-            return new Result(false, "No housing found with ID " + housingId + ".");
+            return Result.failure("No housing found with ID " + housingId + ".");
         }
 
         String requiredBuilding = ranchEnum.getBuildingRequired();
         if (!target.getType().getName().toLowerCase().contains(requiredBuilding.toLowerCase())) {
-            return new Result(false,
-                    animalType.getName() + " must live in a " + requiredBuilding + ".");
+            return Result.failure(animalType.getName() + " must live in a " + requiredBuilding + ".");
         }
 
         PurchasedAnimal newAnimal = new PurchasedAnimal(animalType, givenName);
-        if (!target.addAnimal(newAnimal)) {
-            return new Result(false,
-                    "The capacity of " + target.getType().getName() +
-                            " number " + housingId + " is full.");
+        Result addResult = player.addAnimalToHousing(housingId, newAnimal);
+        if (!addResult.isSuccessful()) {
+            return addResult;
         }
 
         account.withdraw(price);
-
-        return new Result(true,
+        return Result.success(
                 animalType.getName() +
                         " named \"" + givenName + "\" purchased for " +
-                        price + "g and added to " +
+                        price + "g and assigned to " +
                         target.getType().getName() +
                         " #" + housingId + "."
         );
     }
 
+    public Result showCurrentMenu() {
+        return new Result(true, "Current menu: " + app.getCurrentMenu().name());
+    }
+
+    public Result gotoHomeMenu() {
+        Player player = game.getCurrentPlayer();
+        Tile tile = map.getTile(player.currentX(), player.currentY());
+        if(!tile.getType().equals(TileType.House)){
+            return new Result(false, "To use home menu you should be at home.");
+        }
+        app.setCurrentMenu(Menu.HomeMenu);
+        return new Result(true, "you are in home menu");
+    }
+
+    public void menuExit() {
+        App.getInstance().setCurrentMenu(Menu.ExitMenu);
+    }
 
 }

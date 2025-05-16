@@ -28,8 +28,8 @@ public class ProfileMenu implements AppMenu {
             ));
         } else if ((matcher = ProfileMenuCommands.ChangePassword.getMatcher(input)) != null ) {
             System.out.println(controller.changePassword(
-                    matcher.group("new_password"),
-                    matcher.group("old_password")
+                    matcher.group("newPassword"),
+                    matcher.group("oldPassword")
             ).toString());
         } else if ((matcher = ProfileMenuCommands.UserInfo.getMatcher(input)) != null ) {
             controller.userInfo();
