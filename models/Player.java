@@ -1,6 +1,9 @@
 package models;
 
+
 import enums.items.*;
+import enums.items.CraftingRecipes;
+import enums.items.MaterialType;
 import enums.player.Skills;
 import enums.design.TileType;
 import enums.player.Gender;
