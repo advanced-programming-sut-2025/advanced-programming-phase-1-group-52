@@ -68,7 +68,7 @@ public class GameMap {
         for (ShopType shopType : ShopType.values()) {
             generateBuilding(
                     null,
-                    0,
+                    4,
                     TileType.Shop,
                     shopType.getCornerX(),
                     shopType.getCornerX() + 4,
@@ -76,13 +76,20 @@ public class GameMap {
                     shopType.getCornerY() + 4
             );
 
-            this.shops.add(new Shop(shopType));
+            Shop shop = new Shop(shopType);
+            this.shops.add(shop);
+
+            for (int i = shopType.getCornerX(); i < shopType.getCornerX() + 4; i++) {
+                for (int j = shopType.getCornerY(); j < shopType.getCornerY() + 4; j++) {
+                    tiles[i][j].setShop(shop);
+                }
+            }
         }
 
         for (NPCType npc : NPCType.values()) {
             generateBuilding(
                     null,
-                    0,
+                    4,
                     TileType.NPCHouse,
                     npc.getHouseCornerX(),
                     npc.getHouseCornerX() + 4,

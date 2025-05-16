@@ -47,6 +47,18 @@ public class NPCFriendship {
         } 
     }
 
+    public void upgradeLevel() {
+        switch (this.friendshipLevel) {
+            case 0 -> this.friendshipPoints = 200;
+            case 1 -> this.friendshipPoints = 400;
+            case 2 -> this.friendshipPoints = 600;
+        }
+
+        if (this.friendshipLevel < 3) {
+            this.friendshipLevel++;
+        }
+    }
+
     @Override
     public String toString() {
         return npc.getType().toString() + ":\n" +

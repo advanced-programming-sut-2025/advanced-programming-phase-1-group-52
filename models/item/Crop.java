@@ -99,8 +99,8 @@ public class Crop extends Item implements Growable {
         this.dayRemaining -= 1;
     }
 
-    public CropType getCropType() {
-        return (CropType) cropType;
+    public ItemType getCropType() {
+        return cropType;
     }
 
     public void setCropType(CropType cropType) {
