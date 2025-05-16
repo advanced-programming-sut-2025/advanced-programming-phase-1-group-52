@@ -1,11 +1,11 @@
 package models.item;
 
 import enums.items.ArtisanProductType;
-import enums.items.ItemType;
 
 public class Good extends Item{
     ArtisanProductType productType;
-    private boolean canBeUsed = false;
+    private boolean isReadyToUse = false;
+    private int timePassed = 0;
 
     public Good(ArtisanProductType artisanProductType, int number) {
         super(artisanProductType, number);
@@ -21,11 +21,19 @@ public class Good extends Item{
         return productType;
     }
 
-    public boolean canBeUsed() {
-        return canBeUsed;
+    public boolean isReadyToUse() {
+        return this.isReadyToUse;
     }
 
-    public void setCanBeUsed(boolean canBeUsed) {
-        this.canBeUsed = canBeUsed;
+    public void setReadyToUSe(boolean isReadyToUse) {
+        this.isReadyToUse = isReadyToUse;
+    }
+
+    public int getTimePassed() {
+        return timePassed;
+    }
+
+    public void setTimePassed(int timePassed) {
+        this.timePassed = timePassed;
     }
 }

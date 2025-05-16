@@ -841,6 +841,7 @@ public class GameMenuController {
         items.delete(items.length() - 2, items.length());
         return new Result(true, items.toString());
     }
+
     public Result removeItemFromInventory(String itemName, String itemNumberStr) {
         // todo : handle trim in view for now
         // todo : calculate return money
@@ -881,7 +882,6 @@ public class GameMenuController {
         }
         return new Result(true, tool.getName() + " is your current tool");
     }
-
 
     public Result showAllTools(){
         Player player = game.getCurrentPlayer();
@@ -1086,6 +1086,13 @@ public class GameMenuController {
 
     public Result craftItem(String itemName) {
         Player player = game.getCurrentPlayer();
+        GameMap map = game.getMap();
+        Tile currentTile = map.getTile(player.currentX(), player.currentY());
+
+        if(!currentTile.getType().equals(TileType.House)) {
+            return new Result(false, "You should be at home to craft item");
+        }
+
         CraftingRecipes recipeType = findCraftingRecipeType(itemName);
         if(recipeType == null) {
             return new Result(false, "error");
@@ -1209,7 +1216,7 @@ public class GameMenuController {
         if(good == null) {
             return new Result(false, "you do not have this good");
         }
-        if(!good.canBeUsed()){
+        if(!good.isReadyToUse()){
             return new Result(false,"The good is not ready to use");
         }
         player.getInventory().addNumOfItems(1);

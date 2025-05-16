@@ -23,4 +23,8 @@ public interface Growable {
     void setReadyToHarvest(boolean readyToHarvest);
 
     void growFaster();
+
+    boolean isNotWateredForTwoDays();
+
+    void setNotWateredForTwoDays(boolean notWateredForTwoDays);
 }

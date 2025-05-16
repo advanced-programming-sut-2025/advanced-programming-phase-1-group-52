@@ -3,6 +3,7 @@ package models;
 import enums.design.TileType;
 import enums.items.Growable;
 import models.building.Shop;
+import models.item.Crop;
 import models.item.Item;
 import models.item.Seed;
 
@@ -11,7 +12,7 @@ public class Tile {
     private final int y;
     private TileType type;
     private final Player owner;
-    private Growable plant;
+    private Growable plant = null;
     private Tree tree = null;
     private Seed seed = null;
     private Item item = null;
