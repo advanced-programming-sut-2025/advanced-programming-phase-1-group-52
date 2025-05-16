@@ -38,7 +38,7 @@ public enum ToolType implements ItemType {
 
     // Other tools
     Scythe("scythe", 2, true),
-    MilkPale("milk pail", 4, true),
+    MilkPail("milk pail", 4, true),
     Shear("shears", 4, true);
 
     private final String name;

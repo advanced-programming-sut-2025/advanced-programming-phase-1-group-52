@@ -47,8 +47,12 @@ public abstract class Item {
         if (quantity <= 0) return false;
         if (this.number < quantity) return false;
 
+
         this.number -= quantity;
         return true;
     }
 
+        this.number -= quantity;
+        return true;
+    }
 }

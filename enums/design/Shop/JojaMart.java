@@ -2,6 +2,7 @@ package enums.design.Shop;
 
 import enums.design.Season;
 import enums.items.ForagingSeedType;
+import enums.items.ItemType;
 
 public enum JojaMart implements ShopEntry{
     // Permanent Stock
@@ -123,5 +124,11 @@ public enum JojaMart implements ShopEntry{
     @Override public String getDescription() { return description; }
     @Override public int getPrice() { return price; }
     @Override public int getDailyLimit() { return dailyLimit; }
+
+    @Override
+    public ItemType getItemType() {
+        return null;
+    }
+
     public ForagingSeedType getSeed() { return seed; }
 }

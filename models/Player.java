@@ -179,7 +179,7 @@ public class Player {
             return fishingPoleHandler();
         } else if (typeName.equals("Scythe")) {
             return scytheHandler(tile);
-        } else if (typeName.equals("MilkPale")) {
+        } else if (typeName.equals("MilkPail")) {
             return milkPaleHandler();
         } else if (typeName.equals("Shear")) {
             return shearHandler();
@@ -605,6 +605,7 @@ public class Player {
         }
         return false;
     }
+
 
     public void addHousing(Cages cageType) {
         Housing h = new Housing(nextHousingId++, cageType);

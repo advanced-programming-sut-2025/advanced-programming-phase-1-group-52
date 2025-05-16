@@ -36,17 +36,17 @@ public enum MaterialType implements ItemType {
     Flounder("Flounder"),
     MidnightCarp("Midnight carp"),
 
-    // Foraged ItemType
+    // Foraged Type
     Dandelion("Dandelion"),
     Coffee("Coffee"),
 
-    // Processed ItemType
+    // Processed Type
     Rice("Rice"),
     Bread("Bread"),
     HashBrowns("Hash browns"),
     Omelet("Omelet"),
 
-    // Handicrafts ItemType
+    // Handicrafts Type
     CopperOre("Copper ore"),
     IronOre("Iron ore"),
     GoldOre("Gold ore"),

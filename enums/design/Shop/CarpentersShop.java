@@ -1,5 +1,6 @@
 package enums.design.Shop;
 
+import enums.items.ItemType;
 import enums.items.MaterialType;
 import java.util.HashMap;
 import java.util.Map;
@@ -7,51 +8,51 @@ import java.util.Map;
 public enum CarpentersShop implements ShopEntry{
 
     // Permanent Stock
-    Wood(ItemType.Permanent, "Wood", "A sturdy, yet flexible plant material with a wide variety of uses.",
+    Wood(Type.Permanent, "Wood", "A sturdy, yet flexible plant material with a wide variety of uses.",
             10, Integer.MAX_VALUE, null, null, null, MaterialType.Wood),
 
-    Stone(ItemType.Permanent, "Stone", "A common material with many uses in crafting and building.",
+    Stone(Type.Permanent, "Stone", "A common material with many uses in crafting and building.",
             20, Integer.MAX_VALUE, null, null, null, MaterialType.Stone),
 
     // Farm Buildings
-    Barn(ItemType.FarmBuilding, "Barn", "Houses 4 barn-dwelling animals.",
+    Barn(Type.FarmBuilding, "Barn", "Houses 4 barn-dwelling animals.",
             6000, 1, createMaterial(MaterialType.Wood, 350),
             createMaterial(MaterialType.Stone, 150), "7x4",null),
 
-    BigBarn(ItemType.FarmBuilding, "Big Barn", "Houses 8 barn-dwelling animals. Unlocks goats.",
+    BigBarn(Type.FarmBuilding, "Big Barn", "Houses 8 barn-dwelling animals. Unlocks goats.",
             12000, 1, createMaterial(MaterialType.Wood, 450),
             createMaterial(MaterialType.Stone, 200), "7x4", null),
 
-    DeluxeBarn(ItemType.FarmBuilding, "Deluxe Barn", "Houses 12 barn-dwelling animals. Unlocks sheep and pigs.",
+    DeluxeBarn(Type.FarmBuilding, "Deluxe Barn", "Houses 12 barn-dwelling animals. Unlocks sheep and pigs.",
             25000, 1, createMaterial(MaterialType.Wood, 550),
             createMaterial(MaterialType.Stone, 300), "7x4", null),
 
-    Coop(ItemType.FarmBuilding, "Coop", "Houses 4 coop-dwelling animals.",
+    Coop(Type.FarmBuilding, "Coop", "Houses 4 coop-dwelling animals.",
             4000, 1, createMaterial(MaterialType.Wood, 300),
             createMaterial(MaterialType.Stone, 100), "6x3", null),
 
-    BigCoop(ItemType.FarmBuilding, "Big Coop", "Houses 8 coop-dwelling animals. Unlocks ducks.",
+    BigCoop(Type.FarmBuilding, "Big Coop", "Houses 8 coop-dwelling animals. Unlocks ducks.",
             10000, 1, createMaterial(MaterialType.Wood, 400),
             createMaterial(MaterialType.Stone, 150), "6x3", null),
 
-    DeluxeCoop(ItemType.FarmBuilding, "Deluxe Coop", "Houses 12 coop-dwelling animals. Unlocks rabbits.",
+    DeluxeCoop(Type.FarmBuilding, "Deluxe Coop", "Houses 12 coop-dwelling animals. Unlocks rabbits.",
             20000, 1, createMaterial(MaterialType.Wood, 500),
             createMaterial(MaterialType.Stone, 200), "6x3", null),
 
-    Well(ItemType.FarmBuilding, "Well", "Provides a place for you to refill your watering can.",
+    Well(Type.FarmBuilding, "Well", "Provides a place for you to refill your watering can.",
             1000, 1, null,
             createMaterial(MaterialType.Stone, 75), "3x3", null),
 
-    ShippingBin(ItemType.FarmBuilding, "Shipping Bin", "Items placed in it will be included in the nightly shipment.",
+    ShippingBin(Type.FarmBuilding, "Shipping Bin", "Items placed in it will be included in the nightly shipment.",
             250, Integer.MAX_VALUE, createMaterial(MaterialType.Wood, 150),
             null, "1x1", null);
 
-    public enum ItemType {
+    public enum Type {
         Permanent,
         FarmBuilding,
     }
 
-    private final ItemType type;
+    private final Type type;
     private final String name;
     private final String description;
     private final int price;
@@ -61,7 +62,7 @@ public enum CarpentersShop implements ShopEntry{
     private final String size;
     private final MaterialType materialType;
 
-    CarpentersShop(ItemType type, String name, String description, int price, int dailyLimit,
+    CarpentersShop(Type type, String name, String description, int price, int dailyLimit,
                    Map<MaterialType, Integer> material1,
                    Map<MaterialType, Integer> material2, String size, MaterialType materialType) {
         this.type = type;
@@ -81,7 +82,7 @@ public enum CarpentersShop implements ShopEntry{
         return map;
     }
 
-    public ItemType getType() {
+    public Type getType() {
         return type;
     }
     @Override public String getDisplayName() {
@@ -96,6 +97,12 @@ public enum CarpentersShop implements ShopEntry{
     @Override public int getDailyLimit() {
         return dailyLimit;
     }
+
+    @Override
+    public ItemType getItemType() {
+        return null;
+    }
+
     public Map<MaterialType, Integer> getMaterial1() {
         return material1;
     }

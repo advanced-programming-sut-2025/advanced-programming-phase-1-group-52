@@ -313,4 +313,8 @@ public class Game {
             }
         }
     }
+
+    private void crowAttack(){
+
+    }
 }

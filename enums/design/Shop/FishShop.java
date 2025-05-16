@@ -1,5 +1,6 @@
 package enums.design.Shop;
 
+import enums.items.ItemType;
 import enums.items.MaterialType;
 
 
@@ -42,4 +43,9 @@ public enum FishShop implements ShopEntry{
     @Override public int getPrice() { return price; }
     public int getFishingSkillRequired() { return fishingSkillRequired; }
     @Override public int getDailyLimit() { return dailyLimit; }
+
+    @Override
+    public ItemType getItemType() {
+        return this.materialType;
+    }
 }
