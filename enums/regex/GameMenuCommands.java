@@ -67,6 +67,11 @@ public enum GameMenuCommands {
     AskMarriage("ask marriage -u (?<username>\\S+)"),
     MarriageResponse("respond -(?<response>accept|reject) -u (?<username>\\S+)"),
     StartTrade("start trade"),
+    MeetNPC("meet NPC (?<name>\\S+)"),
+    GiftNPC("gift NPC (?<name>\\S+) -i (<item>\\S+)"),
+    FriendshipNPCList("friendship NPC list"),
+    QuestsList("quests list"),
+    QuestsFinish("quests finish -i (?<id>\\S+)"),
     ShowCurrentMenu(""),
     MenuExit("");
 

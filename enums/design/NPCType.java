@@ -3,6 +3,7 @@ package enums.design;
 import enums.items.*;
 import java.util.ArrayList;
 import models.Quest;
+import models.item.CraftingMachine;
 
 public enum NPCType {
     Sebastian(42, 32) {
@@ -48,7 +49,7 @@ public enum NPCType {
         {
             this.quests.add(new Quest(this, MaterialType.HardWood, 10, MaterialType.GoldCoin, 500));
             this.quests.add(new Quest(this, FishType.Salmon, 1, CookingRecipes.SalmonDinner, 1));
-            this.quests.add(new Quest(this, MaterialType.Wood, 200, ArtisanMachineProductType.DELUXE_SCARECROW, 3));
+            this.quests.add(new Quest(this, MaterialType.Wood, 200, CraftingMachineType.DELUXE_SCARECROW, 3));
 
         }
     },

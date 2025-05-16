@@ -5,16 +5,10 @@ import enums.Menu;
 import enums.design.*;
 import enums.items.*;
 import enums.regex.GameMenuCommands;
-import models.App;
-import models.Game;
-import models.Result;
-import models.User;
-import models.*;
-import models.building.House;
-import models.item.*;
-import java.lang.reflect.Array;
+import enums.regex.NPCDialogs;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -389,6 +383,117 @@ public class GameMenuController {
         }
 
         return new Result(true, stringBuilder.toString());
+    }
+
+    public Result finishQuest(String idString) {
+        Player currentPlayer = game.getCurrentPlayer();
+        int id;
+        try {
+            id = Integer.parseInt(idString);
+        } 
+        catch (NumberFormatException e) {
+            return new Result(false, "Invalid id format!"); 
+        }
+
+        NPC npc = null;
+        Quest quest = null;
+        boolean isDone = false;
+        for (NPC n : game.getNPCs()) {
+            HashMap<Quest, Boolean> quests = npc.getQuests();
+            for (Quest q : quests.keySet()) {
+                if (q.getId() == id) {
+                    npc = n;
+                    quest = q;
+                    isDone = quests.get(q);
+                    break;
+                }
+            }
+
+            if (quest != null) break;
+        }
+
+        if (quest == null) {
+            return new Result(false, "No quest found with this id!");
+        }
+        if (isDone) {
+            return new Result(false, "This quest is already done!");
+        }
+
+        Item item = game.getCurrentPlayer().getInventory().getItemByName(quest.getDemand().getName());
+        if (item == null) {
+            return new Result(false, "You don't have the demanding item!");
+        }
+        if (item.getNumber() < quest.getDemandAmount()) {
+            return new Result(false, "You don't have enough items!");
+        }
+
+        switch (quest.getDemand()) {
+            case AnimalProductType animalProductType -> {
+                currentPlayer.getInventory().removeItem(AnimalProduct.class, quest.getDemandAmount());
+            }
+            case FoodType foodType -> {
+                currentPlayer.getInventory().removeItem(Food.class, quest.getDemandAmount());
+            }
+            case MaterialType materialType -> {
+                currentPlayer.getInventory().removeItem(Material.class, quest.getDemandAmount());
+            }
+            case MineralType mineralType -> {
+                currentPlayer.getInventory().removeItem(Mineral.class, quest.getDemandAmount());
+            }
+            case FishType fishType -> {
+                currentPlayer.getInventory().removeItem(Fish.class, quest.getDemandAmount());
+            }
+            case ArtisanProductType artisanProductType -> {
+                currentPlayer.getInventory().removeItem(Good.class, quest.getDemandAmount());
+            }
+            default -> {
+                return new Result(false, "Invalid Item!");
+            }
+        }
+
+        if (quest.getReward() == null) {
+            npc.getFriendShipWith(currentPlayer).upgradeLevel();
+        }
+        else {
+            switch (quest.getReward()) {
+                case MaterialType materialType -> {
+                    Material material = new Material(materialType, quest.getRewardAmount());
+                    currentPlayer.getInventory().addItem(material);
+                }
+                case MineralType mineralType -> {
+                    Mineral mineral = new Mineral(mineralType, quest.getRewardAmount());
+                    currentPlayer.getInventory().addItem(mineral);
+                }
+                case ToolType toolType -> {
+                    Tool tool = new Tool(toolType, quest.getRewardAmount());
+                    currentPlayer.getInventory().addItem(tool);
+                }
+                case FishType fishType -> {
+                    Fish fish = new Fish(fishType, quest.getRewardAmount());
+                    currentPlayer.getInventory().addItem(fish);
+                }
+                case FoodType foodType -> {
+                    Food food = new Food(foodType, quest.getRewardAmount());
+                    currentPlayer.getInventory().addItem(food);
+                }
+                case CookingRecipes cookingRecipes -> {
+                    CookingRecipe cookingRecipe = new CookingRecipe(cookingRecipes);
+                    if (!currentPlayer.getCookingRecipe().contains(cookingRecipe)) {
+                        currentPlayer.getCookingRecipe().add(cookingRecipe);
+                    }
+                }
+                case CraftingMachineType craftingMachineType -> {
+                    CraftingMachine craftingMachine = new CraftingMachine(craftingMachineType, quest.getRewardAmount());
+                    currentPlayer.getInventory().addItem(craftingMachine);
+                }
+                default -> {
+                    return new Result(false, "Invalid item!");
+                }
+            }
+        }
+
+        npc.getQuests().put(quest, true);
+        return new Result(true, "Nice job! You got your reward!");
     }
 
     public Result talk(String receiverName, String message) {

@@ -63,11 +63,7 @@ public class NPC {
         return null;
     }
 
-    public void meetNPC() {
-
-    }
-
-    public void finishQuest(int id) {
-
+    public void finishQuest(Quest quest) {
+        this.quests.put(quest, true);
     }
 }
