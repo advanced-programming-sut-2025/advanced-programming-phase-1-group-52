@@ -2,6 +2,8 @@ package models;
 
 import enums.items.Backpacks;
 import java.util.ArrayList;
+
+import enums.items.MaterialType;
 import models.item.Item;
 
 public class Inventory {
@@ -103,6 +105,24 @@ public class Inventory {
 
     public void setFull(boolean full) {
         isFull = full;
+    }
+
+    public int getCount(MaterialType type) {
+        Item item = getItemByName(type.name());
+        return item == null ? 0 : item.getNumber();
+    }
+
+    public boolean remove(MaterialType type, int quantity) {
+        for (Item item : items) {
+            if (item.getItemType() == type) {
+                boolean success = item.remove(quantity);
+                if (success && item.getNumber() == 0) {
+                    items.remove(item);
+                }
+                return success;
+            }
+        }
+        return false;
     }
 
 }

@@ -446,7 +446,7 @@ public class GameMap {
         return null;
     }
 
-    private boolean inBounds(int x, int y) {
+    public boolean inBounds(int x, int y) {
         return x >= 0 && y >= 0 && x < tiles.length && y < tiles[0].length;
     }
 
