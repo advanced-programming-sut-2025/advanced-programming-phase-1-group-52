@@ -2,8 +2,9 @@ package enums.design;
 
 import enums.items.*;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Random;
 import models.Quest;
-import models.item.CraftingMachine;
 
 public enum NPCType {
     Sebastian(42, 32) {
@@ -33,18 +34,22 @@ public enum NPCType {
     Harvey(32, 42) {
         {
             this.favorites.add(MaterialType.Coffee);
-            this.favorites.add() // todo: add torshi(Pickle) and wine
+            this.favorites.add(ArtisanProductType.GRAPE_WINE);
+            this.favorites.add(ArtisanProductType.PICKLES); 
         }
         {
-            this.quests.add(new Quest(this, , 12, MaterialType.GoldCoin, 750)); // todo: an random plant
+            Random rand = new Random();
+            CropType cropType = Arrays.asList(CropType.values()).get(rand.nextInt(CropType.values().length));
+            this.quests.add(new Quest(this, cropType, 12, MaterialType.GoldCoin, 750));
             this.quests.add(new Quest(this, FishType.Salmon, 1, null, null));
-            this.quests.add(new Quest(this, /*Wine Bottle */, 1, FoodType.Salad, 5));
+            this.quests.add(new Quest(this, ArtisanProductType.GRAPE_WINE, 1, FoodType.Salad, 5));
         }
     },
     Lia(42, 42) {
         {
             this.favorites.add(FoodType.Salad);
-            this.favorites.add(CropType.Grape); // todo: add grapes and wine
+            this.favorites.add(CropType.Grape);
+            this.favorites.add(ArtisanProductType.GRAPE_WINE);
         }
         {
             this.quests.add(new Quest(this, MaterialType.HardWood, 10, MaterialType.GoldCoin, 500));
