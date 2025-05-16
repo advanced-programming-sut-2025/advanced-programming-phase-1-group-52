@@ -2,6 +2,7 @@ package enums.design.Shop;
 
 import enums.items.CookingRecipes;
 import enums.items.FoodType;
+import enums.items.ItemType;
 
 public enum TheStardropSaloon implements ShopEntry {
 
@@ -64,4 +65,9 @@ public enum TheStardropSaloon implements ShopEntry {
     @Override public String getDescription() { return description; }
     @Override public int getPrice() { return price; }
     @Override public int getDailyLimit() { return dailyLimit; }
+
+    @Override
+    public ItemType getItemType() {
+        return null;
+    }
 }

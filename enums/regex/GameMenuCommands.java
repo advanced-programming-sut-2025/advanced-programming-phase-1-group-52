@@ -5,7 +5,7 @@ import java.util.regex.Pattern;
 
 public enum GameMenuCommands {
     CheckFlagInNewGame("^game new -u\\b.*"),
-    ExtractUsernames("(?:^game new -u|(?!^)\\G)\\s+(\\w+)"),
+    CreateNewGame("^game new -u (?<username1>[\\s\\S]*) (?<username2>[\\s\\S]*) (?<username3>[\\s\\S]*)$"),
     GameMap("game map (?<map_number>[\\d]*)"),
     ExitGame("exit game"),
     NextTurn("next turn"),
@@ -38,23 +38,23 @@ public enum GameMenuCommands {
     ShowPlant("showplant -l (?<x>\\d+), (?<y>\\d+)"),
     Fertilize("fertilize -f (?<fertilizer>\\S+) -d (?<direction>\\S+)"),
     HowMuchWater("howmuch water"),
-    Eat("^(\\s*)eat(\\s+)(?<food_name>\\S+)(\\s*)$"),
+    Eat("^(\\s*)eat(\\s+)(?<foodName>\\S+)(\\s*)$"),
     PettingAnAnimal("^(\\s*)pet(\\s+)-n(\\s+)(?<name>\\S+)(\\s*)$"),
-    CHEATSetAnimalFriendship("cheat set friendship -n (?<animal name>\\S+) -c (?<amount>\\d+)"),
+    CHEATSetAnimalFriendship("cheat set friendship -n (?<animalName>\\S+) -c (?<amount>\\d+)"),
     Animals("animals"),
-    ShepherdAnimals("^(\\s*)shepherd(\\s+)animals(\\s+)-n(\\s+)(?<animal name>[\\S\\s+])(\\s+)" +
+    ShepherdAnimals("^(\\s*)shepherd(\\s+)animals(\\s+)-n(\\s+)(?<animalName>[\\S\\s+])(\\s+)" +
             "-l(\\s*)(?<x>\\d+),(\\s*)(?<y>\\d+)(\\s*)$"),
-    FeedHay("^(\\s*)feed(\\s+)hay(\\s+)-n(\\s+)(?<animal name>\\S+)(\\s*)$"),
+    FeedHay("^(\\s*)feed(\\s+)hay(\\s+)-n(\\s+)(?<animalName>\\S+)(\\s*)$"),
     AnimalProduces("^(\\s*)produces(\\s*)$"),
     AnimalCollectProduce("^(\\s*)collect(\\s+)produce(\\s+)-n(\\s+)(?<name>\\S+)(\\s*)$"),
     SellAnimal("^(\\s*)sell(\\s+)animal(\\s+)-n(\\s+)(?<name>\\S+)(\\s*)$"),
     Fishing("^(\\s*)fishing(\\s+)-p(\\s+)(?<fishing pole>\\S+)(\\s*)$"),
-    ArtisanUse("^(\\s*)artisan(\\s+)use(\\s+)(?<artisan_name>\\S+)(\\s+)(?<item1_name>\\S+)(\\s*)$"),
+    ArtisanUse("^(\\s*)artisan(\\s+)use(\\s+)(?<artisanName>\\S+)(\\s+)(?<itemName>\\S+)(\\s*)$"),
     CHEATAddBalance("cheat add (?<amount>\\d+) dollars"),
-    Sell("sell (?<product_name>\\S+) -n (?<count>\\d+)"),
-    ArtisanGet("^(\\s*)artisan(\\s+)get(\\s+)(?<artisan_name>\\S+)(\\s*)$"),
-    PlaceItem("place item -n (?<item_name>\\S+) -d (?<direction>\\S+)"),
-    CHEATAddItem("cheat add item -n (?<item_name>\\S+) -c (?<count>\\d+)"),
+    Sell("sell (?<productName>\\S+) -n (?<count>\\d+)"),
+    ArtisanGet("^(\\s*)artisan(\\s+)get(\\s+)(?<artisanName>\\S+)(\\s*)$"),
+    PlaceItem("place item -n (?<itemName>\\S+) -d (?<direction>\\S+)"),
+    CHEATAddItem("cheat add item -n (?<itemName>\\S+) -c (?<count>\\d+)"),
     Friendships("friendships"),
     Talk("talk -u (?<username>\\S+) -m (?<message>\\S+)"),
     TalkHistory("talk history -u (?<username>\\S+)"),
@@ -72,8 +72,10 @@ public enum GameMenuCommands {
     FriendshipNPCList("friendship NPC list"),
     QuestsList("quests list"),
     QuestsFinish("quests finish -i (?<id>\\S+)"),
-    ShowCurrentMenu(""),
-    MenuExit("");
+    ShowCurrentMenu("show current menu"),
+    MenuExit("menu exit"),
+    GotoHomeMenu("home menu"),
+    TreeInfo("tree info -n (?<name>\\S+)");
 
     private final String pattern;
 

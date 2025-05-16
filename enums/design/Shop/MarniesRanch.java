@@ -1,6 +1,7 @@
 package enums.design.Shop;
 
 import enums.items.AnimalType;
+import enums.items.ItemType;
 import enums.items.MaterialType;
 
 public enum MarniesRanch implements ShopEntry{
@@ -68,5 +69,11 @@ public enum MarniesRanch implements ShopEntry{
     @Override public String getDescription() { return description; }
     @Override public int getPrice() { return price; }
     @Override public int getDailyLimit() { return dailyLimit; }
+
+    @Override
+    public ItemType getItemType() {
+        return null;
+    }
+
     public String getBuildingRequired() { return buildingRequired; }
 }

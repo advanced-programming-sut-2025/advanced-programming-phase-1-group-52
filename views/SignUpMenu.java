@@ -16,18 +16,18 @@ public class SignUpMenu implements AppMenu {
 
         if ((matcher = SignUpMenuCommands.Register.getMatcher(input)) != null) {
             System.out.println(controller.register(
-                    matcher.group("username"),
-                    matcher.group("password"),
-                    matcher.group("password_confirm"),
-                    matcher.group("nickname"),
-                    matcher.group("email"),
-                    matcher.group("gender")
+                    matcher.group("username").trim(),
+                    matcher.group("password").trim(),
+                    matcher.group("passwordConfirm").trim(),
+                    matcher.group("nickname").trim(),
+                    matcher.group("email").trim(),
+                    matcher.group("gender").trim()
             ).toString());
         } else if ((matcher = SignUpMenuCommands.PickQuestion.getMatcher(input)) != null) {
             System.out.println(controller.pickQuestion(
-                    matcher.group("question_number"),
+                    matcher.group("questionNumber"),
                     matcher.group("answer"),
-                    matcher.group("answer_confirm")
+                    matcher.group("answerConfirm")
             ).toString());
         } else if ((matcher = SignUpMenuCommands.ShowCurrentMenu.getMatcher(input)) != null) {
             controller.showCurrentMenu();

@@ -12,110 +12,107 @@ public class GameMenu implements AppMenu {
         String input = scanner.nextLine();
         Matcher matcher;
 
-        if ((matcher = GameMenuCommands.CheckFlagInNewGame.getMatcher(input)) != null) {
-
-        }
-        else if ((matcher = GameMenuCommands.ExtractUsernames.getMatcher(input)) != null) {
-
+        if ((matcher = GameMenuCommands.CreateNewGame.getMatcher(input)) != null) {
+            System.out.println(controller.startNewGame(input).Message());
         }
         else if ((matcher = GameMenuCommands.GameMap.getMatcher(input)) != null) {
 
         }
         else if ((matcher = GameMenuCommands.ExitGame.getMatcher(input)) != null) {
-
+            System.out.println(controller.exitGame().Message());
         }
         else if ((matcher = GameMenuCommands.NextTurn.getMatcher(input)) != null) {
-
+            System.out.println(controller.switchTurn().Message());
         }
         else if ((matcher = GameMenuCommands.Time.getMatcher(input)) != null) {
-
+            System.out.println(controller.showTime().Message());
         }
         else if ((matcher = GameMenuCommands.Date.getMatcher(input)) != null) {
-
+            System.out.println(controller.showDate().Message());
         }
         else if ((matcher = GameMenuCommands.DateTime.getMatcher(input)) != null) {
-            
+            System.out.println(controller.showDateAndTime().Message());
         }
         else if ((matcher = GameMenuCommands.DayOfTheWeek.getMatcher(input)) != null) {
-
+            System.out.println(controller.showDayOfWeek().Message());
         }
         else if ((matcher = GameMenuCommands.CHEATAdvanceTime.getMatcher(input)) != null) {
-
+            System.out.println(controller.changeTime(matcher.group("amount")).Message());
         }
         else if ((matcher = GameMenuCommands.CHEATAdvanceDate.getMatcher(input)) != null) {
-
+            System.out.println(controller.changeDate("amount").Message());
         }
         else if ((matcher = GameMenuCommands.Season.getMatcher(input)) != null) {
-
+            System.out.println(controller.showSeason().Message());
         }
         else if ((matcher = GameMenuCommands.CHEATLightning.getMatcher(input)) != null) {
-
+            System.out.println(controller.cheatLightning(matcher.group("x"), matcher.group("y")).Message());
         }
         else if ((matcher = GameMenuCommands.Weather.getMatcher(input)) != null) {
-
+            System.out.println(controller.showWeather().Message());
         }
         else if ((matcher = GameMenuCommands.WeatherForecast.getMatcher(input)) != null) {
-
+            System.out.println(controller.showTomorrowWeather().Message());
         }
         else if ((matcher = GameMenuCommands.CHEATWeather.getMatcher(input)) != null) {
-
+            System.out.println(controller.changeTomorrowWeather(matcher.group("weather")).Message());
         }
         else if ((matcher = GameMenuCommands.GreenHouseBuilding.getMatcher(input)) != null) {
-
+            System.out.println(controller.buildGreenHouse().Message());
         }
         else if ((matcher = GameMenuCommands.Walk.getMatcher(input)) != null) {
-
+            System.out.println(controller.walk(matcher.group("x"), matcher.group("y")).Message());
         }
         else if ((matcher = GameMenuCommands.PrintMap.getMatcher(input)) != null) {
-
+            System.out.println(controller.printMap(matcher.group("x"),matcher.group("y"), matcher.group("size")).Message());
         }
         else if ((matcher = GameMenuCommands.HelpMap.getMatcher(input)) != null) {
-
+            System.out.println(controller.mapInfo().Message());
         }
         else if ((matcher = GameMenuCommands.EnergyShow.getMatcher(input)) != null) {
-
+            System.out.println(controller.energyShow().Message());
         }
         else if ((matcher = GameMenuCommands.CHEATEnergySet.getMatcher(input)) != null) {
-
+            System.out.println(controller.cheatSetEnergy(matcher.group("value")).Message());
         }
         else if ((matcher = GameMenuCommands.CHEATEnergyUnlimited.getMatcher(input)) != null) {
-
+            System.out.println(controller.cheatUnlimitedEnergy().Message());
         }
         else if ((matcher = GameMenuCommands.InventoryShow.getMatcher(input)) != null) {
-
+            System.out.println(controller.showInventoryItems().Message());
         }
         else if ((matcher = GameMenuCommands.RemoveInventoryItems.getMatcher(input)) != null) {
-
+            System.out.println(controller.removeItemFromInventory(matcher.group("name"),matcher.group("number")).Message());
         }
         else if ((matcher = GameMenuCommands.ToolEquip.getMatcher(input)) != null) {
-
+            System.out.println(controller.equipTool(matcher.group("name")));
         }
         else if ((matcher = GameMenuCommands.ToolShowCurrent.getMatcher(input)) != null) {
-
+            System.out.println(controller.showCurrentTool().Message());
         }
         else if ((matcher = GameMenuCommands.ToolShowAvailable.getMatcher(input)) != null) {
-
+            System.out.println(controller.showAllTools().Message());
         }
         else if ((matcher = GameMenuCommands.ToolUse.getMatcher(input)) != null) {
-
+            System.out.println(controller.useTool(matcher.group("direction")).Message());
         }
         else if ((matcher = GameMenuCommands.CraftInfo.getMatcher(input)) != null) {
-
+            System.out.println(controller.craftInfo(matcher.group("name")).Message());
         }
         else if ((matcher = GameMenuCommands.Plant.getMatcher(input)) != null) {
-
+            System.out.println(controller.plant(matcher.group("seed"), matcher.group("direction")).Message());
         }
         else if ((matcher = GameMenuCommands.ShowPlant.getMatcher(input)) != null) {
-
+            System.out.println(controller.showPlant(matcher.group("x"),matcher.group("y")).Message());
         }
         else if ((matcher = GameMenuCommands.Fertilize.getMatcher(input)) != null) {
-
+            System.out.println(controller.fertilize(matcher.group("fertilizer"), matcher.group("direction")).Message());
         }
         else if ((matcher = GameMenuCommands.HowMuchWater.getMatcher(input)) != null) {
-
+            System.out.println(controller.wateringCanFilled().Message());
         }
         else if ((matcher = GameMenuCommands.Eat.getMatcher(input)) != null) {
-
+            System.out.println(controller.eat(matcher.group("foodName")).Message());
         }
         else if ((matcher = GameMenuCommands.PettingAnAnimal.getMatcher(input)) != null) {
 
@@ -145,79 +142,88 @@ public class GameMenu implements AppMenu {
 
         }
         else if ((matcher = GameMenuCommands.ArtisanUse.getMatcher(input)) != null) {
-
+            System.out.println(controller.useArtisanMachine(matcher.group("artisanName"),matcher.group("itemName")).Message());
         }
         else if ((matcher = GameMenuCommands.CHEATAddBalance.getMatcher(input)) != null) {
-
+            System.out.println(controller.cheatAddBalance(matcher.group("amount")).Message());
         }
         else if ((matcher = GameMenuCommands.Sell.getMatcher(input)) != null) {
 
         }
         else if ((matcher = GameMenuCommands.ArtisanGet.getMatcher(input)) != null) {
-
+            System.out.println(controller.getArtisanProduct(matcher.group("artisanName")).Message());
         }
         else if ((matcher = GameMenuCommands.PlaceItem.getMatcher(input)) != null) {
-
+            System.out.println(controller.placeItem(matcher.group("itemName"), matcher.group("direction")).Message());
         }
         else if ((matcher = GameMenuCommands.CHEATAddItem.getMatcher(input)) != null) {
-
+            System.out.println(controller.cheatAddItem(matcher.group("itemName"), matcher.group("count")).Message());
         }
         else if ((matcher = GameMenuCommands.Friendships.getMatcher(input)) != null) {
-
+            System.out.println(controller.showAllFriendShips().Message());
         }
         else if ((matcher = GameMenuCommands.Talk.getMatcher(input)) != null) {
-
+            System.out.println(controller.talk(matcher.group("username"), matcher.group("message")).Message());
         }
         else if ((matcher = GameMenuCommands.TalkHistory.getMatcher(input)) != null) {
-
+            System.out.println(controller.talkHistory(matcher.group("username")).Message());
         }
         else if ((matcher = GameMenuCommands.Gift.getMatcher(input)) != null) {
-
+            System.out.println(controller.giftPlayer(matcher.group("username"), matcher.group("item"), matcher.group("amount")).Message());
         }
         else if ((matcher = GameMenuCommands.GiftList.getMatcher(input)) != null) {
-
+            System.out.println(controller.showGiftsList().Message());
         }
         else if ((matcher = GameMenuCommands.GiftRate.getMatcher(input)) != null) {
-
+            System.out.println(controller.rateGift(matcher.group("id"), matcher.group("rate")).Message());
         }
         else if ((matcher = GameMenuCommands.GiftHistory.getMatcher(input)) != null) {
-
+            System.out.println(controller.showGiftHistoryWith("username").Message());
         }
         else if ((matcher = GameMenuCommands.Hug.getMatcher(input)) != null) {
-
+            System.out.println(controller.hug(matcher.group("username")).Message());
         }
         else if ((matcher = GameMenuCommands.Flower.getMatcher(input)) != null) {
-
+            System.out.println(controller.flowerSomeone(matcher.group("username")).Message());
         }
         else if ((matcher = GameMenuCommands.AskMarriage.getMatcher(input)) != null) {
-
+            System.out.println(controller.askMarriage(matcher.group("username")).Message());
         }
         else if ((matcher = GameMenuCommands.MarriageResponse.getMatcher(input)) != null) {
-
+            System.out.println(controller.respondToMarriage(matcher.group("response"), matcher.group("username")).Message());
         }
         else if ((matcher = GameMenuCommands.StartTrade.getMatcher(input)) != null) {
-
+            System.out.println(controller.goToTradeMenu().Message());
         }
         else if ((matcher = GameMenuCommands.MeetNPC.getMatcher(input)) != null) {
-
+            System.out.println(controller.meetNPC(matcher.group("name")).Message());
         }
         else if ((matcher = GameMenuCommands.GiftNPC.getMatcher(input)) != null) {
-
+            System.out.println(controller.giftNPC(matcher.group("name"), matcher.group("item")).Message());
         }
         else if ((matcher = GameMenuCommands.FriendshipNPCList.getMatcher(input)) != null) {
-
+            System.out.println(controller.showNPCFriendships().Message());
         }
         else if ((matcher = GameMenuCommands.QuestsList.getMatcher(input)) != null) {
-
+            System.out.println(controller.showQuests().Message());
         }
         else if ((matcher = GameMenuCommands.QuestsFinish.getMatcher(input)) != null) {
-
+            System.out.println(controller.finishQuest(matcher.group("id")).Message());
         }
         else if ((matcher = GameMenuCommands.ShowCurrentMenu.getMatcher(input)) != null) {
-
+            System.out.println(controller.showCurrentMenu().Message());
         }
         else if ((matcher = GameMenuCommands.MenuExit.getMatcher(input)) != null) {
-
+            controller.menuExit();
+        }
+        else if((matcher = GameMenuCommands.GotoHomeMenu.getMatcher(input)) != null) {
+            System.out.println(controller.gotoHomeMenu().Message());
+        }
+        else if((matcher = GameMenuCommands.TreeInfo.getMatcher(input)) != null) {
+            System.out.println(controller.treeInfo(matcher.group("name")).Message());
+        }
+        else {
+            System.out.println("Invalid command");
         }
 
     }
