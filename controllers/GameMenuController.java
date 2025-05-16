@@ -18,15 +18,25 @@ import models.building.House;
 import models.building.Shop;
 import models.item.*;
 import java.lang.reflect.Array;
+
+import enums.design.Shop.CarpentersShop;
+import enums.design.Shop.MarniesRanch;
+import enums.items.*;
+import enums.regex.GameMenuCommands;
+import enums.regex.NPCDialogs;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.regex.Matcher;
 import java.util.stream.Collectors;
+import enums.design.Shop.ShopEntry;
 import models.*;
 import models.building.House;
+import models.building.Housing;
+import models.building.Shop;
 import models.item.*;
 
 
@@ -416,6 +426,117 @@ public class GameMenuController {
         }
 
         return new Result(true, stringBuilder.toString());
+    }
+
+    public Result finishQuest(String idString) {
+        Player currentPlayer = game.getCurrentPlayer();
+        int id;
+        try {
+            id = Integer.parseInt(idString);
+        } 
+        catch (NumberFormatException e) {
+            return new Result(false, "Invalid id format!"); 
+        }
+
+        NPC npc = null;
+        Quest quest = null;
+        boolean isDone = false;
+        for (NPC n : game.getNPCs()) {
+            HashMap<Quest, Boolean> quests = npc.getQuests();
+            for (Quest q : quests.keySet()) {
+                if (q.getId() == id) {
+                    npc = n;
+                    quest = q;
+                    isDone = quests.get(q);
+                    break;
+                }
+            }
+
+            if (quest != null) break;
+        }
+
+        if (quest == null) {
+            return new Result(false, "No quest found with this id!");
+        }
+        if (isDone) {
+            return new Result(false, "This quest is already done!");
+        }
+
+        Item item = game.getCurrentPlayer().getInventory().getItemByName(quest.getDemand().getName());
+        if (item == null) {
+            return new Result(false, "You don't have the demanding item!");
+        }
+        if (item.getNumber() < quest.getDemandAmount()) {
+            return new Result(false, "You don't have enough items!");
+        }
+
+        switch (quest.getDemand()) {
+            case AnimalProductType animalProductType -> {
+                currentPlayer.getInventory().removeItem(AnimalProduct.class, quest.getDemandAmount());
+            }
+            case FoodType foodType -> {
+                currentPlayer.getInventory().removeItem(Food.class, quest.getDemandAmount());
+            }
+            case MaterialType materialType -> {
+                currentPlayer.getInventory().removeItem(Material.class, quest.getDemandAmount());
+            }
+            case MineralType mineralType -> {
+                currentPlayer.getInventory().removeItem(Mineral.class, quest.getDemandAmount());
+            }
+            case FishType fishType -> {
+                currentPlayer.getInventory().removeItem(Fish.class, quest.getDemandAmount());
+            }
+            case ArtisanProductType artisanProductType -> {
+                currentPlayer.getInventory().removeItem(Good.class, quest.getDemandAmount());
+            }
+            default -> {
+                return new Result(false, "Invalid Item!");
+            }
+        }
+
+        if (quest.getReward() == null) {
+            npc.getFriendShipWith(currentPlayer).upgradeLevel();
+        }
+        else {
+            switch (quest.getReward()) {
+                case MaterialType materialType -> {
+                    Material material = new Material(materialType, quest.getRewardAmount());
+                    currentPlayer.getInventory().addItem(material);
+                }
+                case MineralType mineralType -> {
+                    Mineral mineral = new Mineral(mineralType, quest.getRewardAmount());
+                    currentPlayer.getInventory().addItem(mineral);
+                }
+                case ToolType toolType -> {
+                    Tool tool = new Tool(toolType, quest.getRewardAmount());
+                    currentPlayer.getInventory().addItem(tool);
+                }
+                case FishType fishType -> {
+                    Fish fish = new Fish(fishType, quest.getRewardAmount());
+                    currentPlayer.getInventory().addItem(fish);
+                }
+                case FoodType foodType -> {
+                    Food food = new Food(foodType, quest.getRewardAmount());
+                    currentPlayer.getInventory().addItem(food);
+                }
+                case CookingRecipes cookingRecipes -> {
+                    CookingRecipe cookingRecipe = new CookingRecipe(cookingRecipes);
+                    if (!currentPlayer.getCookingRecipe().contains(cookingRecipe)) {
+                        currentPlayer.getCookingRecipe().add(cookingRecipe);
+                    }
+                }
+                case CraftingMachineType craftingMachineType -> {
+                    CraftingMachine craftingMachine = new CraftingMachine(craftingMachineType, quest.getRewardAmount());
+                    currentPlayer.getInventory().addItem(craftingMachine);
+                }
+                default -> {
+                    return new Result(false, "Invalid item!");
+                }
+            }
+        }
+
+        npc.getQuests().put(quest, true);
+        return new Result(true, "Nice job! You got your reward!");
     }
 
     public Result talk(String receiverName, String message) {
@@ -1585,5 +1706,126 @@ public class GameMenuController {
         }
         return null;
     }
+
+    public Result buildBarnOrCoop(String buildingKey, int x, int y) {
+        if (!map.inBounds(x, y)) {
+            return new Result(false, "Coordinates are out of farm bounds.");
+        }
+
+        Shop carpShop = new Shop(ShopType.CarpentersShop);
+        ShopEntry entry = carpShop.findEntry(buildingKey);
+        if (!(entry instanceof CarpentersShop carpEnum) ||
+                !(carpEnum.getDisplayName().contains("Barn") || carpEnum.getDisplayName().contains("Coop"))) {
+            return new Result(false, "'" + buildingKey + "' is not a valid barn or coop building.");
+        }
+
+        Player player = game.getCurrentPlayer();
+        Inventory inv = player.getInventory();
+        var req1 = carpEnum.getMaterial1();
+        var req2 = carpEnum.getMaterial2();
+
+        for (var e1 : req1.entrySet()) {
+            if (inv.getCount(e1.getKey()) < e1.getValue()) {
+                return new Result(false, "Insufficient " + e1.getKey() + ".");
+            }
+        }
+        for (var e2 : req2.entrySet()) {
+            if (inv.getCount(e2.getKey()) < e2.getValue()) {
+                return new Result(false, "Insufficient " + e2.getKey() + ".");
+            }
+        }
+
+        req1.forEach((mat, amt) -> inv.remove(mat, amt));
+        req2.forEach((mat, amt) -> inv.remove(mat, amt));
+
+        try {
+            var playersList = new ArrayList<Player>(game.getPlayers().size());
+            for (var u : game.getPlayers()) playersList.add(u.getPlayer());
+            int idx = playersList.indexOf(player);
+
+            var tileType = TileType.valueOf(buildingKey);
+            var size     = entry.getDisplayName().split("x");
+            int width    = Integer.parseInt(size[0]);
+            int height   = Integer.parseInt(size[1]);
+
+            var gen = GameMap.class.getDeclaredMethod(
+                    "generateBuilding",
+                    ArrayList.class,
+                    int.class,
+                    TileType.class,
+                    int.class, int.class, int.class, int.class
+            );
+            gen.setAccessible(true);
+            gen.invoke(map, playersList, idx, tileType, x, x + width, y, y + height);
+        } catch (Exception ex) {
+            return new Result(false, "Error constructing building: " + ex.getMessage());
+        }
+
+        Cages cageType;
+        if (carpEnum.getDisplayName().contains("Coop")) {
+            cageType = Cages.NormalCage;
+        } else {
+            cageType = Cages.NormalStable;
+        }
+        player.addHousing(cageType);
+        return new Result(true,
+                carpEnum.getDisplayName() + " successfully built at (" + x + "," + y + ")."
+        );
+    }
+
+    public Result buyAnimal(String animalKey, int housingId, String givenName) {
+        Shop ranch = new Shop(ShopType.MarniesRanch);
+        ShopEntry entry = ranch.findEntry(animalKey);
+        if (!(entry instanceof MarniesRanch ranchEnum)) {
+            return new Result(false, "'" + animalKey + "' is not sold at Marnie's Ranch.");
+        }
+
+        AnimalType animalType = ranchEnum.getAnimalType();
+        if (animalType == null) {
+            return new Result(false, "'" + animalKey + "' is not an animal.");
+        }
+
+        Player player = game.getCurrentPlayer();
+        BankAccount account = player.getBankAccount();
+        int price = ranchEnum.getPrice();
+        if (account.getBalance() < price) {
+            return new Result(false, "Insufficient funds to buy " + animalType.getName() + ".");
+        }
+
+        Housing target = null;
+        for (Housing h : player.getHousings()) {
+            if (h.getId() == housingId) {
+                target = h;
+                break;
+            }
+        }
+        if (target == null) {
+            return new Result(false, "No housing found with ID " + housingId + ".");
+        }
+
+        String requiredBuilding = ranchEnum.getBuildingRequired();
+        if (!target.getType().getName().toLowerCase().contains(requiredBuilding.toLowerCase())) {
+            return new Result(false,
+                    animalType.getName() + " must live in a " + requiredBuilding + ".");
+        }
+
+        PurchasedAnimal newAnimal = new PurchasedAnimal(animalType, givenName);
+        if (!target.addAnimal(newAnimal)) {
+            return new Result(false,
+                    "The capacity of " + target.getType().getName() +
+                            " number " + housingId + " is full.");
+        }
+
+        account.withdraw(price);
+
+        return new Result(true,
+                animalType.getName() +
+                        " named \"" + givenName + "\" purchased for " +
+                        price + "g and added to " +
+                        target.getType().getName() +
+                        " #" + housingId + "."
+        );
+    }
+
 
 }

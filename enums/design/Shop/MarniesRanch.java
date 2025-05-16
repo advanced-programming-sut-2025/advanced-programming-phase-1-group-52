@@ -16,7 +16,7 @@ public enum MarniesRanch implements ShopEntry{
             "Use this to collect wool from sheep",
             1000, 1, null),
 
-    // Animal
+    // PurchasedAnimal
     Chicken(null,AnimalType.Chicken, "Chicken",
             "Well cared-for chickens lay eggs every day. Lives in the coop.", 800, 2, "Coop"),
     Cow(null,AnimalType.Cow, "Cow",

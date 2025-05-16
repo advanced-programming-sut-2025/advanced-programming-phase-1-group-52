@@ -1,6 +1,7 @@
 package models.item;
 
 import enums.items.ItemType;
+import enums.items.MaterialType;
 
 public abstract class Item {
     private String name;
@@ -45,6 +46,11 @@ public abstract class Item {
     public boolean remove(int quantity) {
         if (quantity <= 0) return false;
         if (this.number < quantity) return false;
+
+
+        this.number -= quantity;
+        return true;
+    }
 
         this.number -= quantity;
         return true;

@@ -1,13 +1,15 @@
 package models;
 
+
+import enums.items.*;
 import enums.items.CraftingRecipes;
 import enums.items.MaterialType;
 import enums.player.Skills;
 import enums.design.TileType;
-import enums.items.MineralType;
 import enums.player.Gender;
 import enums.player.Skills;
 import models.building.House;
+import models.building.Housing;
 import models.item.*;
 
 import java.util.ArrayList;
@@ -40,6 +42,8 @@ public class Player {
     private ArrayList<Notification> notifications;
     private BankAccount bankAccount;
     private Player spouse = null;
+    private final List<Housing> housings = new ArrayList<>();
+    private static int nextHousingId = 1;
 
     public Player(String username, Gender gender) {
         this.username = username;
@@ -602,4 +606,37 @@ public class Player {
         return false;
     }
 
+
+    public void addHousing(Cages cageType) {
+        Housing h = new Housing(nextHousingId++, cageType);
+        housings.add(h);
+    }
+
+    public Result addAnimalToHousing(int housingId, PurchasedAnimal purchasedAnimal) {
+        for (Housing h : housings) {
+            if (h.getId() == housingId) {
+                if (h.addAnimal(purchasedAnimal)) {
+                    return new Result(true,
+                            purchasedAnimal.getType().getName() +
+                                    " named \"" + purchasedAnimal.getName() +
+                                    "\" was successfully added to " +
+                                    h.getType().getName() +
+                                    " number " + housingId + "."
+                    );
+                } else {
+                    return new Result(false,
+                            "The capacity of " +
+                                    h.getType().getName() +
+                                    " number " + housingId +
+                                    " is full."
+                    );
+                }
+            }
+        }
+        return new Result(false, "No housing found with ID " + housingId + ".");
+    }
+
+    public List<Housing> getHousings() {
+        return housings;
+    }
 }

@@ -118,6 +118,7 @@ public class Inventory {
         return null;
     }
 
+
     public int getCount(MaterialType type) {
         Item item = getItemByName(type.name());
         return item == null ? 0 : item.getNumber();
@@ -144,5 +145,6 @@ public class Inventory {
         }
         return null;
     }
+
 
 }

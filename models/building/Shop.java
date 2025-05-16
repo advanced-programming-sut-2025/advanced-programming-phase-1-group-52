@@ -87,4 +87,5 @@ public class Shop extends Building {
     public void resetStock() {
         this.availableStocks = new HashMap<>(dailyLimits);
     }
+
 }

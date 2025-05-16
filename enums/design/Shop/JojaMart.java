@@ -1,7 +1,6 @@
 package enums.design.Shop;
 
 import enums.design.Season;
-import enums.design.ShopType;
 import enums.items.ForagingSeedType;
 import enums.items.ItemType;
 
@@ -13,7 +12,6 @@ public enum JojaMart implements ShopEntry{
             500, 1,null),
     GrassStarter(null, "Grass Starter", "Place this on your farm to start a new patch of grass.",
             125, Integer.MAX_VALUE,null),
-
     Sugar(null, "Sugar", "Adds sweetness to pastries and candies. Too much can be unhealthy.",
             125, Integer.MAX_VALUE,null),
     WheatFlour(null, "Wheat Flour", "A common cooking ingredient made from crushed wheat seeds.",
