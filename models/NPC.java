@@ -49,7 +49,7 @@ public class NPC {
 
     public Integer getFriendShipLevelWith(Player player) {
         for (NPCFriendship friendship : this.friendships) {
-            if (friendship.getPlayer().getPlayer().equals(player)) return friendship.getFriendshipLevel();
+            if (friendship.getPlayer().equals(player)) return friendship.getFriendshipLevel();
         }
 
         return null;

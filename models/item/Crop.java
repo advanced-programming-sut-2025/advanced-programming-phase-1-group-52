@@ -103,6 +103,8 @@ public class Crop extends Item implements Growable {
 
     public ItemType getCropType() {
         return cropType;
+    public CropType getCropType() {
+        return (CropType) cropType;
     }
 
     public void setCropType(CropType cropType) {
