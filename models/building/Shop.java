@@ -1,14 +1,14 @@
 package models.building;
 
-import enums.design.ShopType;
-import enums.design.Shop.ShopEntry;
 import enums.design.Shop.Blacksmith;
 import enums.design.Shop.CarpentersShop;
 import enums.design.Shop.FishShop;
 import enums.design.Shop.JojaMart;
 import enums.design.Shop.MarniesRanch;
 import enums.design.Shop.PierresGeneralStore;
+import enums.design.Shop.ShopEntry;
 import enums.design.Shop.TheStardropSaloon;
+import enums.design.ShopType;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -30,16 +30,16 @@ public class Shop extends Building {
 
     private void initializeStock() {
         ShopEntry[] catalog;
-        switch (shopType) {
-            case Blacksmith:          catalog = Blacksmith.values();          break;
-            case CarpentersShop:      catalog = CarpentersShop.values();      break;
-            case FishShop:            catalog = FishShop.values();            break;
-            case JojaMart:            catalog = JojaMart.values();            break;
-            case MarniesRanch:        catalog = MarniesRanch.values();        break;
-            case PierresGeneralStore: catalog = PierresGeneralStore.values(); break;
-            case TheStardropSaloon:   catalog = TheStardropSaloon.values();   break;
-            default:                  catalog = new ShopEntry[0];            break;
-        }
+        catalog = switch (shopType) {
+            case Blacksmith -> Blacksmith.values();
+            case CarpentersShop -> CarpentersShop.values();
+            case FishShop -> FishShop.values();
+            case JojaMart -> JojaMart.values();
+            case MarniesRanch -> MarniesRanch.values();
+            case PierresGeneralStore -> PierresGeneralStore.values();
+            case TheStardropSaloon -> TheStardropSaloon.values();
+            default -> new ShopEntry[0];
+        };
         for (ShopEntry e : catalog) {
             entries.add(e);
             dailyLimits.put(e.getDisplayName(), e.getDailyLimit());
@@ -87,5 +87,4 @@ public class Shop extends Building {
     public void resetStock() {
         this.availableStocks = new HashMap<>(dailyLimits);
     }
-
 }

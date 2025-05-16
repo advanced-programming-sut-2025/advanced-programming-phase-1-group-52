@@ -585,6 +585,15 @@ public class GameMenuController {
         return new Result(true, stringBuilder.toString());
     }
 
+    public Result showAllFriendShips() {
+        StringBuilder stringBuilder = new StringBuilder();
+        for (Friendship friendship : game.getFriendshipsByPlayer(game.getCurrentPlayer())) {
+            stringBuilder.append(friendship.toString());
+        }
+
+        return new Result(true, stringBuilder.toString());
+    }
+
     public Result giftPlayer(String username, String itemName, String itemAmountStr) {
         Player receiver = game.getUserByUsername(username).getPlayer();
         if (receiver == null) {

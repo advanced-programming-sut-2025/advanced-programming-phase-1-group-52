@@ -43,4 +43,12 @@ public class Friendship {
 
         this.friendshipPoints += points;
     }
+
+    @Override
+    public String toString() {
+        return players.get(0).getUsername() + " and " + players.get(1).getUsername() +
+                "\nLevel: " + friendshipLevel +
+                "\nPoints: " + friendshipPoints +
+                "\n----------------------------\n";
+    }
 }

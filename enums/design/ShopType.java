@@ -1,9 +1,5 @@
 package enums.design;
 
-import enums.items.ItemType;
-
-import java.util.ArrayList;
-
 public enum ShopType {
     Blacksmith("Clint", 32, 2),
     JojaMart("Morris", 42, 2),
@@ -16,7 +12,6 @@ public enum ShopType {
     private final String name;
     private final int cornerX;
     private final int cornerY;
-    private final ArrayList<ItemType> items = new ArrayList<>();
 
     ShopType(String name, int cornerX, int cornerY) {
         this.name = name;

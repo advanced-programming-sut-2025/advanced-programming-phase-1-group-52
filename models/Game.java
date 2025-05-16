@@ -4,14 +4,13 @@ import enums.design.NPCType;
 import enums.design.TileType;
 import enums.design.Weather;
 import enums.items.CropType;
+import java.util.ArrayList;
+import java.util.Map;
+import java.util.Random;
 import models.item.Crop;
 import models.item.Fruit;
 import models.item.Good;
 import models.item.Item;
-
-import java.util.ArrayList;
-import java.util.Map;
-import java.util.Random;
 
 public class Game {
     private int daysPassed = 0;
@@ -55,6 +54,17 @@ public class Game {
 
     public int getDaysPassed() {
         return daysPassed;
+    }
+
+    public ArrayList<Friendship> getFriendshipsByPlayer(Player player) {
+        ArrayList<Friendship> friendships = new ArrayList<>();
+        for (Friendship friendship : this.friendships) {
+            if (friendship.getPlayers().contains(player)) {
+                friendships.add(friendship);
+            }
+        }
+
+        return friendships;
     }
 
     public Friendship getFriendshipByPlayers(Player player1, Player player2) {
