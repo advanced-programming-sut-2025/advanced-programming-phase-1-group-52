@@ -22,7 +22,59 @@ public enum ArtisanProductType implements ItemType {
     VINEGAR(CraftingMachineType.KEG,"Vinegar", "An aged fermented liquid used in many cooking recipes.", 13, 10, Map.of(MaterialType.Rice,1), 100),
     COFFEE(CraftingMachineType.KEG,"Coffee", "It smells delicious. This is sure to give you a boost.", 75, 2, Map.of(ForagingSeedType.CoffeeBean, 5), 150),
     CARROT_JUICE(CraftingMachineType.KEG,"carrot juice", "A sweet, nutritious beverage.", -1, 96, Map.of(CropType.Carrot, 1), 80), // Uses multiplier
-    // todo : add more juice
+
+    BLUE_JAZZ_JUICE(CraftingMachineType.KEG, "blue jazz juice",
+            "A floral-infused beverage.", -1, 96,
+            Map.of(CropType.BlueJazz, 1), 112),
+
+    CAULIFLOWER_JUICE(CraftingMachineType.KEG, "cauliflower juice",
+            "A hearty vegetable drink.", -1, 96,
+            Map.of(CropType.Cauliflower, 1), 393),
+
+    GARLIC_JUICE(CraftingMachineType.KEG, "garlic juice",
+            "A pungent health tonic.", -1, 96,
+            Map.of(CropType.Garlic, 1), 135),
+
+    KALE_JUICE(CraftingMachineType.KEG, "kale juice",
+            "A nutrient-packed green drink.", -1, 96,
+            Map.of(CropType.Kale, 1), 247),
+
+    PARSNIP_JUICE(CraftingMachineType.KEG, "parsnip juice",
+            "An earthy root vegetable beverage.", -1, 96,
+            Map.of(CropType.Parsnip, 1), 80),
+
+    POTATO_JUICE(CraftingMachineType.KEG, "potato juice",
+            "A starchy, filling drink.", -1, 96,
+            Map.of(CropType.Potato, 1), 180),
+
+    RHUBARB_JUICE(CraftingMachineType.KEG, "rhubarb juice",
+            "A tart, pink-colored juice.", -1, 96,
+            Map.of(CropType.Rhubarb, 1), 495),
+
+    BEET_JUICE(CraftingMachineType.KEG, "beet juice",
+            "A vibrant red juice packed with nutrients.", -1, 96,
+            Map.of(CropType.Beet, 1), 225),
+
+    BOK_CHOY_JUICE(CraftingMachineType.KEG, "bok choy juice",
+            "A light, Asian-inspired vegetable drink.", -1, 96,
+            Map.of(CropType.BokChoy, 1), 180),
+
+    PUMPKIN_JUICE(CraftingMachineType.KEG, "pumpkin juice",
+            "A seasonal fall favorite.", -1, 96,
+            Map.of(CropType.Pumpkin, 1), 720),
+
+    YAM_JUICE(CraftingMachineType.KEG, "yam juice",
+            "A sweet, orange-colored beverage.", -1, 96,
+            Map.of(CropType.Yam, 1), 360),
+
+    // Special cases
+    ANCIENT_FRUIT_JUICE(CraftingMachineType.KEG, "ancient fruit juice",
+            "A mysterious, energizing elixir.", -1, 96,
+            Map.of(CropType.AncientFruit, 1), 1237),
+
+    SWEET_GEM_BERRY_JUICE(CraftingMachineType.KEG, "sweet gem berry juice",
+            "An incredibly rare and valuable drink.", -1, 96,
+            Map.of(CropType.SweetGemBerry, 1), 6750),
     MEAD(CraftingMachineType.KEG,"Mead", "A fermented beverage made from honey. Drink in moderation.", 100, 10, Map.of(ArtisanProductType.HONEY, 1), 300),
     PALE_ALE(CraftingMachineType.KEG,"Pale Ale", "Drink in moderation.", 50, 72, Map.of(CropType.Hops,1), 300),
     GRAPE_WINE(CraftingMachineType.KEG,"grape wine", "Drink in moderation.", -1, 168, Map.of(CropType.Grape, 1), 240), // Uses multiplier
@@ -44,7 +96,86 @@ public enum ArtisanProductType implements ItemType {
 
     // Smoked/Processed
     SMOKED_FISH(CraftingMachineType.FISH_SMOKER,"smoked fish", "A whole fish, smoked to perfection.", -1, 1, Map.of(FishType.Salmon, 1), 150), // Uses multiplier
+    SMOKED_SALMON(CraftingMachineType.FISH_SMOKER, "smoked salmon",
+            "Delicately smoked salmon with rich flavor.", -1, 1,
+            Map.of(FishType.Salmon, 1), 150),
 
+    SMOKED_SARDINE(CraftingMachineType.FISH_SMOKER, "smoked sardine",
+            "Small but flavorful smoked fish.", -1, 1,
+            Map.of(FishType.Sardine, 1), 80),
+
+    SMOKED_SHAD(CraftingMachineType.FISH_SMOKER, "smoked shad",
+            "A traditionally smoked river fish.", -1, 1,
+            Map.of(FishType.Shad, 1), 120),
+
+    SMOKED_BLUE_DISCUS(CraftingMachineType.FISH_SMOKER, "smoked blue discus",
+            "Exotic smoked tropical fish.", -1, 1,
+            Map.of(FishType.BlueDiscus, 1), 240),
+
+    SMOKED_MIDNIGHT_CARP(CraftingMachineType.FISH_SMOKER, "smoked midnight carp",
+            "Dark-fleshed smoked fish with unique aroma.", -1, 1,
+            Map.of(FishType.MidnightCarp, 1), 300),
+
+    SMOKED_SQUID(CraftingMachineType.FISH_SMOKER, "smoked squid",
+            "Tender smoked cephalopod.", -1, 1,
+            Map.of(FishType.Squid, 1), 160),
+
+    SMOKED_TUNA(CraftingMachineType.FISH_SMOKER, "smoked tuna",
+            "Meaty smoked tuna steaks.", -1, 1,
+            Map.of(FishType.Tuna, 1), 200),
+
+    SMOKED_PERCH(CraftingMachineType.FISH_SMOKER, "smoked perch",
+            "Mild smoked freshwater fish.", -1, 1,
+            Map.of(FishType.Perch, 1), 110),
+
+    SMOKED_FLOUNDER(CraftingMachineType.FISH_SMOKER, "smoked flounder",
+            "Delicate smoked flatfish.", -1, 1,
+            Map.of(FishType.Flounder, 1), 200),
+
+    SMOKED_LIONFISH(CraftingMachineType.FISH_SMOKER, "smoked lionfish",
+            "Spicy-smoked exotic fish.", -1, 1,
+            Map.of(FishType.Lionfish, 1), 200),
+
+    SMOKED_HERRING(CraftingMachineType.FISH_SMOKER, "smoked herring",
+            "Classic northern European smoked fish.", -1, 1,
+            Map.of(FishType.Herring, 1), 60),
+
+    SMOKED_GHOST_FISH(CraftingMachineType.FISH_SMOKER, "smoked ghost fish",
+            "Eerily translucent smoked fish.", -1, 1,
+            Map.of(FishType.GhostFish, 1), 90),
+
+    SMOKED_TILAPIA(CraftingMachineType.FISH_SMOKER, "smoked tilapia",
+            "Mild and versatile smoked fish.", -1, 1,
+            Map.of(FishType.Tilapia, 1), 150),
+
+    SMOKED_DORADO(CraftingMachineType.FISH_SMOKER, "smoked dorado",
+            "Premium smoked tropical fish.", -1, 1,
+            Map.of(FishType.Dorado, 1), 200),
+
+    SMOKED_SUNFISH(CraftingMachineType.FISH_SMOKER, "smoked sunfish",
+            "Small but tasty smoked panfish.", -1, 1,
+            Map.of(FishType.Sunfish, 1), 60),
+
+    SMOKED_RAINBOW_TROUT(CraftingMachineType.FISH_SMOKER, "smoked rainbow trout",
+            "Beautifully colored smoked fish.", -1, 1,
+            Map.of(FishType.RainbowTrout, 1), 130),
+
+    // Legendary fish variants
+    SMOKED_LEGEND(CraftingMachineType.FISH_SMOKER, "smoked legend",
+            "The rarest smoked fish in the valley.", -1, 1,
+            Map.of(FishType.Legend, 1), 10000),
+
+    SMOKED_GLACIERFISH(CraftingMachineType.FISH_SMOKER, "smoked glacierfish",
+            "Icy-cold smoked legendary fish.", -1, 1,
+            Map.of(FishType.GlacierFish, 1), 2000),
+
+    SMOKED_ANGLER(CraftingMachineType.FISH_SMOKER, "smoked angler",
+            "Odd-looking but delicious smoked fish.", -1, 1,
+            Map.of(FishType.Angler, 1), 1800),
+
+    SMOKED_CRIMSONFISH(CraftingMachineType.FISH_SMOKER, "smoked crimsonfish",
+            "Vibrant red smoked legendary fish.", -1, 1,
+            Map.of(FishType.CrimsonFish, 1), 3000),
     // Fuel/Refined
     COAL(CraftingMachineType.CHARCOAL_KILN,"coal", "Turns 10 pieces of wood into one piece of coal.", -1, 1, Map.of(MaterialType.Wood, 1), 50),
 

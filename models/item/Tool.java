@@ -4,7 +4,7 @@ import enums.items.MaterialType;
 import enums.items.ToolType;
 
 public class Tool extends Item{
-
+    private int level = 0;
     public Tool(ToolType toolType,int number) {
         super(toolType, number);
     }
@@ -16,5 +16,20 @@ public class Tool extends Item{
 
     public ToolType getToolType() {
         return (ToolType)itemType;
+    }
+    public void setToolType(ToolType toolType) {
+        this.itemType = toolType;
+    }
+    public int getLevel() {
+        return level;
+    }
+    public void setLevel(int level) {
+        this.level = level;
+    }
+    public boolean isMax(){
+        if(this.level >= 4){
+            return true;
+        }
+        return false;
     }
 }
