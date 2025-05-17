@@ -18,12 +18,14 @@ public class Game {
     private User mainPlayer;
     private GameMap map;
     private Player currentPlayer;
+    private User currentUser;
     private Date date;
     private Time time;
     private Weather todayWeather;
     private Weather tomorrowWeather;
     private final ArrayList<Friendship> friendships = new ArrayList<>();
     private final ArrayList<NPC> NPCs = new ArrayList<>();
+    private int switchCounter = 0;
 
     public Game(ArrayList<User> players) {
         this.time = new Time();
@@ -99,17 +101,28 @@ public class Game {
     }
 
     public boolean switchCurrentPlayer() {
-        int currentIndex = players.indexOf(currentPlayer);
-        if (currentIndex == -1) return false;
+        int currentIndex = players.indexOf(currentUser);
+        if (currentIndex == -1){
+            return false;
+        }
 
         Player nextPlayer = findNextAvailablePlayer(currentIndex);
+        User nextUser = findNextAvailableUser(currentIndex);
 
         if (nextPlayer == null) {
             return false;
         }
+        if(nextUser == null){
+            return false;
+        }
 
         setCurrentPlayer(nextPlayer);
-        timePassed();
+        setCurrentUser(nextUser);
+        this.switchCounter++;
+        if(this.switchCounter >= 4){
+            this.switchCounter = 0;
+            timePassed();
+        }
         return true;
     }
 
@@ -204,6 +217,19 @@ public class Game {
                 this.getMap().lightning(3);
             }
         }
+    }
+
+    private User findNextAvailableUser(int currentIndex) {
+        for (int offset = 1; offset <= players.size(); offset++) {
+            int nextIndex = (currentIndex + offset) % players.size();
+            Player candidate = players.get(nextIndex).currentPlayer();
+
+            if (candidate.getEnergy() > 0) {
+                System.out.println(candidate.getEnergy());
+                return players.get(nextIndex);
+            }
+        }
+        return null;
     }
 
     public void timePassed() {
@@ -324,6 +350,14 @@ public class Game {
 
     public void setTomorrowWeather(Weather tomorrowWeather) {
         this.tomorrowWeather = tomorrowWeather;
+    }
+
+    public User getUrrentUser() {
+        return currentUser;
+    }
+
+    public void setCurrentUser(User currentUser) {
+        this.currentUser = currentUser;
     }
 
     private void eraseCrops(){

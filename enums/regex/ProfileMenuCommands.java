@@ -11,7 +11,8 @@ public enum ProfileMenuCommands{
             "-o (?<oldPassword>\\S+)"),
     UserInfo("user info"),
     ShowCurrentMenu("show current menu"),
-    MenuExit("menu exit");
+    MenuExit("menu exit"),
+    GoToMainMenu("go to main menu"),;
 
 
     private final String pattern;

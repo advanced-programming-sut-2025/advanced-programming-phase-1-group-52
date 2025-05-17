@@ -7,6 +7,8 @@ import models.App;
 import models.Result;
 import models.User;
 
+import java.util.Scanner;
+
 public class LoginMenuController {
     private boolean awaitingNewPassword = false;
 
@@ -30,7 +32,7 @@ public class LoginMenuController {
         return new Result(true,"Login Successful.");
     }
 
-    public Result forgetPassword(String username) {
+    public Result forgetPassword(String username, Scanner scanner) {
         User user = App.getInstance()
                 .getUsers()
                 .stream()
@@ -44,8 +46,18 @@ public class LoginMenuController {
         App.getInstance().setCurrentUser(user);
 
         SecurityQuestion question = user.getSecurityQuestion();
-
-        return new Result(true, "Security question: " + question.getQuestionText());
+        System.out.println("security question: " + question);
+        String answer = scanner.nextLine().trim();
+        Result result = answer(answer);
+        if(result.isSuccessful()){
+            System.out.println(result.Message());
+            String newPassword = scanner.nextLine().trim();
+            user.setPassword(newPassword);
+        }
+        else{
+            return new Result(false,"Wrong answer.");
+        }
+        return new Result(true,"password changed successfully");
     }
 
     public Result answer(String answer) {
@@ -89,6 +101,16 @@ public class LoginMenuController {
         awaitingNewPassword = false;
 
         return new Result(true, "Password reset successfully. You can now login.");
+    }
+
+    public Result logout() {
+        App.getInstance().setCurrentUser(null);
+        return new Result(true, "Logout successful.");
+    }
+
+    public Result gotoSignUpMenu() {
+        App.getInstance().setCurrentMenu(Menu.SignUpMenu);
+        return new Result(true, "you are in sign up menu now!");
     }
 
     public void showCurrentMenu() {

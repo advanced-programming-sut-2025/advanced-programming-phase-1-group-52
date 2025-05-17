@@ -39,18 +39,23 @@ public class Inventory {
     }
 
     public boolean addItem(Item newItem) {
-        int total = getTotalItemCount();
-        if (total + newItem.getNumber() > backpack.getCapacity()) {
-            return false;
-        }
-        for (Item existing : items) {
-            if (existing.getClass().equals(newItem.getClass())) {
-                existing.setNumber(existing.getNumber() + newItem.getNumber());
+        for (Item item : items) {
+            if(item.getItemType().equals(newItem.getItemType())) {
+                item.setNumber(item.getNumber() + newItem.getNumber());
                 return true;
             }
+            if(this.isFull){
+                return false;
+            }
+            if(this.numOfItems >= backpack.getCapacity()) {
+                this.isFull = true;
+                return false;
+            }
+            this.items.add(newItem);
+            this.numOfItems += 1;
+            return true;
         }
-        items.add(newItem);
-        return true;
+        return false;
     }
 
     public boolean removeItem(Class<? extends Item> itemClass, int quantity) {
@@ -88,7 +93,7 @@ public class Inventory {
     }
 
     public ArrayList<Item> getItems() {
-        return new ArrayList<>(items);
+        return items;
     }
 
     public Backpacks getBackpack() {
@@ -151,6 +156,4 @@ public class Inventory {
         }
         return null;
     }
-
-
 }

@@ -15,8 +15,8 @@ public class User {
     private HashMap<Game, Player> userPlayers;
     private Game userGame;
     private Player currentPlayer;
-    private int numPlayed;
-    private int highScore;
+    private int numPlayed = 0;
+    private int highScore = 0;
 
     public User(String username, String password, String nickname, String email, Gender gender) {
         this.username = username;
@@ -97,5 +97,22 @@ public class User {
 
     public void setUserGame(Game userGame) {
         this.userGame = userGame;
+    }
+
+    public int getNumPlayed() {
+        return numPlayed;
+    }
+
+    public void addNumPlayed() {
+        this.numPlayed ++;
+    }
+
+    public int getHighScore() {
+        return highScore;
+    }
+    public void setHighScore(int highScore) {
+        if(highScore > this.highScore){
+            this.highScore = highScore;
+        }
     }
 }

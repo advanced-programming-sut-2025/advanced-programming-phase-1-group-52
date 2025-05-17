@@ -11,7 +11,7 @@ public class ProfileMenuController {
         if (username.length() < 3) {
             return new Result(false, "Username must be at least 3 characters");
         }
-        if (!username.matches(String.valueOf(SignUpMenuCommands.ValidUsername))) {
+        if (SignUpMenuCommands.ValidUsername.getMatcher(username) == null) {
             return new Result(false, "Username is invalid");
         }
         for (User user : App.getInstance().getUsers()) {
@@ -36,7 +36,7 @@ public class ProfileMenuController {
     }
 
     public Result changeEmail(String email) {
-        if (!email.matches(String.valueOf(SignUpMenuCommands.ValidEmail))) {
+        if (SignUpMenuCommands.ValidEmail.getMatcher(email) == null) {
             return new Result(false, "Email format is invalid");
         }
 
@@ -60,16 +60,16 @@ public class ProfileMenuController {
         if (newPassword.length() < 8) {
             return new Result(false, "Password must be at least 8 characters");
         }
-        if (!newPassword.matches(String.valueOf(SignUpMenuCommands.ValidDigit))) {
+        if (SignUpMenuCommands.ValidDigit.getMatcher(newPassword) == null) {
             return new Result(false, "Password must contain at least one digit");
         }
-        if (!newPassword.matches(String.valueOf(SignUpMenuCommands.ValidLower))) {
+        if (SignUpMenuCommands.ValidLower.getMatcher(oldPassword) == null) {
             return new Result(false, "Password must contain at least one lowercase letter");
         }
-        if (!newPassword.matches(String.valueOf(SignUpMenuCommands.ValidUpper))) {
+        if (SignUpMenuCommands.ValidUpper.getMatcher(newPassword) == null) {
             return new Result(false, "Password must contain at least one uppercase letter");
         }
-        if (!newPassword.matches(String.valueOf(SignUpMenuCommands.ValidSpecial))) {
+        if (SignUpMenuCommands.ValidSpecial.getMatcher(newPassword) == null) {
             return new Result(false, "Password must contain at least one special character");
         }
 
@@ -78,10 +78,19 @@ public class ProfileMenuController {
 
     }
 
-    public void userInfo() {
+    public Result userInfo() {
         User user = App.getInstance().getCurrentUser();
-        System.out.println("Username: " + user.getUsername());
-        System.out.println("Nickname: " + user.getNickname());
+        StringBuilder userDetail = new StringBuilder();
+        userDetail.append("Username: " + user.getUsername()).append("\n");
+        userDetail.append("Nickname: " + user.getNickname()).append("\n");
+        userDetail.append("Number of game played: " + user.getNumPlayed()).append("\n");
+        userDetail.append("High score: " + user.getHighScore());
+        return new Result(true, userDetail.toString());
+    }
+
+    public Result gotoMainMenu() {
+        App.getInstance().setCurrentMenu(Menu.MainMenu);
+        return new Result(true, "You are now at main menu now");
     }
 
     public void showCurrentMenu() {

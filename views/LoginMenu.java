@@ -18,23 +18,32 @@ public class LoginMenu implements AppMenu {
             System.out.println(controller.login(
                     matcher.group("username"),
                     matcher.group("password")
-            ).toString());
+            ).Message());
         } else if ((matcher = LoginMenuCommands.ForgetPassword.getMatcher(input)) != null) {
             System.out.println(controller.forgetPassword(
-                    matcher.group("username")
-            ).toString());
+                    matcher.group("username"), scanner
+            ).Message());
         } else if ((matcher = LoginMenuCommands.Answer.getMatcher(input)) != null) {
             System.out.println(controller.answer(
                     matcher.group("answer")
-            ).toString());
+            ).Message());
         } else if ((matcher = LoginMenuCommands.ShowCurrentMenu.getMatcher(input)) != null) {
             controller.showCurrentMenu();
         } else if ((matcher = LoginMenuCommands.ResetPassword.getMatcher(input)) != null) {
             System.out.println(controller.resetPassword(
                     matcher.group("resetPassword")
-            ).toString());
+            ).Message());
         } else if ((matcher = LoginMenuCommands.MenuExit.getMatcher(input)) != null) {
             controller.menuExit();
+        }
+        else if ((matcher = LoginMenuCommands.GotoSignUpMenu.getMatcher(input)) != null) {
+            System.out.println(controller.gotoSignUpMenu().Message());
+        }
+        else if ((matcher = LoginMenuCommands.Logout.getMatcher(input)) != null) {
+            System.out.println(controller.logout().Message());
+        }
+        else{
+            System.out.println("Invalid command");
         }
     }
 }

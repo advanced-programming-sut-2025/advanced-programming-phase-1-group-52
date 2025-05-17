@@ -16,7 +16,7 @@ public class GameMenu implements AppMenu {
             System.out.println(controller.startNewGame(input).Message());
         }
         else if ((matcher = GameMenuCommands.GameMap.getMatcher(input)) != null) {
-
+            System.out.println(controller.mapSelector(matcher.group("map1"),matcher.group("map2"),matcher.group("map3"),matcher.group("map4")).Message());
         }
         else if ((matcher = GameMenuCommands.ExitGame.getMatcher(input)) != null) {
             System.out.println(controller.exitGame().Message());
@@ -40,7 +40,7 @@ public class GameMenu implements AppMenu {
             System.out.println(controller.changeTime(matcher.group("amount")).Message());
         }
         else if ((matcher = GameMenuCommands.CHEATAdvanceDate.getMatcher(input)) != null) {
-            System.out.println(controller.changeDate("amount").Message());
+            System.out.println(controller.changeDate(matcher.group("amount")).Message());
         }
         else if ((matcher = GameMenuCommands.Season.getMatcher(input)) != null) {
             System.out.println(controller.showSeason().Message());
@@ -78,6 +78,9 @@ public class GameMenu implements AppMenu {
         else if ((matcher = GameMenuCommands.CHEATEnergyUnlimited.getMatcher(input)) != null) {
             System.out.println(controller.cheatUnlimitedEnergy().Message());
         }
+        else if((matcher = GameMenuCommands.ShowPlayerCoordinates.getMatcher(input)) != null) {
+            System.out.println(controller.showPlayerCoordinates().Message());
+        }
         else if ((matcher = GameMenuCommands.InventoryShow.getMatcher(input)) != null) {
             System.out.println(controller.showInventoryItems().Message());
         }
@@ -85,7 +88,7 @@ public class GameMenu implements AppMenu {
             System.out.println(controller.removeItemFromInventory(matcher.group("name"),matcher.group("number")).Message());
         }
         else if ((matcher = GameMenuCommands.ToolEquip.getMatcher(input)) != null) {
-            System.out.println(controller.equipTool(matcher.group("name")));
+            System.out.println(controller.equipTool(matcher.group("name")).Message());
         }
         else if ((matcher = GameMenuCommands.ToolShowCurrent.getMatcher(input)) != null) {
             System.out.println(controller.showCurrentTool().Message());
@@ -96,12 +99,15 @@ public class GameMenu implements AppMenu {
         else if ((matcher = GameMenuCommands.ToolUse.getMatcher(input)) != null) {
             System.out.println(controller.useTool(matcher.group("direction")).Message());
         }
-        else if ((matcher = GameMenuCommands.CraftInfo.getMatcher(input)) != null) {
-            System.out.println(controller.craftInfo(matcher.group("name")).Message());
+        else if((matcher = GameMenuCommands.CheatWalk.getMatcher(input)) != null) {
+            System.out.println(controller.cheatWalk(matcher.group("x"), matcher.group("y")).Message());
         }
-        else if ((matcher = GameMenuCommands.Plant.getMatcher(input)) != null) {
-            System.out.println(controller.plant(matcher.group("seed"), matcher.group("direction")).Message());
-        }
+//        else if ((matcher = GameMenuCommands.CraftInfo.getMatcher(input)) != null) {
+//            System.out.println(controller.craftInfo(matcher.group("name")).Message());
+//        }
+//        else if ((matcher = GameMenuCommands.Plant.getMatcher(input)) != null) {
+//            System.out.println(controller.plant(matcher.group("seed"), matcher.group("direction")).Message());
+//        }
         else if ((matcher = GameMenuCommands.ShowPlant.getMatcher(input)) != null) {
             System.out.println(controller.showPlant(matcher.group("x"),matcher.group("y")).Message());
         }
@@ -139,7 +145,7 @@ public class GameMenu implements AppMenu {
 
         }
         else if ((matcher = GameMenuCommands.Fishing.getMatcher(input)) != null) {
-
+            System.out.println(controller.fishing(matcher.group("fishingPole")).Message());
         }
         else if ((matcher = GameMenuCommands.ArtisanUse.getMatcher(input)) != null) {
             System.out.println(controller.useArtisanMachine(matcher.group("artisanName"),matcher.group("itemName")).Message());
@@ -221,6 +227,9 @@ public class GameMenu implements AppMenu {
         }
         else if((matcher = GameMenuCommands.TreeInfo.getMatcher(input)) != null) {
             System.out.println(controller.treeInfo(matcher.group("name")).Message());
+        }
+        else if((matcher = GameMenuCommands.ExitGame.getMatcher(input)) != null) {
+            System.out.println(controller.exitGame().Message());
         }
         else {
             System.out.println("Invalid command");

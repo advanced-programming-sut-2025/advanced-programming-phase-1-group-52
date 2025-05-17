@@ -16,8 +16,8 @@ public class MainMenu implements AppMenu {
 
         if ((matcher = MainMenuCommands.MenuEnter.getMatcher(input)) != null ) {
             System.out.println(controller.menuEnter(
-                    matcher.group("menu_name")
-            ).toString());
+                    matcher.group("menuName")
+            ).Message());
         } else if ((matcher = MainMenuCommands.MenuExit.getMatcher(input)) != null) {
             controller.menuExit();
         } else if ((matcher = MainMenuCommands.ShowCurrentMenu.getMatcher(input)) != null ) {
