@@ -1,12 +1,13 @@
 package enums.design.Shop;
 
+import enums.items.CraftingRecipes;
 import enums.items.ItemType;
 import enums.items.MaterialType;
 
 
 public enum FishShop implements ShopEntry{
 
-    FishSmokerRecipe(MaterialType.FishSmokerRecipe, "Fish Smoker (Recipe)",
+    FishSmokerRecipe(CraftingRecipes.FishSmokerRecipe, "Fish Smoker (Recipe)",
             "A recipe to make Fish Smoker", 10000, -1, 1),
     TroutSoup(MaterialType.TroutSoup,  "Trout Soup",
             "Pretty salty.", 250, -1, 1),
@@ -20,16 +21,16 @@ public enum FishShop implements ShopEntry{
             "Use in the water to catch fish.", 7500, 4, 1);
 
 
-    private final MaterialType materialType;
+    private final ItemType itemType;
     private final String displayName;
     private final String description;
     private final int price;
     private final int fishingSkillRequired;
     private final int dailyLimit;
 
-    FishShop(MaterialType materialType, String displayName, String description, int price,
+    FishShop(ItemType itemType, String displayName, String description, int price,
                 int fishingSkillRequired, int dailyLimit) {
-        this.materialType = materialType;
+        this.itemType = itemType;
         this.displayName = displayName;
         this.description = description;
         this.price = price;
@@ -37,7 +38,8 @@ public enum FishShop implements ShopEntry{
         this.dailyLimit = dailyLimit;
     }
 
-    public MaterialType getMaterialType() { return materialType; }
+    @Override
+    public ItemType getItemType() { return itemType; }
     @Override public String getDisplayName() { return displayName; }
     @Override public String getDescription() { return description; }
     @Override public int getPrice() { return price; }
@@ -45,7 +47,9 @@ public enum FishShop implements ShopEntry{
     @Override public int getDailyLimit() { return dailyLimit; }
 
     @Override
-    public ItemType getItemType() {
-        return this.materialType;
+    public String toString() {
+        return this.name() + "\nPrice: " + 
+        this.price + "\nDescription: " + this.description + 
+        "\n----------------------\n";
     }
 }

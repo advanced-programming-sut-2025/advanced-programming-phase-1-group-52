@@ -1,20 +1,17 @@
 package enums.items;
 
-public enum Cages implements ItemType {
-    // Cages:
+public enum CageType implements ItemType {
     NormalCage("normal cage", 4),
     BigCage("big cage", 8),
     DeluxeCage("deluxe cage", 12),
-
-    // Stables:
-    NormalStable("normal stable", 4),
-    BigStable("big stable", 8),
-    DeluxeStable("deluxe stable", 12);
+    NormalBarn("normal cage", 4),
+    BigBarn("big cage", 8),
+    DeluxeBarn("deluxe cage", 12);
 
     private final String name;
     private final int capacity;
 
-    Cages(String name, int capacity) {
+    CageType(String name, int capacity) {
         this.name = name;
         this.capacity = capacity;
     }
