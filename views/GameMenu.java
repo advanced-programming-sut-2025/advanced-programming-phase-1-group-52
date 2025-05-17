@@ -231,6 +231,18 @@ public class GameMenu implements AppMenu {
         else if((matcher = GameMenuCommands.ExitGame.getMatcher(input)) != null) {
             System.out.println(controller.exitGame().Message());
         }
+        else if((matcher = GameMenuCommands.ShowExtractionSkill.getMatcher(input)) != null) {
+            System.out.println(controller.showExtractionSkill().Message());
+        }
+        else if((matcher = GameMenuCommands.ShowForagingSkill.getMatcher(input)) != null) {
+            System.out.println(controller.showForagingSkill().Message());
+        }
+        else if((matcher = GameMenuCommands.ShowFarmingSkill.getMatcher(input)) != null) {
+            System.out.println(controller.showFarmingSkill().Message());
+        }
+        else if ((matcher = GameMenuCommands.ShowFishingSkill.getMatcher(input)) != null) {
+            System.out.println(controller.showFishingSkill().Message());
+        }
         else {
             System.out.println("Invalid command");
         }

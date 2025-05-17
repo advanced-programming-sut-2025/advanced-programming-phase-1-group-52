@@ -202,7 +202,7 @@ public class Player {
         else{
             tile.setType(TileType.Shoveled);
         }
-        return new Result(true, "Tile with X: " + tile.getX() + " Y: " + tile.getY() + " has been shoved");
+        return new Result(true, "Tile with X: " + tile.getX() + " Y: " + tile.getY() + " has been shoveled");
     }
 
     public Result shearHandler(){
@@ -279,7 +279,7 @@ public class Player {
             this.inventory.addItem(new Material(MaterialType.Wood, 50));
             foraging();
             tile.setType(TileType.Earth);
-            return new Result(true, "Branches on Tile with X: " + tile.getX() + " Y: " + tile.getY() + " has been removed!");
+            return new Result(true, "Branches on Tile with X: " + tile.getX() + ", Y: " + tile.getY() + " has been removed!");
         }
         else if(tile.getType().equals(TileType.Tree)){
             tile.setType(TileType.Earth);

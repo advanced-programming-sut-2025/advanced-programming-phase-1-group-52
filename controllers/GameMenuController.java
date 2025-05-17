@@ -1542,7 +1542,7 @@ public class GameMenuController {
         fish.setQuality(quality);
         player.getInventory().addItem(fish);
         player.catchFish();
-        return new Result(true, fish.getNumber() + "x of" + fish.getFishType().getName() + "added to your inventory");
+        return new Result(true, fish.getNumber() + "x of " + fish.getFishType().getName() + " added to your inventory");
     }
 
     private void calculateEnergy(int amount) {
@@ -1899,6 +1899,26 @@ public class GameMenuController {
         }
         App.getInstance().setCurrentMenu(Menu.HomeMenu);
         return new Result(true, "you are in home menu");
+    }
+
+    public Result showFishingSkill() {
+        Player player = game.getCurrentPlayer();
+        return new Result(true, "your fishing skill is: " + player.getSkillLevel(Skills.Fishing));
+    }
+
+    public Result showFarmingSkill() {
+        Player player = game.getCurrentPlayer();
+        return new Result(true, "your farming skill is: " + player.getSkillLevel(Skills.Farming));
+    }
+
+    public Result showForagingSkill() {
+        Player player = game.getCurrentPlayer();
+        return new Result(true, "your foraging skill is: " + player.getSkillLevel(Skills.Foraging));
+    }
+
+    public Result showExtractionSkill() {
+        Player player = game.getCurrentPlayer();
+        return new Result(true, "your mining skill is: " + player.getSkillLevel(Skills.Extraction));
     }
 
     public void menuExit() {
