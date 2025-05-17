@@ -166,9 +166,15 @@ public class GameMap {
                         tiles[i][j] = new Tile(i, j, TileType.Stone, players.get(0));
                     }
                     else if (tileProb < 15) {
+                        TreeType treeType = Arrays.asList(TreeType.values()).get(rand.nextInt(TreeType.values().length));
+                        FruitType fruitType = Arrays.asList(FruitType.values()).get(rand.nextInt(FruitType.values().length));
+
                         tiles[i][j] = new Tile(i, j, TileType.Tree, players.get(0));
-                        tiles[i][j].setTree(new Tree(Arrays.asList(TreeType.values()).get(rand.nextInt(TreeType.values().length))));
-                        tiles[i][j].setPlant(new Fruit(Arrays.asList(FruitType.values()).get(rand.nextInt(FruitType.values().length)), 1));
+                        Tree tree = new Tree(treeType);
+                        tiles[i][j].setTree(tree);
+
+                        Fruit fruit = new Fruit(fruitType, 1);
+                        tiles[i][j].setPlant(fruit);
                     }
                     else if (tileProb < 18) {
                         List<ForagingCropType> crops = Arrays.asList(ForagingCropType.values());
@@ -201,9 +207,15 @@ public class GameMap {
                         tiles[i][j] = new Tile(i, j, TileType.Stone, players.get(1));
                     }
                     else if (tileProb < 15) {
+                        TreeType treeType = Arrays.asList(TreeType.values()).get(rand.nextInt(TreeType.values().length));
+                        FruitType fruitType = Arrays.asList(FruitType.values()).get(rand.nextInt(FruitType.values().length));
+
                         tiles[i][j] = new Tile(i, j, TileType.Tree, players.get(1));
-                        tiles[i][j].setTree(new Tree(Arrays.asList(TreeType.values()).get(rand.nextInt(TreeType.values().length))));
-                        tiles[i][j].setPlant(new Fruit(Arrays.asList(FruitType.values()).get(rand.nextInt(FruitType.values().length)), 1));
+                        Tree tree = new Tree(treeType);
+                        tiles[i][j].setTree(tree);
+
+                        Fruit fruit = new Fruit(fruitType, 1);
+                        tiles[i][j].setPlant(fruit);
                     }
                     else if (tileProb < 18) {
                         List<ForagingCropType> crops = Arrays.asList(ForagingCropType.values());
@@ -236,9 +248,15 @@ public class GameMap {
                         tiles[i][j] = new Tile(i, j, TileType.Stone, players.get(2));
                     }
                     else if (tileProb < 15) {
+                        TreeType treeType = Arrays.asList(TreeType.values()).get(rand.nextInt(TreeType.values().length));
+                        FruitType fruitType = Arrays.asList(FruitType.values()).get(rand.nextInt(FruitType.values().length));
+
                         tiles[i][j] = new Tile(i, j, TileType.Tree, players.get(2));
-                        tiles[i][j].setTree(new Tree(Arrays.asList(TreeType.values()).get(rand.nextInt(TreeType.values().length))));
-                        tiles[i][j].setPlant(new Fruit(Arrays.asList(FruitType.values()).get(rand.nextInt(FruitType.values().length)), 1));
+                        Tree tree = new Tree(treeType);
+                        tiles[i][j].setTree(tree);
+
+                        Fruit fruit = new Fruit(fruitType, 1);
+                        tiles[i][j].setPlant(fruit);
                     }
                     else if (tileProb < 18) {
                         List<ForagingCropType> crops = Arrays.asList(ForagingCropType.values());
@@ -271,9 +289,15 @@ public class GameMap {
                         tiles[i][j] = new Tile(i, j, TileType.Stone, players.get(3));
                     }
                     else if (tileProb < 15) {
+                        TreeType treeType = Arrays.asList(TreeType.values()).get(rand.nextInt(TreeType.values().length));
+                        FruitType fruitType = Arrays.asList(FruitType.values()).get(rand.nextInt(FruitType.values().length));
+
                         tiles[i][j] = new Tile(i, j, TileType.Tree, players.get(3));
-                        tiles[i][j].setTree(new Tree(Arrays.asList(TreeType.values()).get(rand.nextInt(TreeType.values().length))));
-                        tiles[i][j].setPlant(new Fruit(Arrays.asList(FruitType.values()).get(rand.nextInt(FruitType.values().length)), 1));
+                        Tree tree = new Tree(treeType);
+                        tiles[i][j].setTree(tree);
+
+                        Fruit fruit = new Fruit(fruitType, 1);
+                        tiles[i][j].setPlant(fruit);
                     }
                     else if (tileProb < 18) {
                         List<ForagingCropType> crops = Arrays.asList(ForagingCropType.values());

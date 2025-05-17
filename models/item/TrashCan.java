@@ -5,21 +5,21 @@ import enums.items.TrashCanType;
 public class TrashCan extends Item{
     private TrashCanType trashCanType;
     private int percentage;
-    public TrashCan(TrashCanType trashcanType, int number) {
-        super(trashcanType, number);
-        if (this.trashCanType.equals(TrashCanType.PrimitiveTrashCan)){
+    public TrashCan(TrashCanType type, int number) {
+        super(type, number);
+        if (type.equals(TrashCanType.PrimitiveTrashCan)){
             this.percentage = 0;
         }
-        else if (this.trashCanType.equals(TrashCanType.CopperTrashCan)){
+        else if (type.equals(TrashCanType.CopperTrashCan)){
             this.percentage = 15;
         }
-        else if (this.trashCanType.equals(TrashCanType.IronicTrashCan)){
+        else if (type.equals(TrashCanType.IronicTrashCan)){
             this.percentage = 30;
         }
-        else if (this.trashCanType.equals(TrashCanType.GoldenTrashCan)){
+        else if (type.equals(TrashCanType.GoldenTrashCan)){
             this.percentage = 45;
         }
-        else if (this.trashCanType.equals(TrashCanType.GoldenTrashCan)){
+        else if (type.equals(TrashCanType.GoldenTrashCan)){
             this.percentage = 60;
         }
     }

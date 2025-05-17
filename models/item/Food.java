@@ -3,6 +3,7 @@ package models.item;
 import enums.items.FoodType;
 
 public class Food extends Item {
+
     public Food(FoodType foodType, int number) {
         super(foodType, number);
     }

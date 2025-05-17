@@ -84,7 +84,9 @@ public enum GameMenuCommands {
     ShowForagingSkill("show foraging skill"),
     ShowFarmingSkill("show farming skill"),
     CheatAddRecipe("cheat add recipe -n (?<name>[\\S\\s]+)"),
-    PickItem("pick item -d (?<direction>[\\S\\s]+)"),;
+    PickItem("pick item -d (?<direction>[\\S\\s]+)"),
+    RefrigeratorWorking("cooking refrigerator (?<action>(put|pick)) (?<itemName>[\\S\\s]+)"),
+    ShowCookingRecipes("cooking show recipes");
 
     private final String pattern;
 

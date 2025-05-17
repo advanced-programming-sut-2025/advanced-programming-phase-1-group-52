@@ -23,13 +23,13 @@ public class HomeMenu implements AppMenu {
             System.out.println(controller.craftItem(matcher.group("itemName")).Message());
         } 
         else if ((matcher = HomeMenuCommands.CookingRefrigerator.getMatcher(input)) != null) {
-            
+            System.out.println(controller.refrigeratorHandler(matcher.group("action"), matcher.group("item")).Message());
         } 
         else if ((matcher = HomeMenuCommands.CookingShowRecipes.getMatcher(input)) != null) {
-            
+            System.out.println(controller.showCookingRecipes().Message());
         } 
         else if ((matcher = HomeMenuCommands.CookingPrepare.getMatcher(input)) != null) {
-            
+            System.out.println(controller.cook(matcher.group("recipeName")).Message());
         }
         else if((matcher = HomeMenuCommands.CheatAddRecipe.getMatcher(input)) != null) {
             System.out.println(controller.cheatAddRecipe(matcher.group("name")).Message());

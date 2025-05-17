@@ -147,7 +147,7 @@ public enum CropType implements ItemType {
 
     @Override
     public String getName() {
-        return "";
+        return name;
     }
 
     public ForagingSeedType getSeed() {

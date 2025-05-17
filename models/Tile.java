@@ -1,10 +1,15 @@
 package models;
 
 import enums.design.TileType;
+import enums.items.FruitType;
 import enums.items.Growable;
+import enums.items.TreeType;
 import models.building.Shop;
 import models.item.Item;
 import models.item.Seed;
+
+import java.util.Arrays;
+import java.util.Random;
 
 public class Tile {
     private final int x;
@@ -12,15 +17,15 @@ public class Tile {
     private TileType type;
     private Player owner;
     private Growable plant = null;
-    private Tree tree = null;
+    private Tree tree ;
     private Seed seed = null;
     private Item item = null;
     private Shop shop = null;
 
-    public Tile(int x, int y, TileType type, Player owner) {
+    public Tile(int x, int y, TileType tileType, Player owner) {
         this.x = x;
         this.y = y;
-        this.type = type;
+        this.type = tileType;
         this.owner = owner;
     }
 

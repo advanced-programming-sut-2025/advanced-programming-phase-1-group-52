@@ -13,7 +13,7 @@ import enums.design.TileType;
 import enums.items.AnimalType;
 import enums.items.Backpacks;
 import enums.items.CageType;
-import enums.items.CookingRecipes;
+import enums.items.CookingRecipeType;
 import enums.items.CraftingMachineType;
 import enums.items.CraftingRecipes;
 import enums.items.FoodType;
@@ -177,7 +177,7 @@ public class StoreMenuController {
                     CraftingMachine craftingMachine = new CraftingMachine(craftingMachineType, amount);
                     game.getCurrentPlayer().getInventory().addItem(craftingMachine);
                 }
-                case CookingRecipes cookingRecipes -> {
+                case CookingRecipeType cookingRecipes -> {
                     CookingRecipe cookingRecipe = new CookingRecipe(cookingRecipes);
                     game.getCurrentPlayer().addCookingRecipe(cookingRecipe);
                 }

@@ -155,4 +155,27 @@ public class Inventory {
         }
         return null;
     }
+
+    public void remove2(String itemName){
+        for(Item item : items){
+            if(item.getName().equals(itemName)){
+                items.remove(item);
+                this.numOfItems -= 1;
+            }
+        }
+    }
+
+    public void remove2(String itemName, int quantity){
+        for(Item item : items){
+            if(item.getName().equals(itemName)){
+                if(item.getNumber() < quantity){
+                    items.remove(item);
+                    this.numOfItems -= 1;
+                }
+                else{
+                    item.setNumber(item.getNumber() - quantity);
+                }
+            }
+        }
+    }
 }

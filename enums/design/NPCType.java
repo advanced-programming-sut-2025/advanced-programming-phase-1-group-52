@@ -40,7 +40,7 @@ public enum NPCType {
         favorites.add(ArtisanProductType.GRAPE_WINE);
 
         quests.add(new Quest(this, MaterialType.HardWood, 10, MaterialType.GoldCoin, 500));
-        quests.add(new Quest(this, FishType.Salmon, 1, CookingRecipes.SalmonDinner, 1));
+        quests.add(new Quest(this, FishType.Salmon, 1, CookingRecipeType.SalmonDinner, 1));
         quests.add(new Quest(this, MaterialType.Wood, 200, CraftingMachineType.DELUXE_SCARECROW, 3));
     }},
     Robin(52, 42) {{

@@ -23,6 +23,7 @@ public class Player {
     private ArrayList<CookingRecipe> cookingRecipes;
     private int energy;
     private House house;
+    private HouseRefrigerator houseRefrigerator;
     private int originX;
     private int originY;
     private int currentX;
@@ -51,11 +52,13 @@ public class Player {
         this.notifications = new ArrayList<>();
         this.craftingRecipes = new ArrayList<>();
         this.cookingRecipes = new ArrayList<>();
+        this.houseRefrigerator = new HouseRefrigerator();
         this.energy = 200;
         for(Skills skill : Skills.values()){
             this.skills.put(skill, new SkillData());
         }
         giveStarterTools();
+        addTrashCan();
     }
 
     public Trade getTradeById(int id) {
@@ -322,54 +325,46 @@ public class Player {
         }
         this.energy -= energyConsumption;
 
-        switch (tile.getType()) {
-            case Grass -> {
-                tile.setType(TileType.Earth);
-                return new Result(true, "tile with X: " + tile.getX() + " Y: " + tile.getY() + " has been changed to soil!");
+        if (tile.getType().equals(TileType.Grass)) {
+            tile.setType(TileType.Earth);
+            return new Result(true, "tile with X: " + tile.getX() + " Y: " + tile.getY() + " has been changed to soil!");
+        }
+
+        if (tile.getType().equals(TileType.Tree)) {
+            if (tile.getPlant().isReadyToHarvest()) {
+                if (tile.getPlant() instanceof Fruit fruit) {
+                    Fruit newFruit = new Fruit(fruit.getFruitType(), 1);
+                    if (this.inventory.addNumOfItems(1)) {
+                        this.inventory.addItem(newFruit);
+                        harvestCrop();
+                        return new Result(true, "Fruit has been added to the inventory!");
+                    } else {
+                        return new Result(false, "Fruit has not been added to the inventory!, your inventory is full!");
+                    }
+                } else {
+                    return new Result(false, "some problem in harvesting (type casting) come to scytheHandler");
+                }
+            } else {
+                return new Result(false, "This tree is not ready to harvest!");
             }
-            case Tree -> {
-                if(tile.getPlant().isReadyToHarvest()){
-                    if(tile.getPlant() instanceof Fruit fruit){
-                        Fruit newFruit = new Fruit(fruit.getFruitType(),1);
-                        if(this.inventory.addNumOfItems(1)){
-                            this.inventory.addItem(newFruit);
-                            harvestCrop();
-                            return new Result(true, "Fruit has been added to the inventory!");
-                        }
-                        else{
-                            return new Result(false, "Fruit has not been added to the inventory!, your inventory is full!");
-                        }
+        }
+
+        if (tile.getType().equals(TileType.Planted)) {
+            if (tile.getPlant().isReadyToHarvest()) {
+                if (tile.getPlant() instanceof Crop crop) {
+                    Crop newCrop = new Crop(crop.getCropType(), 1);
+                    if (this.inventory.addNumOfItems(1)) {
+                        this.inventory.addItem(newCrop);
+                        harvestCrop();
+                        return new Result(true, "Crop has been added to the inventory!");
+                    } else {
+                        return new Result(false, "Crop has not been added to the inventory!, your inventory is full!");
                     }
-                    else{
-                        return new Result(false, "some problem in harvesting (type casting) come to scytheHandler");
-                    }
+                } else {
+                    return new Result(false, "some problem in harvesting (type casting) come to scytheHandler");
                 }
-                else{
-                    return new Result(false,"This tree is not ready to harvest!");
-                }
-            }
-            case Planted -> {
-                if(tile.getPlant().isReadyToHarvest()){
-                    if(tile.getPlant() instanceof Crop crop){
-                        Crop newCrop = new Crop(crop.getCropType(),1);
-                        if(this.inventory.addNumOfItems(1)){
-                            this.inventory.addItem(newCrop);
-                            harvestCrop();
-                            return new Result(true, "Crop has been added to the inventory!");
-                        }
-                        else{
-                            return new Result(false, "Crop has not been added to the inventory!, your inventory is full!");
-                        }
-                    }
-                    else{
-                        return new Result(false, "some problem in harvesting (type casting) come to scytheHandler");
-                    }
-                }
-                else{
-                    return new Result(false,"This seed is not ready to harvest!");
-                }
-            }
-            default -> {
+            } else {
+                return new Result(false, "This seed is not ready to harvest!");
             }
         }
         return new Result(false, "you can not use scythe on this tile!");
@@ -481,6 +476,7 @@ public class Player {
             addForagingRecipes();
             addFarmingRecipes();
             addMiningRecipes();
+            addFishingRecipes();
         }
     }
 
@@ -523,6 +519,9 @@ public class Player {
             if (!hasRecipe(CraftingRecipes.CherryBombRecipe)) {
                 craftingRecipes.add(new CraftingRecipe(CraftingRecipes.CherryBombRecipe, 1));
             }
+            if(!this.cookingRecipes.contains(CookingRecipeType.MinersTreat)){
+                this.cookingRecipes.add(new CookingRecipe(CookingRecipeType.MinersTreat));
+            }
         }
 
         if (level >= 2) {
@@ -538,6 +537,21 @@ public class Player {
         }
     }
 
+    private void addFishingRecipes() {
+        SkillData skillData = findSkillData(Skills.Fishing);
+        int level = skillData.getLevel();
+        if(level >= 2){
+            if(!this.cookingRecipes.contains(CookingRecipeType.DishOTheSea)){
+                this.cookingRecipes.add(new CookingRecipe(CookingRecipeType.DishOTheSea));
+            }
+        }
+        if (level >= 3) {
+            if(!this.cookingRecipes.contains(CookingRecipeType.SeaFoamPudding)){
+                this.cookingRecipes.add(new CookingRecipe(CookingRecipeType.SeaFoamPudding));
+            }
+        }
+    }
+
     private void addFarmingRecipes() {
         SkillData skillData = findSkillData(Skills.Farming);
         int level = skillData.getLevel();
@@ -548,6 +562,9 @@ public class Player {
             }
             if (!this.craftingRecipes.contains(CraftingRecipes.BeeHouseRecipe)) {
                 this.craftingRecipes.add(new CraftingRecipe(CraftingRecipes.BeeHouseRecipe, 1));
+            }
+            if(!this.cookingRecipes.contains(CookingRecipeType.FarmersLunch)) {
+                this.cookingRecipes.add(new CookingRecipe(CookingRecipeType.FarmersLunch));
             }
         }
 
@@ -591,7 +608,16 @@ public class Player {
                 this.craftingRecipes.add(new CraftingRecipe(CraftingRecipes.CharcoalKilnRecipe,1));
             }
         }
-
+        if (level >= 2) {
+            if(!this.cookingRecipes.contains(CookingRecipeType.VegetableMedley)){
+                this.cookingRecipes.add(new CookingRecipe(CookingRecipeType.VegetableMedley));
+            }
+        }
+        if(level >= 3){
+            if(!this.cookingRecipes.contains(CookingRecipeType.SurvivalBurger)){
+                this.cookingRecipes.add(new CookingRecipe(CookingRecipeType.SurvivalBurger));
+            }
+        }
         if (level >= 4) {
             if (!this.craftingRecipes.contains(CraftingRecipes.MysticTreeSeedRecipe)) {
                 this.craftingRecipes.add(new CraftingRecipe(CraftingRecipes.MysticTreeSeedRecipe,1));
@@ -647,5 +673,17 @@ public class Player {
 
     public List<Housing> getHousings() {
         return housings;
+    }
+
+    private void addTrashCan(){
+        inventory.getItems().add(new TrashCan(TrashCanType.PrimitiveTrashCan,1));
+    }
+
+    public HouseRefrigerator getHouseRefrigerator() {
+        return houseRefrigerator;
+    }
+
+    public void setHouseRefrigerator(HouseRefrigerator houseRefrigerator) {
+        this.houseRefrigerator = houseRefrigerator;
     }
 }

@@ -568,7 +568,7 @@ public class GameMenuController {
                     Food food = new Food(foodType, quest.getRewardAmount());
                     currentPlayer.getInventory().addItem(food);
                 }
-                case CookingRecipes cookingRecipes -> {
+                case CookingRecipeType cookingRecipes -> {
                     CookingRecipe cookingRecipe = new CookingRecipe(cookingRecipes);
                     if (!currentPlayer.getCookingRecipe().contains(cookingRecipe)) {
                         currentPlayer.getCookingRecipe().add(cookingRecipe);
@@ -1181,18 +1181,6 @@ public class GameMenuController {
         return new Result(true, recipeString.toString());
     }
 
-    public Result showCookingRecipes(){
-        Player player = game.getCurrentPlayer();
-        ArrayList<CookingRecipe> playerCookingRecipes = player.getCookingRecipe();
-        StringBuilder recipeString = new StringBuilder();
-        recipeString.append(player.getUsername() + "'s cooking recipes:\n");
-        for(CookingRecipe cookingRecipe : playerCookingRecipes) {
-            recipeString.append(cookingRecipe.getRecipeType().getDisplayName() + "\n");
-        }
-        recipeString.deleteCharAt(recipeString.length() - 1);
-        return new Result(true, recipeString.toString());
-    }
-
     public Result craftItem(String itemName) {
         Player player = game.getCurrentPlayer();
         GameMap map = game.getMap();
@@ -1346,6 +1334,18 @@ public class GameMenuController {
         return new Result(true, amount + " added successfully :)");
     }
 
+    public Result showCookingRecipes() {
+        Player player = game.getCurrentPlayer();
+        if(player.getCookingRecipe() == null || player.getCookingRecipe().isEmpty()) {
+            return new Result(false, "you do not have any cooking recipes");
+        }
+        StringBuilder builder = new StringBuilder();
+        builder.append("You have :\n");
+        for(CookingRecipe recipe : player.getCookingRecipe()) {
+            builder.append(recipe.getRecipeType().getName()).append("\n");
+        }
+        return new Result(true, builder.toString());
+    }
     private void onDayPassed(int days) {
     }
 
@@ -1363,7 +1363,7 @@ public class GameMenuController {
 
     private CropType findCropType(String cropName) {
         for(CropType cropType : CropType.values()) {
-            if (cropType.name().equals(cropName)) {
+            if (cropType.getName().equals(cropName)) {
                 return cropType;
             }
         }
@@ -1461,53 +1461,36 @@ public class GameMenuController {
 
     private Result cookingShowRecipes() {
         StringBuilder sb = new StringBuilder("Cooking recipes:\n");
-        for (CookingRecipes r : CookingRecipes.values()) {
+        for (CookingRecipeType r : CookingRecipeType.values()) {
             sb.append("- ").append(r.getDisplayName()).append("\n");
         }
         return Result.success(sb.toString());
     }
 
-    private Result cookingPrepare(String recipeName) {
-        Player player = game.getCurrentPlayer();
-        House  house  = player.getHouse();
-        var    refrigerator = house.refrigerator();
-        var    inventory    = player.getInventory();
-
-        CookingRecipes recipe;
-        try { recipe = CookingRecipes.valueOf(recipeName); }
-        catch (IllegalArgumentException e) {
-            return Result.failure("Invalid recipe: " + recipeName);
-        }
-
-        boolean ok = recipe.getIngredients().entrySet().stream()
-                .allMatch(e -> refrigerator.hasMaterial(e.getKey(), e.getValue()));
-        if (!ok) {
-            return Result.failure("There are not enough ingredients in the refrigerator.");
-        }
-
-        for (Map.Entry<MaterialType, Integer> e : recipe.getIngredients().entrySet()) {
-            refrigerator.pickMaterial(e.getKey(), e.getValue());
-        }
-
-        FoodType food;
-        try { food = FoodType.valueOf(recipeName); }
-        catch (IllegalArgumentException e) {
-            return Result.failure("Error converting to FoodType.");
-        }
-
-        boolean added = inventory.addItem(food.createItem(1));
-        if (!added) {
-            for (Map.Entry<MaterialType, Integer> e : recipe.getIngredients().entrySet()) {
-                refrigerator.putMaterial(e.getKey(), e.getValue());
-            }
-            return Result.failure("There is not enough space in the inventory.");
-        }
-
-        return Result.success(recipe.getDisplayName() + "Ready and added.");
-    }
-
     public Result eat(String foodName) {
-        return new Result(true, "eating");
+        Player player = game.getCurrentPlayer();
+        Food food = findFoodInInventory(foodName);
+        if (food == null) {
+            return new Result(false, "you don't have this food to eat");
+        }
+        player.getInventory().remove2(foodName,1);
+        player.addEnergy(food.getFoodType().getEnergy());
+        if(food.getFoodType().isBuffMaxEnergy()){
+            player.setEnergy(300);
+        }
+        if (food.getFoodType().getSkillBuff().equals(Skills.Fishing)){
+            player.catchFish();
+        }
+        if (food.getFoodType().getSkillBuff().equals(Skills.Farming)){
+            player.harvestCrop();
+        }
+        if (food.getFoodType().getSkillBuff().equals(Skills.Foraging)){
+            player.foraging();
+        }
+        if (food.getFoodType().getSkillBuff().equals(Skills.Extraction)){
+            player.extract();
+        }
+        return new Result(true,"yummy!");
     }
 
     public Result fishing(String fishingPoleName) {
@@ -1996,5 +1979,15 @@ public class GameMenuController {
         else {
             return 1.2;
         }
+    }
+
+    private Food findFoodInInventory(String foodName){
+        Player player = game.getCurrentPlayer();
+        for(Item item : player.getInventory().getItems()){
+            if(item.getName().equals(foodName)){
+                return (Food) item;
+            }
+        }
+        return null;
     }
 }

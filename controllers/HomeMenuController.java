@@ -2,13 +2,9 @@ package controllers;
 
 import enums.Menu;
 import enums.design.TileType;
-import enums.items.CraftingMachineType;
-import enums.items.CraftingRecipes;
-import enums.items.ItemType;
+import enums.items.*;
 import models.*;
-import models.item.CraftingMachine;
-import models.item.CraftingRecipe;
-import models.item.Item;
+import models.item.*;
 
 import java.util.ArrayList;
 import java.util.Map;
@@ -26,6 +22,7 @@ public class HomeMenuController {
         recipeString.deleteCharAt(recipeString.length() - 1);
         return new Result(true, recipeString.toString());
     }
+
     public Result craftItem(String itemName) {
         Game game = App.getInstance().getCurrentGame();
         Player player = game.getCurrentPlayer();
@@ -83,6 +80,85 @@ public class HomeMenuController {
         player.getCraftingRecipe().add(recipe);
         return new Result(true,recipe.getName() + " added successfully");
     }
+
+    public Result cook(String recipeName){
+        Game game = App.getInstance().getCurrentGame();
+        Player player = game.getCurrentPlayer();
+        CookingRecipeType recipe = findCookingRecipeType(recipeName);
+        if(recipe == null) {
+            return new Result(false, "wrong recipe");
+        }
+        CookingRecipe cookingRecipe = findCookingRecipe(recipe);
+        if(cookingRecipe == null) {
+            return new Result(false, "you don't have this cooking recipe");
+        }
+
+        if(player.getInventory().isFull()){
+            return new Result(false, "your inventory is full");
+        }
+
+        Result result1 = isInventoryReadyToCook(recipe);
+        Result result2 = isRefrigeratorReadyToCook(recipe);
+
+        if(!result1.isSuccessful() && !result2.isSuccessful()){
+            return new Result(false, "you can't cook this food");
+        }
+
+        Food food = new Food(recipe.getFoodType(),2);
+        player.getInventory().getItems().add(food);
+        player.getInventory().addNumOfItems(1);
+        player.addEnergy(-3);
+        return new Result(true,food.getName() + " crafted successfully");
+    }
+
+    public Result showCookingRecipes(){
+        Game game = App.getInstance().getCurrentGame();
+        Player player = game.getCurrentPlayer();
+        ArrayList<CookingRecipe> playerCookingRecipes = player.getCookingRecipe();
+        StringBuilder recipeString = new StringBuilder();
+        recipeString.append(player.getUsername() + "'s cooking recipes:\n");
+        for(CookingRecipe cookingRecipe : playerCookingRecipes) {
+            recipeString.append(cookingRecipe.getRecipeType().getDisplayName() + "\n");
+        }
+        recipeString.deleteCharAt(recipeString.length() - 1);
+        return new Result(true, recipeString.toString());
+    }
+
+    public Result refrigeratorHandler(String action, String itemName) {
+        Game game = App.getInstance().getCurrentGame();
+        Player player = game.getCurrentPlayer();
+        Tile tile = game.getMap().getTile(player.currentX(), player.currentY());
+        if(!tile.getType().equals(TileType.House)){
+            return new Result(false, "you should be at home to use refrigerator!");
+        }
+        HouseRefrigerator refrigerator = player.getHouseRefrigerator();
+        if(action.equals("put")) {
+            Item item = findItem(itemName,player.getInventory().getItems());
+            if(item == null) {
+                return new Result(false, "you do not have this item");
+            }
+            if(refrigerator.putItem(item)) {
+                player.getInventory().remove2(item.getName());
+                return new Result(true, item.getName() + " put successfully");
+            }
+            return new Result(false, "refrigerator is full");
+        }
+        else if(action.equals("pick")) {
+            if(player.getInventory().isFull()) {
+                return new Result(false, "Your inventory is full");
+            }
+            Item pickedItem = refrigerator.pickItem(itemName);
+            if(pickedItem == null) {
+                return new Result(false, "this item is not in the refrigerator");
+            }
+            player.getInventory().addItem(pickedItem);
+            return new Result(true, pickedItem.getName() + " picked successfully");
+        }
+        else {
+            return new Result(false, "Invalid action");
+        }
+    }
+
     private CraftingRecipes findCraftingRecipeType(String recipeName) {
         for(CraftingRecipes craftingRecipe : CraftingRecipes.values()) {
             if(craftingRecipe.getName().equals(recipeName)) {
@@ -156,6 +232,15 @@ public class HomeMenuController {
         return null;
     }
 
+    private Item findItem(String itemName, ArrayList<Item> items) {
+        for(Item item : items){
+            if(item.getName().equals(itemName)){
+                return item;
+            }
+        }
+        return null;
+    }
+
     private CraftingMachineType findCraftingMachineType(String machineName) {
         for(CraftingMachineType craftingMachineType : CraftingMachineType.values()) {
             if(craftingMachineType.getName().equals(machineName)) {
@@ -165,4 +250,115 @@ public class HomeMenuController {
         return null;
     }
 
+    private CookingRecipeType findCookingRecipeType(String recipeName) {
+        for(CookingRecipeType craftingRecipe : CookingRecipeType.values()) {
+            if(craftingRecipe.getName().equals(recipeName)) {
+                return craftingRecipe;
+            }
+        }
+        return null;
+    }
+
+    private CookingRecipe findCookingRecipe(CookingRecipeType recipeType) {
+        Game game = App.getInstance().getCurrentGame();
+        Player player = game.getCurrentPlayer();
+        for(CookingRecipe recipe : player.getCookingRecipe()) {
+            if(recipe.getRecipeType().equals(recipeType) || recipe.getRecipeType().getName().equals(recipeType.getName())) {
+                return recipe;
+            }
+        }
+        return null;
+    }
+
+    private Result isInventoryReadyToCook(CookingRecipeType cookingRecipe) {
+        Game game = App.getInstance().getCurrentGame();
+        Player player = game.getCurrentPlayer();
+        Map<ItemType, Integer> neededIngredients = cookingRecipe.getIngredients();
+        ArrayList<Item> playerItems = player.getInventory().getItems();
+        ItemType itemType;
+        Integer quantity;
+        Item item;
+        Result result = isReadySecondCooking(cookingRecipe);
+
+        if(!result.isSuccessful()){
+            return result;
+        }
+
+        for(Map.Entry<ItemType, Integer> entry : neededIngredients.entrySet()) {
+            itemType = entry.getKey();
+            quantity = entry.getValue();
+            item = findItem(itemType,playerItems);
+            item.setNumber(item.getNumber() - quantity);
+        }
+        return result;
+    }
+
+    private Result isReadySecondCooking(CookingRecipeType cookingRecipe) {
+        Game game = App.getInstance().getCurrentGame();
+        Player player = game.getCurrentPlayer();
+        Map<ItemType, Integer> neededIngredients = cookingRecipe.getIngredients();
+        ArrayList<Item> playerItems = player.getInventory().getItems();
+        ItemType itemType;
+        Integer quantity;
+        Item item;
+
+        for(Map.Entry<ItemType, Integer> entry : neededIngredients.entrySet()) {
+            itemType = entry.getKey();
+            quantity = entry.getValue();
+            item = findItem(itemType,playerItems);
+            if(item == null) {
+                return new Result(false, "Item not found in your inventory");
+            }
+            if(item.getNumber() < quantity){
+                return new Result(false, "Not enough items in your inventory");
+            }
+        }
+        return new Result(true, "All items in your inventory");
+    }
+
+    private Result isRefrigeratorReadyToCook(CookingRecipeType cookingRecipe) {
+        Game game = App.getInstance().getCurrentGame();
+        Player player = game.getCurrentPlayer();
+        Map<ItemType, Integer> neededIngredients = cookingRecipe.getIngredients();
+        ArrayList<Item> playerItems = player.getHouseRefrigerator().getItems();
+        ItemType itemType;
+        Integer quantity;
+        Item item;
+        Result result = isReadySecondCookingRefrigerator(cookingRecipe);
+
+        if(!result.isSuccessful()){
+            return result;
+        }
+
+        for(Map.Entry<ItemType, Integer> entry : neededIngredients.entrySet()) {
+            itemType = entry.getKey();
+            quantity = entry.getValue();
+            item = findItem(itemType,playerItems);
+            item.setNumber(item.getNumber() - quantity);
+        }
+        return result;
+    }
+
+    private Result isReadySecondCookingRefrigerator(CookingRecipeType cookingRecipe) {
+        Game game = App.getInstance().getCurrentGame();
+        Player player = game.getCurrentPlayer();
+        Map<ItemType, Integer> neededIngredients = cookingRecipe.getIngredients();
+        ArrayList<Item> playerItems = player.getHouseRefrigerator().getItems();
+        ItemType itemType;
+        Integer quantity;
+        Item item;
+
+        for(Map.Entry<ItemType, Integer> entry : neededIngredients.entrySet()) {
+            itemType = entry.getKey();
+            quantity = entry.getValue();
+            item = findItem(itemType,playerItems);
+            if(item == null) {
+                return new Result(false, "Item not found in your inventory");
+            }
+            if(item.getNumber() < quantity){
+                return new Result(false, "Not enough items in your inventory");
+            }
+        }
+        return new Result(true, "All items in your inventory");
+    }
 }
