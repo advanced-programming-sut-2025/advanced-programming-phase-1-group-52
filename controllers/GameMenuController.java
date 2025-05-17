@@ -993,32 +993,32 @@ public class GameMenuController {
         return new Result(true, player.handleToolUse(targetTile).Message());
     }
 
-//    public Result craftInfo(String craftName) {
-//        CropType cropType;
-//        if((cropType = findCropType(craftName)) == null) {
-//            return new Result(false, "Crop not found");
-//        }
-//        StringBuilder info = new StringBuilder();
-//        info.append("Name: " + cropType.name()).append("\nSource: " + cropType.getSeedSource()).append("\nStages: ");
-//        for(Integer stage : cropType.getGrowthStages()){
-//            info.append(stage).append("-");
-//        }
-//        info.deleteCharAt(info.length() - 1);
-//        info.append("\nTotal Harvest Time: " + cropType.getTotalHarvestTime()).
-//                append("\nOne Time: " + cropType.isOneTimeHarvest()).
-//                append("\nRegrowth Time: " + cropType.getRegrowthTime()).
-//                append("\nBase Sell Price: " + cropType.getBaseSellPrice()).
-//                append("\nIs Edible: " + cropType.isEdible()).
-//                append("\nBase Energy: " + cropType.getEnergy()).
-//                append("\nBase Health: " + cropType.getBaseHealth()).
-//                append(("\nSeason: "));
-//        for(Season season : cropType.getSeasons()){
-//            info.append(season.name()).append(", ");
-//        }
-//        info.deleteCharAt(info.length() - 1);
-//        info.append("\nCan Become Giant: " + cropType.canBecomeGiant());
-//        return new Result(true, info.toString());
-//    }
+    public Result craftInfo(String craftName) {
+        CropType cropType;
+        if((cropType = findCropType(craftName)) == null) {
+            return new Result(false, "Crop not found");
+        }
+        StringBuilder info = new StringBuilder();
+        info.append("Name: " + cropType.name()).append("\nSource: " + cropType.getSeedSource()).append("\nStages: ");
+        for(Integer stage : cropType.getGrowthStages()){
+            info.append(stage).append("-");
+        }
+        info.deleteCharAt(info.length() - 1);
+        info.append("\nTotal Harvest Time: " + cropType.getTotalHarvestTime()).
+                append("\nOne Time: " + cropType.isOneTimeHarvest()).
+                append("\nRegrowth Time: " + cropType.getRegrowthTime()).
+                append("\nBase Sell Price: " + cropType.getBaseSellPrice()).
+                append("\nIs Edible: " + cropType.isEdible()).
+                append("\nBase Energy: " + cropType.getEnergy()).
+                append("\nBase Health: " + cropType.getBaseHealth()).
+                append(("\nSeason: "));
+        for(Season season : cropType.getSeasons()){
+            info.append(season.name()).append(", ");
+        }
+        info.deleteCharAt(info.length() - 1);
+        info.append("\nCan Become Giant: " + cropType.canBecomeGiant());
+        return new Result(true, info.toString());
+    }
 
     public Result treeInfo(String treeName) {
         TreeType treeType;
@@ -1048,50 +1048,50 @@ public class GameMenuController {
     public void fishingAndDisplay(ToolType pole) {
     }
 
-//    public Result plant(String seedName, String directionStr) {
-//        GameMap map = game.getMap();
-//        Player player = game.getCurrentPlayer();
-//        Tile currentTile = map.getTile(player.currentX(), player.currentY());
-//        Tile targetTile = getTargetTile(currentTile, directionStr, map);
-//
-//        Crop crop = findCropSeedInInventory(player.getInventory().getItems(), seedName);
-//        Fruit fruit = (crop == null) ? findFruitSeedInInventory(player.getInventory().getItems(), seedName) : null;
-//        Seed seed = findSeedInInventory(player.getInventory().getItems(), seedName);
-//
-//        if (crop == null && fruit == null) {
-//            return new Result(false, "Seed not found in inventory (fruit and crop)");
-//        }
-//
-//        if(seed == null) {
-//            return new Result(false, "Seed not found in inventory");
-//        }
-//
-//        if (crop != null) {
-//            if (!targetTile.getType().equals(TileType.Shoveled) ||
-//                    targetTile.getType().equals(TileType.Planted)) {
-//                return new Result(false, "Crops can only be planted on shoveled, unplanted soil");
-//            }
-//
-//            targetTile.setType(TileType.Planted);
-//            targetTile.setPlant(crop);
-//            player.getInventory().getItems().remove(seed);
-//            player.getInventory().addNumOfItems(-1);
-//            return new Result(true, crop.getName() + " crop planted successfully");
-//        }
-//        else if (fruit != null) {
-//            if (!targetTile.getType().equals(TileType.Shoveled)) {
-//                return new Result(false, "Fruit trees can only be planted on shoveled");
-//            }
-//
-//            targetTile.setType(TileType.Tree);
-//            targetTile.setPlant(fruit);
-//            player.getInventory().getItems().remove(seed);
-//            player.getInventory().addNumOfItems(-1);
-//            return new Result(true, fruit.getName() + " tree planted successfully");
-//        }
-//
-//        return new Result(false, "You can not plant in this tile");
-//    }
+    public Result plant(String seedName, String directionStr) {
+        GameMap map = game.getMap();
+        Player player = game.getCurrentPlayer();
+        Tile currentTile = map.getTile(player.currentX(), player.currentY());
+        Tile targetTile = getTargetTile(currentTile, directionStr, map);
+
+        Crop crop = findCropSeedInInventory(player.getInventory().getItems(), seedName);
+        Fruit fruit = (crop == null) ? findFruitSeedInInventory(player.getInventory().getItems(), seedName) : null;
+        Seed seed = findSeedInInventory(player.getInventory().getItems(), seedName);
+
+        if (crop == null && fruit == null) {
+            return new Result(false, "Seed not found in inventory (fruit and crop)");
+        }
+
+        if(seed == null) {
+            return new Result(false, "Seed not found in inventory");
+        }
+
+        if (crop != null) {
+            if (!targetTile.getType().equals(TileType.Shoveled) ||
+                    targetTile.getType().equals(TileType.Planted)) {
+                return new Result(false, "Crops can only be planted on shoveled, unplanted soil");
+            }
+
+            targetTile.setType(TileType.Planted);
+            targetTile.setPlant(crop);
+            player.getInventory().getItems().remove(seed);
+            player.getInventory().addNumOfItems(-1);
+            return new Result(true, crop.getName() + " crop planted successfully");
+        }
+        else if (fruit != null) {
+            if (!targetTile.getType().equals(TileType.Shoveled)) {
+                return new Result(false, "Fruit trees can only be planted on shoveled");
+            }
+
+            targetTile.setType(TileType.Tree);
+            targetTile.setPlant(fruit);
+            player.getInventory().getItems().remove(seed);
+            player.getInventory().addNumOfItems(-1);
+            return new Result(true, fruit.getName() + " tree planted successfully");
+        }
+
+        return new Result(false, "You can not plant in this tile");
+    }
 
     public Result showPlant(String xStr, String yStr){
         int x = Integer.parseInt(xStr);
