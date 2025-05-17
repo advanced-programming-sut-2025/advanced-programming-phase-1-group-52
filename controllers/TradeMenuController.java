@@ -7,7 +7,6 @@ import models.Player;
 import models.Result;
 import models.Trade;
 import models.TradeRequest;
-import models.item.AnimalProduct;
 import models.item.Crop;
 import models.item.Fish;
 import models.item.Food;
@@ -234,20 +233,6 @@ public class TradeMenuController {
         }
 
         switch (item) {
-            case AnimalProduct animalProduct -> {
-                seller.getInventory().removeItem(animalProduct.getClass(), trade.getAmount());
-                AnimalProduct newAnimalProduct = new AnimalProduct(animalProduct.getAnimalType(), trade.getAmount());
-                
-                buyer.getInventory().addItem(newAnimalProduct);
-                buyer.getBankAccount().withdraw(trade.getPrice());
-                
-                seller.getBankAccount().deposit(trade.getPrice());
-                buyer.addNotif(seller, "You bought " + trade.getAmount() + " " + item.getName() + " for " + trade.getPrice() + "$");
-                
-                trade.setAccepted(true);
-                trade.setAnswered(true);
-                return new Result(true, "Trade completed!");
-            }
             case Fish fish -> {
                 seller.getInventory().removeItem(fish.getClass(), trade.getAmount());
                 Fish newFish = new Fish(fish.getFishType(), trade.getAmount());
@@ -385,16 +370,6 @@ public class TradeMenuController {
         }
 
         switch (givingItem) {
-            case AnimalProduct animalProduct -> {
-                buyer.getInventory().removeItem(animalProduct.getClass(), trade.getGivingAmount());
-                AnimalProduct newAnimalProduct = new AnimalProduct(animalProduct.getAnimalType(), trade.getGivingAmount());
-                
-                seller.getInventory().addItem(newAnimalProduct);
-                buyer.addNotif(seller, "You got " + trade.getGivingAmount() + " " + givingItem.getName());
-                
-                trade.setAccepted(true);
-                trade.setAnswered(true);
-            }
             case Fish fish -> {
                 buyer.getInventory().removeItem(fish.getClass(), trade.getGivingAmount());
                 Fish newFish = new Fish(fish.getFishType(), trade.getGivingAmount());
@@ -472,13 +447,6 @@ public class TradeMenuController {
         }
 
         switch (receivingItem) {
-            case AnimalProduct animalProduct -> {
-                seller.getInventory().removeItem(animalProduct.getClass(), trade.getReceivingAmount());
-                AnimalProduct newAnimalProduct = new AnimalProduct(animalProduct.getAnimalType(), trade.getReceivingAmount());
-                buyer.getInventory().addItem(newAnimalProduct);
-
-                return new Result(true, "Trade completed!");
-            }
             case Fish fish -> {
                 seller.getInventory().removeItem(fish.getClass(), trade.getReceivingAmount());
                 Fish newFish = new Fish(fish.getFishType(), trade.getReceivingAmount());

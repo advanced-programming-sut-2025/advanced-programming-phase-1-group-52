@@ -69,6 +69,8 @@ public class GameMenuController {
         player1.setOriginY(2);
         player1.setCurrentX(2);
         player1.setCurrentY(2);
+        player1.setTrashCanX(0);
+        player1.setTrashCanY(0);
         loggedInUser.setCurrentPlayer(player1);
         players.add(loggedInUser);
 
@@ -77,6 +79,8 @@ public class GameMenuController {
         player2.setOriginY(2);
         player2.setCurrentX(84);
         player2.setCurrentY(2);
+        player2.setTrashCanX(89);
+        player2.setTrashCanY(0);
         user1.setCurrentPlayer(player2);
         players.add(user1);
 
@@ -85,6 +89,8 @@ public class GameMenuController {
         player3.setOriginY(34);
         player3.setCurrentX(2);
         player3.setCurrentY(34);
+        player3.setTrashCanX(0);
+        player3.setTrashCanY(59);
         user2.setCurrentPlayer(player3);
         players.add(user2);
 
@@ -93,6 +99,8 @@ public class GameMenuController {
         player4.setOriginY(34);
         player4.setCurrentX(64);
         player4.setCurrentY(34);
+        player4.setTrashCanX(89);
+        player4.setTrashCanY(59);
         user3.setCurrentPlayer(player4);
         players.add(user3);
 
@@ -520,9 +528,6 @@ public class GameMenuController {
         }
 
         switch (quest.getDemand()) {
-            case AnimalProductType animalProductType -> {
-                currentPlayer.getInventory().removeItem(AnimalProduct.class, quest.getDemandAmount());
-            }
             case FoodType foodType -> {
                 currentPlayer.getInventory().removeItem(Food.class, quest.getDemandAmount());
             }
@@ -681,11 +686,6 @@ public class GameMenuController {
 
         
         switch (item) {
-            case AnimalProduct animalProduct -> {
-                game.getCurrentPlayer().getInventory().removeItem(animalProduct.getClass(), itemAmount);
-                AnimalProduct newAnimalProduct = new AnimalProduct(animalProduct.getAnimalType(), itemAmount);
-                receiver.getInventory().addItem(newAnimalProduct);
-            }
             case Fish fish -> {
                 game.getCurrentPlayer().getInventory().removeItem(fish.getClass(), itemAmount);
                 Fish newFish = new Fish(fish.getFishType(), itemAmount);
@@ -1996,5 +1996,129 @@ public class GameMenuController {
         else {
             return 1.2;
         }
+    }
+
+    public Result sell(String... inputs) {
+        Player currentPlayer = game.getCurrentPlayer();
+        if (!isPlayerNearSomething(currentPlayer.getTrashCanX(), currentPlayer.getTrashCanY())) {
+            return new Result(false, "You aren't near your trash can!");
+        }
+
+        Item item = currentPlayer.getInventory().getItemByName(inputs[0]);
+        if (item == null) {
+            return new Result(false, "You don't have the entered item!");
+        }
+        if (item instanceof Tool) {
+            return new Result(false, "You can't sell this item!");
+        }
+        
+        if (inputs[1] == null) {
+            switch (item.getItemType()) {
+                case AnimalProductType animalProductType -> {
+                    currentPlayer.getBankAccount().setFardaeiDollar(animalProductType.getPrice());
+                }   
+                case ArtisanProductType artisanProductType -> {
+                    currentPlayer.getBankAccount().setFardaeiDollar(artisanProductType.getSellPrice());
+                }
+                case CraftingMachineType craftingMachineType -> {
+                    if (craftingMachineType.getPrice() == null) {
+                        return new Result(false, "You can't sell this item!");
+                    }
+                    else {
+                        currentPlayer.getBankAccount().setFardaeiDollar(craftingMachineType.getPrice());
+                    }
+                }
+                case CropType cropType -> {
+                    currentPlayer.getBankAccount().setFardaeiDollar(cropType.getBaseSellPrice());
+                }
+                case FishType fishType -> {
+                    currentPlayer.getBankAccount().setFardaeiDollar(fishType.getPrice());
+                }
+                case FoodType foodType -> {
+                    
+                }
+                case ForagingCropType foragingCropType -> {
+                    currentPlayer.getBankAccount().setFardaeiDollar(foragingCropType.getBaseSellPrice());
+                }
+                case ForagingSeedType foragingSeedType -> {
+                    currentPlayer.getBankAccount().setFardaeiDollar(foragingSeedType.getPrice());
+                }
+                case FruitType fruitType -> {
+                    
+                }
+                case MaterialType materialType -> {
+                    
+                }
+                case MineralType mineralType -> {
+                    currentPlayer.getBankAccount().setFardaeiDollar(mineralType.getPrice());
+                }
+                default -> {
+                    return new Result(false, "You can't sell this item!");
+                }
+            }
+            
+            currentPlayer.getInventory().removeItem(item.getClass(), item.getNumber());
+        }
+        else {
+            int amount;
+            try {
+                amount = Integer.parseInt(inputs[1]);
+            } 
+            catch (NumberFormatException e) {
+                return new Result(false, "Invalid amount format!");
+            }
+
+            if (item.getNumber() < amount) {
+                return new Result(false, "You don't have that much item!");
+            }
+
+            switch (item.getItemType()) {
+                case AnimalProductType animalProductType -> {
+                    currentPlayer.getBankAccount().setFardaeiDollar(animalProductType.getPrice());
+                }   
+                case ArtisanProductType artisanProductType -> {
+                    currentPlayer.getBankAccount().setFardaeiDollar(artisanProductType.getSellPrice());
+                }
+                case CraftingMachineType craftingMachineType -> {
+                    if (craftingMachineType.getPrice() == null) {
+                        return new Result(false, "You can't sell this item!");
+                    }
+                    else {
+                        currentPlayer.getBankAccount().setFardaeiDollar(craftingMachineType.getPrice());
+                    }
+                }
+                case CropType cropType -> {
+                    currentPlayer.getBankAccount().setFardaeiDollar(cropType.getBaseSellPrice());
+                }
+                case FishType fishType -> {
+                    currentPlayer.getBankAccount().setFardaeiDollar(fishType.getPrice());
+                }
+                case FoodType foodType -> {
+                    
+                }
+                case ForagingCropType foragingCropType -> {
+                    currentPlayer.getBankAccount().setFardaeiDollar(foragingCropType.getBaseSellPrice());
+                }
+                case ForagingSeedType foragingSeedType -> {
+                    currentPlayer.getBankAccount().setFardaeiDollar(foragingSeedType.getPrice());
+                }
+                case FruitType fruitType -> {
+                    
+                }
+                case MaterialType materialType -> {
+                    
+                }
+                case MineralType mineralType -> {
+                    currentPlayer.getBankAccount().setFardaeiDollar(mineralType.getPrice());
+                }
+                default -> {
+                    return new Result(false, "You can't sell this item!");
+                }
+            }
+
+            currentPlayer.getInventory().removeItem(item.getClass(), amount);
+        }
+
+        return new Result(true, "You will recieve your money tomorrow!");
     }
 }

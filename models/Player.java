@@ -38,6 +38,8 @@ public class Player {
     private Player spouse = null;
     private final List<Housing> housings = new ArrayList<>();
     private static int nextHousingId = 1;
+    private int trashCanX;
+    private int trashCanY;
 
     public Player(String username, Gender gender) {
         this.username = username;
@@ -64,6 +66,22 @@ public class Player {
         }
 
         return null;
+    }
+
+    public int getTrashCanX() {
+        return this.trashCanX;
+    }
+
+    public int getTrashCanY() {
+        return this.trashCanY;
+    }
+
+    public void setTrashCanX(int x) {
+        this.trashCanX = x;
+    }
+
+    public void setTrashCanY(int y) {
+        this.trashCanY = y;
     }
 
     public void addTrade(Trade trade) {

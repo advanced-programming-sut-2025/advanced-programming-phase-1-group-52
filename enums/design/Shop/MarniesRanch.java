@@ -80,4 +80,13 @@ public enum MarniesRanch implements ShopEntry{
         this.price + "\nDescription: " + this.description + 
         "\n----------------------\n";
     }
+
+    public static MarniesRanch forAnimal(AnimalType animal) {
+        for (MarniesRanch entry : values()) {
+            if (animal.equals(entry.getAnimalType())) {
+                return entry;
+            }
+        }
+        throw new IllegalArgumentException("No shop entry for animal: " + animal);
+    }
 }
