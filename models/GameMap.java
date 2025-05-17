@@ -565,8 +565,18 @@ public class GameMap {
         StringBuilder mapString = new StringBuilder();
         for (int i = y; i <= y + size; i++) {
             for (int j = x; j <= x + size; j++) {
-                mapString.append(tiles[j][i].getType().getSymbol());
-                if (j == 29 || j == 59) mapString.append('|');
+                boolean player = false;
+                for (User user : App.getInstance().getCurrentGame().getPlayers()) {
+                    if (user.getPlayer().currentX() == i && user.getPlayer().currentY() == j) {
+                        mapString.append(App.getInstance().getCurrentGame().getPlayers().indexOf(user) + 1);
+                        player = true;
+                    }
+                }
+
+                if (!player) {
+                    mapString.append(tiles[j][i].getType().getSymbol());
+                    if (j == 29 || j == 59) mapString.append('|');
+                }
             }
 
             mapString.append('\n');

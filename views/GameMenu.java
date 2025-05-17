@@ -154,7 +154,7 @@ public class GameMenu implements AppMenu {
             System.out.println(controller.cheatAddBalance(matcher.group("amount")).Message());
         }
         else if ((matcher = GameMenuCommands.Sell.getMatcher(input)) != null) {
-
+            System.out.println(controller.sell(matcher.group("productName"), matcher.group("count")));
         }
         else if ((matcher = GameMenuCommands.ArtisanGet.getMatcher(input)) != null) {
             System.out.println(controller.getArtisanProduct(matcher.group("artisanName")).Message());
