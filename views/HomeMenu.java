@@ -31,6 +31,9 @@ public class HomeMenu implements AppMenu {
         else if ((matcher = HomeMenuCommands.CookingPrepare.getMatcher(input)) != null) {
             
         }
+        else if((matcher = HomeMenuCommands.CheatAddRecipe.getMatcher(input)) != null) {
+            System.out.println(controller.cheatAddRecipe(matcher.group("name")).Message());
+        }
         else if((matcher = HomeMenuCommands.Back.getMatcher(input)) != null) {
             System.out.println(controller.back().Message());
         }

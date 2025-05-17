@@ -100,7 +100,7 @@ public class StoreMenuController {
         ShopEntry item = null;
         Tile currentTile = map.getTile(game.getCurrentPlayer().currentX(), game.getCurrentPlayer().currentY());
         Shop shop = currentTile.getShop();
-        
+
         switch (currentTile.getShop().getShopType()) {
             case ShopType.Blacksmith: {
                 for (Blacksmith entry : Blacksmith.values()) {
@@ -148,7 +148,7 @@ public class StoreMenuController {
 
         try {
             amount = Integer.parseInt(amountString);
-        } 
+        }
         catch (NumberFormatException e) {
             return new Result(false, "Invalid amount format!");
         }
@@ -164,7 +164,7 @@ public class StoreMenuController {
                     game.getCurrentPlayer().getInventory().addItem(material);
                 }
                 case CraftingRecipes craftingRecipes -> {
-                    CraftingRecipe craftingRecipe = new CraftingRecipe(craftingRecipes);
+                    CraftingRecipe craftingRecipe = new CraftingRecipe(craftingRecipes, 1);
                     game.getCurrentPlayer().addCraftingRecipe(craftingRecipe);
                 }
                 case ForagingSeedType foragingSeedType -> {
@@ -172,7 +172,7 @@ public class StoreMenuController {
                     game.getCurrentPlayer().getInventory().addItem(seed);
                 }
                 case Backpacks backpacks -> {
-                    game.getCurrentPlayer().getInventory().setBackpack(backpacks);    
+                    game.getCurrentPlayer().getInventory().setBackpack(backpacks);
                 }
                 case CraftingMachineType craftingMachineType -> {
                     CraftingMachine craftingMachine = new CraftingMachine(craftingMachineType, amount);

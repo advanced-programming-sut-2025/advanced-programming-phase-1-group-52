@@ -48,7 +48,7 @@ public class User {
     }
 
     public Player getPlayer() {
-        return this.currentPlayer;
+        return currentPlayer;
     }
 
     public SecurityQuestion getSecurityQuestion() { return securityQuestion; }

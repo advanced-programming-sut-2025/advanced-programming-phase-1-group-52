@@ -8,12 +8,12 @@ public class Crop extends Item implements Growable {
     private ItemType cropType;
     private int dayPassed = 0;
     private int dayRemaining = 0;
-    private boolean isWateredToday = false;
-    private boolean isFertilizedToday = false;
+    private boolean isWateredToday = true;
+    private boolean isFertilizedToday = true;
     private boolean needsWaterToday = false;
     private int currentStage = 0;
     private boolean isReadyToHarvest = false;
-    private boolean isNotWateredForTwoDays = false;
+    private boolean isNotWateredForTwoDays = true;
     private boolean canBeHarvestAgain = true;
 
     public Crop(ItemType cropType, int number) {

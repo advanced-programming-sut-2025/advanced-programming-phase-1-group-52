@@ -215,7 +215,7 @@ public class Player {
         else{
             tile.setType(TileType.Shoveled);
         }
-        return new Result(true, "Tile with X: " + tile.getX() + " Y: " + tile.getY() + " has been shoved");
+        return new Result(true, "Tile with X: " + tile.getX() + " Y: " + tile.getY() + " has been shoveled");
     }
 
     public Result shearHandler(){
@@ -292,7 +292,7 @@ public class Player {
             this.inventory.addItem(new Material(MaterialType.Wood, 50));
             foraging();
             tile.setType(TileType.Earth);
-            return new Result(true, "Branches on Tile with X: " + tile.getX() + " Y: " + tile.getY() + " has been removed!");
+            return new Result(true, "Branches on Tile with X: " + tile.getX() + ", Y: " + tile.getY() + " has been removed!");
         }
         else if(tile.getType().equals(TileType.Tree)){
             tile.setType(TileType.Earth);
@@ -539,19 +539,19 @@ public class Player {
 
         if (level >= 1) {
             if (!hasRecipe(CraftingRecipes.CherryBombRecipe)) {
-                craftingRecipes.add(new CraftingRecipe(CraftingRecipes.CherryBombRecipe));
+                craftingRecipes.add(new CraftingRecipe(CraftingRecipes.CherryBombRecipe, 1));
             }
         }
 
         if (level >= 2) {
             if (!hasRecipe(CraftingRecipes.BombRecipe)) {
-                craftingRecipes.add(new CraftingRecipe(CraftingRecipes.BombRecipe));
+                craftingRecipes.add(new CraftingRecipe(CraftingRecipes.BombRecipe,1));
             }
         }
 
         if (level >= 3) {
             if (!hasRecipe(CraftingRecipes.MegaBombRecipe)) {
-                craftingRecipes.add(new CraftingRecipe(CraftingRecipes.MegaBombRecipe));
+                craftingRecipes.add(new CraftingRecipe(CraftingRecipes.MegaBombRecipe, 1));
             }
         }
     }
@@ -562,40 +562,40 @@ public class Player {
 
         if (level >= 1) {
             if (!this.craftingRecipes.contains(CraftingRecipes.SprinklerRecipe)) {
-                this.craftingRecipes.add(new CraftingRecipe(CraftingRecipes.SprinklerRecipe));
+                this.craftingRecipes.add(new CraftingRecipe(CraftingRecipes.SprinklerRecipe, 1));
             }
             if (!this.craftingRecipes.contains(CraftingRecipes.BeeHouseRecipe)) {
-                this.craftingRecipes.add(new CraftingRecipe(CraftingRecipes.BeeHouseRecipe));
+                this.craftingRecipes.add(new CraftingRecipe(CraftingRecipes.BeeHouseRecipe, 1));
             }
         }
 
         else if (level >= 2) {
             if (!this.craftingRecipes.contains(CraftingRecipes.QualitySprinklerRecipe)) {
-                this.craftingRecipes.add(new CraftingRecipe(CraftingRecipes.QualitySprinklerRecipe));
+                this.craftingRecipes.add(new CraftingRecipe(CraftingRecipes.QualitySprinklerRecipe,1));
             }
             if (!this.craftingRecipes.contains(CraftingRecipes.CheesePressRecipe)) {
-                this.craftingRecipes.add(new CraftingRecipe(CraftingRecipes.CheesePressRecipe));
+                this.craftingRecipes.add(new CraftingRecipe(CraftingRecipes.CheesePressRecipe,1));
             }
             if (!this.craftingRecipes.contains(CraftingRecipes.PreservesJarRecipe)) {
-                this.craftingRecipes.add(new CraftingRecipe(CraftingRecipes.PreservesJarRecipe));
+                this.craftingRecipes.add(new CraftingRecipe(CraftingRecipes.PreservesJarRecipe,1));
             }
             if (!this.craftingRecipes.contains(CraftingRecipes.DeluxeScarecrowRecipe)) {
-                this.craftingRecipes.add(new CraftingRecipe(CraftingRecipes.DeluxeScarecrowRecipe));
+                this.craftingRecipes.add(new CraftingRecipe(CraftingRecipes.DeluxeScarecrowRecipe,1));
             }
         }
 
         else if (level >= 3) {
             if (!this.craftingRecipes.contains(CraftingRecipes.IridiumSprinklerRecipe)) {
-                this.craftingRecipes.add(new CraftingRecipe(CraftingRecipes.IridiumSprinklerRecipe));
+                this.craftingRecipes.add(new CraftingRecipe(CraftingRecipes.IridiumSprinklerRecipe,1));
             }
             if (!this.craftingRecipes.contains(CraftingRecipes.KegRecipe)) {
-                this.craftingRecipes.add(new CraftingRecipe(CraftingRecipes.KegRecipe));
+                this.craftingRecipes.add(new CraftingRecipe(CraftingRecipes.KegRecipe,1));
             }
             if (!this.craftingRecipes.contains(CraftingRecipes.LoomRecipe)) {
-                this.craftingRecipes.add(new CraftingRecipe(CraftingRecipes.LoomRecipe));
+                this.craftingRecipes.add(new CraftingRecipe(CraftingRecipes.LoomRecipe,1));
             }
             if (!this.craftingRecipes.contains(CraftingRecipes.OilMakerRecipe)) {
-                this.craftingRecipes.add(new CraftingRecipe(CraftingRecipes.OilMakerRecipe));
+                this.craftingRecipes.add(new CraftingRecipe(CraftingRecipes.OilMakerRecipe,1));
             }
         }
     }
@@ -606,13 +606,13 @@ public class Player {
 
         if (level >= 1) {
             if (!this.craftingRecipes.contains(CraftingRecipes.CharcoalKilnRecipe)) {
-                this.craftingRecipes.add(new CraftingRecipe(CraftingRecipes.CharcoalKilnRecipe));
+                this.craftingRecipes.add(new CraftingRecipe(CraftingRecipes.CharcoalKilnRecipe,1));
             }
         }
 
         if (level >= 4) {
             if (!this.craftingRecipes.contains(CraftingRecipes.MysticTreeSeedRecipe)) {
-                this.craftingRecipes.add(new CraftingRecipe(CraftingRecipes.MysticTreeSeedRecipe));
+                this.craftingRecipes.add(new CraftingRecipe(CraftingRecipes.MysticTreeSeedRecipe,1));
             }
         }
     }
