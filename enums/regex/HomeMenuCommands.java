@@ -8,7 +8,8 @@ public enum HomeMenuCommands {
     Crafting("crafting craft (?<itemName>\\S+)"),
     CookingRefrigerator("^(\\s*)cooking(\\s+)refrigerator(\\s+)(put|pick)(\\s+)(?<item>\\S+)(\\s*)$"),
     CookingShowRecipes("^(\\s*)cooking(\\s+)show(\\s+)recipes(\\s*)$"),
-    CookingPrepare("^(\\s*)cooking(\\s+)prepare(\\s+)(?<recipeName>\\S+)(\\s*)$");
+    CookingPrepare("^(\\s*)cooking(\\s+)prepare(\\s+)(?<recipeName>\\S+)(\\s*)$"),
+    Back("^(\\s*)back");
 
     private final String pattern;
 

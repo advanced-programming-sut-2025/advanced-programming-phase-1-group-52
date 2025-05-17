@@ -10,7 +10,7 @@ public class Tile {
     private final int x;
     private final int y;
     private TileType type;
-    private final Player owner;
+    private Player owner;
     private Growable plant = null;
     private Tree tree = null;
     private Seed seed = null;

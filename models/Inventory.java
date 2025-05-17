@@ -87,7 +87,7 @@ public class Inventory {
     }
 
     public ArrayList<Item> getItems() {
-        return new ArrayList<>(items);
+        return items;
     }
 
     public Backpacks getBackpack() {

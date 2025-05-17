@@ -65,32 +65,41 @@ public class GameMenuController {
         User loggedInUser = App.getInstance().getCurrentUser();
 
         Player player1 = new Player(loggedInUser.getUsername(), loggedInUser.getGender());
-        player1.setOriginX(10);
-        player1.setOriginY(10);
+        player1.setOriginX(2);
+        player1.setOriginY(2);
+        player1.setCurrentX(2);
+        player1.setCurrentY(2);
         loggedInUser.setCurrentPlayer(player1);
         players.add(loggedInUser);
 
         Player player2 = new Player(user1.getUsername(), user1.getGender());
-        player2.setOriginX(80);
-        player2.setOriginY(10);
+        player2.setOriginX(84);
+        player2.setOriginY(2);
+        player2.setCurrentX(84);
+        player2.setCurrentY(2);
         user1.setCurrentPlayer(player2);
         players.add(user1);
 
         Player player3 = new Player(user2.getUsername(), user2.getGender());
-        player3.setOriginX(10);
-        player3.setOriginY(80);
+        player3.setOriginX(2);
+        player3.setOriginY(34);
+        player3.setCurrentX(2);
+        player3.setCurrentY(34);
         user2.setCurrentPlayer(player3);
         players.add(user2);
 
         Player player4 = new Player(user3.getUsername(), user3.getGender());
-        player4.setOriginX(80);
-        player4.setOriginY(80);
+        player4.setOriginX(64);
+        player4.setOriginY(34);
+        player4.setCurrentX(64);
+        player4.setCurrentY(34);
         user3.setCurrentPlayer(player4);
         players.add(user3);
 
         Game newGame = new Game(players);
         newGame.setMainPlayer(loggedInUser);
         newGame.setCurrentPlayer(loggedInUser.currentPlayer());
+        newGame.setCurrentUser(loggedInUser);
         App.getInstance().addGame(newGame);
         App.getInstance().setCurrentGame(newGame);
         this.setGame(newGame);
@@ -182,7 +191,7 @@ public class GameMenuController {
     } 
 
     public Result showTime() {
-        return new Result(true, "It's " + game.getTime().hour() + "O'clock");
+        return new Result(true, "It's " + game.getTime().hour() + " O'clock");
     }
 
     public Result showDate() {
@@ -263,7 +272,7 @@ public class GameMenuController {
         } catch (IllegalArgumentException e) {
             return new Result(false, "Invalid weather string");
         }
-        return new Result(true, "Tomorrow weather changed to" + game.getTomorrowWeather().name());
+        return new Result(true, "Tomorrow weather changed to " + game.getTomorrowWeather().name());
     }
 
     public Result buildGreenHouse(){
@@ -273,9 +282,10 @@ public class GameMenuController {
         }
         Material wood;
         if((wood = (Material) player.getInventory().findItemByType(MaterialType.Wood)) == null){
-            if(wood.getNumber() < 500){
-                return new Result(false, "you don't have enough wood");
-            }
+            return new Result(false, "you don't have any wood");
+        }
+        if(wood.getNumber() < 500){
+            return new Result(false, "you don't have enough wood");
         }
         player.getBankAccount().withdraw(1000);
         wood.setNumber(wood.getNumber() - 500);
@@ -306,7 +316,7 @@ public class GameMenuController {
         ArrayList<Tile> path = map.findWalkPath(currentPlayer.currentX(), currentPlayer.currentY(), x, y);
 
         if (path == null) {
-            return new Result(false, "You can not walk there!");
+            return new Result(false, "You can not walk there mate!");
         }
 
         int sumTurns = 0;
@@ -327,7 +337,17 @@ public class GameMenuController {
             return new Result(false, "You are too idiot to walk that much! You will faint!");
         }
 
+        currentPlayer.setCurrentX(x);
+        currentPlayer.setCurrentY(y);
+        currentPlayer.setEnergy(currentPlayer.getEnergy() - requiredEnergy);
         return new Result(true, "You made it!");
+    }
+
+    public Result cheatWalk(String xString, String yString) {
+        Player currentPlayer = game.getCurrentPlayer();
+        currentPlayer.setCurrentX(Integer.parseInt(xString));
+        currentPlayer.setCurrentY(Integer.parseInt(yString));
+        return new Result(true, "partab shodam :o");
     }
 
     public Result printMap(String xString, String yString, String sizeString) {
@@ -352,6 +372,11 @@ public class GameMenuController {
                 "tree : T\n" +
                 "shop : $\n" +
                 "NPC house : H");
+    }
+
+    public Result showPlayerCoordinates() {
+        Player currentPlayer = game.getCurrentPlayer();
+        return new Result(true, "player x: " + currentPlayer.currentX() + ", " + "player y: " + currentPlayer.currentY());
     }
 
     public Result energyShow() {
@@ -903,10 +928,13 @@ public class GameMenuController {
         Game game = App.getInstance().getCurrentGame();
         Player player = game.getCurrentPlayer();
         StringBuilder items = new StringBuilder();
-        for(Item item: player.getInventory().getItems()){
-            items.append(item.getName() + " x" + item.getNumber() + ", ");
+        if(player.getInventory().getItems() == null || player.getInventory().getItems().isEmpty()){
+            return new Result(false, "You have no items!");
         }
-        items.delete(items.length() - 2, items.length());
+        for(Item item: player.getInventory().getItems()){
+            items.append(item.getName() + " x" + item.getNumber() + "\n");
+        }
+        items.delete(items.length() - 1, items.length());
         return new Result(true, items.toString());
     }
 
