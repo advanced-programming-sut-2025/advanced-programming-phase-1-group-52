@@ -96,12 +96,12 @@ public class GameMenu implements AppMenu {
         else if ((matcher = GameMenuCommands.ToolUse.getMatcher(input)) != null) {
             System.out.println(controller.useTool(matcher.group("direction")).Message());
         }
-        else if ((matcher = GameMenuCommands.CraftInfo.getMatcher(input)) != null) {
-            System.out.println(controller.craftInfo(matcher.group("name")).Message());
-        }
-        else if ((matcher = GameMenuCommands.Plant.getMatcher(input)) != null) {
-            System.out.println(controller.plant(matcher.group("seed"), matcher.group("direction")).Message());
-        }
+//        else if ((matcher = GameMenuCommands.CraftInfo.getMatcher(input)) != null) {
+//            System.out.println(controller.craftInfo(matcher.group("name")).Message());
+//        }
+//        else if ((matcher = GameMenuCommands.Plant.getMatcher(input)) != null) {
+//            System.out.println(controller.plant(matcher.group("seed"), matcher.group("direction")).Message());
+//        }
         else if ((matcher = GameMenuCommands.ShowPlant.getMatcher(input)) != null) {
             System.out.println(controller.showPlant(matcher.group("x"),matcher.group("y")).Message());
         }

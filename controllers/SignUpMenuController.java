@@ -11,7 +11,7 @@ import models.User;
 import java.util.Scanner;
 import java.util.regex.Matcher;
 
-public class SignUpMenuController {
+public class    SignUpMenuController {
     public Result register(String username, String password, String passwordConfirm, String nickname, String email, String gender, Scanner scanner) {
         if (username.length() < 3) {
             return new Result(false, "Username must be at least 3 characters");

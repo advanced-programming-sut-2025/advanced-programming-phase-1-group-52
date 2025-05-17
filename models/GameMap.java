@@ -285,6 +285,14 @@ public class GameMap {
                 }
             }
         }
+
+        for (int i = 0; i < 90; i++) {
+            for (int j = 0; j < 60; j++) {
+                if (tiles[i][j] == null) {
+                    tiles[i][j] = new Tile(i, j, TileType.Earth, null);
+                }
+            }
+        }
     }
 
     public void setCurrentWeather(Weather currentWeather) {
@@ -482,23 +490,23 @@ public class GameMap {
         return mapString.toString();
     }
 
-    public void generateRandomForagingSeeds() {
-        for (int i = 0; i < 90; i++) {
-            for (int j = 0; j < 60; j++) {
-                Random rand = new Random();
-                int prob = rand.nextInt(10);
-                if (tiles[i][j].getType().equals(TileType.Shoveled) && prob == 0) {
-                    Game game = App.getInstance().getCurrentGame();
-                    List<ForagingSeedType> seeds = Arrays.stream(ForagingSeedType.values())
-                                .filter(seed -> seed.isForaging() && seed.getSeasons().contains(game.getDate().getCurrentSeason()))
-                                .collect(Collectors.toList());
-                    ForagingSeedType seedType = seeds.get(rand.nextInt(seeds.size()));
-
-                    tiles[i][j].setSeed(new Seed(seedType, 1));
-                }
-            }
-        }
-    }
+//    public void generateRandomForagingSeeds() {
+//        for (int i = 0; i < 90; i++) {
+//            for (int j = 0; j < 60; j++) {
+//                Random rand = new Random();
+//                int prob = rand.nextInt(10);
+//                if (tiles[i][j].getType().equals(TileType.Shoveled) && prob == 0) {
+//                    Game game = App.getInstance().getCurrentGame();
+//                    List<ForagingSeedType> seeds = Arrays.stream(ForagingSeedType.values())
+//                                .filter(seed -> seed.isForaging() && seed.getSeasons().contains(game.getDate().getCurrentSeason()))
+//                                .collect(Collectors.toList());
+//                    ForagingSeedType seedType = seeds.get(rand.nextInt(seeds.size()));
+//
+//                    tiles[i][j].setSeed(new Seed(seedType, 1));
+//                }
+//            }
+//        }
+//    }
 
     public void generatePlantsFromSeeds() {
         for (int i = 0; i < 90; i++) {
