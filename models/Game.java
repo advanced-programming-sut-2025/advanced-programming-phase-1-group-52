@@ -243,6 +243,8 @@ public class Game {
             randomizeTomorrowWeather();
             handlePlayersCoordinateInMorning();
             handleFaintedPlayers();
+            map.generateRandomForagingSeeds();
+            map.generatePlantsFromSeeds();
             eraseCrops();
             updateCrops();
             checkForLightning();
@@ -360,7 +362,7 @@ public class Game {
         this.currentUser = currentUser;
     }
 
-    private void eraseCrops(){
+    public void eraseCrops(){
         for(int i = 0; i < 90; i++) {
             for (int j = 0; j < 60; j++) {
                 Tile tile = map.getTile(i, j);
@@ -374,7 +376,7 @@ public class Game {
         }
     }
 
-    private void updateCrops(){
+    public void updateCrops(){
         for(int i = 0; i < 90; i++){
             for(int j = 0; j < 60; j++){
                 Tile tile = map.getTile(i, j);
@@ -396,13 +398,13 @@ public class Game {
                                     plant.setWateredToday(false);
                                 }
                             }
-                            else {
-                                System.out.println("error 1");
-                            }
+//                            else {
+//                                System.out.println("error 1");
+//                            }
                         }
-                        else{
-                            System.out.println("error 2");
-                        }
+//                        else{
+//                            System.out.println("error 2");
+//                        }
                     }
                 }
                 else if(tile.getType().equals(TileType.Tree)){
@@ -419,9 +421,9 @@ public class Game {
                                 fruit.setWateredToday(false);
                             }
                         }
-                        else {
-                            System.out.println("error 3");
-                        }
+//                        else {
+//                            System.out.println("error 3");
+//                        }
                     }
                 }
             }

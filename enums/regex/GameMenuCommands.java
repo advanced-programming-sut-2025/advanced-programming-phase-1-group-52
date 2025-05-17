@@ -82,7 +82,9 @@ public enum GameMenuCommands {
     ShowFishingSkill("show fishing skill"),
     ShowExtractionSkill("show extraction skill"),
     ShowForagingSkill("show foraging skill"),
-    ShowFarmingSkill("show farming skill"),;
+    ShowFarmingSkill("show farming skill"),
+    CheatAddRecipe("cheat add recipe -n (?<name>[\\S\\s]+)"),
+    PickItem("pick item -d (?<direction>[\\S\\s]+)"),;
 
     private final String pattern;
 

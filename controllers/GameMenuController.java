@@ -241,7 +241,12 @@ public class GameMenuController {
         game.getTime().setHour(Time.DAY_START);
 
         this.onSeasonChanged(seasonsPassed);
-
+        for(int i = 0; i < days; i++) {
+            game.randomizeTomorrowWeather();
+            game.updateCrops();
+            game.getMap().generateRandomForagingSeeds();
+            game.getMap().generatePlantsFromSeeds();
+        }
         return new Result(true,"date changed!");
     }
 
@@ -292,8 +297,12 @@ public class GameMenuController {
         for (int i = 0; i < 90; i++){
             for(int j = 0; j < 60; j++){
                 Tile tile = map.getTile(i,j);
+                if(tile.getOwner() == null){
+                    continue;
+                }
                 if(tile.getOwner().equals(player)){
                     if(tile.getType().equals(TileType.BrokenGreenHouse)){
+//                        System.out.println("hh");
                         tile.setType(TileType.GreenHouse);
                     }
                 }
@@ -999,10 +1008,13 @@ public class GameMenuController {
             return new Result(false, "Crop not found");
         }
         StringBuilder info = new StringBuilder();
-        info.append("Name: " + cropType.name()).append("\nSource: " + cropType.getSeedSource()).append("\nStages: ");
-        for(Integer stage : cropType.getGrowthStages()){
-            info.append(stage).append("-");
-        }
+        info.append("Name: " + cropType.name()).append("\nSource: " + cropType.getSeed()).append("\nStages: ");
+
+        info.append(cropType.getGrowthStages1());
+        info.append(cropType.getGrowthStages2());
+        info.append(cropType.getGrowthStages3());
+        info.append(cropType.getGrowthStages4());
+
         info.deleteCharAt(info.length() - 1);
         info.append("\nTotal Harvest Time: " + cropType.getTotalHarvestTime()).
                 append("\nOne Time: " + cropType.isOneTimeHarvest()).
@@ -1012,9 +1024,8 @@ public class GameMenuController {
                 append("\nBase Energy: " + cropType.getEnergy()).
                 append("\nBase Health: " + cropType.getBaseHealth()).
                 append(("\nSeason: "));
-        for(Season season : cropType.getSeasons()){
-            info.append(season.name()).append(", ");
-        }
+
+        info.append(cropType.getSeasons());
         info.deleteCharAt(info.length() - 1);
         info.append("\nCan Become Giant: " + cropType.canBecomeGiant());
         return new Result(true, info.toString());
@@ -1135,14 +1146,14 @@ public class GameMenuController {
             return new Result(false, "Fertilizer not found in inventory");
         }
 
-        if(fertilizer.getMaterialName().equals(MaterialType.BasicRetainingSoil.getDisplayName())){
+        if(fertilizer.getMaterialName().equals(MaterialType.BasicRetainingSoil.getName())){
             targetTile.getPlant().setFertilizedToday(true);
         }
-        else if(fertilizer.getMaterialName().equals(MaterialType.QualityRetainingSoil.getDisplayName())){
+        else if(fertilizer.getMaterialName().equals(MaterialType.QualityRetainingSoil.getName())){
             targetTile.getPlant().setFertilizedToday(true);
             targetTile.getPlant().growFaster();
         }
-        else if(fertilizer.getMaterialName().equals(MaterialType.DeluxeRetainingSoil.getDisplayName())){
+        else if(fertilizer.getMaterialName().equals(MaterialType.DeluxeRetainingSoil.getName())){
             targetTile.getPlant().setFertilizedToday(true);
             targetTile.getPlant().setWateredToday(true);
         }
@@ -1164,7 +1175,7 @@ public class GameMenuController {
         StringBuilder recipeString = new StringBuilder();
         recipeString.append(player.getUsername() + "'s crafting recipes:\n");
         for(CraftingRecipe craftingRecipe : playerCraftingRecipes) {
-            recipeString.append(craftingRecipe.getRecipeType().getDisplayName() + "\n");
+            recipeString.append(craftingRecipe.getRecipeType().getName() + "\n");
         }
         recipeString.deleteCharAt(recipeString.length() - 1);
         return new Result(true, recipeString.toString());
@@ -1225,9 +1236,12 @@ public class GameMenuController {
         Tile currentTile = map.getTile(player.currentX(), player.currentY());
         Tile targetTile = getTargetTile(currentTile, directionStr, map);
         if(targetTile.getItem() != null) {
-            return new Result(false, "ypu can not put item on this tile, it has another item");
+            return new Result(false, "you can not put item on this tile, it has another item");
         }
         Item item = findItem(itemName, player.getInventory().getItems());
+        if(item == null) {
+            return new Result(false, "there is no item named " + itemName + " in your inventory");
+        }
         targetTile.setItem(item);
         player.getInventory().getItems().remove(item);
         player.getInventory().addNumOfItems(-1);
@@ -1239,6 +1253,9 @@ public class GameMenuController {
         Player player = game.getCurrentPlayer();
         Tile currrentTile = map.getTile(player.currentX(), player.currentY());
         Tile targetTile = getTargetTile(currrentTile,directionStr,map);
+        if(player.getCurrentTool() == null){
+            return new Result(false, "please equip pickaxe");
+        }
         if(!player.getCurrentTool().getToolType().name().endsWith("Pickaxe")){
             return new Result(false, "you can not pick an item, change your current tool to pickaxe");
         }
@@ -1249,9 +1266,10 @@ public class GameMenuController {
             return new Result(false, "your inventory is full");
         }
         player.getInventory().addItem(targetTile.getItem());
+        Item pickedItem = targetTile.getItem();
         targetTile.setItem(null);
         player.getInventory().addNumOfItems(1);
-        return new Result(true, targetTile.getItem().getName() + " x" + targetTile.getItem().getNumber() + " picked successfully");
+        return new Result(true, pickedItem.getName() + " x" + pickedItem.getNumber() + " picked successfully");
     }
 
     public Result cheatAddItem(String itemName, String quantityStr) {
@@ -1610,26 +1628,26 @@ public class GameMenuController {
         return null;
     }
 
-//    private Crop findCropSeedInInventory(ArrayList<Item> items, String seedName) {
-//        for (Item item : items) {
-//            if (item instanceof Seed && item.getName().equals(seedName)) {
-//                CropType cropType = findCropTypeBySeed(seedName);
-//                if (cropType != null) {
-//                    return new Crop(cropType, 1);
-//                }
-//            }
-//        }
-//        return null;
-//    }
+    private Crop findCropSeedInInventory(ArrayList<Item> items, String seedName) {
+        for (Item item : items) {
+            if (item instanceof Seed && item.getName().equals(seedName)) {
+                CropType cropType = findCropTypeBySeed(seedName);
+                if (cropType != null) {
+                    return new Crop(cropType, 1);
+                }
+            }
+        }
+        return null;
+    }
 
-//    private CropType findCropTypeBySeed(String seedName) {
-//        for(CropType cropType : CropType.values()) {
-//            if(cropType.getSeedSource().name().equals(seedName)) {
-//                return cropType;
-//            }
-//        }
-//        return null;
-//    }
+    private CropType findCropTypeBySeed(String seedName) {
+        for(CropType cropType : CropType.values()) {
+            if(cropType.getSeed().name().equals(seedName)) {
+                return cropType;
+            }
+        }
+        return null;
+    }
 
     private FruitType findFruitTypeBySeed(String seedName) {
         for(FruitType fruitType : FruitType.values()) {
@@ -1823,11 +1841,11 @@ public class GameMenuController {
             return new Result(false, "Error constructing building: " + ex.getMessage());
         }
 
-        Cages cageType;
+        CageType cageType;
         if (carpEnum.getDisplayName().contains("Coop")) {
-            cageType = Cages.NormalCage;
+            cageType = CageType.NormalCage;
         } else {
-            cageType = Cages.NormalStable;
+            cageType = CageType.NormalBarn;
         }
         player.addHousing(cageType);
         return new Result(true,

@@ -2,6 +2,7 @@ package controllers;
 
 import enums.Menu;
 import enums.design.TileType;
+import enums.items.CraftingMachineType;
 import enums.items.CraftingRecipes;
 import enums.items.ItemType;
 import models.*;
@@ -13,28 +14,32 @@ import java.util.ArrayList;
 import java.util.Map;
 
 public class HomeMenuController {
-    private Game game = App.getInstance().getCurrentGame();
     public Result showCraftingRecipes(){
+        Game game = App.getInstance().getCurrentGame();
         Player player = game.getCurrentPlayer();
         ArrayList<CraftingRecipe> playerCraftingRecipes = player.getCraftingRecipe();
         StringBuilder recipeString = new StringBuilder();
         recipeString.append(player.getUsername() + "'s crafting recipes:\n");
         for(CraftingRecipe craftingRecipe : playerCraftingRecipes) {
-            recipeString.append(craftingRecipe.getRecipeType().getDisplayName() + "\n");
+            recipeString.append(craftingRecipe.getRecipeType().getName() + "\n");
         }
         recipeString.deleteCharAt(recipeString.length() - 1);
         return new Result(true, recipeString.toString());
     }
     public Result craftItem(String itemName) {
+        Game game = App.getInstance().getCurrentGame();
         Player player = game.getCurrentPlayer();
         GameMap map = game.getMap();
         Tile currentTile = map.getTile(player.currentX(), player.currentY());
-
+        CraftingMachineType machineType = findCraftingMachineType(itemName);
+        if(machineType == null) {
+            return new Result(false, "There is no machine with that name");
+        }
         if(!currentTile.getType().equals(TileType.House)) {
             return new Result(false, "You should be at home to craft item");
         }
 
-        CraftingRecipes recipeType = findCraftingRecipeType(itemName);
+        CraftingRecipes recipeType = findCraftingRecipeType(machineType.getName() + " Recipe");
         if(recipeType == null) {
             return new Result(false, "error");
         }
@@ -66,9 +71,21 @@ public class HomeMenuController {
         App.getInstance().setCurrentMenu(Menu.GameMenu);
         return new Result(true, "you are in game menu now!");
     }
+
+    public Result cheatAddRecipe(String recipeName){
+        Game game = App.getInstance().getCurrentGame();
+        Player player = game.getCurrentPlayer();
+        CraftingRecipes recipeType = findCraftingRecipeType(recipeName);
+        if(recipeType == null) {
+            return new Result(false, "error2");
+        }
+        CraftingRecipe recipe = new CraftingRecipe(recipeType,1);
+        player.getCraftingRecipe().add(recipe);
+        return new Result(true,recipe.getName() + " added successfully");
+    }
     private CraftingRecipes findCraftingRecipeType(String recipeName) {
         for(CraftingRecipes craftingRecipe : CraftingRecipes.values()) {
-            if(craftingRecipe.name().equals(recipeName)) {
+            if(craftingRecipe.getName().equals(recipeName)) {
                 return craftingRecipe;
             }
         }
@@ -85,6 +102,7 @@ public class HomeMenuController {
     }
 
     private Result isInventoryReadyToCraft(CraftingRecipes craftingRecipe) {
+        Game game = App.getInstance().getCurrentGame();
         Player player = game.getCurrentPlayer();
         Map<ItemType, Integer> neededIngredients = craftingRecipe.getIngredients();
         ArrayList<Item> playerItems = player.getInventory().getItems();
@@ -107,6 +125,7 @@ public class HomeMenuController {
     }
 
     private Result isReadySecond(CraftingRecipes craftingRecipe){
+        Game game = App.getInstance().getCurrentGame();
         Player player = game.getCurrentPlayer();
         Map<ItemType, Integer> neededIngredients = craftingRecipe.getIngredients();
         ArrayList<Item> playerItems = player.getInventory().getItems();
@@ -132,6 +151,15 @@ public class HomeMenuController {
         for(Item item : items){
             if(item.getItemType().equals(itemType)){
                 return item;
+            }
+        }
+        return null;
+    }
+
+    private CraftingMachineType findCraftingMachineType(String machineName) {
+        for(CraftingMachineType craftingMachineType : CraftingMachineType.values()) {
+            if(craftingMachineType.getName().equals(machineName)) {
+                return craftingMachineType;
             }
         }
         return null;

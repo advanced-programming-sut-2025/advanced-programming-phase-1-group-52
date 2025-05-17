@@ -48,7 +48,7 @@ public class User {
     }
 
     public Player getPlayer() {
-        return this.userPlayers.get(App.getInstance().getCurrentGame());
+        return currentPlayer;
     }
 
     public SecurityQuestion getSecurityQuestion() { return securityQuestion; }

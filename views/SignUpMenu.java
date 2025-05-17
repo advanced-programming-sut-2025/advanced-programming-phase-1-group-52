@@ -12,7 +12,6 @@ public class SignUpMenu implements AppMenu {
     public void checkInput(Scanner scanner) {
         String input = scanner.nextLine().trim();
         Matcher matcher;
-
         if ((matcher = SignUpMenuCommands.Register.getMatcher(input)) != null) {
             System.out.println(controller.register(
                     matcher.group("username").trim(),
@@ -22,7 +21,10 @@ public class SignUpMenu implements AppMenu {
                     matcher.group("email").trim(),
                     matcher.group("gender").trim(), scanner
             ).Message());
-        } else if ((matcher = SignUpMenuCommands.ShowCurrentMenu.getMatcher(input)) != null) {
+        }
+        else if((matcher = SignUpMenuCommands.GeneratePassword.getMatcher(input)) != null) {
+            System.out.println(controller.generatePassword().Message());
+        }else if ((matcher = SignUpMenuCommands.ShowCurrentMenu.getMatcher(input)) != null) {
             controller.showCurrentMenu();
         } else if ((matcher = SignUpMenuCommands.MenuExit.getMatcher(input)) != null) {
             controller.menuExit();

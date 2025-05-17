@@ -43,10 +43,9 @@ import models.item.Seed;
 import models.item.Tool;
 
 public class StoreMenuController {
-    private final Game game = App.getInstance().getCurrentGame();
-    private final GameMap map = App.getInstance().getCurrentGame().getMap();
-
     public Result showAllProducts() {
+        Game game = App.getInstance().getCurrentGame();
+        GameMap map = App.getInstance().getCurrentGame().getMap();
         StringBuilder stringBuilder = new StringBuilder();
         Tile currentTile = map.getTile(game.getCurrentPlayer().currentX(), game.getCurrentPlayer().currentY());
         switch (currentTile.getShop().getShopType()) {
@@ -94,11 +93,13 @@ public class StoreMenuController {
     }
 
     public Result purchase(String name, String amountString) {
+        Game game = App.getInstance().getCurrentGame();
+        GameMap map = App.getInstance().getCurrentGame().getMap();
         int amount;
         ShopEntry item = null;
         Tile currentTile = map.getTile(game.getCurrentPlayer().currentX(), game.getCurrentPlayer().currentY());
         Shop shop = currentTile.getShop();
-        
+
         switch (currentTile.getShop().getShopType()) {
             case ShopType.Blacksmith: {
                 for (Blacksmith entry : Blacksmith.values()) {
@@ -146,7 +147,7 @@ public class StoreMenuController {
 
         try {
             amount = Integer.parseInt(amountString);
-        } 
+        }
         catch (NumberFormatException e) {
             return new Result(false, "Invalid amount format!");
         }
@@ -162,7 +163,7 @@ public class StoreMenuController {
                     game.getCurrentPlayer().getInventory().addItem(material);
                 }
                 case CraftingRecipes craftingRecipes -> {
-                    CraftingRecipe craftingRecipe = new CraftingRecipe(craftingRecipes);
+                    CraftingRecipe craftingRecipe = new CraftingRecipe(craftingRecipes, 1);
                     game.getCurrentPlayer().addCraftingRecipe(craftingRecipe);
                 }
                 case ForagingSeedType foragingSeedType -> {
@@ -170,7 +171,7 @@ public class StoreMenuController {
                     game.getCurrentPlayer().getInventory().addItem(seed);
                 }
                 case Backpacks backpacks -> {
-                    game.getCurrentPlayer().getInventory().setBackpack(backpacks);    
+                    game.getCurrentPlayer().getInventory().setBackpack(backpacks);
                 }
                 case CraftingMachineType craftingMachineType -> {
                     CraftingMachine craftingMachine = new CraftingMachine(craftingMachineType, amount);
@@ -198,6 +199,8 @@ public class StoreMenuController {
     }
 
     public Result showAvailableProducts() {
+        Game game = App.getInstance().getCurrentGame();
+        GameMap map = App.getInstance().getCurrentGame().getMap();
         Tile currentTile = map.getTile(game.getCurrentPlayer().currentX(), game.getCurrentPlayer().currentY());
         Shop shop = currentTile.getShop();
         StringBuilder stringBuilder = new StringBuilder();
@@ -233,6 +236,8 @@ public class StoreMenuController {
     }
 
     public Result buyAnimal(String animalKey, String housingIdString, String givenName) {
+        Game game = App.getInstance().getCurrentGame();
+        GameMap map = App.getInstance().getCurrentGame().getMap();
         int housingId = Integer.parseInt(housingIdString);
 
         Shop ranch = new Shop(ShopType.MarniesRanch);
@@ -287,6 +292,8 @@ public class StoreMenuController {
     }
 
     public Result buildBarnOrCoop(String buildingKey, String xString, String yString) {
+        Game game = App.getInstance().getCurrentGame();
+        GameMap map = App.getInstance().getCurrentGame().getMap();
         int x = Integer.parseInt(xString);
         int y = Integer.parseInt(yString);
 
@@ -372,6 +379,8 @@ public class StoreMenuController {
     }
 
     public Result upgradeTool(String toolName) {
+        Game game = App.getInstance().getCurrentGame();
+        GameMap map = App.getInstance().getCurrentGame().getMap();
         Tile currentTile = map.getTile(game.getCurrentPlayer().currentX(), game.getCurrentPlayer().currentY());
         Shop shop = currentTile.getShop();
 

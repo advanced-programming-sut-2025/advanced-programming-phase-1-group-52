@@ -9,11 +9,11 @@ public class Fruit extends Item implements Growable {
     private int currentStage = 0;
     private int dayPassed = 0;
     private int dayRemaining = 0;
-    private boolean isWateredToday = false;
-    private boolean isFertilizedToday = false;
+    private boolean isWateredToday = true;
+    private boolean isFertilizedToday = true;
     private boolean needsWaterToday = false;
     private boolean isReadyToHarvest = false;
-    private boolean isNotWateredForTwoDays = false;
+    private boolean isNotWateredForTwoDays = true;
 
     public Fruit(FruitType fruitType, int number) {
         super(fruitType, number);
