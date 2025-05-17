@@ -391,7 +391,7 @@ public class GameMap {
         }
     }
 
-    private void generateBuilding(
+    public void generateBuilding(
             ArrayList<Player> players, int playerIndex, TileType buildingType,
             int xStart, int xEnd, int yStart, int yEnd
     ) {
@@ -628,5 +628,15 @@ public class GameMap {
                 }
             }
         }
+    }
+
+    public boolean isPlantThere(int xStart, int xEnd, int yStart, int yEnd) {
+        for (int i = xStart; i <= xEnd; i++) {
+            for (int j = yStart; j <= yEnd; j++) {
+                if (tiles[i][j].getPlant() != null && tiles[i][j].getTree() == null) return false;
+            }
+        }
+
+        return true;
     }
 }

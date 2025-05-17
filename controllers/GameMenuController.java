@@ -519,9 +519,6 @@ public class GameMenuController {
         }
 
         switch (quest.getDemand()) {
-            case AnimalProductType animalProductType -> {
-                currentPlayer.getInventory().removeItem(AnimalProduct.class, quest.getDemandAmount());
-            }
             case FoodType foodType -> {
                 currentPlayer.getInventory().removeItem(Food.class, quest.getDemandAmount());
             }
@@ -680,11 +677,6 @@ public class GameMenuController {
 
         
         switch (item) {
-            case AnimalProduct animalProduct -> {
-                game.getCurrentPlayer().getInventory().removeItem(animalProduct.getClass(), itemAmount);
-                AnimalProduct newAnimalProduct = new AnimalProduct(animalProduct.getAnimalType(), itemAmount);
-                receiver.getInventory().addItem(newAnimalProduct);
-            }
             case Fish fish -> {
                 game.getCurrentPlayer().getInventory().removeItem(fish.getClass(), itemAmount);
                 Fish newFish = new Fish(fish.getFishType(), itemAmount);
