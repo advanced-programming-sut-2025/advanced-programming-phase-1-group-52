@@ -1,5 +1,6 @@
 package controllers;
 
+import enums.Menu;
 import enums.design.TileType;
 import enums.items.CraftingRecipes;
 import enums.items.ItemType;
@@ -61,6 +62,10 @@ public class HomeMenuController {
         return new Result(true,craftingProduct.getName() + " crafted successfully");
     }
 
+    public Result back(){
+        App.getInstance().setCurrentMenu(Menu.GameMenu);
+        return new Result(true, "you are in game menu now!");
+    }
     private CraftingRecipes findCraftingRecipeType(String recipeName) {
         for(CraftingRecipes craftingRecipe : CraftingRecipes.values()) {
             if(craftingRecipe.name().equals(recipeName)) {
@@ -131,4 +136,5 @@ public class HomeMenuController {
         }
         return null;
     }
+
 }

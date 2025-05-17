@@ -26,7 +26,7 @@ public class Player {
     private final ArrayList<Talk> talks;
     private ArrayList<CraftingRecipe> craftingRecipes;
     private ArrayList<CookingRecipe> cookingRecipes;
-    private int energy = 200;
+    private int energy;
     private House house;
     private int originX;
     private int originY;
@@ -56,6 +56,7 @@ public class Player {
         this.notifications = new ArrayList<>();
         this.craftingRecipes = new ArrayList<>();
         this.cookingRecipes = new ArrayList<>();
+        this.energy = 200;
         for(Skills skill : Skills.values()){
             this.skills.put(skill, new SkillData());
         }
@@ -408,7 +409,7 @@ public class Player {
     }
 
     public void setCurrentX(int currentX) {
-        this.currentX = Player.this.currentX;
+        this.currentX = currentX;
     }
 
     public boolean checkFaint (){
@@ -495,7 +496,7 @@ public class Player {
     private void giveStarterTools() {
         List<Tool> starterTools = StarterKit.getStarterTools();
         for (Tool tool : starterTools) {
-            inventory.addItem(tool);
+            inventory.getItems().add(tool);
         }
     }
 
