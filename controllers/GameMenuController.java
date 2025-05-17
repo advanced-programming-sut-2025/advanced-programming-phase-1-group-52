@@ -61,26 +61,26 @@ public class GameMenuController {
         User loggedInUser = App.getInstance().getCurrentUser();
 
         Player player1 = new Player(loggedInUser.getUsername(), loggedInUser.getGender());
-        player1.setOriginX(10);
-        player1.setOriginY(10);
+        player1.setOriginX(2);
+        player1.setOriginY(2);
         loggedInUser.setCurrentPlayer(player1);
         players.add(loggedInUser);
 
         Player player2 = new Player(user1.getUsername(), user1.getGender());
-        player2.setOriginX(80);
-        player2.setOriginY(10);
+        player2.setOriginX(84);
+        player2.setOriginY(2);
         user1.setCurrentPlayer(player2);
         players.add(user1);
 
         Player player3 = new Player(user2.getUsername(), user2.getGender());
-        player3.setOriginX(10);
-        player3.setOriginY(80);
+        player3.setOriginX(2);
+        player3.setOriginY(34);
         user2.setCurrentPlayer(player3);
         players.add(user2);
 
         Player player4 = new Player(user3.getUsername(), user3.getGender());
-        player4.setOriginX(80);
-        player4.setOriginY(80);
+        player4.setOriginX(64);
+        player4.setOriginY(34);
         user3.setCurrentPlayer(player4);
         players.add(user3);
 
@@ -226,12 +226,19 @@ public class GameMenuController {
         return new Result(true,game.getDate().getCurrentSeason().name());
     }
 
-    public Result lightningHandling() {
-        return new Result(true, "Lightning handling");
-    }
-
     public Result cheatLightning(String xString, String yString) {
-        return new Result(true, "Lightning handling");
+        int x, y;
+
+        try {
+            x = Integer.parseInt(xString);
+            y = Integer.parseInt(yString);
+        } 
+        catch (NumberFormatException e) {
+            return new Result(false, "Invalid number format!");
+        }
+
+        Result result = game.getMap().cheatLightning(x, y);
+        return result;
     }
 
     public Result showWeather() {
@@ -1478,8 +1485,7 @@ public class GameMenuController {
     private String toolListMaker(ArrayList<Item> tools) {
         StringBuilder toolList = new StringBuilder();
         for (Item item : tools) {
-            if (item instanceof Tool) {
-                Tool tool = (Tool) item;
+            if (item instanceof Tool tool) {
                 toolList.append(tool.getToolType().name())
                         .append(" x").append(tool.getNumber())
                         .append("\n");
@@ -1560,8 +1566,8 @@ public class GameMenuController {
 
     private WateringCan findWateringCanInInventory(ArrayList<Item> items) {
         for (Item item : items) {
-            if (item instanceof WateringCan) {
-                return (WateringCan) item;
+            if (item instanceof WateringCan wateringCan) {
+                return wateringCan;
             }
         }
         return null;
@@ -1640,9 +1646,9 @@ public class GameMenuController {
 
     private CraftingMachine findCraftingMachineInInventory(CraftingMachineType craftingProductType, ArrayList<Item> items) {
         for(Item item : items) {
-            if(item instanceof CraftingMachine) {
+            if(item instanceof CraftingMachine craftingMachine) {
                 if(item.getItemType().equals(craftingProductType)) {
-                    return (CraftingMachine) item;
+                    return craftingMachine;
                 }
             }
         }

@@ -125,6 +125,87 @@ public class Game {
         return null;
     }
 
+    public void crowsAttack() {
+        Random rand = new Random();
+        if (rand.nextInt() == 0) {
+            int numPlants = 0;
+            Tile[][] tiles = this.map.getTiles();
+            ArrayList<Tile> targetTiles = new ArrayList<>();
+            for (int i = 0; i < 30; i++) {
+                for (int j = 0; j < 30; j++) {
+                    if (tiles[i][j].getPlant() != null) {
+                        numPlants++;
+                        targetTiles.add(tiles[i][j]);
+                    }
+                }
+            }
+
+            for (int i = 0; i < numPlants / 16; i++) {
+                targetTiles.get(rand.nextInt(targetTiles.size())).setPlant(null);
+            }
+            
+            numPlants = 0;
+            targetTiles = new ArrayList<>();
+
+            for (int i = 60; i < 90; i++) {
+                for (int j = 0; j < 30; j++) {
+                    if (tiles[i][j].getPlant() != null) {
+                        numPlants++;
+                        targetTiles.add(tiles[i][j]);
+                    }
+                }
+            }
+
+            for (int i = 0; i < numPlants / 16; i++) {
+                targetTiles.get(rand.nextInt(targetTiles.size())).setPlant(null);
+            }
+
+            numPlants = 0;
+            targetTiles = new ArrayList<>();
+
+            for (int i = 0; i < 30; i++) {
+                for (int j = 30; j < 60; j++) {
+                    if (tiles[i][j].getPlant() != null) {
+                        numPlants++;
+                        targetTiles.add(tiles[i][j]);
+                    }
+                }
+            }
+
+            for (int i = 0; i < numPlants / 16; i++) {
+                targetTiles.get(rand.nextInt(targetTiles.size())).setPlant(null);
+            }
+
+            numPlants = 0;
+            targetTiles = new ArrayList<>();
+
+            for (int i = 60; i < 90; i++) {
+                for (int j = 30; j < 60; j++) {
+                    if (tiles[i][j].getPlant() != null) {
+                        numPlants++;
+                        targetTiles.add(tiles[i][j]);
+                    }
+                }
+            }
+
+            for (int i = 0; i < numPlants / 16; i++) {
+                targetTiles.get(rand.nextInt(targetTiles.size())).setPlant(null);
+            }
+        }
+    }
+
+    public void checkForLightning() {
+        if (this.getTomorrowWeather().equals(Weather.Stormy)) {
+            Random rand = new Random();
+            if (rand.nextInt(5) == 0) {
+                this.getMap().lightning(0);
+                this.getMap().lightning(1);
+                this.getMap().lightning(2);
+                this.getMap().lightning(3);
+            }
+        }
+    }
+
     public void timePassed() {
         int dayPassed = this.time.addHours(1);
         updateArtisanProduct();
@@ -138,6 +219,8 @@ public class Game {
             handleFaintedPlayers();
             eraseCrops();
             updateCrops();
+            checkForLightning();
+            crowAttack();
         }
     }
 

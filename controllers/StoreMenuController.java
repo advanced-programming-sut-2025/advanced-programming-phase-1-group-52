@@ -19,6 +19,7 @@ import enums.items.CraftingRecipes;
 import enums.items.FoodType;
 import enums.items.ForagingSeedType;
 import enums.items.MaterialType;
+import enums.items.ToolType;
 import java.util.ArrayList;
 import java.util.HashMap;
 import models.App;
@@ -36,8 +37,10 @@ import models.item.CookingRecipe;
 import models.item.CraftingMachine;
 import models.item.CraftingRecipe;
 import models.item.Food;
+import models.item.Item;
 import models.item.Material;
 import models.item.Seed;
+import models.item.Tool;
 
 public class StoreMenuController {
     private final Game game = App.getInstance().getCurrentGame();
@@ -366,5 +369,157 @@ public class StoreMenuController {
         return new Result(true,
                 carpEnum.getDisplayName() + " successfully built at (" + x + "," + y + ")."
         );
+    }
+
+    public Result upgradeTool(String toolName) {
+        Tile currentTile = map.getTile(game.getCurrentPlayer().currentX(), game.getCurrentPlayer().currentY());
+        Shop shop = currentTile.getShop();
+
+        if (!shop.getShopType().equals(ShopType.Blacksmith)) {
+            return new Result(false, "You should be at blacksmith's shop to upgrade tools!");
+        }
+
+        Tool tool = game.getCurrentPlayer().getInventory().getToolByName(toolName);
+        if (tool == null) {
+            return new Result(false, "Invalid tool name!");
+        }
+
+        if (tool.isMax()) {
+            return new Result(false, "Already max level!");
+        }
+
+        switch (tool.getLevel()) {
+            case 0 -> {
+                if (game.getCurrentPlayer().getBankAccount().getBalance() < 2000) {
+                    return new Result(false, "You don't have enough money!");
+                }
+
+                Item bar = game.getCurrentPlayer().getInventory().getItemByName("Copper bar");
+                if (bar == null) {
+                    return new Result(false, "You don't have any Copper bar!");
+                }
+                if (bar.getNumber() < 5) {
+                    return new Result(false, "You don't have enough Copper bars!");
+                }
+
+                game.getCurrentPlayer().getInventory().remove(MaterialType.CopperBar, 5);
+                game.getCurrentPlayer().getBankAccount().withdraw(2000);
+                tool.setLevel(1);
+
+                if (tool.getItemType().getName().contains("hoe")) {
+                    tool.setItemType(ToolType.CopperHoe);
+                }
+                else if (tool.getItemType().getName().contains("pickaxe")) {
+                    tool.setItemType(ToolType.CopperPickaxe);
+                }
+                else if (tool.getItemType().getName().contains("axe")) {
+                    tool.setItemType(ToolType.CopperAxe);
+                }
+                else if (tool.getItemType().getName().contains("can")) {
+                    tool.setItemType(ToolType.CopperWateringCan);
+                }
+
+                return new Result(true, "Tool upgraded!");
+            }
+            case 1 -> {
+                if (game.getCurrentPlayer().getBankAccount().getBalance() < 5000) {
+                    return new Result(false, "You don't have enough money!");
+                }
+
+                Item bar = game.getCurrentPlayer().getInventory().getItemByName("Iron bar");
+                if (bar == null) {
+                    return new Result(false, "You don't have any Iron bar!");
+                }
+                if (bar.getNumber() < 5) {
+                    return new Result(false, "You don't have enough Iron bars!");
+                }
+
+                game.getCurrentPlayer().getInventory().remove(MaterialType.IronBar, 5);
+                game.getCurrentPlayer().getBankAccount().withdraw(5000);
+                tool.setLevel(2);
+
+                if (tool.getItemType().getName().contains("hoe")) {
+                    tool.setItemType(ToolType.IronicHoe);
+                }
+                else if (tool.getItemType().getName().contains("pickaxe")) {
+                    tool.setItemType(ToolType.IronicPickaxe);
+                }
+                else if (tool.getItemType().getName().contains("axe")) {
+                    tool.setItemType(ToolType.IronicAxe);
+                }
+                else if (tool.getItemType().getName().contains("can")) {
+                    tool.setItemType(ToolType.IronicWateringCan);
+                }
+
+                return new Result(true, "Tool upgraded!");
+            }
+            case 2 -> {
+                if (game.getCurrentPlayer().getBankAccount().getBalance() < 10000) {
+                    return new Result(false, "You don't have enough money!");
+                }
+
+                Item bar = game.getCurrentPlayer().getInventory().getItemByName("Gold bar");
+                if (bar == null) {
+                    return new Result(false, "You don't have any Gold bar!");
+                }
+                if (bar.getNumber() < 5) {
+                    return new Result(false, "You don't have enough Gold bars!");
+                }
+
+                game.getCurrentPlayer().getInventory().remove(MaterialType.GoldBar, 5);
+                game.getCurrentPlayer().getBankAccount().withdraw(10000);
+                tool.setLevel(3);
+
+                if (tool.getItemType().getName().contains("hoe")) {
+                    tool.setItemType(ToolType.GoldenHoe);
+                }
+                else if (tool.getItemType().getName().contains("pickaxe")) {
+                    tool.setItemType(ToolType.GoldenPickaxe);
+                }
+                else if (tool.getItemType().getName().contains("axe")) {
+                    tool.setItemType(ToolType.GoldenAxe);
+                }
+                else if (tool.getItemType().getName().contains("can")) {
+                    tool.setItemType(ToolType.GoldenWateringCan);
+                }
+
+                return new Result(true, "Tool upgraded!");
+            }
+            case 3 -> {
+                if (game.getCurrentPlayer().getBankAccount().getBalance() < 25000) {
+                    return new Result(false, "You don't have enough money!");
+                }
+
+                Item bar = game.getCurrentPlayer().getInventory().getItemByName("Iridium bar");
+                if (bar == null) {
+                    return new Result(false, "You don't have any Iridium bar!");
+                }
+                if (bar.getNumber() < 5) {
+                    return new Result(false, "You don't have enough Iridium bars!");
+                }
+
+                game.getCurrentPlayer().getInventory().remove(MaterialType.IridiumBar, 5);
+                game.getCurrentPlayer().getBankAccount().withdraw(25000);
+                tool.setLevel(4);
+
+                if (tool.getItemType().getName().contains("hoe")) {
+                    tool.setItemType(ToolType.IridiumHoe);
+                }
+                else if (tool.getItemType().getName().contains("pickaxe")) {
+                    tool.setItemType(ToolType.IridiumPickaxe);
+                }
+                else if (tool.getItemType().getName().contains("axe")) {
+                    tool.setItemType(ToolType.IridiumAxe);
+                }
+                else if (tool.getItemType().getName().contains("can")) {
+                    tool.setItemType(ToolType.IridiumWateringCan);
+                }
+
+                return new Result(true, "Tool upgraded!");
+            }
+            default -> {
+                return new Result(false, "Already max level!");
+            }
+        }
     }
 }
