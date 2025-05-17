@@ -8,6 +8,10 @@ import models.App;
 import models.Result;
 import models.User;
 
+import java.security.SecureRandom;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Scanner;
 import java.util.regex.Matcher;
 
@@ -112,5 +116,35 @@ public class    SignUpMenuController {
     public Result gotoLoginMenu(){
         App.getInstance().setCurrentMenu(Menu.LoginMenu);
         return new Result(true, "you are in login menu now!");
+    }
+
+    public Result generatePassword() {
+        String lowerCase = "abcdefghijklmnopqrstuvwxyz";
+        String upperCase = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        String digits = "0123456789";
+        String specialChars = "?><,\"';:\\/|][}{+=)(*&^%$#!";
+
+        String allChars = lowerCase + upperCase + digits + specialChars;
+
+        SecureRandom random = new SecureRandom();
+        List<Character> passwordChars = new ArrayList<>();
+
+        // Ensure at least one from each required group
+        passwordChars.add(lowerCase.charAt(random.nextInt(lowerCase.length())));
+        passwordChars.add(upperCase.charAt(random.nextInt(upperCase.length())));
+        passwordChars.add(digits.charAt(random.nextInt(digits.length())));
+        passwordChars.add(specialChars.charAt(random.nextInt(specialChars.length())));
+
+        for (int i = 4; i < 8; i++) {
+            passwordChars.add(allChars.charAt(random.nextInt(allChars.length())));
+        }
+        Collections.shuffle(passwordChars, random);
+
+        StringBuilder password = new StringBuilder();
+        for (char c : passwordChars) {
+            password.append(c);
+        }
+
+        return new Result(true, password.toString());
     }
 }

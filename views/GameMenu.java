@@ -102,12 +102,12 @@ public class GameMenu implements AppMenu {
         else if((matcher = GameMenuCommands.CheatWalk.getMatcher(input)) != null) {
             System.out.println(controller.cheatWalk(matcher.group("x"), matcher.group("y")).Message());
         }
-//        else if ((matcher = GameMenuCommands.CraftInfo.getMatcher(input)) != null) {
-//            System.out.println(controller.craftInfo(matcher.group("name")).Message());
-//        }
-//        else if ((matcher = GameMenuCommands.Plant.getMatcher(input)) != null) {
-//            System.out.println(controller.plant(matcher.group("seed"), matcher.group("direction")).Message());
-//        }
+        else if ((matcher = GameMenuCommands.CraftInfo.getMatcher(input)) != null) {
+            System.out.println(controller.craftInfo(matcher.group("name")).Message());
+        }
+        else if ((matcher = GameMenuCommands.Plant.getMatcher(input)) != null) {
+            System.out.println(controller.plant(matcher.group("seed"), matcher.group("direction")).Message());
+        }
         else if ((matcher = GameMenuCommands.ShowPlant.getMatcher(input)) != null) {
             System.out.println(controller.showPlant(matcher.group("x"),matcher.group("y")).Message());
         }
@@ -230,6 +230,24 @@ public class GameMenu implements AppMenu {
         }
         else if((matcher = GameMenuCommands.ExitGame.getMatcher(input)) != null) {
             System.out.println(controller.exitGame().Message());
+        }
+        else if((matcher = GameMenuCommands.ShowExtractionSkill.getMatcher(input)) != null) {
+            System.out.println(controller.showExtractionSkill().Message());
+        }
+        else if((matcher = GameMenuCommands.ShowForagingSkill.getMatcher(input)) != null) {
+            System.out.println(controller.showForagingSkill().Message());
+        }
+        else if((matcher = GameMenuCommands.ShowFarmingSkill.getMatcher(input)) != null) {
+            System.out.println(controller.showFarmingSkill().Message());
+        }
+        else if ((matcher = GameMenuCommands.ShowFishingSkill.getMatcher(input)) != null) {
+            System.out.println(controller.showFishingSkill().Message());
+        }
+        else if((matcher = GameMenuCommands.PickItem.getMatcher(input)) != null) {
+            System.out.println(controller.pickItem(matcher.group("direction")).Message());
+        }
+        else if((matcher = GameMenuCommands.Plant.getMatcher(input)) != null) {
+            System.out.println(controller.plant(matcher.group("seed"), matcher.group("direction")).Message());
         }
         else {
             System.out.println("Invalid command");

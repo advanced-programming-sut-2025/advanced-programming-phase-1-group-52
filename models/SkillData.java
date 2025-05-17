@@ -6,7 +6,7 @@ public class SkillData {
 
     public SkillData() {
         this.experience = 0;
-        this.level = 0;
+        this.level = 1;
     }
 
     public void addExperience(int amount) {

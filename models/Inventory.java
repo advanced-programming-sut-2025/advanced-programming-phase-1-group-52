@@ -40,7 +40,7 @@ public class Inventory {
 
     public boolean addItem(Item newItem) {
         for (Item item : items) {
-            if(item.getItemType().equals(newItem.getItemType())) {
+            if(item.getItemType().equals(newItem.getItemType()) || item.getName().equals(newItem.getName())) {
                 item.setNumber(item.getNumber() + newItem.getNumber());
                 return true;
             }
@@ -51,10 +51,9 @@ public class Inventory {
                 this.isFull = true;
                 return false;
             }
-            this.items.add(newItem);
-            this.numOfItems += 1;
-            return true;
         }
+        this.items.add(newItem);
+        this.numOfItems += 1;
         return false;
     }
 

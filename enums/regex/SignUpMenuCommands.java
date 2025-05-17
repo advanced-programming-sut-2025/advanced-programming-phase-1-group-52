@@ -18,7 +18,7 @@ public enum SignUpMenuCommands{
     ValidSpecial(".*[!@#$%^&*()].*"),
     ValidEmail("[a-zA-Z0-9_\\.]+@[a-zA-Z0-9_\\.]+\\.[a-zA-Z0-9_\\.]+"),
     GoToLoginMenu("go to login menu"),
-    ;
+    GeneratePassword("generate password"),;
 
 
     private final String pattern;

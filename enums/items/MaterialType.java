@@ -3,11 +3,11 @@ package enums.items;
 
 public enum MaterialType implements ItemType {
     
-    Egg("Egg"),
-    Milk("Milk"),
-    Cheese("Cheese"),
-    Sugar("Sugar"),
-    Oil("Oil"),
+    Egg("egg"),
+    Milk("milk"),
+    Cheese("cheese"),
+    Sugar("sugar"),
+    Oil("oil"),
 
     // Crops
     Wheat("Wheat"),
@@ -112,10 +112,6 @@ public enum MaterialType implements ItemType {
 
     MaterialType(String name) {
         this.name = name;
-    }
-
-    public String getDisplayName() {
-        return name;
     }
 
     @Override
