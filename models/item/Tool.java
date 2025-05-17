@@ -1,6 +1,5 @@
 package models.item;
 
-import enums.items.MaterialType;
 import enums.items.ToolType;
 
 public class Tool extends Item{
@@ -27,9 +26,6 @@ public class Tool extends Item{
         this.level = level;
     }
     public boolean isMax(){
-        if(this.level >= 4){
-            return true;
-        }
-        return false;
+        return this.level >= 4;
     }
 }

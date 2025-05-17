@@ -1,19 +1,17 @@
 package models.building;
 
-import enums.items.AnimalType;
-import enums.items.Cages;
-import models.PurchasedAnimal;
-
+import enums.items.CageType;
 import java.util.ArrayList;
 import java.util.List;
+import models.PurchasedAnimal;
 
 public class Housing {
     private final int id;
-    private final Cages type;
+    private final CageType type;
     private final int capacity;
     private final List<PurchasedAnimal> occupants;
 
-    public Housing(int id, Cages type) {
+    public Housing(int id, CageType type) {
         this.id = id;
         this.type = type;
         this.capacity = type.getCapacity();
@@ -21,7 +19,7 @@ public class Housing {
     }
 
     public int getId() { return id; }
-    public Cages getType() { return type; }
+    public CageType getType() { return type; }
     public int getCapacity() { return capacity; }
     public List<PurchasedAnimal> getOccupants() { return occupants; }
 

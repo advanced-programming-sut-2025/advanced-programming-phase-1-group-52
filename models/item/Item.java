@@ -1,7 +1,6 @@
 package models.item;
 
 import enums.items.ItemType;
-import enums.items.MaterialType;
 
 public abstract class Item {
     private String name;

@@ -1,6 +1,5 @@
 package enums.design.Shop;
 
-import enums.items.ItemType;
 import enums.items.MaterialType;
 import java.util.HashMap;
 import java.util.Map;
@@ -98,11 +97,6 @@ public enum CarpentersShop implements ShopEntry{
         return dailyLimit;
     }
 
-    @Override
-    public ItemType getItemType() {
-        return null;
-    }
-
     public Map<MaterialType, Integer> getMaterial1() {
         return material1;
     }
@@ -112,5 +106,14 @@ public enum CarpentersShop implements ShopEntry{
     public String getSize() {
         return size;
     }
-    public MaterialType getMaterialType() { return materialType; }
+
+    @Override
+    public MaterialType getItemType() { return materialType; }
+
+    @Override
+    public String toString() {
+        return this.name + "\nPrice: " + this.price + 
+        "\nDescription: " + this.description + 
+        "\n-----------------------\n";
+    }
 }

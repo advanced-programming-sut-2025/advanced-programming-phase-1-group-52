@@ -1,10 +1,9 @@
 package models;
 
 import enums.items.Backpacks;
-import java.util.ArrayList;
-
 import enums.items.ItemType;
 import enums.items.MaterialType;
+import java.util.ArrayList;
 import models.item.Item;
 import models.item.Tool;
 
@@ -22,6 +21,13 @@ public class Inventory {
             if (item.getName().equals(name)) {
                 return item;
             }
+        }   
+        return null;
+    }
+
+    public Tool getToolByName(String name) {
+        for (Item item : items) {
+            if (item instanceof Tool && item.getName().equals(name)) return (Tool) item;
         }
         return null;
     }

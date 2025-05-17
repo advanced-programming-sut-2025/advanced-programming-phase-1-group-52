@@ -313,8 +313,82 @@ public class GameMap {
         this.currentWeather = currentWeather;
     }
 
-    public void lightning(Tile tile1, Tile tile2, Tile tile3) {
+    public void lightning(int playerIndex) {
+        Random rand = new Random();
+        switch (playerIndex) {
+            case 0 -> {
+                for (int i = 0; i < 3; i++) {
+                    int x = rand.nextInt(30);
+                    int y = rand.nextInt(30);
 
+                    Tile target = tiles[x][y];
+                    if (target.getType().equals(TileType.Grass) || target.getType().equals(TileType.Planted) || target.getType().equals(TileType.Tree) || target.getType().equals(TileType.Shoveled)) {
+                        target.setPlant(null);
+                        target.setTree(null);
+                        target.setSeed(null);
+                        target.setType(TileType.Earth);
+                    }
+                }
+            }
+            case 1 -> {
+                for (int i = 0; i < 3; i++) {
+                    int x = rand.nextInt(30) + 60;
+                    int y = rand.nextInt(30);
+
+                    Tile target = tiles[x][y];
+                    if (target.getType().equals(TileType.Grass) || target.getType().equals(TileType.Planted) || target.getType().equals(TileType.Tree) || target.getType().equals(TileType.Shoveled)) {
+                        target.setPlant(null);
+                        target.setTree(null);
+                        target.setSeed(null);
+                        target.setType(TileType.Earth);
+                    }
+                }
+            }
+            case 2 -> {
+                for (int i = 0; i < 3; i++) {
+                    int x = rand.nextInt(30);
+                    int y = rand.nextInt(30) + 30;
+
+                    Tile target = tiles[x][y];
+                    if (target.getType().equals(TileType.Grass) || target.getType().equals(TileType.Planted) || target.getType().equals(TileType.Tree) || target.getType().equals(TileType.Shoveled)) {
+                        target.setPlant(null);
+                        target.setTree(null);
+                        target.setSeed(null);
+                        target.setType(TileType.Earth);
+                    }
+                }
+            }
+            case 3 -> {
+                for (int i = 0; i < 3; i++) {
+                    int x = rand.nextInt(30) + 60;
+                    int y = rand.nextInt(30) + 30;
+
+                    Tile target = tiles[x][y];
+                    if (target.getType().equals(TileType.Grass) || target.getType().equals(TileType.Planted) || target.getType().equals(TileType.Tree) || target.getType().equals(TileType.Shoveled)) {
+                        target.setPlant(null);
+                        target.setTree(null);
+                        target.setSeed(null);
+                        target.setType(TileType.Earth);
+                    }
+                }
+            }
+            default -> {
+            }
+        }
+    }
+
+    public Result cheatLightning(int x, int y) {
+        Tile target = tiles[x][y];
+        if (target.getType().equals(TileType.Grass) || target.getType().equals(TileType.Planted) || target.getType().equals(TileType.Tree) || target.getType().equals(TileType.Shoveled)) {
+            target.setPlant(null);
+            target.setTree(null);
+            target.setSeed(null);
+            target.setType(TileType.Earth);
+            return new Result(true, "Lightning hit!");
+        }
+        else {
+            return new Result(false, "Lightning has no effect on that tile!");
+        }
     }
 
     private void generateBuilding(
@@ -427,6 +501,10 @@ public class GameMap {
         }
     }
 
+    public Tile[][] getTiles() {
+        return this.tiles;
+    }
+
     public Tile getTile(int x, int y) {
         return tiles[x][y];
     }
@@ -504,23 +582,23 @@ public class GameMap {
         return mapString.toString();
     }
 
-//    public void generateRandomForagingSeeds() {
-//        for (int i = 0; i < 90; i++) {
-//            for (int j = 0; j < 60; j++) {
-//                Random rand = new Random();
-//                int prob = rand.nextInt(10);
-//                if (tiles[i][j].getType().equals(TileType.Shoveled) && prob == 0) {
-//                    Game game = App.getInstance().getCurrentGame();
-//                    List<ForagingSeedType> seeds = Arrays.stream(ForagingSeedType.values())
-//                                .filter(seed -> seed.isForaging() && seed.getSeasons().contains(game.getDate().getCurrentSeason()))
-//                                .collect(Collectors.toList());
-//                    ForagingSeedType seedType = seeds.get(rand.nextInt(seeds.size()));
-//
-//                    tiles[i][j].setSeed(new Seed(seedType, 1));
-//                }
-//            }
-//        }
-//    }
+   public void generateRandomForagingSeeds() {
+       for (int i = 0; i < 90; i++) {
+           for (int j = 0; j < 60; j++) {
+               Random rand = new Random();
+               int prob = rand.nextInt(10);
+               if (tiles[i][j].getType().equals(TileType.Shoveled) && prob == 0) {
+                   Game game = App.getInstance().getCurrentGame();
+                   List<ForagingSeedType> seeds = Arrays.stream(ForagingSeedType.values())
+                               .filter(seed -> seed.isForaging() && seed.getSeason().equals(game.getDate().getCurrentSeason()))
+                               .collect(Collectors.toList());
+                   ForagingSeedType seedType = seeds.get(rand.nextInt(seeds.size()));
+
+                   tiles[i][j].setSeed(new Seed(seedType, 1));
+               }
+           }
+       }
+   }
 
     public void generatePlantsFromSeeds() {
         for (int i = 0; i < 90; i++) {
@@ -540,9 +618,5 @@ public class GameMap {
                 }
             }
         }
-    }
-
-    public Tile[][] getTiles() {
-        return tiles;
     }
 }

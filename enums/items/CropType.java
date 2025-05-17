@@ -149,4 +149,12 @@ public enum CropType implements ItemType {
     public String getName() {
         return "";
     }
+
+    public ForagingSeedType getSeed() {
+        for (ForagingSeedType type : ForagingSeedType.values()) {
+                if (type.getPlantType().equals(this)) return type;
+        }
+
+        return null;
+    }
 }

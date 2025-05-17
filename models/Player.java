@@ -1,23 +1,18 @@
 package models;
 
 
-import enums.items.*;
-import enums.items.CraftingRecipes;
-import enums.items.MaterialType;
-import enums.player.Skills;
 import enums.design.TileType;
+import enums.items.*;
 import enums.player.Gender;
-import models.building.House;
-import models.building.Housing;
-import models.item.*;
-
+import enums.player.Skills;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
-
-import models.item.Tool;
+import models.building.House;
+import models.building.Housing;
+import models.item.*;
 
 public class Player {
     private final String username;
@@ -177,10 +172,10 @@ public class Player {
             return wateringCanHandler(tile);
         } else if (typeName.equals("Scythe")) {
             return scytheHandler(tile);
-        } else if (typeName.equals("MilkPail")) {
-            return milkPaleHandler();
-        } else if (typeName.equals("Shear")) {
-            return shearHandler();
+        // } else if (typeName.equals("MilkPail")) {
+        //     return milkPaleHandler();
+        // } else if (typeName.equals("Shear")) {
+        //     return shearHandler();
         } else {
             return new Result(false, "Unknown tool type");
         }
@@ -621,7 +616,7 @@ public class Player {
         return false;
     }
 
-    public void addHousing(Cages cageType) {
+    public void addHousing(CageType cageType) {
         Housing h = new Housing(nextHousingId++, cageType);
         housings.add(h);
     }

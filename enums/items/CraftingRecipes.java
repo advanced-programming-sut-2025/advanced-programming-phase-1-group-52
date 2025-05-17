@@ -116,7 +116,13 @@ public enum CraftingRecipes implements ItemType {
             ForagingSeedType.MapleSeed, 5,
             ForagingSeedType.PineCone, 5,
             ForagingSeedType.MahoganySeed, 5
-    ), 100, ForagingSeedType.MysticTreeSeed);
+    ), 100, ForagingSeedType.MysticTreeSeed),
+
+    GrassStarterRecipe("Grass Starter", Map.of(
+            MaterialType.Wood, 1,
+            MaterialType.Fiber, 1
+    ), 0, CraftingMachineType.GRASS_STARTER);
+
 
     private final String displayName;
     private final Map<ItemType, Integer> ingredients;

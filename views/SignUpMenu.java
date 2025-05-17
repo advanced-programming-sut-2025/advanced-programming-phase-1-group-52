@@ -2,7 +2,6 @@ package views;
 
 import controllers.SignUpMenuController;
 import enums.regex.SignUpMenuCommands;
-
 import java.util.Scanner;
 import java.util.regex.Matcher;
 

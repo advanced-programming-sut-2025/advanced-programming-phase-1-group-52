@@ -81,7 +81,7 @@ public enum ForagingSeedType implements ItemType {
         return plantType;
     }
 
-    public Season getSeasons() {
+    public Season getSeason() {
         return season;
     }
 
