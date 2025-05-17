@@ -607,7 +607,7 @@ public class Player {
     }
 
 
-    public void addHousing(Cages cageType) {
+    public void addHousing(CageType cageType) {
         Housing h = new Housing(nextHousingId++, cageType);
         housings.add(h);
     }

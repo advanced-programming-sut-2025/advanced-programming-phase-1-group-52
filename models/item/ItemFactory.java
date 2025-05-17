@@ -1,12 +1,8 @@
 package models.item;
 
+import enums.items.*;
 import java.util.*;
 import java.util.function.BiFunction;
-import java.util.function.Function;
-import enums.items.*;
-import models.Tree;
-import models.item.Crop;
-import models.item.*;
 
 public class ItemFactory {
     // Map each Type class to its corresponding Item constructor
@@ -19,7 +15,6 @@ public class ItemFactory {
         ITEM_CONSTRUCTORS.put(ForagingSeedType.class, (type, number) -> new Seed((ForagingSeedType) type, number));
         ITEM_CONSTRUCTORS.put(MineralType.class, (type, number) -> new Mineral((MineralType) type, number));
         ITEM_CONSTRUCTORS.put(ToolType.class, (type, number) -> new Tool((ToolType) type, number));
-        ITEM_CONSTRUCTORS.put(Cages.class, (type, number) -> new Cage((Cages) type, number));
         ITEM_CONSTRUCTORS.put(FishType.class, (type, number) -> new Fish((FishType) type, number));
         ITEM_CONSTRUCTORS.put(TrashCanType.class, (type, number) -> new TrashCan((TrashCanType) type, number));
     }
@@ -35,7 +30,7 @@ public class ItemFactory {
             AnimalType.class,
             AnimalProductType.class,
             Backpacks.class,
-            Cages.class,
+            CageType.class,
             FishType.class,
             TrashCanType.class
     );

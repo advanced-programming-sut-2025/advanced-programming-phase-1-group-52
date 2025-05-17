@@ -11,14 +11,13 @@ import enums.design.Shop.TheStardropSaloon;
 import enums.design.ShopType;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 public class Shop extends Building {
     private final ShopType shopType;
-    private final List<ShopEntry> entries;
+    private final ArrayList<ShopEntry> entries;
     private final Map<String, Integer> dailyLimits;
-    private Map<String, Integer> availableStocks;
+    private HashMap<String, Integer> availableStocks;
 
     public Shop(ShopType shopType) {
         this.shopType = shopType;
@@ -46,12 +45,16 @@ public class Shop extends Building {
         }
     }
 
+    public HashMap<String, Integer> getStock() {
+        return this.availableStocks;
+    }
+
     public ShopType getShopType() {
         return shopType;
     }
 
-    public List<ShopEntry> getEntries() {
-        return List.copyOf(entries);
+    public ArrayList<ShopEntry> getEntries() {
+        return entries;
     }
 
     public boolean hasEntry(String name) {
