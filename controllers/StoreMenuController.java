@@ -28,7 +28,7 @@ import models.Game;
 import models.GameMap;
 import models.Inventory;
 import models.Player;
-import models.PurchasedAnimal;
+import models.item.PurchasedAnimal;
 import models.Result;
 import models.Tile;
 import models.User;
@@ -276,7 +276,7 @@ public class StoreMenuController {
             return Result.failure(animalType.getName() + " must live in a " + requiredBuilding + ".");
         }
 
-        PurchasedAnimal newAnimal = new PurchasedAnimal(animalType, givenName);
+        PurchasedAnimal newAnimal = new PurchasedAnimal(animalType, givenName, target.getX() + 1, target.getY() + 1);
         Result addResult = player.addAnimalToHousing(housingId, newAnimal);
         if (!addResult.isSuccessful()) {
             return addResult;
@@ -378,7 +378,7 @@ public class StoreMenuController {
         req1.forEach((mat, amt) -> inv.remove(mat, amt));
         req2.forEach((mat, amt) -> inv.remove(mat, amt));
         player.getBankAccount().withdraw(carpEnum.getPrice());
-        player.addHousing(cageType);
+        player.addHousing(cageType, x, y);
         return new Result(true,
                 carpEnum.getDisplayName() + " successfully built at (" + x + "," + y + ")."
         );

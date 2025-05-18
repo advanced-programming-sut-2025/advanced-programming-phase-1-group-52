@@ -3,23 +3,10 @@ package controllers;
 
 import enums.Menu;
 import enums.design.*;
-import enums.design.Shop.CarpentersShop;
-import enums.design.Shop.ShopEntry;
 import enums.items.*;
 import enums.player.Skills;
 import enums.regex.GameMenuCommands;
 import enums.regex.NPCDialogs;
-import models.App;
-import models.Game;
-import models.Result;
-import models.User;
-import models.*;
-import models.building.House;
-import models.building.Shop;
-import models.item.*;
-
-import enums.design.Shop.MarniesRanch;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -28,8 +15,10 @@ import java.util.Map;
 import java.util.Random;
 import java.util.regex.Matcher;
 import java.util.stream.Collectors;
-
+import models.*;
+import models.building.House;
 import models.building.Housing;
+import models.item.*;
 
 
 public class GameMenuController {
@@ -1787,124 +1776,6 @@ public class GameMenuController {
         return null;
     }
 
-    public Result buildBarnOrCoop(String buildingKey, int x, int y) {
-        if (!map.inBounds(x, y)) {
-            return new Result(false, "Coordinates are out of farm bounds.");
-        }
-
-        Shop carpShop = new Shop(ShopType.CarpentersShop);
-        ShopEntry entry = carpShop.findEntry(buildingKey);
-        if (!(entry instanceof CarpentersShop carpEnum) ||
-                !(carpEnum.getDisplayName().contains("Barn") || carpEnum.getDisplayName().contains("Coop"))) {
-            return new Result(false, "'" + buildingKey + "' is not a valid barn or coop building.");
-        }
-
-        Player player = game.getCurrentPlayer();
-        Inventory inv = player.getInventory();
-        var req1 = carpEnum.getMaterial1();
-        var req2 = carpEnum.getMaterial2();
-
-        for (var e1 : req1.entrySet()) {
-            if (inv.getCount(e1.getKey()) < e1.getValue()) {
-                return new Result(false, "Insufficient " + e1.getKey() + ".");
-            }
-        }
-        for (var e2 : req2.entrySet()) {
-            if (inv.getCount(e2.getKey()) < e2.getValue()) {
-                return new Result(false, "Insufficient " + e2.getKey() + ".");
-            }
-        }
-
-        req1.forEach((mat, amt) -> inv.remove(mat, amt));
-        req2.forEach((mat, amt) -> inv.remove(mat, amt));
-
-        try {
-            var playersList = new ArrayList<Player>(game.getPlayers().size());
-            for (var u : game.getPlayers()) playersList.add(u.getPlayer());
-            int idx = playersList.indexOf(player);
-
-            var tileType = TileType.valueOf(buildingKey);
-            var size     = entry.getDisplayName().split("x");
-            int width    = Integer.parseInt(size[0]);
-            int height   = Integer.parseInt(size[1]);
-
-            var gen = GameMap.class.getDeclaredMethod(
-                    "generateBuilding",
-                    ArrayList.class,
-                    int.class,
-                    TileType.class,
-                    int.class, int.class, int.class, int.class
-            );
-            gen.setAccessible(true);
-            gen.invoke(map, playersList, idx, tileType, x, x + width, y, y + height);
-        } catch (Exception ex) {
-            return new Result(false, "Error constructing building: " + ex.getMessage());
-        }
-
-        CageType cageType;
-        if (carpEnum.getDisplayName().contains("Coop")) {
-            cageType = CageType.NormalCage;
-        } else {
-            cageType = CageType.NormalBarn;
-        }
-        player.addHousing(cageType);
-        return new Result(true,
-                carpEnum.getDisplayName() + " successfully built at (" + x + "," + y + ")."
-        );
-    }
-
-    public Result buyAnimal(String animalKey, int housingId, String givenName) {
-        Shop ranch = new Shop(ShopType.MarniesRanch);
-        ShopEntry entry = ranch.findEntry(animalKey);
-        if (!(entry instanceof MarniesRanch ranchEnum)) {
-            return Result.failure("'" + animalKey + "' is not sold at Marnie's Ranch.");
-        }
-
-        AnimalType animalType = ranchEnum.getAnimalType();
-        if (animalType == null) {
-            return Result.failure("'" + animalKey + "' is not an animal.");
-        }
-
-        Player player = game.getCurrentPlayer();
-        BankAccount account = player.getBankAccount();
-        int price = ranchEnum.getPrice();
-
-        if (account.getBalance() < price) {
-            return Result.failure("Insufficient funds to buy " + animalType.getName() + ".");
-        }
-
-        Housing target = null;
-        for (Housing h : player.getHousings()) {
-            if (h.getId() == housingId) {
-                target = h;
-                break;
-            }
-        }
-        if (target == null) {
-            return Result.failure("No housing found with ID " + housingId + ".");
-        }
-
-        String requiredBuilding = ranchEnum.getBuildingRequired();
-        if (!target.getType().getName().toLowerCase().contains(requiredBuilding.toLowerCase())) {
-            return Result.failure(animalType.getName() + " must live in a " + requiredBuilding + ".");
-        }
-
-        PurchasedAnimal newAnimal = new PurchasedAnimal(animalType, givenName);
-        Result addResult = player.addAnimalToHousing(housingId, newAnimal);
-        if (!addResult.isSuccessful()) {
-            return addResult;
-        }
-
-        account.withdraw(price);
-        return Result.success(
-                animalType.getName() +
-                        " named \"" + givenName + "\" purchased for " +
-                        price + "g and assigned to " +
-                        target.getType().getName() +
-                        " #" + housingId + "."
-        );
-    }
-
     public Result showCurrentMenu() {
         return new Result(true, "Current menu: " + App.getInstance().getCurrentMenu().name());
     }
@@ -2120,5 +1991,129 @@ public class GameMenuController {
         }
 
         return new Result(true, "You will recieve your money tomorrow!");
+    }
+
+    public Result petAnimal(String name) {
+        PurchasedAnimal animal = null;
+        for (Housing housing : game.getCurrentPlayer().getHousings()) {
+            for (PurchasedAnimal purchasedAnimal : housing.getOccupants()) {
+                if (purchasedAnimal.getName().equals(name)) animal = purchasedAnimal;
+            }
+        }
+
+        if (animal == null) {
+            return new Result(false, "Invalid animal name!");
+        }
+
+        if (!isPlayerNearSomething(animal.getX(), animal.getY())) {
+            return new Result(false, "You are not near the animal!");
+        }
+
+        animal.addFriendshipPoints(15);
+        return new Result(true, "You did it!");
+    }
+
+    public Result cheatSetAnimalFriendship(String name, String amountString) {
+        int amount = Integer.parseInt(amountString);
+        PurchasedAnimal animal = null;
+        for (Housing housing : game.getCurrentPlayer().getHousings()) {
+            for (PurchasedAnimal purchasedAnimal : housing.getOccupants()) {
+                if (purchasedAnimal.getName().equals(name)) animal = purchasedAnimal;
+            }
+        }
+
+        if (animal == null) {
+            return new Result(false, "Invalid animal name!");
+        }
+
+        animal.setFriendshipPoints(amount);
+        return new Result(true, "Done!");
+    }
+
+    public Result showAnimals() {
+        StringBuilder stringBuilder = new StringBuilder();
+        for (Housing housing : game.getCurrentPlayer().getHousings()) {
+            for (PurchasedAnimal purchasedAnimal : housing.getOccupants()) {
+                stringBuilder.append(purchasedAnimal.toString());
+            }
+        }
+
+        return new Result(true, stringBuilder.toString());
+    }
+
+    public Result shepherdAnimal(String name, String xString, String yString) {
+        int x, y;
+        PurchasedAnimal animal = null;
+        for (Housing housing : game.getCurrentPlayer().getHousings()) {
+            for (PurchasedAnimal purchasedAnimal : housing.getOccupants()) {
+                if (purchasedAnimal.getName().equals(name)) animal = purchasedAnimal;
+            }
+        }
+
+        if (animal == null) {
+            return new Result(false, "Invalid animal name!");
+        }
+
+        try {
+            x = Integer.parseInt(xString);
+            y = Integer.parseInt(yString);
+        } 
+        catch (NumberFormatException e) {
+            return new Result(false, "Invalid coordinates format!");
+        }
+
+        Tile tile = map.getTile(x, y);
+        if (tile.getType().equals(TileType.Housing)) {
+            animal.setInCage(true);
+        }
+        else {
+            animal.setInCage(false);
+        }
+
+        animal.setX(x);
+        animal.setY(y);
+        animal.setFull(true);
+        return new Result(true, "Done!");
+    }
+
+    public Result feedHay(String name) {
+        PurchasedAnimal animal = null;
+        for (Housing housing : game.getCurrentPlayer().getHousings()) {
+            for (PurchasedAnimal purchasedAnimal : housing.getOccupants()) {
+                if (purchasedAnimal.getName().equals(name)) animal = purchasedAnimal;
+            }
+        }
+
+        if (animal == null) {
+            return new Result(false, "Invalid animal name!");
+        }
+
+        if (!isPlayerNearSomething(animal.getX(), animal.getY())) {
+            return new Result(false, "You are not near the animal!");
+        }
+
+        animal.setFull(true);
+        return new Result(true, "Done!");
+    }
+
+    public Result sellAnimal(String name) {
+        PurchasedAnimal animal = null;
+        Housing h = null;
+        for (Housing housing : game.getCurrentPlayer().getHousings()) {
+            for (PurchasedAnimal purchasedAnimal : housing.getOccupants()) {
+                if (purchasedAnimal.getName().equals(name)) {
+                    animal = purchasedAnimal;
+                    h = housing;
+                }
+            }
+        }
+
+        if (animal == null || h == null) {
+            return new Result(false, "Invalid animal name!");
+        }
+
+        h.removeAnimal(animal);
+        game.getCurrentPlayer().getBankAccount().deposit((int) (animal.getType().getPrice() * (animal.getFriendshipPoints() / 1000 + 0.3)));
+        return new Result(true, "Animal sold!");
     }
 }

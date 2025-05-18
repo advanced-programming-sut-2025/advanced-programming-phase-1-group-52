@@ -634,8 +634,8 @@ public class Player {
         return false;
     }
 
-    public void addHousing(CageType cageType) {
-        Housing h = new Housing(nextHousingId++, cageType);
+    public void addHousing(CageType cageType, int x, int y) {
+        Housing h = new Housing(nextHousingId++, cageType, x, y);
         housings.add(h);
     }
 
