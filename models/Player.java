@@ -113,13 +113,13 @@ public class Player {
         this.notifications.add(new Notification(sender, message));
     }
 
-    public void showNotifs() {
+    public String showNotifs() {
         StringBuilder stringBuilder = new StringBuilder();
         for (Notification notif : this.notifications) {
             stringBuilder.append(notif.getMessage());
         }
 
-        System.out.println(stringBuilder.toString());
+        return stringBuilder.toString();
     }
 
     public void resetNotifs() {

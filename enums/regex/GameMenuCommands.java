@@ -69,8 +69,8 @@ public enum GameMenuCommands {
     AskMarriage("ask marriage -u (?<username>\\S+)"),
     MarriageResponse("respond -(?<response>accept|reject) -u (?<username>\\S+)"),
     StartTrade("start trade"),
-    MeetNPC("meet NPC (?<name>[\\S\\s]+)"),
-    GiftNPC("gift NPC (?<name>[\\S\\s]+) -i (<item>[\\S\\s]+)"),
+    MeetNPC("meet NPC -n (?<name>[\\S\\s]+)"),
+    GiftNPC("gift NPC -n (?<name>[\\S\\s]+) -i (?<item>[\\S\\s]+)"),
     FriendshipNPCList("friendship NPC list"),
     QuestsList("quests list"),
     QuestsFinish("quests finish -i (?<id>\\d+)"),
@@ -84,7 +84,8 @@ public enum GameMenuCommands {
     ShowForagingSkill("show foraging skill"),
     ShowFarmingSkill("show farming skill"),
     CheatAddRecipe("cheat add recipe -n (?<name>[\\S\\s]+)"),
-    PickItem("pick item -d (?<direction>[\\S\\s]+)"),;
+    PickItem("pick item -d (?<direction>[\\S\\s]+)"),
+    CheatFriendship("cheat friendship");
 
     private final String pattern;
 

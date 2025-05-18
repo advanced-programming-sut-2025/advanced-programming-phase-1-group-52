@@ -58,6 +58,10 @@ public class Game {
         return daysPassed;
     }
 
+    public ArrayList<Friendship> getFriendship() {
+        return this.friendships;
+    }
+
     public ArrayList<Friendship> getFriendshipsByPlayer(Player player) {
         ArrayList<Friendship> friendships = new ArrayList<>();
         for (Friendship friendship : this.friendships) {

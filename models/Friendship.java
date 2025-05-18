@@ -4,7 +4,7 @@ import java.util.ArrayList;
 
 public class Friendship {
     private final ArrayList<Player> players = new ArrayList<>();
-    private int friendshipLevel = 0;
+    private int friendshipLevel = 3;
     private int friendshipPoints = 0;
 
     public Friendship(Player firstPlayer, Player secondPlayer) {

@@ -180,9 +180,9 @@ public class GameMenuController {
     public Result switchTurn() {
         boolean isPlayerAvailable = game.switchCurrentPlayer();
         if(isPlayerAvailable){
-            game.getCurrentPlayer().showNotifs();
+            String notifs = game.getCurrentPlayer().showNotifs();
             game.getCurrentPlayer().resetNotifs();
-            return new Result(true, "Game switched to " + game.getCurrentPlayer().getUsername() + " ");
+            return new Result(true, "Game switched to " + game.getCurrentPlayer().getUsername() + "\nNotifs:\n" + notifs);
         }
         return new Result(false, "you can not switch to other players");
     } 
@@ -603,6 +603,9 @@ public class GameMenuController {
             currentPlayer.addEnergy(50);
         }
 
+        currentPlayer.addTalk(talk);
+        player.addTalk(talk);
+        player.addNotif(currentPlayer, talk.toString());
         return new Result(true, game.getCurrentPlayer().getUsername() + " sent a message to " + player.getUsername() + ":\n" + message);
     }
 
@@ -614,7 +617,7 @@ public class GameMenuController {
         
         StringBuilder stringBuilder = new StringBuilder();
         for (Talk talk : player.getTalks()) {
-            if (talk.getReceiver().equals(player)) stringBuilder.append(talk.toString());
+            if (talk.getReceiver().equals(player) || talk.getReceiver().equals(game.getCurrentPlayer())) stringBuilder.append(talk.toString());
         }
 
         return new Result(true, stringBuilder.toString());
@@ -2115,5 +2118,11 @@ public class GameMenuController {
         h.removeAnimal(animal);
         game.getCurrentPlayer().getBankAccount().deposit((int) (animal.getType().getPrice() * (animal.getFriendshipPoints() / 1000 + 0.3)));
         return new Result(true, "Animal sold!");
+    }
+
+    public void cheatFriendship() {
+        for (Friendship friendship : game.getFriendship()) {
+            friendship.setFriendshipLevel(3);
+        }
     }
 }
