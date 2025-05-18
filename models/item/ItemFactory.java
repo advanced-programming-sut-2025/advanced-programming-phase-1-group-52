@@ -20,6 +20,7 @@ public class ItemFactory {
         ITEM_CONSTRUCTORS.put(MaterialType.class, (type, number) -> new Material((MaterialType) type, number));
         ITEM_CONSTRUCTORS.put(ArtisanProductType.class, (type, number) -> new Good((ArtisanProductType) type, number));
         ITEM_CONSTRUCTORS.put(FoodType.class, (type, number) -> new Food((FoodType) type, number));
+        ITEM_CONSTRUCTORS.put(AnimalProductType.class, (type, number) -> new AnimalProduct((AnimalProductType) type, number));
     }
 
     private static final List<Class<? extends Enum<?>>> ITEM_ENUMS = Arrays.asList(

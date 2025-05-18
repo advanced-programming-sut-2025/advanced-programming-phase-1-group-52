@@ -420,13 +420,13 @@ public class Game {
                     }
                     else{
                         if(tile.getPlant() instanceof Fruit fruit){
-                            if(fruit.getDayPassed() >= tile.getTree().getType().getTotalHarvestTime()){
-                                fruit.setReadyToHarvest(true);
-                            }
-                            else{
-                                fruit.setDayPassed(fruit.getDayPassed() + 1);
-                                fruit.setWateredToday(false);
-                            }
+//                            if(fruit.getDayPassed() >= tile.getTree().getType().getTotalHarvestTime()){
+//                                fruit.setReadyToHarvest(true);
+//                            }
+//                            else{
+//                                fruit.setDayPassed(fruit.getDayPassed() + 1);
+//                                fruit.setWateredToday(false);
+//                            }
                         }
 //                        else {
 //                            System.out.println("error 3");

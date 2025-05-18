@@ -69,7 +69,7 @@ public class HomeMenuController {
         return new Result(true, "you are in game menu now!");
     }
 
-    public Result cheatAddRecipe(String recipeName){
+    public Result cheatAddCraftingRecipe(String recipeName){
         Game game = App.getInstance().getCurrentGame();
         Player player = game.getCurrentPlayer();
         CraftingRecipes recipeType = findCraftingRecipeType(recipeName);
@@ -79,6 +79,18 @@ public class HomeMenuController {
         CraftingRecipe recipe = new CraftingRecipe(recipeType,1);
         player.getCraftingRecipe().add(recipe);
         return new Result(true,recipe.getName() + " added successfully");
+    }
+
+    public Result cheatAddCookingRecipe(String recipeName){
+        Game game = App.getInstance().getCurrentGame();
+        Player player = game.getCurrentPlayer();
+        CookingRecipeType recipeType = findCookingRecipeType(recipeName);
+        if(recipeType == null) {
+            return new Result(false, "error2");
+        }
+        CookingRecipe recipe = new CookingRecipe(recipeType);
+        player.getCookingRecipe().add(recipe);
+        return new Result(true,recipeName + " added successfully");
     }
 
     public Result cook(String recipeName){

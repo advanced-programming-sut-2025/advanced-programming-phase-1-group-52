@@ -9,7 +9,7 @@ import java.util.Map;
 public enum CookingRecipeType implements ItemType {
     FriedEgg("Fried egg Recipe",50,null, false,0, 35, FoodType.FriedEgg) {
         {
-            ingredients.put(MaterialType.Egg, 1);
+            ingredients.put(AnimalProductType.ChickenEgg, 1);
         }
     },
 
