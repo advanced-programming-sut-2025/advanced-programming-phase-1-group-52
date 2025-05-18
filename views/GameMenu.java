@@ -121,19 +121,19 @@ public class GameMenu implements AppMenu {
             System.out.println(controller.eat(matcher.group("foodName")).Message());
         }
         else if ((matcher = GameMenuCommands.PettingAnAnimal.getMatcher(input)) != null) {
-
+            System.out.println(controller.petAnimal(matcher.group("name")));
         }
         else if ((matcher = GameMenuCommands.CHEATSetAnimalFriendship.getMatcher(input)) != null) {
-
+            System.out.println(controller.cheatSetAnimalFriendship(matcher.group("animalName"), matcher.group("amount")));
         }
         else if ((matcher = GameMenuCommands.Animals.getMatcher(input)) != null) {
-
+            System.out.println(controller.showAnimals());
         }
         else if ((matcher = GameMenuCommands.ShepherdAnimals.getMatcher(input)) != null) {
-
+            System.out.println(controller.shepherdAnimal(matcher.group("animalName"), matcher.group("x"), matcher.group("y")));
         }
         else if ((matcher = GameMenuCommands.FeedHay.getMatcher(input)) != null) {
-
+            System.out.println(controller.feedHay(matcher.group("animalName")));
         }
         else if ((matcher = GameMenuCommands.AnimalProduces.getMatcher(input)) != null) {
 
@@ -142,7 +142,7 @@ public class GameMenu implements AppMenu {
 
         }
         else if ((matcher = GameMenuCommands.SellAnimal.getMatcher(input)) != null) {
-
+            System.out.println(controller.sellAnimal(matcher.group("name")));
         }
         else if ((matcher = GameMenuCommands.Fishing.getMatcher(input)) != null) {
             System.out.println(controller.fishing(matcher.group("fishingPole")).Message());
