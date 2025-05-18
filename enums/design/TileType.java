@@ -23,7 +23,8 @@ public enum TileType {
     Quarry(true, ANSI.BLACK + "Q" + ANSI.RESET),
     Tree(false, ANSI.GREEN + "T" + ANSI.RESET),
     Shop(true, ANSI.BLUE + "$" + ANSI.RESET),
-    NPCHouse(true, ANSI.CYAN + "H" + ANSI.RESET),;
+    NPCHouse(true, ANSI.CYAN + "H" + ANSI.RESET),
+    Housing(true, ANSI.CYAN + "C" + ANSI.RESET);
 
     private final boolean reachable;
     private final String symbol;

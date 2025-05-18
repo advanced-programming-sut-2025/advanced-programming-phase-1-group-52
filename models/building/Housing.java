@@ -2,26 +2,37 @@ package models.building;
 
 import enums.items.CageType;
 import java.util.ArrayList;
-import java.util.List;
-import models.PurchasedAnimal;
+import models.item.PurchasedAnimal;
 
 public class Housing {
     private final int id;
     private final CageType type;
     private final int capacity;
-    private final List<PurchasedAnimal> occupants;
+    private final ArrayList<PurchasedAnimal> occupants;
+    private final int cornerX;
+    private final int cornerY;
 
-    public Housing(int id, CageType type) {
+    public Housing(int id, CageType type, int x, int y) {
         this.id = id;
         this.type = type;
+        this.cornerX = x;
+        this.cornerY = y;
         this.capacity = type.getCapacity();
         this.occupants = new ArrayList<>();
+    }
+
+    public int getX() {
+        return this.cornerX;
+    }
+
+    public int getY() {
+        return this.cornerY;
     }
 
     public int getId() { return id; }
     public CageType getType() { return type; }
     public int getCapacity() { return capacity; }
-    public List<PurchasedAnimal> getOccupants() { return occupants; }
+    public ArrayList<PurchasedAnimal> getOccupants() { return occupants; }
 
     public boolean addAnimal(PurchasedAnimal animal) {
         if (occupants.size() < capacity) {
@@ -29,5 +40,9 @@ public class Housing {
             return true;
         }
         return false;
+    }
+
+    public void removeAnimal(PurchasedAnimal animal) {
+        this.occupants.remove(animal);
     }
 }

@@ -3,23 +3,10 @@ package controllers;
 
 import enums.Menu;
 import enums.design.*;
-import enums.design.Shop.CarpentersShop;
-import enums.design.Shop.ShopEntry;
 import enums.items.*;
 import enums.player.Skills;
 import enums.regex.GameMenuCommands;
 import enums.regex.NPCDialogs;
-import models.App;
-import models.Game;
-import models.Result;
-import models.User;
-import models.*;
-import models.building.House;
-import models.building.Shop;
-import models.item.*;
-
-import enums.design.Shop.MarniesRanch;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -28,8 +15,10 @@ import java.util.Map;
 import java.util.Random;
 import java.util.regex.Matcher;
 import java.util.stream.Collectors;
-
+import models.*;
+import models.building.House;
 import models.building.Housing;
+import models.item.*;
 
 
 public class GameMenuController {
@@ -69,6 +58,8 @@ public class GameMenuController {
         player1.setOriginY(2);
         player1.setCurrentX(2);
         player1.setCurrentY(2);
+        player1.setTrashCanX(0);
+        player1.setTrashCanY(0);
         loggedInUser.setCurrentPlayer(player1);
         players.add(loggedInUser);
 
@@ -77,6 +68,8 @@ public class GameMenuController {
         player2.setOriginY(2);
         player2.setCurrentX(84);
         player2.setCurrentY(2);
+        player2.setTrashCanX(89);
+        player2.setTrashCanY(0);
         user1.setCurrentPlayer(player2);
         players.add(user1);
 
@@ -85,6 +78,8 @@ public class GameMenuController {
         player3.setOriginY(34);
         player3.setCurrentX(2);
         player3.setCurrentY(34);
+        player3.setTrashCanX(0);
+        player3.setTrashCanY(59);
         user2.setCurrentPlayer(player3);
         players.add(user2);
 
@@ -93,6 +88,8 @@ public class GameMenuController {
         player4.setOriginY(34);
         player4.setCurrentX(64);
         player4.setCurrentY(34);
+        player4.setTrashCanX(89);
+        player4.setTrashCanY(59);
         user3.setCurrentPlayer(player4);
         players.add(user3);
 
@@ -116,7 +113,7 @@ public class GameMenuController {
         } catch (NumberFormatException e) {
             return new Result(false, "Invalid map id");
         }
-        
+
         if (user1Farm < 1 || user1Farm > 3) {
             return new Result(false, "Invalid map id for user1");
         }
@@ -188,7 +185,7 @@ public class GameMenuController {
             return new Result(true, "Game switched to " + game.getCurrentPlayer().getUsername() + " ");
         }
         return new Result(false, "you can not switch to other players");
-    } 
+    }
 
     public Result showTime() {
         return new Result(true, "It's " + game.getTime().hour() + " O'clock");
@@ -401,13 +398,13 @@ public class GameMenuController {
         if (!isPlayerNearSomething(npc.getX(), npc.getY())) {
             return new Result(false, "You are not near the NPC!");
         }
-        
+
         ArrayList<NPCDialogs> dialogs = Arrays.stream(NPCDialogs.values())
                 .filter(dialog -> dialog.getLevel() == npc.getFriendShipLevelWith(game.getCurrentPlayer()))
                 .filter(dialog -> dialog.getWeather() == null || dialog.getWeather() == game.getTodayWeather())
                 .filter(dialog -> dialog.getSeason() == null || dialog.getSeason() == game.getDate().getCurrentSeason())
                 .collect(Collectors.toCollection(ArrayList::new));
-                
+
         Random rand = new Random();
         npc.getFriendShipWith(game.getCurrentPlayer()).addFriendshipPoints(20);
         return new Result(true, npc.getType().toString() + " says: " + dialogs.get(rand.nextInt(dialogs.size())).getDialog());
@@ -435,10 +432,10 @@ public class GameMenuController {
         if (item.isTool()) {
             return new Result(false, "You can not gift a tool!");
         }
-        
+
         if (npc.getType().getFavorites().contains(item.getItemType())) {
             npc.getFriendShipWith(game.getCurrentPlayer()).addFriendshipPoints(200);
-        } 
+        }
         else {
             npc.getFriendShipWith(game.getCurrentPlayer()).addFriendshipPoints(50);
         }
@@ -482,9 +479,9 @@ public class GameMenuController {
         int id;
         try {
             id = Integer.parseInt(idString);
-        } 
+        }
         catch (NumberFormatException e) {
-            return new Result(false, "Invalid id format!"); 
+            return new Result(false, "Invalid id format!");
         }
 
         NPC npc = null;
@@ -520,9 +517,6 @@ public class GameMenuController {
         }
 
         switch (quest.getDemand()) {
-            case AnimalProductType animalProductType -> {
-                currentPlayer.getInventory().removeItem(AnimalProduct.class, quest.getDemandAmount());
-            }
             case FoodType foodType -> {
                 currentPlayer.getInventory().removeItem(Food.class, quest.getDemandAmount());
             }
@@ -617,7 +611,7 @@ public class GameMenuController {
         if (player == null) {
             return new Result(false, "Player not found!");
         }
-        
+
         StringBuilder stringBuilder = new StringBuilder();
         for (Talk talk : player.getTalks()) {
             if (talk.getReceiver().equals(player)) stringBuilder.append(talk.toString());
@@ -679,13 +673,8 @@ public class GameMenuController {
             return new Result(false, "You don't have enough items!");
         }
 
-        
+
         switch (item) {
-            case AnimalProduct animalProduct -> {
-                game.getCurrentPlayer().getInventory().removeItem(animalProduct.getClass(), itemAmount);
-                AnimalProduct newAnimalProduct = new AnimalProduct(animalProduct.getAnimalType(), itemAmount);
-                receiver.getInventory().addItem(newAnimalProduct);
-            }
             case Fish fish -> {
                 game.getCurrentPlayer().getInventory().removeItem(fish.getClass(), itemAmount);
                 Fish newFish = new Fish(fish.getFishType(), itemAmount);
@@ -725,7 +714,7 @@ public class GameMenuController {
                 return new Result(false, "Item is not giftable!");
             }
         }
-        
+
         if (receiver.equals(game.getCurrentPlayer().getSpouse())) {
             receiver.addEnergy(50);
             game.getCurrentPlayer().addEnergy(50);
@@ -741,7 +730,7 @@ public class GameMenuController {
         int giftId;
         try {
             giftId = Integer.parseInt(idString);
-        } 
+        }
         catch (NumberFormatException e) {
             return new Result(false, "Id format is invalid!");
         }
@@ -779,7 +768,7 @@ public class GameMenuController {
         }
 
         return new Result(true, stringBuilder.toString());
-    } 
+    }
 
     public Result showGiftHistoryWith(String username) {
         StringBuilder stringBuilder = new StringBuilder();
@@ -846,7 +835,7 @@ public class GameMenuController {
         player.getInventory().addItem(newFlower);
 
         friendship.setFriendshipLevel(3);
-        player.addNotif(currentPlayer, currentPlayer.getUsername() + " has flowered you!");        
+        player.addNotif(currentPlayer, currentPlayer.getUsername() + " has flowered you!");
         return new Result(true, "You have flowered " + username + "and your friendship level is now 3!");
     }
 
@@ -882,7 +871,7 @@ public class GameMenuController {
         if (player == null) {
             return new Result(false, "Invalid username!");
         }
-        
+
         Friendship friendship = game.getFriendshipByPlayers(game.getCurrentPlayer(), player);
         if (respond.equals("accept")) {
             friendship.setFriendshipLevel(4);
@@ -1573,7 +1562,7 @@ public class GameMenuController {
             switchTurn();
         }
     }
-    
+
     private Item findItem(String itemName, ArrayList<Item> items) {
         for(Item item : items){
             if(item.getName().equals(itemName)){
@@ -1786,124 +1775,6 @@ public class GameMenuController {
         return null;
     }
 
-    public Result buildBarnOrCoop(String buildingKey, int x, int y) {
-        if (!map.inBounds(x, y)) {
-            return new Result(false, "Coordinates are out of farm bounds.");
-        }
-
-        Shop carpShop = new Shop(ShopType.CarpentersShop);
-        ShopEntry entry = carpShop.findEntry(buildingKey);
-        if (!(entry instanceof CarpentersShop carpEnum) ||
-                !(carpEnum.getDisplayName().contains("Barn") || carpEnum.getDisplayName().contains("Coop"))) {
-            return new Result(false, "'" + buildingKey + "' is not a valid barn or coop building.");
-        }
-
-        Player player = game.getCurrentPlayer();
-        Inventory inv = player.getInventory();
-        var req1 = carpEnum.getMaterial1();
-        var req2 = carpEnum.getMaterial2();
-
-        for (var e1 : req1.entrySet()) {
-            if (inv.getCount(e1.getKey()) < e1.getValue()) {
-                return new Result(false, "Insufficient " + e1.getKey() + ".");
-            }
-        }
-        for (var e2 : req2.entrySet()) {
-            if (inv.getCount(e2.getKey()) < e2.getValue()) {
-                return new Result(false, "Insufficient " + e2.getKey() + ".");
-            }
-        }
-
-        req1.forEach((mat, amt) -> inv.remove(mat, amt));
-        req2.forEach((mat, amt) -> inv.remove(mat, amt));
-
-        try {
-            var playersList = new ArrayList<Player>(game.getPlayers().size());
-            for (var u : game.getPlayers()) playersList.add(u.getPlayer());
-            int idx = playersList.indexOf(player);
-
-            var tileType = TileType.valueOf(buildingKey);
-            var size     = entry.getDisplayName().split("x");
-            int width    = Integer.parseInt(size[0]);
-            int height   = Integer.parseInt(size[1]);
-
-            var gen = GameMap.class.getDeclaredMethod(
-                    "generateBuilding",
-                    ArrayList.class,
-                    int.class,
-                    TileType.class,
-                    int.class, int.class, int.class, int.class
-            );
-            gen.setAccessible(true);
-            gen.invoke(map, playersList, idx, tileType, x, x + width, y, y + height);
-        } catch (Exception ex) {
-            return new Result(false, "Error constructing building: " + ex.getMessage());
-        }
-
-        CageType cageType;
-        if (carpEnum.getDisplayName().contains("Coop")) {
-            cageType = CageType.NormalCage;
-        } else {
-            cageType = CageType.NormalBarn;
-        }
-        player.addHousing(cageType);
-        return new Result(true,
-                carpEnum.getDisplayName() + " successfully built at (" + x + "," + y + ")."
-        );
-    }
-
-    public Result buyAnimal(String animalKey, int housingId, String givenName) {
-        Shop ranch = new Shop(ShopType.MarniesRanch);
-        ShopEntry entry = ranch.findEntry(animalKey);
-        if (!(entry instanceof MarniesRanch ranchEnum)) {
-            return Result.failure("'" + animalKey + "' is not sold at Marnie's Ranch.");
-        }
-
-        AnimalType animalType = ranchEnum.getAnimalType();
-        if (animalType == null) {
-            return Result.failure("'" + animalKey + "' is not an animal.");
-        }
-
-        Player player = game.getCurrentPlayer();
-        BankAccount account = player.getBankAccount();
-        int price = ranchEnum.getPrice();
-
-        if (account.getBalance() < price) {
-            return Result.failure("Insufficient funds to buy " + animalType.getName() + ".");
-        }
-
-        Housing target = null;
-        for (Housing h : player.getHousings()) {
-            if (h.getId() == housingId) {
-                target = h;
-                break;
-            }
-        }
-        if (target == null) {
-            return Result.failure("No housing found with ID " + housingId + ".");
-        }
-
-        String requiredBuilding = ranchEnum.getBuildingRequired();
-        if (!target.getType().getName().toLowerCase().contains(requiredBuilding.toLowerCase())) {
-            return Result.failure(animalType.getName() + " must live in a " + requiredBuilding + ".");
-        }
-
-        PurchasedAnimal newAnimal = new PurchasedAnimal(animalType, givenName);
-        Result addResult = player.addAnimalToHousing(housingId, newAnimal);
-        if (!addResult.isSuccessful()) {
-            return addResult;
-        }
-
-        account.withdraw(price);
-        return Result.success(
-                animalType.getName() +
-                        " named \"" + givenName + "\" purchased for " +
-                        price + "g and assigned to " +
-                        target.getType().getName() +
-                        " #" + housingId + "."
-        );
-    }
-
     public Result showCurrentMenu() {
         return new Result(true, "Current menu: " + App.getInstance().getCurrentMenu().name());
     }
@@ -1997,13 +1868,259 @@ public class GameMenuController {
         }
     }
 
-    private Food findFoodInInventory(String foodName){
+    private Food findFoodInInventory(String foodName) {
         Player player = game.getCurrentPlayer();
-        for(Item item : player.getInventory().getItems()){
-            if(item.getName().equals(foodName)){
+        for (Item item : player.getInventory().getItems()) {
+            if (item.getName().equals(foodName)) {
                 return (Food) item;
             }
         }
         return null;
+    }
+    public Result sell(String... inputs) {
+        Player currentPlayer = game.getCurrentPlayer();
+        if (!isPlayerNearSomething(currentPlayer.getTrashCanX(), currentPlayer.getTrashCanY())) {
+            return new Result(false, "You aren't near your trash can!");
+        }
+
+        Item item = currentPlayer.getInventory().getItemByName(inputs[0]);
+        if (item == null) {
+            return new Result(false, "You don't have the entered item!");
+        }
+        if (item instanceof Tool) {
+            return new Result(false, "You can't sell this item!");
+        }
+
+        if (inputs[1] == null) {
+            switch (item.getItemType()) {
+                case AnimalProductType animalProductType -> {
+                    currentPlayer.getBankAccount().setFardaeiDollar(animalProductType.getPrice());
+                }
+                case ArtisanProductType artisanProductType -> {
+                    currentPlayer.getBankAccount().setFardaeiDollar(artisanProductType.getSellPrice());
+                }
+                case CraftingMachineType craftingMachineType -> {
+                    if (craftingMachineType.getPrice() == null) {
+                        return new Result(false, "You can't sell this item!");
+                    }
+                    else {
+                        currentPlayer.getBankAccount().setFardaeiDollar(craftingMachineType.getPrice());
+                    }
+                }
+                case CropType cropType -> {
+                    currentPlayer.getBankAccount().setFardaeiDollar(cropType.getBaseSellPrice());
+                }
+                case FishType fishType -> {
+                    currentPlayer.getBankAccount().setFardaeiDollar(fishType.getPrice());
+                }
+                case FoodType foodType -> {
+
+                }
+                case ForagingCropType foragingCropType -> {
+                    currentPlayer.getBankAccount().setFardaeiDollar(foragingCropType.getBaseSellPrice());
+                }
+                case ForagingSeedType foragingSeedType -> {
+                    currentPlayer.getBankAccount().setFardaeiDollar(foragingSeedType.getPrice());
+                }
+                case FruitType fruitType -> {
+
+                }
+                case MaterialType materialType -> {
+
+                }
+                case MineralType mineralType -> {
+                    currentPlayer.getBankAccount().setFardaeiDollar(mineralType.getPrice());
+                }
+                default -> {
+                    return new Result(false, "You can't sell this item!");
+                }
+            }
+
+            currentPlayer.getInventory().removeItem(item.getClass(), item.getNumber());
+        }
+        else {
+            int amount;
+            try {
+                amount = Integer.parseInt(inputs[1]);
+            }
+            catch (NumberFormatException e) {
+                return new Result(false, "Invalid amount format!");
+            }
+
+            if (item.getNumber() < amount) {
+                return new Result(false, "You don't have that much item!");
+            }
+
+            switch (item.getItemType()) {
+                case AnimalProductType animalProductType -> {
+                    currentPlayer.getBankAccount().setFardaeiDollar(animalProductType.getPrice());
+                }
+                case ArtisanProductType artisanProductType -> {
+                    currentPlayer.getBankAccount().setFardaeiDollar(artisanProductType.getSellPrice());
+                }
+                case CraftingMachineType craftingMachineType -> {
+                    if (craftingMachineType.getPrice() == null) {
+                        return new Result(false, "You can't sell this item!");
+                    }
+                    else {
+                        currentPlayer.getBankAccount().setFardaeiDollar(craftingMachineType.getPrice());
+                    }
+                }
+                case CropType cropType -> {
+                    currentPlayer.getBankAccount().setFardaeiDollar(cropType.getBaseSellPrice());
+                }
+                case FishType fishType -> {
+                    currentPlayer.getBankAccount().setFardaeiDollar(fishType.getPrice());
+                }
+                case FoodType foodType -> {
+
+                }
+                case ForagingCropType foragingCropType -> {
+                    currentPlayer.getBankAccount().setFardaeiDollar(foragingCropType.getBaseSellPrice());
+                }
+                case ForagingSeedType foragingSeedType -> {
+                    currentPlayer.getBankAccount().setFardaeiDollar(foragingSeedType.getPrice());
+                }
+                case FruitType fruitType -> {
+
+                }
+                case MaterialType materialType -> {
+
+                }
+                case MineralType mineralType -> {
+                    currentPlayer.getBankAccount().setFardaeiDollar(mineralType.getPrice());
+                }
+                default -> {
+                    return new Result(false, "You can't sell this item!");
+                }
+            }
+
+            currentPlayer.getInventory().removeItem(item.getClass(), amount);
+        }
+
+        return new Result(true, "You will recieve your money tomorrow!");
+    }
+    public Result petAnimal(String name) {
+        PurchasedAnimal animal = null;
+        for (Housing housing : game.getCurrentPlayer().getHousings()) {
+            for (PurchasedAnimal purchasedAnimal : housing.getOccupants()) {
+                if (purchasedAnimal.getName().equals(name)) animal = purchasedAnimal;
+            }
+        }
+
+        if (animal == null) {
+            return new Result(false, "Invalid animal name!");
+        }
+
+        if (!isPlayerNearSomething(animal.getX(), animal.getY())) {
+            return new Result(false, "You are not near the animal!");
+        }
+
+        animal.addFriendshipPoints(15);
+        return new Result(true, "You did it!");
+    }
+
+    public Result cheatSetAnimalFriendship(String name, String amountString) {
+        int amount = Integer.parseInt(amountString);
+        PurchasedAnimal animal = null;
+        for (Housing housing : game.getCurrentPlayer().getHousings()) {
+            for (PurchasedAnimal purchasedAnimal : housing.getOccupants()) {
+                if (purchasedAnimal.getName().equals(name)) animal = purchasedAnimal;
+            }
+        }
+
+        if (animal == null) {
+            return new Result(false, "Invalid animal name!");
+        }
+
+        animal.setFriendshipPoints(amount);
+        return new Result(true, "Done!");
+    }
+
+    public Result showAnimals() {
+        StringBuilder stringBuilder = new StringBuilder();
+        for (Housing housing : game.getCurrentPlayer().getHousings()) {
+            for (PurchasedAnimal purchasedAnimal : housing.getOccupants()) {
+                stringBuilder.append(purchasedAnimal.toString());
+            }
+        }
+
+        return new Result(true, stringBuilder.toString());
+    }
+
+    public Result shepherdAnimal(String name, String xString, String yString) {
+        int x, y;
+        PurchasedAnimal animal = null;
+        for (Housing housing : game.getCurrentPlayer().getHousings()) {
+            for (PurchasedAnimal purchasedAnimal : housing.getOccupants()) {
+                if (purchasedAnimal.getName().equals(name)) animal = purchasedAnimal;
+            }
+        }
+
+        if (animal == null) {
+            return new Result(false, "Invalid animal name!");
+        }
+
+        try {
+            x = Integer.parseInt(xString);
+            y = Integer.parseInt(yString);
+        }
+        catch (NumberFormatException e) {
+            return new Result(false, "Invalid coordinates format!");
+        }
+
+        Tile tile = map.getTile(x, y);
+        if (tile.getType().equals(TileType.Housing)) {
+            animal.setInCage(true);
+        }
+        else {
+            animal.setInCage(false);
+        }
+
+        animal.setX(x);
+        animal.setY(y);
+        animal.setFull(true);
+        return new Result(true, "Done!");
+    }
+
+    public Result feedHay(String name) {
+        PurchasedAnimal animal = null;
+        for (Housing housing : game.getCurrentPlayer().getHousings()) {
+            for (PurchasedAnimal purchasedAnimal : housing.getOccupants()) {
+                if (purchasedAnimal.getName().equals(name)) animal = purchasedAnimal;
+            }
+        }
+
+        if (animal == null) {
+            return new Result(false, "Invalid animal name!");
+        }
+
+        if (!isPlayerNearSomething(animal.getX(), animal.getY())) {
+            return new Result(false, "You are not near the animal!");
+        }
+
+        animal.setFull(true);
+        return new Result(true, "Done!");
+    }
+
+    public Result sellAnimal(String name) {
+        PurchasedAnimal animal = null;
+        Housing h = null;
+        for (Housing housing : game.getCurrentPlayer().getHousings()) {
+            for (PurchasedAnimal purchasedAnimal : housing.getOccupants()) {
+                if (purchasedAnimal.getName().equals(name)) {
+                    animal = purchasedAnimal;
+                    h = housing;
+                }
+            }
+        }
+
+        if (animal == null || h == null) {
+            return new Result(false, "Invalid animal name!");
+        }
+
+        h.removeAnimal(animal);
+        game.getCurrentPlayer().getBankAccount().deposit((int) (animal.getType().getPrice() * (animal.getFriendshipPoints() / 1000 + 0.3)));
+        return new Result(true, "Animal sold!");
     }
 }

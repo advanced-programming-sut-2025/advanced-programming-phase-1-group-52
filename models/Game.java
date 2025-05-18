@@ -232,6 +232,12 @@ public class Game {
         return null;
     }
 
+    public void handleFardaei() {
+        for (User user : this.players) {
+            user.getPlayer().getBankAccount().depositFardaei();
+        }
+    }
+
     public void timePassed() {
         int dayPassed = this.time.addHours(1);
         updateArtisanProduct();
@@ -249,6 +255,7 @@ public class Game {
             updateCrops();
             checkForLightning();
             crowAttack();
+            handleFardaei();
         }
     }
 

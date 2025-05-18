@@ -28,9 +28,10 @@ import models.Game;
 import models.GameMap;
 import models.Inventory;
 import models.Player;
-import models.PurchasedAnimal;
+import models.item.PurchasedAnimal;
 import models.Result;
 import models.Tile;
+import models.User;
 import models.building.Housing;
 import models.building.Shop;
 import models.item.CookingRecipe;
@@ -275,7 +276,7 @@ public class StoreMenuController {
             return Result.failure(animalType.getName() + " must live in a " + requiredBuilding + ".");
         }
 
-        PurchasedAnimal newAnimal = new PurchasedAnimal(animalType, givenName);
+        PurchasedAnimal newAnimal = new PurchasedAnimal(animalType, givenName, target.getX() + 1, target.getY() + 1);
         Result addResult = player.addAnimalToHousing(housingId, newAnimal);
         if (!addResult.isSuccessful()) {
             return addResult;
@@ -324,32 +325,10 @@ public class StoreMenuController {
             }
         }
 
-        req1.forEach((mat, amt) -> inv.remove(mat, amt));
-        req2.forEach((mat, amt) -> inv.remove(mat, amt));
-
-        try {
-            var playersList = new ArrayList<Player>(game.getPlayers().size());
-            for (var u : game.getPlayers()) playersList.add(u.getPlayer());
-            int idx = playersList.indexOf(player);
-
-            var tileType = TileType.valueOf(buildingKey);
-            var size     = entry.getDisplayName().split("x");
-            int width    = Integer.parseInt(size[0]);
-            int height   = Integer.parseInt(size[1]);
-
-            var gen = GameMap.class.getDeclaredMethod(
-                    "generateBuilding",
-                    ArrayList.class,
-                    int.class,
-                    TileType.class,
-                    int.class, int.class, int.class, int.class
-            );
-            gen.setAccessible(true);
-            gen.invoke(map, playersList, idx, tileType, x, x + width, y, y + height);
-        } catch (Exception ex) {
-            return new Result(false, "Error constructing building: " + ex.getMessage());
+        if (player.getBankAccount().getBalance() < carpEnum.getPrice()) {
+            return new Result(false, "You don't have enough money!");
         }
-
+        
         CageType cageType;
         if (carpEnum.getDisplayName().contains("Coop")) {
             if (carpEnum.getDisplayName().contains("Big")) {
@@ -361,7 +340,19 @@ public class StoreMenuController {
             else {
                 cageType = CageType.NormalCage;
             }
-        } else {
+            
+            if (map.isPlantThere(x, x + 6, y, y + 3)) {
+                return new Result(false, "You can't place your coop there!");
+            }
+
+            ArrayList<Player> players = new ArrayList<>();
+            for (User user : game.getPlayers()) {
+                players.add(user.getPlayer());
+            }
+
+            map.generateBuilding(players, players.indexOf(game.getCurrentPlayer()), TileType.Housing, x, x + 6, y, y + 3);
+        } 
+        else {
             if (carpEnum.getDisplayName().contains("Big")) {
                 cageType = CageType.BigBarn;
             }
@@ -371,8 +362,23 @@ public class StoreMenuController {
             else {
                 cageType = CageType.NormalBarn;
             }
+
+            if (map.isPlantThere(x, x + 7, y, y + 4)) {
+                return new Result(false, "You can't place your barn there!");
+            }
+
+            ArrayList<Player> players = new ArrayList<>();
+            for (User user : game.getPlayers()) {
+                players.add(user.getPlayer());
+            }
+
+            map.generateBuilding(players, players.indexOf(game.getCurrentPlayer()), TileType.Housing, x, x + 7, y, y + 4);
         }
-        player.addHousing(cageType);
+        
+        req1.forEach((mat, amt) -> inv.remove(mat, amt));
+        req2.forEach((mat, amt) -> inv.remove(mat, amt));
+        player.getBankAccount().withdraw(carpEnum.getPrice());
+        player.addHousing(cageType, x, y);
         return new Result(true,
                 carpEnum.getDisplayName() + " successfully built at (" + x + "," + y + ")."
         );
