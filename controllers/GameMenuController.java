@@ -9,10 +9,6 @@ import enums.items.*;
 import enums.player.Skills;
 import enums.regex.GameMenuCommands;
 import enums.regex.NPCDialogs;
-import models.App;
-import models.Game;
-import models.Result;
-import models.User;
 import models.*;
 import models.building.House;
 import models.building.Shop;
@@ -2120,5 +2116,129 @@ public class GameMenuController {
         }
 
         return new Result(true, "You will recieve your money tomorrow!");
+    }
+
+    public Result petAnimal(String name) {
+        PurchasedAnimal animal = null;
+        for (Housing housing : game.getCurrentPlayer().getHousings()) {
+            for (PurchasedAnimal purchasedAnimal : housing.getOccupants()) {
+                if (purchasedAnimal.getName().equals(name)) animal = purchasedAnimal;
+            }
+        }
+
+        if (animal == null) {
+            return new Result(false, "Invalid animal name!");
+        }
+
+        if (!isPlayerNearSomething(animal.getX(), animal.getY())) {
+            return new Result(false, "You are not near the animal!");
+        }
+
+        animal.addFriendshipPoints(15);
+        return new Result(true, "You did it!");
+    }
+
+    public Result cheatSetAnimalFriendship(String name, String amountString) {
+        int amount = Integer.parseInt(amountString);
+        PurchasedAnimal animal = null;
+        for (Housing housing : game.getCurrentPlayer().getHousings()) {
+            for (PurchasedAnimal purchasedAnimal : housing.getOccupants()) {
+                if (purchasedAnimal.getName().equals(name)) animal = purchasedAnimal;
+            }
+        }
+
+        if (animal == null) {
+            return new Result(false, "Invalid animal name!");
+        }
+
+        animal.setFriendshipPoints(amount);
+        return new Result(true, "Done!");
+    }
+
+    public Result showAnimals() {
+        StringBuilder stringBuilder = new StringBuilder();
+        for (Housing housing : game.getCurrentPlayer().getHousings()) {
+            for (PurchasedAnimal purchasedAnimal : housing.getOccupants()) {
+                stringBuilder.append(purchasedAnimal.toString());
+            }
+        }
+
+        return new Result(true, stringBuilder.toString());
+    }
+
+    public Result shepherdAnimal(String name, String xString, String yString) {
+        int x, y;
+        PurchasedAnimal animal = null;
+        for (Housing housing : game.getCurrentPlayer().getHousings()) {
+            for (PurchasedAnimal purchasedAnimal : housing.getOccupants()) {
+                if (purchasedAnimal.getName().equals(name)) animal = purchasedAnimal;
+            }
+        }
+
+        if (animal == null) {
+            return new Result(false, "Invalid animal name!");
+        }
+
+        try {
+            x = Integer.parseInt(xString);
+            y = Integer.parseInt(yString);
+        } 
+        catch (NumberFormatException e) {
+            return new Result(false, "Invalid coordinates format!");
+        }
+
+        Tile tile = map.getTile(x, y);
+        if (tile.getType().equals(TileType.Housing)) {
+            animal.setInCage(true);
+        }
+        else {
+            animal.setInCage(false);
+        }
+
+        animal.setX(x);
+        animal.setY(y);
+        animal.setFull(true);
+        return new Result(true, "Done!");
+    }
+
+    public Result feedHay(String name) {
+        PurchasedAnimal animal = null;
+        for (Housing housing : game.getCurrentPlayer().getHousings()) {
+            for (PurchasedAnimal purchasedAnimal : housing.getOccupants()) {
+                if (purchasedAnimal.getName().equals(name)) animal = purchasedAnimal;
+            }
+        }
+
+        if (animal == null) {
+            return new Result(false, "Invalid animal name!");
+        }
+
+        if (!isPlayerNearSomething(animal.getX(), animal.getY())) {
+            return new Result(false, "You are not near the animal!");
+        }
+
+        animal.setFull(true);
+        return new Result(true, "Done!");
+    }
+
+    public Result sellAnimal(String name) {
+        PurchasedAnimal animal = null;
+        Housing h = null;
+        for (Housing housing : game.getCurrentPlayer().getHousings()) {
+            for (PurchasedAnimal purchasedAnimal : housing.getOccupants()) {
+                if (purchasedAnimal.getName().equals(name)) {
+                    animal = purchasedAnimal;
+                    h = housing;
+                }
+            }
+        }
+
+        if (animal == null || h == null) {
+            return new Result(false, "Invalid animal name!");
+        }
+
+        h.removeAnimal(animal);
+        game.getCurrentPlayer().getBankAccount().deposit((int) (animal.getType().getPrice() * (animal.getFriendshipPoints() / 1000 + 0.3)));
+        return new Result(true, "Animal sold!");
     }
 }

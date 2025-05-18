@@ -1,24 +1,58 @@
-package models;
+package models.item;
 
 import enums.design.Shop.MarniesRanch;
 import enums.items.AnimalType;
 import enums.items.ToolType;
-
 import java.util.concurrent.ThreadLocalRandom;
 
 public class PurchasedAnimal {
     private final AnimalType type;
     private final String name;
-    private int friendshipPoints;
+    private int friendshipPoints = 0;
     private boolean isInCage = true;
     private boolean isFull = false;
+    private boolean wasFull = false;
+    private boolean productCollected = false;
+    private int x;
+    private int y;
 
-    public PurchasedAnimal(AnimalType type, String name, int friendshipPoints, boolean isInCage, boolean isFull) {
+    public PurchasedAnimal(AnimalType type, String name, int x, int y) {
         this.type = type;
         this.name = name;
-        this.friendshipPoints = friendshipPoints;
-        this.isInCage = isInCage;
-        this.isFull = isFull;
+        this.x = x;
+        this.y = y;
+    }
+
+    public boolean getCollected() {
+        return this.productCollected;
+    }
+
+    public void setCollected(boolean x) {
+        this.productCollected = x;
+    }
+
+    public boolean getWasFull() {
+        return this.wasFull;
+    }
+
+    public void setWasFull(boolean wasFull) {
+        this.wasFull = wasFull;
+    }
+
+    public int getX() {
+        return this.x;
+    }
+
+    public void setX(int x) {
+        this.x = x;
+    }
+
+    public int getY() {
+        return this.y;
+    }
+
+    public void setY(int y) {
+        this.y = y;
     }
 
     public boolean checkFriendshipPoints () {
@@ -96,4 +130,15 @@ public class PurchasedAnimal {
         this.isFull = isFull;
     }
 
+    public void addFriendshipPoints(int amount) {
+        if (this.friendshipPoints + amount > 1000) this.friendshipPoints = 1000;
+        else this.friendshipPoints += amount;
+    }
+
+    @Override
+    public String toString() {
+        return this.name + ":\nFriendship points: " + this.friendshipPoints + 
+        "\nisFull: " + this.isFull + "\nin housing: " + 
+        this.isInCage + "\n---------------------\n";
+    }
 }
