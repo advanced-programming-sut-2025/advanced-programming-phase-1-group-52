@@ -1478,18 +1478,21 @@ public class GameMenuController {
         if(food.getFoodType().isBuffMaxEnergy()){
             player.setEnergy(300);
         }
-        if (food.getFoodType().getSkillBuff().equals(Skills.Fishing)){
-            player.catchFish();
+        if(food.getFoodType().getSkillBuff() != null){
+            if (food.getFoodType().getSkillBuff().equals(Skills.Fishing)){
+                player.catchFish();
+            }
+            if (food.getFoodType().getSkillBuff().equals(Skills.Farming)){
+                player.harvestCrop();
+            }
+            if (food.getFoodType().getSkillBuff().equals(Skills.Foraging)){
+                player.foraging();
+            }
+            if (food.getFoodType().getSkillBuff().equals(Skills.Extraction)){
+                player.extract();
+            }
         }
-        if (food.getFoodType().getSkillBuff().equals(Skills.Farming)){
-            player.harvestCrop();
-        }
-        if (food.getFoodType().getSkillBuff().equals(Skills.Foraging)){
-            player.foraging();
-        }
-        if (food.getFoodType().getSkillBuff().equals(Skills.Extraction)){
-            player.extract();
-        }
+
         return new Result(true,"yummy!");
     }
 
@@ -1544,6 +1547,19 @@ public class GameMenuController {
         player.getInventory().addItem(fish);
         player.catchFish();
         return new Result(true, fish.getNumber() + "x of " + fish.getFishType().getName() + " added to your inventory");
+    }
+
+    public Result cheatTileType(String direction) {
+        Player player = game.getCurrentPlayer();
+        Tile currentTile = map.getTile(player.currentX(), player.currentY());
+        Tile targetTile = getTargetTile(currentTile, direction, map);
+        if(targetTile == null){
+            return new Result(false, "No target tile found");
+        }
+        if(targetTile.getType() == null){
+            return new Result(false, "tile type is null");
+        }
+        return new Result(true, "Type: " + targetTile.getType().name());
     }
 
     private void calculateEnergy(int amount) {

@@ -223,40 +223,46 @@ public class Player {
         this.energy -= energyConsumption;
         Material newMaterial = null;
         Mineral newMineral = null;
-        switch (tile.getType()){
-            case Stone -> {
-                foraging();
-                newMaterial = new Material(MaterialType.Stone,10 + add);
+        TileType type = tile.getType();
+        if (type.equals(TileType.Stone)) {
+            foraging();
+            newMaterial = new Material(MaterialType.Stone, 10 + add);
+            tile.setType(TileType.Earth);
+        } else if (type.equals(TileType.CopperStone)) {
+            newMineral = new Mineral(MineralType.COPPER, 10 + add);
+            tile.setType(TileType.Earth);
+        } else if (type.equals(TileType.GoldStone)) {
+            newMineral = new Mineral(MineralType.GOLD, 10 + add);
+            tile.setType(TileType.Earth);
+        } else if (type.equals(TileType.IridiumStone)) {
+            newMineral = new Mineral(MineralType.IRIDIUM, 10 + add);
+            tile.setType(TileType.Earth);
+        } else if (type.equals(TileType.JewelStone)) {
+            Random rand = new Random();
+            int prob = rand.nextInt(10);
+            if (prob < 5) {
+                newMineral = new Mineral(MineralType.QUARTZ, 10 + add);
             }
-            case CopperStone -> newMineral = new Mineral(MineralType.COPPER, 10 + add);
-            case GoldStone -> newMineral = new Mineral(MineralType.GOLD, 10 + add);
-            case IridiumStone -> newMineral = new Mineral(MineralType.IRIDIUM, 10 + add);
-            case JewelStone -> {
-                Random rand = new Random();
-                int prob = rand.nextInt(10);
-                if (prob < 5) {
-                    newMineral = new Mineral(MineralType.QUARTZ, 10 + add);
-                }
-                else if (prob < 8) {
-                    newMineral = new Mineral(MineralType.EMERALD, 10 + add);
-                }
-                else {
-                    newMineral = new Mineral(MineralType.DIAMOND, 10 + add);
-                }
+            else if (prob < 8) {
+                newMineral = new Mineral(MineralType.EMERALD, 10 + add);
             }
-            case IronStone -> newMineral = new Mineral(MineralType.IRON, 10 + add);
-            case Shoveled -> tile.setType(TileType.Earth);
-            case Earth -> {
-                if(tile.getItem() != null){
-                    this.getInventory().addItem(tile.getItem());
-                }
+            else {
+                newMineral = new Mineral(MineralType.DIAMOND, 10 + add);
+            }
+        } else if (type.equals(TileType.IronStone)) {
+            newMineral = new Mineral(MineralType.IRON, 10 + add);
+        } else if (type.equals(TileType.Shoveled)) {
+            tile.setType(TileType.Earth);
+        } else if (type.equals(TileType.Earth)) {
+            if (tile.getItem() != null) {
+                this.getInventory().addItem(tile.getItem());
             }
         }
         this.inventory.addNumOfItems(1);
         if (newMineral != null) {
             this.inventory.addItem(newMineral);
         }
-        else {
+        else if (newMaterial != null) {
             this.inventory.addItem(newMaterial);
         }
         extract();

@@ -19,6 +19,7 @@ public class ItemFactory {
         ITEM_CONSTRUCTORS.put(CraftingMachineType.class, (type, number) -> new CraftingMachine((CraftingMachineType) type, number));
         ITEM_CONSTRUCTORS.put(MaterialType.class, (type, number) -> new Material((MaterialType) type, number));
         ITEM_CONSTRUCTORS.put(ArtisanProductType.class, (type, number) -> new Good((ArtisanProductType) type, number));
+        ITEM_CONSTRUCTORS.put(FoodType.class, (type, number) -> new Food((FoodType) type, number));
     }
 
     private static final List<Class<? extends Enum<?>>> ITEM_ENUMS = Arrays.asList(
@@ -37,7 +38,8 @@ public class ItemFactory {
             CraftingRecipes.class,
             CraftingMachineType.class,
             MaterialType.class,
-            ArtisanProductType.class
+            ArtisanProductType.class,
+            FoodType.class
     );
 
     public static Optional<Item> createItem(String name, int number) {
