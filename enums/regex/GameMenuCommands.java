@@ -70,7 +70,7 @@ public enum GameMenuCommands {
     MarriageResponse("respond -(?<response>accept|reject) -u (?<username>\\S+)"),
     StartTrade("start trade"),
     MeetNPC("meet NPC (?<name>[\\S\\s]+)"),
-    GiftNPC("gift NPC (?<name>[\\S\\s]+) -i (<item>[\\S\\s]+)"),
+    GiftNPC("gift NPC (?<name>[\\S\\s]+) -i (?<item>[\\S\\s]+)"),
     FriendshipNPCList("friendship NPC list"),
     QuestsList("quests list"),
     QuestsFinish("quests finish -i (?<id>\\d+)"),
@@ -84,7 +84,10 @@ public enum GameMenuCommands {
     ShowForagingSkill("show foraging skill"),
     ShowFarmingSkill("show farming skill"),
     CheatAddRecipe("cheat add recipe -n (?<name>[\\S\\s]+)"),
-    PickItem("pick item -d (?<direction>[\\S\\s]+)"),;
+    PickItem("pick item -d (?<direction>[\\S\\s]+)"),
+    RefrigeratorWorking("cooking refrigerator (?<action>(put|pick)) (?<itemName>[\\S\\s]+)"),
+    ShowCookingRecipes("cooking show recipes"),
+    CheatShowTargetTileType("cheat show tile type -d (?<direction>[\\S\\s]+)"),;
 
     private final String pattern;
 

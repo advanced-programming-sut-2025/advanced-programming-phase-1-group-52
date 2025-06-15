@@ -13,7 +13,7 @@ public class TradeMenu implements AppMenu {
         Matcher matcher;
 
         if ((matcher = TradeMenuCommands.Buy.getMatcher(input)) != null) {
-            
+            System.out.println(controller.buyOffer(matcher.group("username"), matcher.group("item"), matcher.group("amount"), matcher.group("price")));
         } 
         else if ((matcher = TradeMenuCommands.Trade.getMatcher(input)) != null) {
             

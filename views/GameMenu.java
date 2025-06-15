@@ -249,6 +249,9 @@ public class GameMenu implements AppMenu {
         else if((matcher = GameMenuCommands.Plant.getMatcher(input)) != null) {
             System.out.println(controller.plant(matcher.group("seed"), matcher.group("direction")).Message());
         }
+        else if((matcher = GameMenuCommands.CheatShowTargetTileType.getMatcher(input)) != null) {
+            System.out.println(controller.cheatTileType(matcher.group("direction")).Message());
+        }
         else {
             System.out.println("Invalid command");
         }

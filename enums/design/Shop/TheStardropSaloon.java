@@ -1,6 +1,6 @@
 package enums.design.Shop;
 
-import enums.items.CookingRecipes;
+import enums.items.CookingRecipeType;
 import enums.items.FoodType;
 import enums.items.ItemType;
 
@@ -21,35 +21,35 @@ public enum TheStardropSaloon implements ShopEntry {
             300, Integer.MAX_VALUE),
 
     // Recipe
-    HashbrownsRecipe(CookingRecipes.HashBrowns, CookingRecipes.HashBrowns, "Hashbrowns Recipe",
+    HashbrownsRecipe(CookingRecipeType.HashBrowns, CookingRecipeType.HashBrowns, "Hashbrowns Recipe",
             "A recipe to make Hashbrowns", 50, 1),
-    OmeletRecipe(CookingRecipes.Omelet, CookingRecipes.Omelet, "Omelet Recipe",
+    OmeletRecipe(CookingRecipeType.Omelet, CookingRecipeType.Omelet, "Omelet Recipe",
             "A recipe to make Omelet", 100, 1),
-    PancakesRecipe(CookingRecipes.Pancakes, CookingRecipes.Pancakes, "Pancakes Recipe",
+    PancakesRecipe(CookingRecipeType.Pancakes, CookingRecipeType.Pancakes, "Pancakes Recipe",
             "A recipe to make Pancakes", 100, 1),
-    BreadRecipe(CookingRecipes.Bread, CookingRecipes.Bread, "Bread Recipe",
+    BreadRecipe(CookingRecipeType.Bread, CookingRecipeType.Bread, "Bread Recipe",
             "A recipe to make Bread", 100, 1),
-    TortillaRecipe(CookingRecipes.Tortilla, CookingRecipes.Tortilla, "Tortilla Recipe",
+    TortillaRecipe(CookingRecipeType.Tortilla, CookingRecipeType.Tortilla, "Tortilla Recipe",
             "A recipe to make Tortilla", 100, 1),
-    PizzaRecipe(CookingRecipes.Pizza, CookingRecipes.Pizza, "Pizza Recipe",
+    PizzaRecipe(CookingRecipeType.Pizza, CookingRecipeType.Pizza, "Pizza Recipe",
             "A recipe to make Pizza", 150, 1),
-    MakiRollRecipe(CookingRecipes.MakiRoll, CookingRecipes.MakiRoll, "Maki Roll Recipe",
+    MakiRollRecipe(CookingRecipeType.MakiRoll, CookingRecipeType.MakiRoll, "Maki Roll Recipe",
             "A recipe to make Maki Roll", 300, 1),
-    TripleShotEspressoRecipe(CookingRecipes.TripleShotEspresso, CookingRecipes.TripleShotEspresso, "Triple Shot Espresso Recipe",
+    TripleShotEspressoRecipe(CookingRecipeType.TripleShotEspresso, CookingRecipeType.TripleShotEspresso, "Triple Shot Espresso Recipe",
             "A recipe to make Triple Shot Espresso", 5000, 1),
-    CookieRecipe(CookingRecipes.Cookie, CookingRecipes.Cookie, "Cookie Recipe",
+    CookieRecipe(CookingRecipeType.Cookie, CookingRecipeType.Cookie, "Cookie Recipe",
             "A recipe to make Cookie", 300, 1);
 
 
 
     private final ItemType itemType;
-    private final CookingRecipes cookingRecipes;
+    private final CookingRecipeType cookingRecipes;
     private final String name;
     private final String description;
     private final int price;
     private final int dailyLimit;
 
-    TheStardropSaloon(ItemType itemType, CookingRecipes cookingRecipes, String name, String description, int price, int dailyLimit) {
+    TheStardropSaloon(ItemType itemType, CookingRecipeType cookingRecipes, String name, String description, int price, int dailyLimit) {
 
         this.itemType = itemType;
         this.cookingRecipes = cookingRecipes;
@@ -61,7 +61,7 @@ public enum TheStardropSaloon implements ShopEntry {
 
     @Override
     public ItemType getItemType() { return itemType; }
-    public CookingRecipes getCookingRecipes() { return cookingRecipes; }
+    public CookingRecipeType getCookingRecipes() { return cookingRecipes; }
     @Override public String getDisplayName() { return name; }
     @Override public String getDescription() { return description; }
     @Override public int getPrice() { return price; }

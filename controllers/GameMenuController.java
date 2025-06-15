@@ -113,7 +113,7 @@ public class GameMenuController {
         } catch (NumberFormatException e) {
             return new Result(false, "Invalid map id");
         }
-        
+
         if (user1Farm < 1 || user1Farm > 3) {
             return new Result(false, "Invalid map id for user1");
         }
@@ -185,7 +185,7 @@ public class GameMenuController {
             return new Result(true, "Game switched to " + game.getCurrentPlayer().getUsername() + " ");
         }
         return new Result(false, "you can not switch to other players");
-    } 
+    }
 
     public Result showTime() {
         return new Result(true, "It's " + game.getTime().hour() + " O'clock");
@@ -256,7 +256,25 @@ public class GameMenuController {
     }
 
     public Result cheatLightning(String xString, String yString) {
-        return new Result(true, "Lightning handling");
+        int x = Integer.parseInt(xString);
+        int y = Integer.parseInt(yString);
+        Tile tile = map.getTile(x, y);
+        if (tile.getType().equals(TileType.Tree)) {
+            System.out.println("1");
+            tile.setType(TileType.Stone);
+            tile.setPlant(null);
+            tile.setTree(null);
+            tile.setSeed(null);
+        }
+        else if (tile.getType().equals(TileType.Planted)) {
+            System.out.println("2");
+            tile.setType(TileType.Earth);
+            tile.setPlant(null);
+            tile.setTree(null);
+            tile.setSeed(null);
+        }
+
+        return new Result(true, "Lightning hit!");
     }
 
     public Result showWeather() {
@@ -299,7 +317,6 @@ public class GameMenuController {
                 }
                 if(tile.getOwner().equals(player)){
                     if(tile.getType().equals(TileType.BrokenGreenHouse)){
-//                        System.out.println("hh");
                         tile.setType(TileType.GreenHouse);
                     }
                 }
@@ -398,13 +415,13 @@ public class GameMenuController {
         if (!isPlayerNearSomething(npc.getX(), npc.getY())) {
             return new Result(false, "You are not near the NPC!");
         }
-        
+
         ArrayList<NPCDialogs> dialogs = Arrays.stream(NPCDialogs.values())
                 .filter(dialog -> dialog.getLevel() == npc.getFriendShipLevelWith(game.getCurrentPlayer()))
                 .filter(dialog -> dialog.getWeather() == null || dialog.getWeather() == game.getTodayWeather())
                 .filter(dialog -> dialog.getSeason() == null || dialog.getSeason() == game.getDate().getCurrentSeason())
                 .collect(Collectors.toCollection(ArrayList::new));
-                
+
         Random rand = new Random();
         npc.getFriendShipWith(game.getCurrentPlayer()).addFriendshipPoints(20);
         return new Result(true, npc.getType().toString() + " says: " + dialogs.get(rand.nextInt(dialogs.size())).getDialog());
@@ -432,10 +449,10 @@ public class GameMenuController {
         if (item.isTool()) {
             return new Result(false, "You can not gift a tool!");
         }
-        
+
         if (npc.getType().getFavorites().contains(item.getItemType())) {
             npc.getFriendShipWith(game.getCurrentPlayer()).addFriendshipPoints(200);
-        } 
+        }
         else {
             npc.getFriendShipWith(game.getCurrentPlayer()).addFriendshipPoints(50);
         }
@@ -479,9 +496,9 @@ public class GameMenuController {
         int id;
         try {
             id = Integer.parseInt(idString);
-        } 
+        }
         catch (NumberFormatException e) {
-            return new Result(false, "Invalid id format!"); 
+            return new Result(false, "Invalid id format!");
         }
 
         NPC npc = null;
@@ -562,7 +579,7 @@ public class GameMenuController {
                     Food food = new Food(foodType, quest.getRewardAmount());
                     currentPlayer.getInventory().addItem(food);
                 }
-                case CookingRecipes cookingRecipes -> {
+                case CookingRecipeType cookingRecipes -> {
                     CookingRecipe cookingRecipe = new CookingRecipe(cookingRecipes);
                     if (!currentPlayer.getCookingRecipe().contains(cookingRecipe)) {
                         currentPlayer.getCookingRecipe().add(cookingRecipe);
@@ -611,7 +628,7 @@ public class GameMenuController {
         if (player == null) {
             return new Result(false, "Player not found!");
         }
-        
+
         StringBuilder stringBuilder = new StringBuilder();
         for (Talk talk : player.getTalks()) {
             if (talk.getReceiver().equals(player)) stringBuilder.append(talk.toString());
@@ -673,7 +690,7 @@ public class GameMenuController {
             return new Result(false, "You don't have enough items!");
         }
 
-        
+
         switch (item) {
             case Fish fish -> {
                 game.getCurrentPlayer().getInventory().removeItem(fish.getClass(), itemAmount);
@@ -714,7 +731,7 @@ public class GameMenuController {
                 return new Result(false, "Item is not giftable!");
             }
         }
-        
+
         if (receiver.equals(game.getCurrentPlayer().getSpouse())) {
             receiver.addEnergy(50);
             game.getCurrentPlayer().addEnergy(50);
@@ -730,7 +747,7 @@ public class GameMenuController {
         int giftId;
         try {
             giftId = Integer.parseInt(idString);
-        } 
+        }
         catch (NumberFormatException e) {
             return new Result(false, "Id format is invalid!");
         }
@@ -768,7 +785,7 @@ public class GameMenuController {
         }
 
         return new Result(true, stringBuilder.toString());
-    } 
+    }
 
     public Result showGiftHistoryWith(String username) {
         StringBuilder stringBuilder = new StringBuilder();
@@ -835,7 +852,7 @@ public class GameMenuController {
         player.getInventory().addItem(newFlower);
 
         friendship.setFriendshipLevel(3);
-        player.addNotif(currentPlayer, currentPlayer.getUsername() + " has flowered you!");        
+        player.addNotif(currentPlayer, currentPlayer.getUsername() + " has flowered you!");
         return new Result(true, "You have flowered " + username + "and your friendship level is now 3!");
     }
 
@@ -871,7 +888,7 @@ public class GameMenuController {
         if (player == null) {
             return new Result(false, "Invalid username!");
         }
-        
+
         Friendship friendship = game.getFriendshipByPlayers(game.getCurrentPlayer(), player);
         if (respond.equals("accept")) {
             friendship.setFriendshipLevel(4);
@@ -1170,18 +1187,6 @@ public class GameMenuController {
         return new Result(true, recipeString.toString());
     }
 
-    public Result showCookingRecipes(){
-        Player player = game.getCurrentPlayer();
-        ArrayList<CookingRecipe> playerCookingRecipes = player.getCookingRecipe();
-        StringBuilder recipeString = new StringBuilder();
-        recipeString.append(player.getUsername() + "'s cooking recipes:\n");
-        for(CookingRecipe cookingRecipe : playerCookingRecipes) {
-            recipeString.append(cookingRecipe.getRecipeType().getDisplayName() + "\n");
-        }
-        recipeString.deleteCharAt(recipeString.length() - 1);
-        return new Result(true, recipeString.toString());
-    }
-
     public Result craftItem(String itemName) {
         Player player = game.getCurrentPlayer();
         GameMap map = game.getMap();
@@ -1335,6 +1340,18 @@ public class GameMenuController {
         return new Result(true, amount + " added successfully :)");
     }
 
+    public Result showCookingRecipes() {
+        Player player = game.getCurrentPlayer();
+        if(player.getCookingRecipe() == null || player.getCookingRecipe().isEmpty()) {
+            return new Result(false, "you do not have any cooking recipes");
+        }
+        StringBuilder builder = new StringBuilder();
+        builder.append("You have :\n");
+        for(CookingRecipe recipe : player.getCookingRecipe()) {
+            builder.append(recipe.getRecipeType().getName()).append("\n");
+        }
+        return new Result(true, builder.toString());
+    }
     private void onDayPassed(int days) {
     }
 
@@ -1352,7 +1369,7 @@ public class GameMenuController {
 
     private CropType findCropType(String cropName) {
         for(CropType cropType : CropType.values()) {
-            if (cropType.name().equals(cropName)) {
+            if (cropType.getName().equals(cropName)) {
                 return cropType;
             }
         }
@@ -1450,53 +1467,39 @@ public class GameMenuController {
 
     private Result cookingShowRecipes() {
         StringBuilder sb = new StringBuilder("Cooking recipes:\n");
-        for (CookingRecipes r : CookingRecipes.values()) {
+        for (CookingRecipeType r : CookingRecipeType.values()) {
             sb.append("- ").append(r.getDisplayName()).append("\n");
         }
         return Result.success(sb.toString());
     }
 
-    private Result cookingPrepare(String recipeName) {
-        Player player = game.getCurrentPlayer();
-        House  house  = player.getHouse();
-        var    refrigerator = house.refrigerator();
-        var    inventory    = player.getInventory();
-
-        CookingRecipes recipe;
-        try { recipe = CookingRecipes.valueOf(recipeName); }
-        catch (IllegalArgumentException e) {
-            return Result.failure("Invalid recipe: " + recipeName);
-        }
-
-        boolean ok = recipe.getIngredients().entrySet().stream()
-                .allMatch(e -> refrigerator.hasMaterial(e.getKey(), e.getValue()));
-        if (!ok) {
-            return Result.failure("There are not enough ingredients in the refrigerator.");
-        }
-
-        for (Map.Entry<MaterialType, Integer> e : recipe.getIngredients().entrySet()) {
-            refrigerator.pickMaterial(e.getKey(), e.getValue());
-        }
-
-        FoodType food;
-        try { food = FoodType.valueOf(recipeName); }
-        catch (IllegalArgumentException e) {
-            return Result.failure("Error converting to FoodType.");
-        }
-
-        boolean added = inventory.addItem(food.createItem(1));
-        if (!added) {
-            for (Map.Entry<MaterialType, Integer> e : recipe.getIngredients().entrySet()) {
-                refrigerator.putMaterial(e.getKey(), e.getValue());
-            }
-            return Result.failure("There is not enough space in the inventory.");
-        }
-
-        return Result.success(recipe.getDisplayName() + "Ready and added.");
-    }
-
     public Result eat(String foodName) {
-        return new Result(true, "eating");
+        Player player = game.getCurrentPlayer();
+        Food food = findFoodInInventory(foodName);
+        if (food == null) {
+            return new Result(false, "you don't have this food to eat");
+        }
+        player.getInventory().remove2(foodName,1);
+        player.addEnergy(food.getFoodType().getEnergy());
+        if(food.getFoodType().isBuffMaxEnergy()){
+            player.setEnergy(300);
+        }
+        if(food.getFoodType().getSkillBuff() != null){
+            if (food.getFoodType().getSkillBuff().equals(Skills.Fishing)){
+                player.catchFish();
+            }
+            if (food.getFoodType().getSkillBuff().equals(Skills.Farming)){
+                player.harvestCrop();
+            }
+            if (food.getFoodType().getSkillBuff().equals(Skills.Foraging)){
+                player.foraging();
+            }
+            if (food.getFoodType().getSkillBuff().equals(Skills.Extraction)){
+                player.extract();
+            }
+        }
+
+        return new Result(true,"yummy!");
     }
 
     public Result fishing(String fishingPoleName) {
@@ -1552,6 +1555,19 @@ public class GameMenuController {
         return new Result(true, fish.getNumber() + "x of " + fish.getFishType().getName() + " added to your inventory");
     }
 
+    public Result cheatTileType(String direction) {
+        Player player = game.getCurrentPlayer();
+        Tile currentTile = map.getTile(player.currentX(), player.currentY());
+        Tile targetTile = getTargetTile(currentTile, direction, map);
+        if(targetTile == null){
+            return new Result(false, "No target tile found");
+        }
+        if(targetTile.getType() == null){
+            return new Result(false, "tile type is null");
+        }
+        return new Result(true, "Type: " + targetTile.getType().name());
+    }
+
     private void calculateEnergy(int amount) {
         Player player = game.getCurrentPlayer();
         player.setEnergy(player.getEnergy() + amount);
@@ -1563,7 +1579,7 @@ public class GameMenuController {
             switchTurn();
         }
     }
-    
+
     private Item findItem(String itemName, ArrayList<Item> items) {
         for(Item item : items){
             if(item.getName().equals(itemName)){
@@ -1869,6 +1885,15 @@ public class GameMenuController {
         }
     }
 
+    private Food findFoodInInventory(String foodName) {
+        Player player = game.getCurrentPlayer();
+        for (Item item : player.getInventory().getItems()) {
+            if (item.getName().equals(foodName)) {
+                return (Food) item;
+            }
+        }
+        return null;
+    }
     public Result sell(String... inputs) {
         Player currentPlayer = game.getCurrentPlayer();
         if (!isPlayerNearSomething(currentPlayer.getTrashCanX(), currentPlayer.getTrashCanY())) {
@@ -1882,12 +1907,12 @@ public class GameMenuController {
         if (item instanceof Tool) {
             return new Result(false, "You can't sell this item!");
         }
-        
+
         if (inputs[1] == null) {
             switch (item.getItemType()) {
                 case AnimalProductType animalProductType -> {
                     currentPlayer.getBankAccount().setFardaeiDollar(animalProductType.getPrice());
-                }   
+                }
                 case ArtisanProductType artisanProductType -> {
                     currentPlayer.getBankAccount().setFardaeiDollar(artisanProductType.getSellPrice());
                 }
@@ -1906,7 +1931,7 @@ public class GameMenuController {
                     currentPlayer.getBankAccount().setFardaeiDollar(fishType.getPrice());
                 }
                 case FoodType foodType -> {
-                    
+
                 }
                 case ForagingCropType foragingCropType -> {
                     currentPlayer.getBankAccount().setFardaeiDollar(foragingCropType.getBaseSellPrice());
@@ -1915,10 +1940,10 @@ public class GameMenuController {
                     currentPlayer.getBankAccount().setFardaeiDollar(foragingSeedType.getPrice());
                 }
                 case FruitType fruitType -> {
-                    
+
                 }
                 case MaterialType materialType -> {
-                    
+
                 }
                 case MineralType mineralType -> {
                     currentPlayer.getBankAccount().setFardaeiDollar(mineralType.getPrice());
@@ -1927,14 +1952,14 @@ public class GameMenuController {
                     return new Result(false, "You can't sell this item!");
                 }
             }
-            
+
             currentPlayer.getInventory().removeItem(item.getClass(), item.getNumber());
         }
         else {
             int amount;
             try {
                 amount = Integer.parseInt(inputs[1]);
-            } 
+            }
             catch (NumberFormatException e) {
                 return new Result(false, "Invalid amount format!");
             }
@@ -1946,7 +1971,7 @@ public class GameMenuController {
             switch (item.getItemType()) {
                 case AnimalProductType animalProductType -> {
                     currentPlayer.getBankAccount().setFardaeiDollar(animalProductType.getPrice());
-                }   
+                }
                 case ArtisanProductType artisanProductType -> {
                     currentPlayer.getBankAccount().setFardaeiDollar(artisanProductType.getSellPrice());
                 }
@@ -1965,7 +1990,7 @@ public class GameMenuController {
                     currentPlayer.getBankAccount().setFardaeiDollar(fishType.getPrice());
                 }
                 case FoodType foodType -> {
-                    
+
                 }
                 case ForagingCropType foragingCropType -> {
                     currentPlayer.getBankAccount().setFardaeiDollar(foragingCropType.getBaseSellPrice());
@@ -1974,10 +1999,10 @@ public class GameMenuController {
                     currentPlayer.getBankAccount().setFardaeiDollar(foragingSeedType.getPrice());
                 }
                 case FruitType fruitType -> {
-                    
+
                 }
                 case MaterialType materialType -> {
-                    
+
                 }
                 case MineralType mineralType -> {
                     currentPlayer.getBankAccount().setFardaeiDollar(mineralType.getPrice());
@@ -1992,7 +2017,6 @@ public class GameMenuController {
 
         return new Result(true, "You will recieve your money tomorrow!");
     }
-
     public Result petAnimal(String name) {
         PurchasedAnimal animal = null;
         for (Housing housing : game.getCurrentPlayer().getHousings()) {
@@ -2057,7 +2081,7 @@ public class GameMenuController {
         try {
             x = Integer.parseInt(xString);
             y = Integer.parseInt(yString);
-        } 
+        }
         catch (NumberFormatException e) {
             return new Result(false, "Invalid coordinates format!");
         }

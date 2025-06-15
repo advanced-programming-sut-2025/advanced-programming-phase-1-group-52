@@ -10,24 +10,24 @@ public enum MaterialType implements ItemType {
     Oil("oil"),
 
     // Crops
-    Wheat("Wheat"),
-    WheatFlour("Wheat flour"),
-    Pumpkin("Pumpkin"),
-    Tomato("Tomato"),
-    Corn("Corn"),
-    Potato("Potato"),
-    Blueberry("Blueberry"),
-    Melon("Melon"),
-    Apricot("Apricot"),
-    RedCabbage("Red cabbage"),
-    Radish("Radish"),
-    Amaranth("Amaranth"),
-    Kale("Kale"),
-    Beet("Beet"),
-    Parsnip("Parsnip"),
-    Carrot("Carrot"),
-    Eggplant("Eggplant"),
-    Leek("Leek"),
+    Wheat("Wheat mat"),
+    WheatFlour("Wheat flour mat"),
+    Pumpkin("Pumpkin mat"),
+    Tomato("Tomato mat"),
+    Corn("Corn mat"),
+    Potato("Potato mat"),
+    Blueberry("Blueberry mat"),
+    Melon("Melon mat"),
+    Apricot("Apricot mat"),
+    RedCabbage("Red cabbage mat"),
+    Radish("Radish mat"),
+    Amaranth("Amaranth mat"),
+    Kale("Kale mat"),
+    Beet("Beet mat"),
+    Parsnip("Parsnip mat"),
+    Carrot("Carrot mat"),
+    Eggplant("Eggplant mat"),
+    Leek("Leek mat"),
 
     // Fish
     Sardine("Sardine"),
@@ -42,9 +42,9 @@ public enum MaterialType implements ItemType {
 
     // Processed Type
     Rice("Rice"),
-    Bread("Bread"),
-    HashBrowns("Hash browns"),
-    Omelet("Omelet"),
+    Bread("Bread mat"),
+    HashBrowns("Hash browns mat"),
+    Omelet("Omelet mat"),
 
     // Handicrafts Type
     CopperOre("Copper ore"),
@@ -79,21 +79,7 @@ public enum MaterialType implements ItemType {
     // Joja's remainings
     JojaCola("Joja Cola"),
 
-    // Carpenter's items
-    Barn("Barn"),
-    BigBarn("Big Barn"),
-    DeluxeBarn("Deluxe Barn"),
-    Coop("Coop"),
-    BigCoop("Big Coop"),
-    DeluxeCoop("Deluxe Coop"),
-    Well("Well"),
-    ShippingBin("Shipping Bin"),
-
-    // StarDrop Saloon
-    Beer("Beer"),
-    Salad("Salad"),
-    Spaghetti("Spaghetti"),
-    Pizza("Pizza"),
+    // Carpenter's items,
 
     // Marine's Ranch items:
     Hay("Hay"),
@@ -101,7 +87,6 @@ public enum MaterialType implements ItemType {
     Shears("Shears"),
 
     // Fishing poles :
-    FishSmokerRecipe( "Fish Smoker recipe"),
     TroutSoup( "Trout Soup"),
     BambooPole( "Bamboo Pole"),
     TrainingRod("Training Rod"),

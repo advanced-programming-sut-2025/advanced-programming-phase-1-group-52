@@ -1,16 +1,15 @@
 package models.item;
 
-import enums.items.CookingRecipes;
-import enums.items.ItemType;
+import enums.items.CookingRecipeType;
 
 public class CookingRecipe{
-    CookingRecipes recipeType;
+    CookingRecipeType recipeType;
 
-    public CookingRecipe(CookingRecipes recipeType) {
+    public CookingRecipe(CookingRecipeType recipeType) {
         this.recipeType = recipeType;
     }
 
-    public CookingRecipes getRecipeType() {
+    public CookingRecipeType getRecipeType() {
         return recipeType;
     }
 }
