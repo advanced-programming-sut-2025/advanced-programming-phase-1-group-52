@@ -35,14 +35,15 @@ public class HouseRefrigerator {
     }
 
     public Item pickItem(String targetItemName) {
+        Item newItem = null;
         for (Item item : items) {
             if(item.getName().equals(targetItemName)) {
-                items.remove(item);
-                this.filled -= 1;
-                return item;
+                newItem = item;
             }
         }
-        return null;
+        items.remove(newItem);
+        this.filled -= 1;
+        return newItem;
     }
 
 }

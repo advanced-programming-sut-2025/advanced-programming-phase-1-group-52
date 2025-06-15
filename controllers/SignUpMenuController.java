@@ -5,6 +5,7 @@ import enums.player.Gender;
 import enums.regex.SecurityQuestion;
 import enums.regex.SignUpMenuCommands;
 import models.App;
+import models.DataBase;
 import models.Result;
 import models.User;
 
@@ -61,6 +62,7 @@ public class    SignUpMenuController {
         String questionNumber;
         String input = scanner.nextLine().trim();
         User newUser = new User (username, password, nickname, email, genderEnum);
+        DataBase.addUser(newUser);
         if((matcher = SignUpMenuCommands.PickQuestion.getMatcher(input)) != null){
             questionNumber = matcher.group("questionNumber");
             answer = matcher.group("answer");

@@ -245,6 +245,7 @@ public class Player {
         if (type.equals(TileType.Stone)) {
             foraging();
             newMaterial = new Material(MaterialType.Stone, 10 + add);
+            this.inventory.addItem(newMaterial);
             tile.setType(TileType.Earth);
         } else if (type.equals(TileType.CopperStone)) {
             newMineral = new Mineral(MineralType.COPPER, 10 + add);

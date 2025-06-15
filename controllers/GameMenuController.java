@@ -256,7 +256,25 @@ public class GameMenuController {
     }
 
     public Result cheatLightning(String xString, String yString) {
-        return new Result(true, "Lightning handling");
+        int x = Integer.parseInt(xString);
+        int y = Integer.parseInt(yString);
+        Tile tile = map.getTile(x, y);
+        if (tile.getType().equals(TileType.Tree)) {
+            System.out.println("1");
+            tile.setType(TileType.Stone);
+            tile.setPlant(null);
+            tile.setTree(null);
+            tile.setSeed(null);
+        }
+        else if (tile.getType().equals(TileType.Planted)) {
+            System.out.println("2");
+            tile.setType(TileType.Earth);
+            tile.setPlant(null);
+            tile.setTree(null);
+            tile.setSeed(null);
+        }
+
+        return new Result(true, "Lightning hit!");
     }
 
     public Result showWeather() {
@@ -299,7 +317,6 @@ public class GameMenuController {
                 }
                 if(tile.getOwner().equals(player)){
                     if(tile.getType().equals(TileType.BrokenGreenHouse)){
-//                        System.out.println("hh");
                         tile.setType(TileType.GreenHouse);
                     }
                 }
