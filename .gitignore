@@ -1,7 +1,6 @@
 # Default ignored files
 /shelf/
 /workspace.xml
-/assets/content
 ## Gradle:
 .gradle/
 gradle-app.setting
