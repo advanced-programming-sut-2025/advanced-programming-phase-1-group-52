@@ -1,8 +1,0 @@
-ext.pathMapper = [:]
-ext.pathMapper.put('C:/Program Files/JetBrains/IntelliJ IDEA Community Edition 2024.3.4.1/lib/external-system-rt.jar', '/mnt/c/Program Files/JetBrains/IntelliJ IDEA Community Edition 2024.3.4.1/lib/external-system-rt.jar')
-ext.pathMapper.put('C:/Program Files/JetBrains/IntelliJ IDEA Community Edition 2024.3.4.1/plugins/gradle/lib/gradle-tooling-extension-impl.jar', '/mnt/c/Program Files/JetBrains/IntelliJ IDEA Community Edition 2024.3.4.1/plugins/gradle/lib/gradle-tooling-extension-impl.jar')
-ext.pathMapper.put('C:/Program Files/JetBrains/IntelliJ IDEA Community Edition 2024.3.4.1/plugins/gradle/lib/gradle-tooling-extension-api.jar', '/mnt/c/Program Files/JetBrains/IntelliJ IDEA Community Edition 2024.3.4.1/plugins/gradle/lib/gradle-tooling-extension-api.jar')
-ext.pathMapper.put('//wsl.localhost/Ubuntu/home/sanyar/.sdkman/candidates/java/21.0.2-tem/bin/java', '/home/sanyar/.sdkman/candidates/java/21.0.2-tem/bin/java')
-ext.pathMapper.put('//wsl.localhost/ubuntu/home/sanyar/java_projects/AP_Project/AP_Project_Phase2,3', '/home/sanyar/java_projects/AP_Project/AP_Project_Phase2,3')
-ext.pathMapper.put("<<target java executable path>>", '/usr/lib/jvm/jdk-23.0.2-oracle-x64/bin/java')
-ext.mapPath = { path -> pathMapper.get(path) ?: path }
