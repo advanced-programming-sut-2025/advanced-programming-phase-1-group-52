@@ -1,9 +1,9 @@
 [
 {
 	class: com.example.main.models.User
-	username: radin
-	password: "%N},f2ou"
-	nickname: radin7
+	username: radin1
+	password: radin
+	nickname: rad
 	email: radin@gmail.com
 	gender: Male
 	securityQuestion: PetName

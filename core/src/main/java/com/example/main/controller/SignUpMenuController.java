@@ -34,7 +34,7 @@ public class    SignUpMenuController {
             return new Result(false, "Username is invalid");
         }
         for (User users : App.getInstance().getUsers()) {
-            if (users.getUsername().equals(username)){
+            if (users.getUsername() != null && users.getUsername().equals(username)){
                 return new Result(false, "This username is already taken!");
             }
         }
@@ -86,7 +86,7 @@ public class    SignUpMenuController {
             return new Result(false, "Username is invalid");
         }
         for (User users : App.getInstance().getUsers()) {
-            if (users.getUsername().equals(username)){
+            if (users.getUsername() != null && users.getUsername().equals(username)){
                 return new Result(false, "this username is already taken!");
             }
         }
@@ -150,7 +150,7 @@ public class    SignUpMenuController {
         SecurityQuestion[] questions = SecurityQuestion.values();
         if (questionNum < 1 || questionNum > questions.length) {
             return new Result(false,
-                    "Invalid question number. Must be between 1 and " + questions.length);
+                "Invalid question number. Must be between 1 and " + questions.length);
         }
         SecurityQuestion selected = questions[questionNum - 1];
         if (!answer.equals(answerConfirm)) {
@@ -166,8 +166,8 @@ public class    SignUpMenuController {
         App.getInstance().setCurrentMenu(Menu.LoginMenu);
 
         return new Result(true,
-                "Security question set to: \"" + selected.getQuestionText() + "\". " +
-                        "Please use this to recover your password if needed.");
+            "Security question set to: \"" + selected.getQuestionText() + "\". " +
+                "Please use this to recover your password if needed.");
     }
 
     public void showCurrentMenu() {

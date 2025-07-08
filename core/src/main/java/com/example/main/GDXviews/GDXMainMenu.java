@@ -49,7 +49,7 @@ public class GDXMainMenu implements Screen {
             public void clicked(InputEvent event, float x, float y) {
                 Result result = controller.menuEnter("ProfileMenu");
                 System.out.println(result.Message());
-                //GDXProfileMenu
+                Main.getInstance().setScreen(new GDXProfileMenu());
             }
         });
 

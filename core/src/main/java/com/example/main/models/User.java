@@ -6,19 +6,24 @@ import com.example.main.enums.regex.SecurityQuestion;
 import java.util.HashMap;
 
 public class User {
-    private String username;
-    private String password;
-    private String nickname;
-    private String email;
-    private Gender gender;
-    private SecurityQuestion securityQuestion;
-    private String securityAnswer;
-    private HashMap<Game, Player> userPlayers = new HashMap<>();
-    private Game userGame;
-    private Player currentPlayer;
-    private int numPlayed = 0;
-    private int highScore = 0;
+    // --- Fields to be saved in JSON ---
+    public String username;
+    public String password;
+    public String nickname;
+    public String email;
+    public Gender gender;
+    public SecurityQuestion securityQuestion;
+    public String securityAnswer;
+    public int numPlayed = 0;
+    public int highScore = 0;
 
+    // --- Runtime fields (marked as transient to be ignored by JSON serializer) ---
+    private transient HashMap<Game, Player> userPlayers = new HashMap<>();
+    private transient Game userGame;
+    private transient Player currentPlayer;
+
+
+    // No-argument constructor for JSON deserialization
     public User() {
         this.userPlayers = new HashMap<>();
     }
@@ -31,6 +36,8 @@ public class User {
         this.gender = gender;
         this.userPlayers = new HashMap<>();
     }
+
+    // --- Getters and Setters ---
 
     public String getUsername() { return username; }
 
@@ -73,6 +80,9 @@ public class User {
     public HashMap<Game, Player> userPlayers() { return userPlayers; }
 
     public void addUserPlayers(Game game, Player player) {
+        if (this.userPlayers == null) {
+            this.userPlayers = new HashMap<>();
+        }
         this.userPlayers.put(game, player);
     }
 

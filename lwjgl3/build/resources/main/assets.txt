@@ -7171,3 +7171,4 @@ ui/templates/game.lml
 ui/templates/loading.lml
 ui/templates/macros/global.lml
 ui/templates/menu.lml
+users.json
