@@ -1,19 +1,26 @@
 package com.example.main.models;
 
+import com.example.main.GDXmodels.DatabaseManager;
 import com.example.main.enums.Menu;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class App {
-    private static App instance ;
-    private final ArrayList<User> users;
+    private static App instance;
+    private List<User> users;
     private ArrayList<Game> games;
+    private final DatabaseManager dbManager;
     private Menu currentMenu;
     private User currentUser;
     private Game currentGame;
 
     private App() {
-        users = new ArrayList<>();
+        dbManager = new DatabaseManager();
+        users = dbManager.loadUsers();
+        if (users == null) {
+            users = new ArrayList<>();
+        }
         games = new ArrayList<>();
     }
 
@@ -22,7 +29,7 @@ public class App {
         return instance;
     }
 
-    public ArrayList<User> getUsers() {
+    public List<User> getUsers() {
         return users;
     }
 
@@ -58,12 +65,16 @@ public class App {
         this.currentGame = currentGame;
     }
 
-    public ArrayList<User> users() {
+    public List<User> users() {
         return users;
     }
 
     public void addUsers(User user) {
         this.users.add(user);
+        dbManager.saveUsers(users);
     }
 
+    public void updateUserData() {
+        dbManager.saveUsers(users);
+    }
 }

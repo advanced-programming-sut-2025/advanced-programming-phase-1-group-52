@@ -16,6 +16,68 @@ import com.example.main.models.Result;
 import com.example.main.models.User;
 
 public class    SignUpMenuController {
+    public Result register(
+        String username,
+        String password,
+        String passwordConfirm,
+        String nickname,
+        String email,
+        String gender,
+        SecurityQuestion question,
+        String answer,
+        String answerConfirm
+    ) {
+        if (username.length() < 3) {
+            return new Result(false, "Username must be at least 3 characters");
+        }
+        if (SignUpMenuCommands.ValidUsername.getMatcher(username) == null) {
+            return new Result(false, "Username is invalid");
+        }
+        for (User users : App.getInstance().getUsers()) {
+            if (users.getUsername().equals(username)){
+                return new Result(false, "This username is already taken!");
+            }
+        }
+        if(!password.equals(passwordConfirm)){
+            return new Result(false, "Passwords do not match");
+        }
+        if (password.length() < 8) {
+            return new Result(false, "Password must be at least 8 characters");
+        }
+        if (SignUpMenuCommands.ValidDigit.getMatcher(password) == null) {
+            return new Result(false, "Password must contain digit");
+        }
+        if (SignUpMenuCommands.ValidLower.getMatcher(password) == null) {
+            return new Result(false, "Password must contain lowercase letter");
+        }
+        if (SignUpMenuCommands.ValidUpper.getMatcher(password) == null) {
+            return new Result(false, "Password must contain uppercase letter");
+        }
+        if (SignUpMenuCommands.ValidSpecial.getMatcher(password) == null) {
+            return new Result(false, "Password must contain special character");
+        }
+        if (SignUpMenuCommands.ValidEmail.getMatcher(email) == null) {
+            return new Result(false, "Email is invalid");
+        }
+
+        if (!answer.equals(answerConfirm)) {
+            return new Result(false, "Security answers do not match");
+        }
+        if (answer.trim().isEmpty()) {
+            return new Result(false, "Security answer cannot be empty");
+        }
+
+        Gender genderEnum = Gender.valueOf(gender);
+        User newUser = new User(username, password, nickname, email, genderEnum);
+        newUser.setSecurityQuestion(question);
+        newUser.setSecurityAnswer(answer);
+
+        App.getInstance().addUsers(newUser);
+        App.getInstance().setCurrentMenu(Menu.LoginMenu);
+
+        return new Result(true, "User registered successfully");
+    }
+
     public Result register(String username, String password, String passwordConfirm, String nickname, String email, String gender, Scanner scanner) {
         if (username.length() < 3) {
             return new Result(false, "Username must be at least 3 characters");
