@@ -30,17 +30,17 @@ public class GDXMainMenu implements Screen {
 
         Label welcomeLabel = new Label("Welcome, " + App.getInstance().getCurrentUser().getUsername(), skin);
 
-        TextButton gameMenuButton = new TextButton("Go to Game Menu", skin);
+        TextButton preGameMenuButton = new TextButton("Go to PreGame Menu", skin);
         TextButton profileMenuButton = new TextButton("Go to Profile Menu", skin);
         TextButton logoutButton = new TextButton("Logout", skin);
         TextButton exitButton = new TextButton("Exit", skin);
 
-        gameMenuButton.addListener(new ClickListener() {
+        preGameMenuButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                Result result = controller.menuEnter("GameMenu");
+                Result result = controller.menuEnter("PreGameMenu");
                 System.out.println(result.Message());
-                // DXXGameMenu
+                Main.getInstance().setScreen(new GDXPreGameMenu());
             }
         });
 
@@ -71,7 +71,7 @@ public class GDXMainMenu implements Screen {
         });
 
         table.add(welcomeLabel).padBottom(20).row();
-        table.add(gameMenuButton).width(200).pad(10).row();
+        table.add(preGameMenuButton).width(200).pad(10).row();
         table.add(profileMenuButton).width(200).pad(10).row();
         table.add(logoutButton).width(200).pad(10).row();
         table.add(exitButton).width(200).pad(10).row();
