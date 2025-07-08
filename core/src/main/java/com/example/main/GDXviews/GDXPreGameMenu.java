@@ -10,6 +10,7 @@ import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.example.main.Main;
 import com.example.main.controller.PreGameMenuController;
+import com.example.main.models.App;
 import com.example.main.models.Result;
 
 public class GDXPreGameMenu implements Screen {
@@ -17,7 +18,8 @@ public class GDXPreGameMenu implements Screen {
     private Skin skin;
     private PreGameMenuController controller;
 
-    private TextField username1Field, username2Field, username3Field;
+    private TextField username2Field, username3Field, username4Field;
+    private SelectBox<String> map1Select, map2Select, map3Select, map4Select;
     private Label messageLabel;
     private TextButton newGameButton, loadGameButton, backButton;
 
@@ -33,14 +35,24 @@ public class GDXPreGameMenu implements Screen {
 
         messageLabel = new Label("", skin);
 
-        username1Field = new TextField("", skin);
-        username1Field.setMessageText("Player 2 Username");
-
         username2Field = new TextField("", skin);
-        username2Field.setMessageText("Player 3 Username");
+        username2Field.setMessageText("Player 2 Username");
 
         username3Field = new TextField("", skin);
-        username3Field.setMessageText("Player 4 Username");
+        username3Field.setMessageText("Player 3 Username");
+
+        username4Field = new TextField("", skin);
+        username4Field.setMessageText("Player 4 Username");
+
+        String[] mapOptions = {"Neutral", "Miner", "Fisher"};
+        map1Select = new SelectBox<>(skin);
+        map1Select.setItems(mapOptions);
+        map2Select = new SelectBox<>(skin);
+        map2Select.setItems(mapOptions);
+        map3Select = new SelectBox<>(skin);
+        map3Select.setItems(mapOptions);
+        map4Select = new SelectBox<>(skin);
+        map4Select.setItems(mapOptions);
 
         newGameButton = new TextButton("Start New Game", skin);
         loadGameButton = new TextButton("Load Game", skin);
@@ -49,14 +61,17 @@ public class GDXPreGameMenu implements Screen {
         newGameButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                String user1 = username1Field.getText();
                 String user2 = username2Field.getText();
                 String user3 = username3Field.getText();
-                Result result = controller.startNewGame(user1, user2, user3);
+                String user4 = username4Field.getText();
+                int map1 = map1Select.getSelectedIndex();
+                int map2 = map2Select.getSelectedIndex();
+                int map3 = map3Select.getSelectedIndex();
+                int map4 = map4Select.getSelectedIndex();
+                Result result = controller.startNewGame(user2, user3, user4, map1, map2, map3, map4);
                 messageLabel.setText(result.Message());
                 if (result.isSuccessful()) {
-                    // On success, you might navigate to a map selection screen or the game itself.
-                    // For now, it shows a success message.
+                    // Navigate to the game screen or map selection if needed
                 }
             }
         });
@@ -76,21 +91,29 @@ public class GDXPreGameMenu implements Screen {
         });
 
         // Layout
-        table.add(messageLabel).colspan(2).pad(10);
+        table.add(messageLabel).colspan(3).pad(10).center();
+        table.row();
+        table.add(new Label("Player 1 (You):", skin)).left();
+        table.add(new Label(App.getInstance().getCurrentUser().getUsername(), skin)).pad(5);
+        table.add(map1Select).width(150).pad(5);
         table.row();
         table.add(new Label("Player 2:", skin)).left();
-        table.add(username1Field).width(250).pad(5);
+        table.add(username2Field).width(250).pad(5);
+        table.add(map2Select).width(150).pad(5);
         table.row();
         table.add(new Label("Player 3:", skin)).left();
-        table.add(username2Field).width(250).pad(5);
+        table.add(username3Field).width(250).pad(5);
+        table.add(map3Select).width(150).pad(5);
         table.row();
         table.add(new Label("Player 4:", skin)).left();
-        table.add(username3Field).width(250).pad(5);
+        table.add(username4Field).width(250).pad(5);
+        table.add(map4Select).width(150).pad(5);
         table.row().padTop(20);
-        table.add(newGameButton).width(200).pad(10);
-        table.add(loadGameButton).width(200).pad(10);
+        table.add(newGameButton).width(200).pad(10).colspan(3).center();
         table.row();
-        table.add(backButton).colspan(2).center().pad(10);
+        table.add(loadGameButton).width(200).pad(10).colspan(3).center();
+        table.row();
+        table.add(backButton).colspan(3).center().pad(10);
     }
 
     @Override
