@@ -21,6 +21,7 @@ public class ProfileMenuController {
         }
 
         App.getInstance().getCurrentUser().setUsername(username);
+        App.getInstance().updateUserData(); // Save data after successful change
         return new Result(true, "Username changed successfully.");
     }
 
@@ -32,6 +33,7 @@ public class ProfileMenuController {
         }
 
         App.getInstance().getCurrentUser().setNickname(nickname);
+        App.getInstance().updateUserData(); // Save data after successful change
         return new Result(true, "Nickname changed successfully.");
     }
 
@@ -47,6 +49,7 @@ public class ProfileMenuController {
         }
 
         App.getInstance().getCurrentUser().setEmail(email);
+        App.getInstance().updateUserData(); // Save data after successful change
         return new Result(true, "Email changed successfully.");
     }
 
@@ -74,6 +77,7 @@ public class ProfileMenuController {
         }
 
         user.setPassword(newPassword);
+        App.getInstance().updateUserData(); // Save data after successful change
         return new Result(true, "Password changed successfully.");
 
     }

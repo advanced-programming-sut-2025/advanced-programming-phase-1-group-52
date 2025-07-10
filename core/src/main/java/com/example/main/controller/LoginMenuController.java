@@ -102,6 +102,45 @@ public class LoginMenuController {
 
         return new Result(true, "Password reset successfully. You can now login.");
     }
+    public Result resetPasswordProcess(String username, String answer, String newPassword) {
+        User user = App.getInstance()
+            .getUsers()
+            .stream()
+            .filter(u -> u.getUsername().equals(username))
+            .findFirst()
+            .orElse(null);
+
+        if (user == null) {
+            return new Result(false, "No user account found with the provided Username.");
+        }
+
+        if (!user.getSecurityAnswer().equals(answer)) {
+            return new Result(false, "Wrong answer to security question.");
+        }
+
+        if (newPassword.length() < 8) {
+            return new Result(false, "Password must be at least 8 characters");
+        }
+        if (SignUpMenuCommands.ValidDigit.getMatcher(newPassword) == null) {
+            return new Result(false, "Password must contain a digit");
+        }
+        if (SignUpMenuCommands.ValidLower.getMatcher(newPassword) == null) {
+            return new Result(false, "Password must contain a lowercase letter");
+        }
+        if (SignUpMenuCommands.ValidUpper.getMatcher(newPassword) == null) {
+            return new Result(false, "Password must contain an uppercase letter");
+        }
+        if (SignUpMenuCommands.ValidSpecial.getMatcher(newPassword) == null) {
+            return new Result(false, "Password must contain a special character");
+        }
+
+        user.setPassword(newPassword);
+        App.getInstance().updateUserData();
+        App.getInstance().setCurrentUser(null);
+        App.getInstance().setCurrentMenu(Menu.LoginMenu);
+
+        return new Result(true, "Password reset successfully. You can now login.");
+    }
 
     public Result logout() {
         App.getInstance().setCurrentUser(null);
