@@ -4535,10 +4535,19 @@ content/Content (unpacked)/TileSheets/weapons.png
 content/Content (unpacked)/TileSheets/wizard_furniture.png
 content/Content (unpacked)/TileSheets/wizard_furnitureFront.png
 content/Content (unpacked)/VolcanoLayouts/Layouts.png
+content/Cut/bush.png
 content/Cut/grass1.png
 content/Cut/grass2.png
 content/Cut/ground1.png
 content/Cut/ground2.png
+content/Cut/npc_house1.png
+content/Cut/npc_house2.png
+content/Cut/npc_house3.png
+content/Cut/npc_house4.png
+content/Cut/npc_house5.png
+content/Cut/player_house1.png
+content/Cut/player_house2.png
+content/Cut/player_house3.png
 content/Cut/shoveled.png
 content/Cut/tree1.png
 content/Cut/tree2.png
@@ -7160,7 +7169,12 @@ hs_err_pid108444.log
 hs_err_pid112288.log
 hs_err_pid113802.log
 hs_err_pid13770.log
+hs_err_pid138256.log
+hs_err_pid142396.log
+hs_err_pid144846.log
 hs_err_pid15195.log
+hs_err_pid153018.log
+hs_err_pid154995.log
 hs_err_pid16999.log
 hs_err_pid20092.log
 hs_err_pid21808.log

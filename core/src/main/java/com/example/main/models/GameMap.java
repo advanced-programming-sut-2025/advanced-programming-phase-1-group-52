@@ -1,5 +1,13 @@
 package com.example.main.models;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Queue;
+import java.util.Random;
+import java.util.stream.Collectors;
+
 import com.example.main.enums.design.FarmThemes;
 import com.example.main.enums.design.NPCType;
 import com.example.main.enums.design.ShopType;
@@ -9,13 +17,6 @@ import com.example.main.enums.items.ForagingCropType;
 import com.example.main.enums.items.ForagingSeedType;
 import com.example.main.enums.items.FruitType;
 import com.example.main.enums.items.TreeType;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Queue;
-import java.util.Random;
-import java.util.stream.Collectors;
 import com.example.main.models.building.GreenHouse;
 import com.example.main.models.building.House;
 import com.example.main.models.building.NPCHouse;
@@ -44,27 +45,30 @@ public class GameMap {
             players.add(user.getPlayer());
         }
 
-        generateBuilding(players, 0, TileType.House, 1, 6, 1, 6);
+        generateBuilding(players, 0, TileType.House, 1, 8, 1, 8);
         generateBuilding(players, 0, TileType.BrokenGreenHouse, 22, 29, 1, 7);
         this.houses.add(new House(players.get(0), 1, 1));
         this.greenHouses.add(new GreenHouse(players.get(0), 22, 1));
 
-        generateBuilding(players, 1, TileType.House, 83, 88, 1, 6);
+        generateBuilding(players, 1, TileType.House, 81, 88, 1, 8);
         generateBuilding(players, 1, TileType.BrokenGreenHouse, 61, 68, 1, 7);
         this.houses.add(new House(players.get(1), 83, 1));
         this.greenHouses.add(new GreenHouse(players.get(1), 61, 1));
 
-        generateBuilding(players, 2, TileType.House, 1, 6, 33, 38);
+        generateBuilding(players, 2, TileType.House, 1, 8, 31, 38);
         generateBuilding(players, 2, TileType.BrokenGreenHouse, 22, 29, 32, 38);
         this.houses.add(new House(players.get(2), 1, 33));
         this.greenHouses.add(new GreenHouse(players.get(2), 22, 32));
 
-        generateBuilding(players, 3, TileType.House, 83, 88, 33, 38);
+        generateBuilding(players, 3, TileType.House, 81, 88, 31, 38);
         generateBuilding(players, 3, TileType.BrokenGreenHouse, 61, 68, 32, 38);
         this.houses.add(new House(players.get(3), 83, 33));
         this.greenHouses.add(new GreenHouse(players.get(3), 61, 32));
 
         generateFarm(players, themes);
+
+        // Generate bush borders around player areas
+        generateBushBorders(players);
 
         for (ShopType shopType : ShopType.values()) {
             generateBuilding(
@@ -95,7 +99,7 @@ public class GameMap {
                     npc.getHouseCornerX(),
                     npc.getHouseCornerX() + 4,
                     npc.getHouseCornerY(),
-                    npc.getHouseCornerY() + 4
+                    npc.getHouseCornerY() + 6
             );
 
             this.npcHouses.add(new NPCHouse(npc));
@@ -530,6 +534,62 @@ public class GameMap {
             case Miner -> generateBuilding(players, 3, TileType.Quarry, 61, 79, 54, 58);
             case Fisher -> generateLake(players.get(3), 61, 79, 54, 58);
             default -> {
+            }
+        }
+    }
+
+    private void generateBushBorders(ArrayList<Player> players) {
+        // Generate bush borders around each player area, leaving gaps for movement
+        
+        // Player 0 area: (0,0) to (29,29)
+        generateBushBorderForArea(players.get(0), 0, 29, 0, 29);
+        
+        // Player 1 area: (60,0) to (89,29)
+        generateBushBorderForArea(players.get(1), 60, 89, 0, 29);
+        
+        // Player 2 area: (0,30) to (29,59)
+        generateBushBorderForArea(players.get(2), 0, 29, 30, 59);
+        
+        // Player 3 area: (60,30) to (89,59)
+        generateBushBorderForArea(players.get(3), 60, 89, 30, 59);
+    }
+
+    private void generateBushBorderForArea(Player owner, int xStart, int xEnd, int yStart, int yEnd) {
+        // Create bush borders around the area, leaving gaps for movement
+        
+        // Top border (leave gaps at positions 13-16 for a 4-tile opening)
+        for (int x = xStart; x <= xEnd; x++) {
+            if (x < xStart + 13 || x > xStart + 16) {
+                if (tiles[x][yStart] == null || tiles[x][yStart].getType() == TileType.Earth) {
+                    tiles[x][yStart] = new Tile(x, yStart, TileType.Bush, owner);
+                }
+            }
+        }
+        
+        // Bottom border (leave gaps at positions 13-16 for a 4-tile opening)
+        for (int x = xStart; x <= xEnd; x++) {
+            if (x < xStart + 13 || x > xStart + 16) {
+                if (tiles[x][yEnd] == null || tiles[x][yEnd].getType() == TileType.Earth) {
+                    tiles[x][yEnd] = new Tile(x, yEnd, TileType.Bush, owner);
+                }
+            }
+        }
+        
+        // Left border (leave gaps at positions 13-16 for a 4-tile opening)
+        for (int y = yStart; y <= yEnd; y++) {
+            if (y < yStart + 13 || y > yStart + 16) {
+                if (tiles[xStart][y] == null || tiles[xStart][y].getType() == TileType.Earth) {
+                    tiles[xStart][y] = new Tile(xStart, y, TileType.Bush, owner);
+                }
+            }
+        }
+        
+        // Right border (leave gaps at positions 13-16 for a 4-tile opening)
+        for (int y = yStart; y <= yEnd; y++) {
+            if (y < yStart + 13 || y > yStart + 16) {
+                if (tiles[xEnd][y] == null || tiles[xEnd][y].getType() == TileType.Earth) {
+                    tiles[xEnd][y] = new Tile(xEnd, y, TileType.Bush, owner);
+                }
             }
         }
     }
