@@ -51,6 +51,13 @@ public class GDXGameScreen implements Screen {
     private Texture npcHouse4Texture;
     private Texture npcHouse5Texture;
     private Texture bushTexture;
+    private Texture stone1Texture;
+    private Texture stone2Texture;
+    private Texture copperStoneTexture;
+    private Texture ironStoneTexture;
+    private Texture goldStoneTexture;
+    private Texture iridiumStoneTexture;
+    private Texture jewelStoneTexture;
     
     // Random base ground assignment for each map position
     private int[][] baseGroundMap;  // 0 = ground1, 1 = ground2
@@ -61,6 +68,8 @@ public class GDXGameScreen implements Screen {
     private int[] playerHouseVariants;  // One per player
     // Store random house choices for each NPC (0-4 for npc_house1-npc_house5)
     private int[] npcHouseVariants;     // One per NPC
+    // Store random stone choices for regular stones (0 = stone1, 1 = stone2)
+    private int[][] stoneVariantMap;    // One per stone position
     private Random random;
     
     // Player house coordinates from GameMap.java
@@ -138,6 +147,7 @@ public class GDXGameScreen implements Screen {
         treeVariantMap = new int[MAP_WIDTH][MAP_HEIGHT];
         playerHouseVariants = new int[4]; // 4 players
         npcHouseVariants = new int[5]; // 5 NPCs
+        stoneVariantMap = new int[MAP_WIDTH][MAP_HEIGHT];
         
         loadTextures();
 
@@ -166,6 +176,13 @@ public class GDXGameScreen implements Screen {
         npcHouse4Texture = new Texture("content/Cut/npc_house4.png");
         npcHouse5Texture = new Texture("content/Cut/npc_house5.png");
         bushTexture = new Texture("content/Cut/bush.png");
+        stone1Texture = new Texture("content/Cut/stone1.png");
+        stone2Texture = new Texture("content/Cut/stone2.png");
+        copperStoneTexture = new Texture("content/Cut/copper_stone.png");
+        ironStoneTexture = new Texture("content/Cut/iron_stone.png");
+        goldStoneTexture = new Texture("content/Cut/gold_stone.png");
+        iridiumStoneTexture = new Texture("content/Cut/iridium_stone.png");
+        jewelStoneTexture = new Texture("content/Cut/jewel_stone.png");
     }
     
     private void generateRandomMaps() {
@@ -180,6 +197,9 @@ public class GDXGameScreen implements Screen {
                 
                 // Random tree variant (0 = tree1, 1 = tree2, 2 = tree3)
                 treeVariantMap[x][y] = random.nextInt(3);
+
+                // Random stone variant (0 = stone1, 1 = stone2)
+                stoneVariantMap[x][y] = random.nextInt(2);
             }
         }
         
@@ -190,7 +210,7 @@ public class GDXGameScreen implements Screen {
 
         // Generate random house variants for each NPC
         for (int i = 0; i < 5; i++) {
-            npcHouseVariants[i] = random.nextInt(5); // 0-4 for npc_house1-npc_house5
+            npcHouseVariants[i] = i; // Assign each NPC their specific house (0=house1, 1=house2, etc.)
         }
     }
     
@@ -347,6 +367,37 @@ public class GDXGameScreen implements Screen {
             case Bush:
                 // Render bush overlay ON TOP of ground
                 spriteBatch.draw(bushTexture, worldX, worldY, TILE_SIZE, TILE_SIZE);
+                break;
+                
+            case Stone:
+                // Render stone overlay ON TOP of ground using pre-generated random choice
+                Texture stoneTexture = stoneVariantMap[tileX][tileY] == 0 ? stone1Texture : stone2Texture;
+                spriteBatch.draw(stoneTexture, worldX, worldY, TILE_SIZE, TILE_SIZE);
+                break;
+                
+            case CopperStone:
+                // Render copper stone overlay ON TOP of ground
+                spriteBatch.draw(copperStoneTexture, worldX, worldY, TILE_SIZE, TILE_SIZE);
+                break;
+                
+            case IronStone:
+                // Render iron stone overlay ON TOP of ground
+                spriteBatch.draw(ironStoneTexture, worldX, worldY, TILE_SIZE, TILE_SIZE);
+                break;
+                
+            case GoldStone:
+                // Render gold stone overlay ON TOP of ground
+                spriteBatch.draw(goldStoneTexture, worldX, worldY, TILE_SIZE, TILE_SIZE);
+                break;
+                
+            case IridiumStone:
+                // Render iridium stone overlay ON TOP of ground
+                spriteBatch.draw(iridiumStoneTexture, worldX, worldY, TILE_SIZE, TILE_SIZE);
+                break;
+                
+            case JewelStone:
+                // Render jewel stone overlay ON TOP of ground
+                spriteBatch.draw(jewelStoneTexture, worldX, worldY, TILE_SIZE, TILE_SIZE);
                 break;
                 
             // Trees are now handled separately in renderTreeSprite for proper Z-ordering
@@ -533,6 +584,13 @@ public class GDXGameScreen implements Screen {
         npcHouse4Texture.dispose();
         npcHouse5Texture.dispose();
         bushTexture.dispose();
+        stone1Texture.dispose();
+        stone2Texture.dispose();
+        copperStoneTexture.dispose();
+        ironStoneTexture.dispose();
+        goldStoneTexture.dispose();
+        iridiumStoneTexture.dispose();
+        jewelStoneTexture.dispose();
         
         stage.dispose();
         skin.dispose();
