@@ -1,14 +1,13 @@
 package com.example.main.models;
 
-import com.example.main.enums.design.NPCType;
-import com.example.main.enums.design.TileType;
-import com.example.main.enums.design.Weather;
-import com.example.main.enums.items.CropType;
-
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.Random;
 
+import com.example.main.enums.design.NPCType;
+import com.example.main.enums.design.TileType;
+import com.example.main.enums.design.Weather;
+import com.example.main.enums.items.CropType;
 import com.example.main.models.item.Crop;
 import com.example.main.models.item.Fruit;
 import com.example.main.models.item.Good;
@@ -34,6 +33,7 @@ public class Game {
         this.date = new Date();
         this.players = players;
         this.currentPlayer = players.getFirst().getPlayer();
+        this.currentUser = players.getFirst(); // Initialize currentUser to match currentPlayer
         this.todayWeather = Weather.Sunny;
         this.tomorrowWeather = Weather.Rainy;
 

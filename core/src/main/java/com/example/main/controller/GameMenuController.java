@@ -105,42 +105,42 @@ public class GameMenuController {
         User loggedInUser = App.getInstance().getCurrentUser();
 
         Player player1 = new Player(loggedInUser.getUsername(), loggedInUser.getGender());
-        player1.setOriginX(2);
-        player1.setOriginY(2);
-        player1.setCurrentX(2);
-        player1.setCurrentY(2);
+        player1.setOriginX(4);
+        player1.setOriginY(4);
+        player1.setCurrentX(4);
+        player1.setCurrentY(4);
         player1.setTrashCanX(0);
         player1.setTrashCanY(0);
         loggedInUser.setCurrentPlayer(player1);
         players.add(loggedInUser);
 
         Player player2 = new Player(user1.getUsername(), user1.getGender());
-        player2.setOriginX(2);
-        player2.setOriginY(84);
-        player2.setCurrentX(2);
-        player2.setCurrentY(84);
-        player2.setTrashCanX(0);
-        player2.setTrashCanY(89);
+        player2.setOriginX(84);
+        player2.setOriginY(4);
+        player2.setCurrentX(84);
+        player2.setCurrentY(4);
+        player2.setTrashCanX(89);
+        player2.setTrashCanY(0);
         user1.setCurrentPlayer(player2);
         players.add(user1);
 
         Player player3 = new Player(user2.getUsername(), user2.getGender());
-        player3.setOriginX(34);
-        player3.setOriginY(2);
-        player3.setCurrentX(34);
-        player3.setCurrentY(2);
-        player3.setTrashCanX(59);
-        player3.setTrashCanY(0);
+        player3.setOriginX(4);
+        player3.setOriginY(34);
+        player3.setCurrentX(4);
+        player3.setCurrentY(34);
+        player3.setTrashCanX(0);
+        player3.setTrashCanY(59);
         user2.setCurrentPlayer(player3);
         players.add(user2);
 
         Player player4 = new Player(user3.getUsername(), user3.getGender());
-        player4.setOriginX(34);
-        player4.setOriginY(84);
-        player4.setCurrentX(34);
-        player4.setCurrentY(84);
-        player4.setTrashCanX(59);
-        player4.setTrashCanY(89);
+        player4.setOriginX(84);
+        player4.setOriginY(34);
+        player4.setCurrentX(84);
+        player4.setCurrentY(34);
+        player4.setTrashCanX(89);
+        player4.setTrashCanY(59);
         user3.setCurrentPlayer(player4);
         players.add(user3);
 
@@ -229,6 +229,7 @@ public class GameMenuController {
     }
 
     public Result switchTurn() {
+        Game game = App.getInstance().getCurrentGame();
         boolean isPlayerAvailable = game.switchCurrentPlayer();
         if(isPlayerAvailable){
             game.getCurrentPlayer().showNotifs();

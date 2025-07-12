@@ -2,12 +2,12 @@ package com.example.main.enums.design;
 
 public enum ShopType {
     Blacksmith("Clint", 32, 2),
-    JojaMart("Morris", 42, 2),
-    PierresGeneralStore("Pierre", 52, 2),
-    CarpentersShop("Robin", 32, 12),
-    FishShop("Willy", 42, 12),
-    MarniesRanch("Marnie", 52, 12),
-    TheStardropSaloon("Gus", 32, 22);
+    JojaMart("Morris", 46, 2),
+    PierresGeneralStore("Pierre", 32, 12),
+    CarpentersShop("Robin", 46, 12),
+    FishShop("Willy", 32, 22),
+    MarniesRanch("Marnie", 46, 22),
+    TheStardropSaloon("Gus", 32, 32);
 
     private final String name;
     private final int cornerX;

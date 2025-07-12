@@ -70,27 +70,6 @@ public class GameMap {
         // Generate bush borders around player areas
         generateBushBorders(players);
 
-        for (ShopType shopType : ShopType.values()) {
-            generateBuilding(
-                    null,
-                    4,
-                    TileType.Shop,
-                    shopType.getCornerX(),
-                    shopType.getCornerX() + 4,
-                    shopType.getCornerY(),
-                    shopType.getCornerY() + 4
-            );
-
-            Shop shop = new Shop(shopType);
-            this.shops.add(shop);
-
-            for (int i = shopType.getCornerX(); i < shopType.getCornerX() + 4; i++) {
-                for (int j = shopType.getCornerY(); j < shopType.getCornerY() + 4; j++) {
-                    tiles[i][j].setShop(shop);
-                }
-            }
-        }
-
         for (NPCType npc : NPCType.values()) {
             generateBuilding(
                     null,
@@ -353,6 +332,28 @@ public class GameMap {
                     else {
                         tiles[i][j] = new Tile(i, j, TileType.Earth, null);
                     }
+                }
+            }
+        }
+
+        // Generate shops AFTER all terrain generation to prevent overwriting
+        for (ShopType shopType : ShopType.values()) {
+            generateBuilding(
+                    null,
+                    4,
+                    TileType.Shop,
+                    shopType.getCornerX(),
+                    shopType.getCornerX() + 7,
+                    shopType.getCornerY(),
+                    shopType.getCornerY() + 7
+            );
+
+            Shop shop = new Shop(shopType);
+            this.shops.add(shop);
+
+            for (int i = shopType.getCornerX(); i < shopType.getCornerX() + 7; i++) {
+                for (int j = shopType.getCornerY(); j < shopType.getCornerY() + 7; j++) {
+                    tiles[i][j].setShop(shop);
                 }
             }
         }

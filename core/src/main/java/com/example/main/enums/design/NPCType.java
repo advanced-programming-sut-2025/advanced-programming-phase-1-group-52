@@ -18,7 +18,7 @@ import com.example.main.enums.items.ToolType;
 import com.example.main.models.Quest;
 
 public enum NPCType {
-    Sebastian(42, 32) {{
+    Sebastian(42, 40) {{
         favorites.add(AnimalProductType.SheepWool);
         favorites.add(FoodType.PumpkinPie);
         favorites.add(FoodType.Pizza);
@@ -27,7 +27,7 @@ public enum NPCType {
         quests.add(new Quest(this, FoodType.PumpkinPie, 1, MaterialType.GoldCoin, 5000));
         quests.add(new Quest(this, MaterialType.Stone, 150, MineralType.QUARTZ, 50));
     }},
-    Abigail(52, 32) {{
+    Abigail(52, 40) {{
         favorites.add(MaterialType.Stone);
         favorites.add(MaterialType.IronOre);
         favorites.add(MaterialType.Coffee);
@@ -36,7 +36,7 @@ public enum NPCType {
         quests.add(new Quest(this, MaterialType.Pumpkin, 1, MaterialType.GoldCoin, 500));
         quests.add(new Quest(this, MaterialType.Wheat, 50, ToolType.IridiumWateringCan, 1));
     }},
-    Harvey(32, 42) {{
+    Harvey(32, 50) {{
         favorites.add(MaterialType.Coffee);
         favorites.add(ArtisanProductType.GRAPE_WINE);
         favorites.add(ArtisanProductType.PICKLES);
@@ -47,7 +47,7 @@ public enum NPCType {
         quests.add(new Quest(this, FishType.Salmon, 1, MaterialType.GoldCoin, 0));
         quests.add(new Quest(this, ArtisanProductType.GRAPE_WINE, 1, FoodType.Salad, 5));
     }},
-    Lia(42, 42) {{
+    Lia(42, 50) {{
         favorites.add(FoodType.Salad);
         favorites.add(CropType.Grape);
         favorites.add(ArtisanProductType.GRAPE_WINE);
@@ -56,7 +56,7 @@ public enum NPCType {
         quests.add(new Quest(this, FishType.Salmon, 1, CookingRecipeType.SalmonDinner, 1));
         quests.add(new Quest(this, MaterialType.Wood, 200, CraftingMachineType.DELUXE_SCARECROW, 3));
     }},
-    Robin(52, 42) {{
+    Robin(52, 50) {{
         favorites.add(FoodType.Spaghetti);
         favorites.add(MaterialType.Wood);
         favorites.add(MaterialType.IronBar);
