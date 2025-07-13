@@ -5,21 +5,18 @@ import java.util.Random;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.Screen;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.example.main.controller.GameMenuController;
 import com.example.main.enums.design.TileType;
-import com.example.main.models.App;
-import com.example.main.models.Game;
-import com.example.main.models.GameMap;
-import com.example.main.models.Player;
-import com.example.main.models.Tile;
-import com.example.main.models.User;
+import com.example.main.models.*;
 
 public class GDXGameScreen implements Screen {
     private Stage stage;
@@ -27,17 +24,26 @@ public class GDXGameScreen implements Screen {
     private Game game;
     private GameMap gameMap;
     private GameMenuController controller;
-    
+
     private SpriteBatch spriteBatch;
     private OrthographicCamera camera;
+    private OrthographicCamera hudCamera;
     private com.badlogic.gdx.graphics.glutils.ShapeRenderer shapeRenderer;
-    
+
     private float cameraSpeed = 200f;
     private boolean cameraFollowsPlayer = true;
-    
+
     private boolean showMinimap = false;
     private boolean mKeyPressed = false;
-    
+
+    // Time-related variables
+    private float timeAccumulator = 0f;
+    private static final float SECONDS_PER_10_IN_GAME_MINUTES = 0.7f;
+
+    // HUD Assets
+    private Texture clockTexture;
+    private BitmapFont hudFont;
+
     private Texture ground1Texture;
     private Texture ground2Texture;
     private Texture grass1Texture;
@@ -62,7 +68,7 @@ public class GDXGameScreen implements Screen {
     private Texture goldStoneTexture;
     private Texture iridiumStoneTexture;
     private Texture jewelStoneTexture;
-    
+
     private Texture blacksmithTexture;
     private Texture jojamartTexture;
     private Texture pierresShopTexture;
@@ -70,23 +76,23 @@ public class GDXGameScreen implements Screen {
     private Texture fishShopTexture;
     private Texture ranchTexture;
     private Texture saloonTexture;
-    
+
     private Texture lake1Texture;
     private Texture lake2Texture;
     private Texture lake3Texture;
-    
+
     private Texture maleIdleTexture;
     private Texture maleDown1Texture, maleDown2Texture;
     private Texture maleUp1Texture, maleUp2Texture;
     private Texture maleLeft1Texture, maleLeft2Texture;
     private Texture maleRight1Texture, maleRight2Texture;
-    
+
     private Texture femaleIdleTexture;
     private Texture femaleDown1Texture, femaleDown2Texture;
     private Texture femaleUp1Texture, femaleUp2Texture;
     private Texture femaleLeft1Texture, femaleLeft2Texture;
     private Texture femaleRight1Texture, femaleRight2Texture;
-    
+
     private int[][] baseGroundMap;
     private int[][] grassVariantMap;
     private int[][] treeVariantMap;
@@ -95,7 +101,7 @@ public class GDXGameScreen implements Screen {
     private int[][] stoneVariantMap;
     private int[][] waterVariantMap;
     private Random random;
-    
+
     private enum PlayerDirection {
         DOWN, UP, LEFT, RIGHT, DOWN_LEFT, DOWN_RIGHT, UP_LEFT, UP_RIGHT
     }
@@ -106,21 +112,21 @@ public class GDXGameScreen implements Screen {
     private static final float PLAYER_MOVE_SPEED = 4.5f;
     private float playerMoveProgress = 0f;
     private int playerTargetX, playerTargetY;
-    
+
     private static final int[][] HOUSE_POSITIONS = {
         {1, 1},
         {81, 1},
         {1, 51},
         {81, 51}
     };
-    
+
     private static final int[][] HOUSE_AREAS = {
         {1, 8, 1, 8},
         {81, 88, 1, 8},
         {1, 8, 51, 58},
         {81, 88, 51, 58}
     };
-    
+
     private static final int[][] NPC_HOUSE_POSITIONS = {
         {32, 40},
         {42, 40},
@@ -128,7 +134,7 @@ public class GDXGameScreen implements Screen {
         {37, 50},
         {47, 50}
     };
-    
+
     private static final int[][] NPC_HOUSE_AREAS = {
         {32, 35, 40, 45},
         {42, 45, 40, 45},
@@ -136,7 +142,7 @@ public class GDXGameScreen implements Screen {
         {37, 40, 50, 55},
         {47, 50, 50, 55}
     };
-    
+
     private static final int[][] SHOP_POSITIONS = {
         {33, 3},
         {47, 3},
@@ -146,7 +152,7 @@ public class GDXGameScreen implements Screen {
         {47, 23},
         {33, 33}
     };
-    
+
     private static final int[][] SHOP_AREAS = {
         {33, 37, 3, 7},
         {47, 51, 3, 7},
@@ -166,23 +172,25 @@ public class GDXGameScreen implements Screen {
         stage = new Stage(new ScreenViewport());
         Gdx.input.setInputProcessor(stage);
         skin = new Skin(Gdx.files.internal("uiskin.json"));
-        
+
         spriteBatch = new SpriteBatch();
         camera = new OrthographicCamera();
+        hudCamera = new OrthographicCamera();
         shapeRenderer = new com.badlogic.gdx.graphics.glutils.ShapeRenderer();
-        
+
         float worldWidth = MAP_WIDTH * TILE_SIZE;
         float worldHeight = MAP_HEIGHT * TILE_SIZE;
-        
+
         float screenWidth = Gdx.graphics.getWidth();
         float screenHeight = Gdx.graphics.getHeight();
-        
+
         camera.setToOrtho(false, screenWidth, screenHeight);
+        hudCamera.setToOrtho(false, screenWidth, screenHeight);
         camera.zoom = 0.85f;
-        
+
         camera.position.set(worldWidth / 2f, worldHeight / 2f, 0);
         camera.update();
-        
+
         random = new Random();
         baseGroundMap = new int[MAP_WIDTH][MAP_HEIGHT];
         grassVariantMap = new int[MAP_WIDTH][MAP_HEIGHT];
@@ -191,18 +199,128 @@ public class GDXGameScreen implements Screen {
         npcHouseVariants = new int[5];
         stoneVariantMap = new int[MAP_WIDTH][MAP_HEIGHT];
         waterVariantMap = new int[MAP_WIDTH][MAP_HEIGHT];
-        
+
         loadTextures();
+        loadHudAssets();
 
         game = App.getInstance().getCurrentGame();
         gameMap = game.getMap();
-        
+
         controller.setGame(game);
         controller.setMap(gameMap);
-        
+
         generateRandomMaps();
-        
+
         initializePlayerPosition();
+    }
+
+    private void loadHudAssets() {
+        clockTexture = new Texture("content/clock/Clock.png");
+        hudFont = new BitmapFont(); // Use the default LibGDX font
+        hudFont.setColor(Color.WHITE); // Changed to WHITE for better contrast
+        hudFont.getData().setScale(1.5f); // Adjust scale as needed
+    }
+
+    private void updateTime(float delta) {
+        timeAccumulator += delta;
+        if (timeAccumulator >= SECONDS_PER_10_IN_GAME_MINUTES) {
+            timeAccumulator -= SECONDS_PER_10_IN_GAME_MINUTES;
+            if (game != null) {
+                game.advanceTimeByMinutes(10);
+            }
+        }
+    }
+
+    @Override
+    public void render(float delta) {
+        handleInput(delta);
+        updateTime(delta);
+
+        Gdx.gl.glClearColor(0.2f, 0.3f, 0.3f, 1);
+        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+
+        // Render Game World
+        camera.update();
+        spriteBatch.setProjectionMatrix(camera.combined);
+        spriteBatch.begin();
+        renderMap();
+        spriteBatch.end();
+
+        if (showMinimap) {
+            renderMinimap();
+        }
+
+        // Render HUD
+        renderHud();
+
+        stage.act(delta);
+        stage.draw();
+    }
+
+    private void renderHud() {
+        // --- Draw UI Backgrounds ---
+        Gdx.gl.glEnable(GL20.GL_BLEND);
+        Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
+        shapeRenderer.setProjectionMatrix(hudCamera.combined);
+        shapeRenderer.begin(com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType.Filled);
+
+        // Set the background color to a deep, semi-transparent blue
+        shapeRenderer.setColor(0.0f, 0.0f, 0.5f, 0.5f);
+
+        // Draw background for weather and season text
+        float infoBgX = 10;
+        float infoBgY = Gdx.graphics.getHeight() - 70;
+        float infoBgWidth = 220; // Adjust width as needed
+        float infoBgHeight = 60;
+        shapeRenderer.rect(infoBgX, infoBgY, infoBgWidth, infoBgHeight);
+
+        shapeRenderer.end();
+        Gdx.gl.glDisable(GL20.GL_BLEND);
+
+        // --- Draw Text and Textures ---
+        spriteBatch.setProjectionMatrix(hudCamera.combined);
+        spriteBatch.begin();
+
+        // Draw the clock texture
+        float screenWidth = Gdx.graphics.getWidth();
+        float clockWidth = clockTexture.getWidth() * 1f;
+        float clockHeight = clockTexture.getHeight() * 1f;
+        float clockX = screenWidth - clockWidth - 20;
+        float clockY = Gdx.graphics.getHeight() - clockHeight - 20;
+        spriteBatch.draw(clockTexture, clockX, clockY, clockWidth, clockHeight);
+
+        // --- Draw Text on top of backgrounds ---
+        // Make font black for the clock text as it's on a light background
+        hudFont.setColor(Color.BLACK);
+        Date date = game.getDate();
+        String dateString = date.getCurrentWeekday().name().substring(0, 3) + ". " + date.getCurrentDay();
+        hudFont.draw(spriteBatch, dateString, clockX + 160, clockY + 215);
+
+        Time time = game.getTime();
+        int hour = time.getHour();
+        String ampm = hour < 12 || hour >= 24 ? "am" : "pm";
+        if (hour == 0) {
+            hour = 12;
+        } else if (hour > 12) {
+            if (hour < 24) {
+                hour -= 12;
+            } else {
+                hour -= 24;
+                if (hour == 0) hour = 12;
+            }
+        }
+        String timeString = String.format("%d:%02d %s", hour, time.getMinute(), ampm);
+        hudFont.draw(spriteBatch, timeString, clockX + 145, clockY + 120);
+
+        // Revert font color to white for the dark background
+        hudFont.setColor(Color.WHITE);
+        String seasonString = "Season: " + date.getCurrentSeason().name();
+        hudFont.draw(spriteBatch, seasonString, 20, Gdx.graphics.getHeight() - 20);
+
+        String weatherString = "Weather: " + game.getTodayWeather().name();
+        hudFont.draw(spriteBatch, weatherString, 20, Gdx.graphics.getHeight() - 50);
+
+        spriteBatch.end();
     }
 
     private void initializePlayerPosition() {
@@ -215,12 +333,12 @@ public class GDXGameScreen implements Screen {
                         player.setOriginY(HOUSE_POSITIONS[i][1] + 9);
                     }
                 }
-                
+
                 player.setCurrentX(player.originX());
                 player.setCurrentY(player.originY());
             }
         }
-        
+
         Player currentPlayer = game.getCurrentPlayer();
         if (currentPlayer != null) {
             playerTargetX = currentPlayer.originX();
@@ -253,7 +371,7 @@ public class GDXGameScreen implements Screen {
         goldStoneTexture = new Texture("content/Cut/map_elements/gold_stone.png");
         iridiumStoneTexture = new Texture("content/Cut/map_elements/iridium_stone.png");
         jewelStoneTexture = new Texture("content/Cut/map_elements/jewel_stone.png");
-        
+
         try {
             blacksmithTexture = new Texture("content/Cut/map_elements/Blacksmith.png");
             jojamartTexture = new Texture("content/Cut/map_elements/Jojamart.png");
@@ -275,7 +393,7 @@ public class GDXGameScreen implements Screen {
         lake1Texture = new Texture("content/Cut/map_elements/lake1.png");
         lake2Texture = new Texture("content/Cut/map_elements/lake2.png");
         lake3Texture = new Texture("content/Cut/map_elements/lake3.png");
-        
+
         maleIdleTexture = new Texture("content/Cut/player/male_idle.png");
         maleDown1Texture = new Texture("content/Cut/player/male_down1.png");
         maleDown2Texture = new Texture("content/Cut/player/male_down2.png");
@@ -285,7 +403,7 @@ public class GDXGameScreen implements Screen {
         maleLeft2Texture = new Texture("content/Cut/player/male_left2.png");
         maleRight1Texture = new Texture("content/Cut/player/male_right1.png");
         maleRight2Texture = new Texture("content/Cut/player/male_right2.png");
-        
+
         femaleIdleTexture = new Texture("content/Cut/player/female_idle.png");
         femaleDown1Texture = new Texture("content/Cut/player/female_down1.png");
         femaleDown2Texture = new Texture("content/Cut/player/female_down2.png");
@@ -296,7 +414,7 @@ public class GDXGameScreen implements Screen {
         femaleRight1Texture = new Texture("content/Cut/player/female_right1.png");
         femaleRight2Texture = new Texture("content/Cut/player/female_right2.png");
     }
-    
+
     private void generateRandomMaps() {
         for (int x = 0; x < MAP_WIDTH; x++) {
             for (int y = 0; y < MAP_HEIGHT; y++) {
@@ -315,7 +433,7 @@ public class GDXGameScreen implements Screen {
                 }
             }
         }
-        
+
         for (int i = 0; i < 4; i++) {
             playerHouseVariants[i] = random.nextInt(3);
         }
@@ -324,20 +442,20 @@ public class GDXGameScreen implements Screen {
             npcHouseVariants[i] = i;
         }
     }
-    
+
     private void handleInput(float delta) {
         handleMinimapToggle();
         handleTurnSwitching();
         handlePlayerMovement(delta);
         handleCameraMovement(delta);
     }
-    
+
     private void handlePlayerMovement(float delta) {
         Player currentPlayer = game.getCurrentPlayer();
         if (currentPlayer == null) return;
-        
+
         playerAnimationTime += delta;
-        
+
         if (playerMoving && playerMoveProgress < 1.0f) {
             playerMoveProgress += PLAYER_MOVE_SPEED * delta;
             if (playerMoveProgress >= 1.0f) {
@@ -348,16 +466,16 @@ public class GDXGameScreen implements Screen {
             }
             return;
         }
-        
+
         boolean upPressed = Gdx.input.isKeyPressed(Input.Keys.W) || Gdx.input.isKeyPressed(Input.Keys.UP);
         boolean downPressed = Gdx.input.isKeyPressed(Input.Keys.S) || Gdx.input.isKeyPressed(Input.Keys.DOWN);
         boolean leftPressed = Gdx.input.isKeyPressed(Input.Keys.A) || Gdx.input.isKeyPressed(Input.Keys.LEFT);
         boolean rightPressed = Gdx.input.isKeyPressed(Input.Keys.D) || Gdx.input.isKeyPressed(Input.Keys.RIGHT);
-        
+
         int newX = currentPlayer.currentX();
         int newY = currentPlayer.currentY();
         PlayerDirection newDirection = playerDirection;
-        
+
         if (upPressed && leftPressed) {
             newDirection = PlayerDirection.UP_LEFT;
             newX -= 1;
@@ -387,9 +505,9 @@ public class GDXGameScreen implements Screen {
             newDirection = PlayerDirection.RIGHT;
             newX += 1;
         }
-        
+
         playerDirection = newDirection;
-        
+
         if (newX != currentPlayer.currentX() || newY != currentPlayer.currentY()) {
             if (newX >= 0 && newX < MAP_WIDTH && newY >= 0 && newY < MAP_HEIGHT) {
                 if (isPlayerWalkable(newX, newY, currentPlayer)) {
@@ -405,69 +523,69 @@ public class GDXGameScreen implements Screen {
             playerAnimationTime = 0f;
         }
     }
-    
+
     private boolean isPlayerWalkable(int x, int y, Player currentPlayer) {
         Tile tile = gameMap.getTiles()[x][y];
         if (tile == null) {
             return false;
         }
-        
+
         if (!tile.getType().isReachable()) {
             return false;
         }
-        
+
         Player tileOwner = tile.getOwner();
-        
-        return tileOwner == null || 
-               tileOwner.equals(currentPlayer) || 
+
+        return tileOwner == null ||
+               tileOwner.equals(currentPlayer) ||
                (currentPlayer.getSpouse() != null && tileOwner.equals(currentPlayer.getSpouse()));
     }
-    
+
     private void handleMinimapToggle() {
         boolean mKeyCurrentlyPressed = Gdx.input.isKeyPressed(Input.Keys.M);
-        
+
         if (mKeyCurrentlyPressed && !mKeyPressed) {
             showMinimap = !showMinimap;
         }
-        
+
         mKeyPressed = mKeyCurrentlyPressed;
     }
-    
+
     private boolean nKeyPressed = false;
-    
+
     private void handleTurnSwitching() {
         boolean nKeyCurrentlyPressed = Gdx.input.isKeyPressed(Input.Keys.N);
-        
+
         if (nKeyCurrentlyPressed && !nKeyPressed) {
             controller.switchTurn();
-            
+
             cameraFollowsPlayer = true;
-            
+
             Player newCurrentPlayer = game.getCurrentPlayer();
             if (newCurrentPlayer != null) {
                 updateCameraToFollowPlayer(newCurrentPlayer);
             }
-            
+
             playerMoving = false;
             playerMoveProgress = 0f;
         }
-        
+
         nKeyPressed = nKeyCurrentlyPressed;
     }
-    
+
     private void handleCameraMovement(float delta) {
         Player currentPlayer = game.getCurrentPlayer();
-        
-        boolean manualControl = Gdx.input.isKeyPressed(Input.Keys.I) || 
-                               Gdx.input.isKeyPressed(Input.Keys.K) || 
-                               Gdx.input.isKeyPressed(Input.Keys.J) || 
+
+        boolean manualControl = Gdx.input.isKeyPressed(Input.Keys.I) ||
+                               Gdx.input.isKeyPressed(Input.Keys.K) ||
+                               Gdx.input.isKeyPressed(Input.Keys.J) ||
                                Gdx.input.isKeyPressed(Input.Keys.L);
-        
+
         if (manualControl) {
             cameraFollowsPlayer = false;
-            
+
             float movement = cameraSpeed * delta;
-            
+
             if (Gdx.input.isKeyPressed(Input.Keys.I)) {
                 camera.position.y += movement;
             }
@@ -484,98 +602,76 @@ public class GDXGameScreen implements Screen {
             cameraFollowsPlayer = true;
             updateCameraToFollowPlayer(currentPlayer);
         }
-        
+
         if (Gdx.input.isKeyPressed(Input.Keys.Q)) {
             camera.zoom += 0.02f;
         }
         if (Gdx.input.isKeyPressed(Input.Keys.E)) {
             camera.zoom -= 0.02f;
         }
-        
+
         camera.zoom = Math.max(0.1f, Math.min(camera.zoom, 3.0f));
-        
+
         constrainCameraToMapBounds();
     }
-    
+
     private void updateCameraToFollowPlayer(Player player) {
         float playerX = player.currentX();
         float playerY = player.currentY();
-        
+
         if (playerMoving && playerMoveProgress < 1.0f) {
             float startX = player.currentX();
             float startY = player.currentY();
             float endX = playerTargetX;
             float endY = playerTargetY;
-            
+
             playerX = startX + (endX - startX) * playerMoveProgress;
             playerY = startY + (endY - startY) * playerMoveProgress;
         }
-        
+
         float worldX = playerX * TILE_SIZE;
         float worldY = (MAP_HEIGHT - 1 - playerY) * TILE_SIZE;
-        
+
         camera.position.set(worldX, worldY, 0);
     }
-    
+
     private void constrainCameraToMapBounds() {
         float worldWidth = MAP_WIDTH * TILE_SIZE;
         float worldHeight = MAP_HEIGHT * TILE_SIZE;
-        
+
         float cameraHalfWidth = camera.viewportWidth * camera.zoom / 2f;
         float cameraHalfHeight = camera.viewportHeight * camera.zoom / 2f;
-        
+
         camera.position.x = Math.max(cameraHalfWidth, Math.min(camera.position.x, worldWidth - cameraHalfWidth));
         camera.position.y = Math.max(cameraHalfHeight, Math.min(camera.position.y, worldHeight - cameraHalfHeight));
     }
-    
+
     @Override
     public void show() {
     }
 
-    @Override
-    public void render(float delta) {
-        handleInput(delta);
-        
-        Gdx.gl.glClearColor(0.2f, 0.3f, 0.3f, 1);
-        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
-        
-        camera.update();
-        spriteBatch.setProjectionMatrix(camera.combined);
-        
-        spriteBatch.begin();
-        renderMap();
-        spriteBatch.end();
-        
-        if (showMinimap) {
-            renderMinimap();
-        }
-        
-        stage.act(delta);
-        stage.draw();
-    }
-    
     private void renderMap() {
         Tile[][] tiles = gameMap.getTiles();
-        
+
         for (int x = 0; x < MAP_WIDTH; x++) {
             for (int y = 0; y < MAP_HEIGHT; y++) {
                 float worldX = x * TILE_SIZE;
                 float worldY = (MAP_HEIGHT - 1 - y) * TILE_SIZE;
-                
+
                 Tile currentTile = tiles[x] != null && tiles[x][y] != null ? tiles[x][y] : null;
                 renderBaseGround(x, y, worldX, worldY, currentTile);
-                
+
                 if (tiles[x] != null && tiles[x][y] != null) {
                     Tile tile = tiles[x][y];
                     TileType tileType = tile.getType();
-                    
+
                     if (tileType != TileType.Tree) {
                         renderTileOverlay(tile, x, y, worldX, worldY);
                     }
                 }
             }
         }
-        
+
         for (int y = 0; y < MAP_HEIGHT; y++) {
             for (int x = 0; x < MAP_WIDTH; x++) {
                 if (tiles[x] != null && tiles[x][y] != null) {
@@ -588,7 +684,7 @@ public class GDXGameScreen implements Screen {
                 }
             }
         }
-        
+
         for (int y = 0; y < MAP_HEIGHT; y++) {
             for (int x = 0; x < MAP_WIDTH; x++) {
                 if (tiles[x] != null && tiles[x][y] != null) {
@@ -609,45 +705,45 @@ public class GDXGameScreen implements Screen {
                 }
             }
         }
-        
+
         renderPlayer();
     }
-    
+
     private void renderPlayer() {
         for (User user : game.getPlayers()) {
             Player player = user.getPlayer();
             if (player == null) {
                 continue;
             }
-            
+
             float playerX = player.currentX();
             float playerY = player.currentY();
-            
+
             Player currentPlayer = game.getCurrentPlayer();
             if (player.equals(currentPlayer) && playerMoving && playerMoveProgress < 1.0f) {
                 float startX = player.currentX();
                 float startY = player.currentY();
                 float endX = playerTargetX;
                 float endY = playerTargetY;
-                
+
                 playerX = startX + (endX - startX) * playerMoveProgress;
                 playerY = startY + (endY - startY) * playerMoveProgress;
             }
-            
+
             if (playerX < 0 || playerX >= MAP_WIDTH || playerY < 0 || playerY >= MAP_HEIGHT) {
                 continue;
             }
-            
+
             float worldX = playerX * TILE_SIZE;
             float worldY = (MAP_HEIGHT - 1 - playerY) * TILE_SIZE;
-            
+
             Texture playerTexture = getPlayerTexture(player);
-            
-            float playerWidth = playerTexture.getWidth() * 2;   
-            float playerHeight = playerTexture.getHeight() * 2;     
+
+            float playerWidth = playerTexture.getWidth() * 2;
+            float playerHeight = playerTexture.getHeight() * 2;
             float renderX = worldX + (TILE_SIZE - playerWidth) / 2f;
             float renderY = worldY;
-            
+
             if (player.equals(currentPlayer)) {
                 spriteBatch.draw(playerTexture, renderX, renderY, playerWidth, playerHeight);
             } else {
@@ -657,17 +753,17 @@ public class GDXGameScreen implements Screen {
             }
         }
     }
-    
+
     private Texture getPlayerTexture(Player player) {
         boolean isMale = player.getGender().name().equals("Male");
         Player currentPlayer = game.getCurrentPlayer();
-        
+
         if (!player.equals(currentPlayer) || !playerMoving) {
             return isMale ? maleIdleTexture : femaleIdleTexture;
         }
-        
+
         int animFrame = ((int) (playerAnimationTime / ANIMATION_SPEED)) % 2;
-        
+
         switch (playerDirection) {
             case DOWN:
             case DOWN_LEFT:
@@ -677,7 +773,7 @@ public class GDXGameScreen implements Screen {
                 } else {
                     return animFrame == 0 ? femaleDown1Texture : femaleDown2Texture;
                 }
-                
+
             case UP:
             case UP_LEFT:
             case UP_RIGHT:
@@ -686,38 +782,38 @@ public class GDXGameScreen implements Screen {
                 } else {
                     return animFrame == 0 ? femaleUp1Texture : femaleUp2Texture;
                 }
-                
+
             case LEFT:
                 if (isMale) {
                     return animFrame == 0 ? maleLeft1Texture : maleLeft2Texture;
                 } else {
                     return animFrame == 0 ? femaleLeft1Texture : femaleLeft2Texture;
                 }
-                
+
             case RIGHT:
                 if (isMale) {
                     return animFrame == 0 ? maleRight1Texture : maleRight2Texture;
                 } else {
                     return animFrame == 0 ? femaleRight1Texture : femaleRight2Texture;
                 }
-                
+
             default:
                 return isMale ? maleIdleTexture : femaleIdleTexture;
         }
     }
-    
+
     private void renderBaseGround(int x, int y, float worldX, float worldY, Tile tile) {
         if (tile != null && tile.getType() == TileType.Water) {
             return;
         }
-        
+
         Texture groundTexture = baseGroundMap[x][y] == 0 ? ground1Texture : ground2Texture;
         spriteBatch.draw(groundTexture, worldX, worldY, TILE_SIZE, TILE_SIZE);
     }
-    
+
     private void renderTileOverlay(Tile tile, int tileX, int tileY, float worldX, float worldY) {
         TileType tileType = tile.getType();
-        
+
         switch (tileType) {
             case Water:
                 Texture waterTexture;
@@ -729,65 +825,65 @@ public class GDXGameScreen implements Screen {
                 }
                 spriteBatch.draw(waterTexture, worldX, worldY, TILE_SIZE, TILE_SIZE);
                 break;
-                
+
             case Grass:
                 Texture grassTexture = grassVariantMap[tileX][tileY] == 0 ? grass1Texture : grass2Texture;
                 spriteBatch.draw(grassTexture, worldX, worldY, TILE_SIZE, TILE_SIZE);
                 break;
-                
+
             case Shoveled:
                 spriteBatch.draw(shoveledTexture, worldX, worldY, TILE_SIZE, TILE_SIZE);
                 break;
-                
+
             case Bush:
                 spriteBatch.draw(bushTexture, worldX, worldY, TILE_SIZE, TILE_SIZE);
                 break;
-                
+
             case Stone:
                 Texture stoneTexture = stoneVariantMap[tileX][tileY] == 0 ? stone1Texture : stone2Texture;
                 spriteBatch.draw(stoneTexture, worldX, worldY, TILE_SIZE, TILE_SIZE);
                 break;
-                
+
             case CopperStone:
                 spriteBatch.draw(copperStoneTexture, worldX, worldY, TILE_SIZE, TILE_SIZE);
                 break;
-                
+
             case IronStone:
                 spriteBatch.draw(ironStoneTexture, worldX, worldY, TILE_SIZE, TILE_SIZE);
                 break;
-                
+
             case GoldStone:
                 spriteBatch.draw(goldStoneTexture, worldX, worldY, TILE_SIZE, TILE_SIZE);
                 break;
-                
+
             case IridiumStone:
                 spriteBatch.draw(iridiumStoneTexture, worldX, worldY, TILE_SIZE, TILE_SIZE);
                 break;
-                
+
             case JewelStone:
                 spriteBatch.draw(jewelStoneTexture, worldX, worldY, TILE_SIZE, TILE_SIZE);
                 break;
-                
+
             case Tree:
                 break;
-                
+
             case House:
                 break;
-                
+
             case NPCHouse:
                 break;
-                
+
             case Wall:
                 break;
-                
+
             case Shop:
                 break;
-                
+
             default:
                 break;
         }
     }
-    
+
     private void renderTreeSprite(int tileX, int tileY, float worldX, float worldY) {
         Texture treeTexture;
         switch (treeVariantMap[tileX][tileY]) {
@@ -796,20 +892,20 @@ public class GDXGameScreen implements Screen {
             case 2: treeTexture = tree3Texture; break;
             default: treeTexture = tree1Texture; break;
         }
-        
+
         float treeWidth = treeTexture.getWidth();
         float treeHeight = treeTexture.getHeight();
-        
+
         float treeX = worldX + (TILE_SIZE - treeWidth) / 2f;
         float treeY = worldY;
-        
+
         spriteBatch.draw(treeTexture, treeX, treeY, treeWidth, treeHeight);
     }
-    
+
     private void renderHouseSprite(int tileX, int tileY, float worldX, float worldY) {
         int playerIndex = getPlayerIndexForHouse(tileX, tileY);
         if (playerIndex == -1) return;
-        
+
         Texture houseTexture;
         switch (playerHouseVariants[playerIndex]) {
             case 0: houseTexture = house1Texture; break;
@@ -817,26 +913,26 @@ public class GDXGameScreen implements Screen {
             case 2: houseTexture = house3Texture; break;
             default: houseTexture = house1Texture; break;
         }
-        
+
         int[] houseArea = HOUSE_AREAS[playerIndex];
         int houseStartX = houseArea[0];
         int houseStartY = houseArea[2];
-        
+
         if (tileX == houseStartX && tileY == houseStartY) {
             float houseWidth = houseTexture.getWidth();
             float houseHeight = houseTexture.getHeight();
-            
+
             float houseX = worldX;
             float houseY = worldY;
-            
+
             spriteBatch.draw(houseTexture, houseX, houseY, houseWidth, houseHeight);
         }
     }
-    
+
     private void renderNPCHouseSprite(int tileX, int tileY, float worldX, float worldY) {
         int npcIndex = getNPCIndexForHouse(tileX, tileY);
         if (npcIndex == -1) return;
-        
+
         Texture npcHouseTexture;
         switch (npcHouseVariants[npcIndex]) {
             case 0: npcHouseTexture = npcHouse1Texture; break;
@@ -846,29 +942,29 @@ public class GDXGameScreen implements Screen {
             case 4: npcHouseTexture = npcHouse5Texture; break;
             default: npcHouseTexture = npcHouse1Texture; break;
         }
-        
+
         int[] npcHouseArea = NPC_HOUSE_AREAS[npcIndex];
         int npcHouseStartX = npcHouseArea[0];
         int npcHouseStartY = npcHouseArea[2];
-        
+
         if (tileX == npcHouseStartX && tileY == npcHouseStartY) {
             float npcHouseWidth = npcHouseTexture.getWidth();
             float npcHouseHeight = npcHouseTexture.getHeight();
-            
+
             float npcHouseX = worldX;
             float npcHouseY = worldY;
-            
+
             spriteBatch.draw(npcHouseTexture, npcHouseX, npcHouseY, npcHouseWidth, npcHouseHeight);
         }
     }
-    
+
     private void renderShopSprite(int tileX, int tileY, float worldX, float worldY) {
         int shopIndex = getShopIndex(tileX, tileY);
         if (shopIndex == -1) {
             renderSimpleShopSprite(tileX, tileY, worldX, worldY);
             return;
         }
-        
+
         Texture shopTexture;
         switch (shopIndex) {
             case 0: shopTexture = blacksmithTexture; break;
@@ -880,37 +976,37 @@ public class GDXGameScreen implements Screen {
             case 6: shopTexture = saloonTexture; break;
             default: shopTexture = ground1Texture; break;
         }
-        
+
         int[] shopArea = SHOP_AREAS[shopIndex];
         int shopStartX = shopArea[0];
         int shopStartY = shopArea[2];
-        
+
         if (tileX == shopStartX && tileY == shopStartY) {
             int shopWidthInTiles = shopArea[1] - shopArea[0] + 1;
             int shopHeightInTiles = shopArea[3] - shopArea[2] + 1;
-            
+
             float shopWidth = shopWidthInTiles * TILE_SIZE;
             float shopHeight = shopHeightInTiles * TILE_SIZE;
-            
+
             float shopX = worldX;
             float shopY = worldY;
-            
+
             spriteBatch.draw(shopTexture, shopX, shopY, shopWidth, shopHeight);
         }
     }
-    
+
     private void renderSimpleShopSprite(int tileX, int tileY, float worldX, float worldY) {
         Texture shopTexture = ground1Texture;
-        
+
         float shopWidth = TILE_SIZE;
         float shopHeight = TILE_SIZE;
-        
+
         float shopX = worldX;
         float shopY = worldY;
-        
+
         spriteBatch.draw(shopTexture, shopX, shopY, shopWidth, shopHeight);
     }
-    
+
     private int getPlayerIndexForHouse(int x, int y) {
         for (int i = 0; i < HOUSE_AREAS.length; i++) {
             int[] area = HOUSE_AREAS[i];
@@ -920,7 +1016,7 @@ public class GDXGameScreen implements Screen {
         }
         return -1;
     }
-    
+
     private int getNPCIndexForHouse(int x, int y) {
         for (int i = 0; i < NPC_HOUSE_AREAS.length; i++) {
             int[] area = NPC_HOUSE_AREAS[i];
@@ -930,7 +1026,7 @@ public class GDXGameScreen implements Screen {
         }
         return -1;
     }
-    
+
     private int getShopIndex(int x, int y) {
         for (int i = 0; i < SHOP_AREAS.length; i++) {
             int[] area = SHOP_AREAS[i];
@@ -940,60 +1036,60 @@ public class GDXGameScreen implements Screen {
         }
         return -1;
     }
-    
+
     private void renderMinimap() {
         float screenWidth = Gdx.graphics.getWidth();
         float screenHeight = Gdx.graphics.getHeight();
-        
+
         float minimapSize = Math.min(screenWidth, screenHeight) * 0.4f;
-        
+
         float minimapX = (screenWidth - minimapSize) / 2f;
         float minimapY = (screenHeight - minimapSize) / 2f;
-        
+
         renderMinimapBackgroundAndBorder(minimapX, minimapY, minimapSize, minimapSize);
-        
+
         spriteBatch.begin();
-        
+
         OrthographicCamera minimapCamera = new OrthographicCamera();
-        
+
         float zoomToFitWidth = minimapSize / (MAP_WIDTH * TILE_SIZE);
         float zoomToFitHeight = minimapSize / (MAP_HEIGHT * TILE_SIZE);
-        
+
         float minimapZoom = Math.min(zoomToFitWidth, zoomToFitHeight);
-        
-        minimapZoom *= 0.80f; 
-        
+
+        minimapZoom *= 0.80f;
+
         minimapCamera.setToOrtho(false, MAP_WIDTH * TILE_SIZE, MAP_HEIGHT * TILE_SIZE);
         minimapCamera.zoom = 1f / minimapZoom;
         minimapCamera.position.set((MAP_WIDTH * TILE_SIZE) / 2f, (MAP_HEIGHT * TILE_SIZE) / 2f, 0);
         minimapCamera.update();
-        
+
         minimapCamera.viewportWidth = minimapSize;
         minimapCamera.viewportHeight = minimapSize;
         minimapCamera.position.set(minimapX + minimapSize / 2f, minimapY + minimapSize / 2f, 0);
         minimapCamera.update();
-        
+
         spriteBatch.setProjectionMatrix(minimapCamera.combined);
-        
+
         renderMinimapContent();
-        
+
         spriteBatch.end();
-        
+
         camera.update();
         spriteBatch.setProjectionMatrix(camera.combined);
     }
-    
+
     private void renderMinimapContent() {
         Tile[][] tiles = gameMap.getTiles();
-        
+
         for (int x = 0; x < MAP_WIDTH; x++) {
             for (int y = 0; y < MAP_HEIGHT; y++) {
                 if (tiles[x] != null && tiles[x][y] != null) {
                     Tile tile = tiles[x][y];
-                    
+
                     float worldX = x * TILE_SIZE;
                     float worldY = (MAP_HEIGHT - 1 - y) * TILE_SIZE;
-                    
+
                     Texture minimapTexture = getMinimapTexture(tile.getType());
                     if (minimapTexture != null) {
                         spriteBatch.draw(minimapTexture, worldX, worldY, TILE_SIZE, TILE_SIZE);
@@ -1001,24 +1097,24 @@ public class GDXGameScreen implements Screen {
                 }
             }
         }
-        
+
         Player currentPlayer = game.getCurrentPlayer();
         if (currentPlayer != null) {
             float playerX = currentPlayer.currentX();
             float playerY = currentPlayer.currentY();
-            
+
             float startX = currentPlayer.currentX();
             float startY = currentPlayer.currentY();
-            
+
             float worldX = playerX * TILE_SIZE;
             float worldY = (MAP_HEIGHT - 1 - playerY) * TILE_SIZE;
-            
+
             spriteBatch.setColor(1f, 1f, 0f, 1f);
             spriteBatch.draw(ground1Texture, worldX, worldY, TILE_SIZE, TILE_SIZE);
             spriteBatch.setColor(1f, 1f, 1f, 1f);
         }
     }
-    
+
     private Texture getMinimapTexture(TileType tileType) {
         switch (tileType) {
             case Water:
@@ -1041,21 +1137,21 @@ public class GDXGameScreen implements Screen {
                 return ground1Texture;
         }
     }
-    
+
     private void renderMinimapBackgroundAndBorder(float x, float y, float width, float height) {
         shapeRenderer.setProjectionMatrix(camera.combined);
         shapeRenderer.begin(com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType.Filled);
-        
+
         OrthographicCamera uiCamera = new OrthographicCamera();
         uiCamera.setToOrtho(false, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
         uiCamera.update();
         shapeRenderer.setProjectionMatrix(uiCamera.combined);
-        
+
         shapeRenderer.setColor(0, 0, 0, 0.8f);
         shapeRenderer.rect(x, y, width, height);
-        
+
         shapeRenderer.end();
-        
+
         shapeRenderer.begin(com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType.Line);
         shapeRenderer.setColor(1, 1, 1, 1);
         shapeRenderer.rect(x, y, width, height);
@@ -1065,6 +1161,7 @@ public class GDXGameScreen implements Screen {
     @Override
     public void resize(int width, int height) {
         stage.getViewport().update(width, height, true);
+        hudCamera.setToOrtho(false, width, height);
     }
 
     @Override
@@ -1085,7 +1182,9 @@ public class GDXGameScreen implements Screen {
         skin.dispose();
         spriteBatch.dispose();
         shapeRenderer.dispose();
-        
+        clockTexture.dispose();
+        hudFont.dispose();
+
         ground1Texture.dispose();
         ground2Texture.dispose();
         grass1Texture.dispose();
@@ -1110,7 +1209,7 @@ public class GDXGameScreen implements Screen {
         goldStoneTexture.dispose();
         iridiumStoneTexture.dispose();
         jewelStoneTexture.dispose();
-        
+
         blacksmithTexture.dispose();
         jojamartTexture.dispose();
         pierresShopTexture.dispose();
@@ -1118,11 +1217,11 @@ public class GDXGameScreen implements Screen {
         fishShopTexture.dispose();
         ranchTexture.dispose();
         saloonTexture.dispose();
-        
+
         lake1Texture.dispose();
         lake2Texture.dispose();
         lake3Texture.dispose();
-        
+
         maleIdleTexture.dispose();
         maleDown1Texture.dispose();
         maleDown2Texture.dispose();
@@ -1132,7 +1231,7 @@ public class GDXGameScreen implements Screen {
         maleLeft2Texture.dispose();
         maleRight1Texture.dispose();
         maleRight2Texture.dispose();
-        
+
         femaleIdleTexture.dispose();
         femaleDown1Texture.dispose();
         femaleDown2Texture.dispose();

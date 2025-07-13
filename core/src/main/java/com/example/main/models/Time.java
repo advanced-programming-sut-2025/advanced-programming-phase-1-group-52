@@ -1,26 +1,33 @@
 package com.example.main.models;
 
 public class Time {
-    public static final int DAY_START = 9;
-    public static final int DAY_END = 22;
+    public static final int DAY_START = 6; // Changed to 6 AM for a more standard start time
+    public static final int DAY_END = 26; // Represents 2:00 AM the next day
     public static final int ACTIVE_HOURS = DAY_END - DAY_START;
 
     private int hour = DAY_START;
+    private int minute = 0;
 
-    public int addHours(int hours) {
-        if (hours <= 0) return 0;
+    public int addMinutes(int minutes) {
+        if (minutes <= 0) return 0;
 
-        int elapsedHours = (this.hour - DAY_START) + hours;
+        int totalMinutes = (this.hour * 60 + this.minute) + minutes;
 
-        int daysPassed = elapsedHours / ACTIVE_HOURS;
-        int remainingHours = elapsedHours % ACTIVE_HOURS;
-        this.hour = DAY_START + remainingHours;
+        this.hour = totalMinutes / 60;
+        this.minute = totalMinutes % 60;
 
-        if (remainingHours == 0 && hours > 0) {
-            this.hour = DAY_END;
+        int daysPassed = 0;
+        if (this.hour >= DAY_END) {
+            daysPassed = this.hour / DAY_END;
+            this.hour = DAY_START + (this.hour % DAY_END);
         }
 
         return daysPassed;
+    }
+
+    public int addHours(int hours) {
+        if (hours <= 0) return 0;
+        return addMinutes(hours * 60);
     }
 
     public void advanceHour() {
@@ -31,13 +38,17 @@ public class Time {
         return this.hour >= DAY_END;
     }
 
-    public int hour() {
+    public int getHour() {
         return hour;
     }
 
+    public int getMinute() {
+        return minute;
+    }
+
     public void setHour(int hour) {
-        if (hour < DAY_START || hour > DAY_END) {
-            throw new IllegalArgumentException("Hour must be between 9 and 22");
+        if (hour < 0 || hour > 23) { // Allow full 24-hour range internally
+            throw new IllegalArgumentException("Hour must be between 0 and 23");
         }
         this.hour = hour;
     }
