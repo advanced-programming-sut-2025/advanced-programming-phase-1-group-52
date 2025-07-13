@@ -56,6 +56,40 @@ public class Game {
         this.NPCs.add(new NPC(NPCType.Sebastian, realPlayers));
     }
 
+    /**
+     * Advances the game time by a specified number of minutes and triggers daily updates if a day passes.
+     * @param minutes The number of minutes to advance.
+     */
+    public void advanceTimeByMinutes(int minutes) {
+        int daysPassed = this.time.addMinutes(minutes);
+        if (daysPassed > 0) {
+            for (int i = 0; i < daysPassed; i++) {
+                advanceDay();
+            }
+        }
+    }
+
+    /**
+     * Contains all the logic that should be executed when a day passes.
+     */
+    private void advanceDay() {
+        this.daysPassed++;
+        this.date.addDays(1);
+        this.todayWeather = this.tomorrowWeather;
+        randomizeTomorrowWeather();
+        handlePlayersCoordinateInMorning();
+        handleFaintedPlayers();
+        if (map != null) {
+            map.generateRandomForagingSeeds();
+            map.generatePlantsFromSeeds();
+        }
+        eraseCrops();
+        updateCrops();
+        checkForLightning();
+        crowsAttack();
+        handleFardaei();
+    }
+
     public int getDaysPassed() {
         return daysPassed;
     }
@@ -77,7 +111,7 @@ public class Game {
                 return friendship;
             }
         }
-        
+
         return null;
     }
 
@@ -123,7 +157,8 @@ public class Game {
         this.switchCounter++;
         if(this.switchCounter >= 4){
             this.switchCounter = 0;
-            timePassed();
+            // The timePassed() method is deprecated in favor of advanceTimeByMinutes
+            // timePassed();
         }
         return true;
     }
@@ -141,6 +176,7 @@ public class Game {
     }
 
     public void crowsAttack() {
+        if (map == null) return;
         Random rand = new Random();
         if (rand.nextInt() == 0) {
             int numPlants = 0;
@@ -158,7 +194,7 @@ public class Game {
             for (int i = 0; i < numPlants / 16; i++) {
                 targetTiles.get(rand.nextInt(targetTiles.size())).setPlant(null);
             }
-            
+
             numPlants = 0;
             targetTiles = new ArrayList<>();
 
@@ -210,7 +246,7 @@ public class Game {
     }
 
     public void checkForLightning() {
-        if (this.getTomorrowWeather().equals(Weather.Stormy)) {
+        if (this.getTomorrowWeather().equals(Weather.Stormy) && map != null) {
             Random rand = new Random();
             if (rand.nextInt(5) == 0) {
                 this.getMap().lightning(0);
@@ -237,27 +273,6 @@ public class Game {
     public void handleFardaei() {
         for (User user : this.players) {
             user.getPlayer().getBankAccount().depositFardaei();
-        }
-    }
-
-    public void timePassed() {
-        int dayPassed = this.time.addHours(1);
-        updateArtisanProduct();
-        if(dayPassed > 0){
-            this.daysPassed++;
-            int seasonPassed = this.date.addDays(dayPassed);
-            // todo : add thor
-            this.todayWeather = this.tomorrowWeather;
-            randomizeTomorrowWeather();
-            handlePlayersCoordinateInMorning();
-            handleFaintedPlayers();
-            map.generateRandomForagingSeeds();
-            map.generatePlantsFromSeeds();
-            eraseCrops();
-            updateCrops();
-            checkForLightning();
-            crowAttack();
-            handleFardaei();
         }
     }
 
@@ -372,13 +387,14 @@ public class Game {
     }
 
     public void eraseCrops(){
+        if(map == null) return;
         for(int i = 0; i < 90; i++) {
             for (int j = 0; j < 60; j++) {
                 Tile tile = map.getTile(i, j);
-                if(tile.getPlant().isNotWateredForTwoDays()){
+                if(tile.getPlant() != null && tile.getPlant().isNotWateredForTwoDays()){
                     tile.setPlant(null);
                 }
-                if(!tile.getPlant().isFertilizedToday()){
+                if(tile.getPlant() != null && !tile.getPlant().isFertilizedToday()){
                     tile.setPlant(null);
                 }
             }
@@ -386,6 +402,7 @@ public class Game {
     }
 
     public void updateCrops(){
+        if(map == null) return;
         for(int i = 0; i < 90; i++){
             for(int j = 0; j < 60; j++){
                 Tile tile = map.getTile(i, j);
@@ -407,32 +424,12 @@ public class Game {
                                     plant.setWateredToday(false);
                                 }
                             }
-//                            else {
-//                                System.out.println("error 1");
-//                            }
                         }
-//                        else{
-//                            System.out.println("error 2");
-//                        }
                     }
                 }
                 else if(tile.getType().equals(TileType.Tree)){
                     if(tile.getPlant() == null){
                         System.out.println("error in tree");
-                    }
-                    else{
-                        if(tile.getPlant() instanceof Fruit fruit){
-//                            if(fruit.getDayPassed() >= tile.getTree().getType().getTotalHarvestTime()){
-//                                fruit.setReadyToHarvest(true);
-//                            }
-//                            else{
-//                                fruit.setDayPassed(fruit.getDayPassed() + 1);
-//                                fruit.setWateredToday(false);
-//                            }
-                        }
-//                        else {
-//                            System.out.println("error 3");
-//                        }
                     }
                 }
             }
@@ -450,9 +447,5 @@ public class Game {
                 }
             }
         }
-    }
-
-    private void crowAttack(){
-
     }
 }

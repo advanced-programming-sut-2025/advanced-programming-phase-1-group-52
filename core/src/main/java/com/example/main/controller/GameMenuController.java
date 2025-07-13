@@ -240,7 +240,7 @@ public class GameMenuController {
     }
 
     public Result showTime() {
-        return new Result(true, "It's " + game.getTime().hour() + " O'clock");
+        return new Result(true, "It's " + game.getTime().getHour() + " O'clock");
     }
 
     public Result showDate() {
@@ -264,7 +264,7 @@ public class GameMenuController {
         Time time = game.getTime();
         Date date = game.getDate();
 
-        int originalHour = time.hour();
+        int originalHour = time.getHour();
         int daysPassed = time.addHours(hours);
 
 
@@ -524,20 +524,20 @@ public class GameMenuController {
         if (game.getNPCs() == null) {
             return new Result(false, "No NPCs available!");
         }
-        
+
         for (NPC npc : game.getNPCs()) {
             if (npc == null || npc.getQuests() == null) {
                 continue; // Skip null NPCs or NPCs with null quest maps
             }
-            
+
             java.util.HashMap<Quest, Boolean> quests = npc.getQuests();
             List<Quest> questsList = new ArrayList<>(quests.keySet());
-            
+
             // Check if there are any quests for this NPC
             if (questsList.isEmpty()) {
                 continue;
             }
-            
+
             // Always show first quest if it exists AND is not completed
             if (questsList.size() > 0 && questsList.get(0) != null) {
                 Quest firstQuest = questsList.get(0);
@@ -546,9 +546,9 @@ public class GameMenuController {
                     stringBuilder.append(firstQuest.toString());
                 }
             }
-            
+
             // Show second quest if friendship level >= 1, it exists, AND is not completed
-            if (questsList.size() > 1 && questsList.get(1) != null && 
+            if (questsList.size() > 1 && questsList.get(1) != null &&
                 npc.getFriendShipLevelWith(game.getCurrentPlayer()) != null &&
                 npc.getFriendShipLevelWith(game.getCurrentPlayer()) >= 1) {
                 Quest secondQuest = questsList.get(1);
@@ -561,7 +561,7 @@ public class GameMenuController {
             // Show third quest based on NPC type, days passed, AND not completed
             if (questsList.size() > 2 && questsList.get(2) != null) {
                 boolean showThirdQuest = false;
-                
+
                 if (npc.getType() == NPCType.Abigail && game.getDaysPassed() >= 20) {
                     showThirdQuest = true;
                 }
@@ -577,7 +577,7 @@ public class GameMenuController {
                 else if (npc.getType() == NPCType.Sebastian && game.getDaysPassed() >= 15) {
                     showThirdQuest = true;
                 }
-                
+
                 if (showThirdQuest) {
                     Quest thirdQuest = questsList.get(2);
                     Boolean isCompleted = quests.get(thirdQuest);
@@ -594,30 +594,30 @@ public class GameMenuController {
     // Helper method to check if a quest is visible/active (same logic as showQuests)
     private boolean isQuestVisible(Quest quest, NPC npc) {
         if (quest == null || npc == null) return false;
-        
+
         HashMap<Quest, Boolean> quests = npc.getQuests();
         if (quests == null) return false;
-        
+
         // Check if quest is completed - if so, it's not visible
         Boolean isCompleted = quests.get(quest);
         if (isCompleted != null && isCompleted) {
             return false; // Completed quests are never visible
         }
-        
+
         List<Quest> questsList = new ArrayList<>(quests.keySet());
         int questIndex = questsList.indexOf(quest);
-        
+
         if (questIndex == -1) return false; // Quest not found
-        
+
         // First quest is always visible (if not completed)
         if (questIndex == 0) return true;
-        
+
         // Second quest is visible if friendship level >= 1 (if not completed)
         if (questIndex == 1) {
             return npc.getFriendShipLevelWith(game.getCurrentPlayer()) != null &&
                    npc.getFriendShipLevelWith(game.getCurrentPlayer()) >= 1;
         }
-        
+
         // Third quest is visible based on NPC type and days passed (if not completed)
         if (questIndex == 2) {
             switch (npc.getType()) {
@@ -629,7 +629,7 @@ public class GameMenuController {
                 default -> { return false; }
             }
         }
-        
+
         return false; // Quests beyond index 2 are not visible
     }
 
@@ -651,7 +651,7 @@ public class GameMenuController {
         NPC npc = null;
         Quest quest = null;
         boolean isDone = false;
-        
+
         try {
             for (NPC n : game.getNPCs()) {
                 if (n == null || n.getQuests() == null) {
@@ -679,7 +679,7 @@ public class GameMenuController {
         if (isDone) {
             return new Result(false, "This quest is already done!");
         }
-        
+
         // Check if the quest is visible/active
         if (!isQuestVisible(quest, npc)) {
             return new Result(false, "This quest is not available yet! Check your friendship level or wait for more days to pass.");
@@ -688,7 +688,7 @@ public class GameMenuController {
         if (quest.getDemand() == null) {
             return new Result(false, "Quest demand is invalid!");
         }
-        
+
         // Use the more reliable findItemByType method instead of getItemByName
         Item item = currentPlayer.getInventory().findItemByType(quest.getDemand());
         if (item == null) {
@@ -794,7 +794,7 @@ public class GameMenuController {
 
         // Create talk object with proper sender and receiver
         Talk talk = new Talk(currentPlayer, player, message);
-        
+
         // Add the talk to BOTH players' talk lists so both can see the conversation
         currentPlayer.addTalk(talk);  // Sender keeps record of what they sent
         player.addTalk(talk);         // Receiver gets the message in their history
@@ -818,11 +818,11 @@ public class GameMenuController {
 
         Player currentPlayer = game.getCurrentPlayer();
         StringBuilder stringBuilder = new StringBuilder();
-        
+
         // Show complete conversation history between current player and target player
         // Check all talks involving both players
         boolean foundAnyTalks = false;
-        
+
         for (Talk talk : currentPlayer.getTalks()) {
             // Show talks where current player talked to target player OR target player talked to current player
             if ((talk.getSender().equals(currentPlayer) && talk.getReceiver().equals(targetPlayer)) ||
@@ -2360,10 +2360,10 @@ public class GameMenuController {
     public Result checkInventoryIntegrity() {
         StringBuilder report = new StringBuilder();
         report.append("Inventory Integrity Check:\n");
-        
+
         ArrayList<Item> items = game.getCurrentPlayer().getInventory().getItems();
         boolean foundIssues = false;
-        
+
         for (int i = 0; i < items.size(); i++) {
             Item item = items.get(i);
             try {
@@ -2371,7 +2371,7 @@ public class GameMenuController {
                 String name = item.getName();
                 ItemType type = item.getItemType();
                 int number = item.getNumber();
-                
+
                 if (name == null) {
                     report.append("ISSUE: Item at index ").append(i).append(" has null name\n");
                     foundIssues = true;
@@ -2383,7 +2383,7 @@ public class GameMenuController {
                 if (number <= 0) {
                     report.append("WARNING: Item at index ").append(i).append(" has invalid quantity: ").append(number).append("\n");
                 }
-                
+
                 // Check specific types
                 if (item instanceof Material material) {
                     MaterialType matType = material.getMaterialType();
@@ -2392,35 +2392,35 @@ public class GameMenuController {
                         foundIssues = true;
                     }
                 }
-                
+
                 report.append("OK: Item ").append(i).append(": ").append(name).append(" (").append(item.getClass().getSimpleName()).append(", qty: ").append(number).append(")\n");
-                
+
             } catch (Exception e) {
                 report.append("ERROR: Item at index ").append(i).append(" threw exception: ").append(e.getMessage()).append("\n");
                 foundIssues = true;
             }
         }
-        
+
         if (!foundIssues) {
             report.append("\nAll items are healthy!");
         } else {
             report.append("\nFound issues in inventory. Consider using 'cheat add item' to replace corrupted items.");
         }
-        
+
         return new Result(true, report.toString());
     }
 
     public Result checkQuestIntegrity() {
         StringBuilder report = new StringBuilder();
         report.append("Quest and NPC Integrity Check:\n");
-        
+
         boolean foundIssues = false;
-        
+
         if (game.getNPCs() == null) {
             report.append("CRITICAL: Game NPCs list is null!\n");
             return new Result(true, report.toString());
         }
-        
+
         for (int i = 0; i < game.getNPCs().size(); i++) {
             NPC npc = game.getNPCs().get(i);
             try {
@@ -2429,23 +2429,23 @@ public class GameMenuController {
                     foundIssues = true;
                     continue;
                 }
-                
+
                 String npcName = npc.getType().name();
                 HashMap<Quest, Boolean> quests = npc.getQuests();
-                
+
                 if (npcName == null) {
                     report.append("ISSUE: NPC at index ").append(i).append(" has null name\n");
                     foundIssues = true;
                 }
-                
+
                 if (quests == null) {
                     report.append("ISSUE: NPC '").append(npcName != null ? npcName : "Unknown").append("' has null quest map\n");
                     foundIssues = true;
                     continue;
                 }
-                
+
                 report.append("OK: NPC '").append(npcName).append("' has ").append(quests.size()).append(" quests\n");
-                
+
                 // Check each quest
                 int questIndex = 0;
                 for (Quest quest : quests.keySet()) {
@@ -2458,17 +2458,17 @@ public class GameMenuController {
                             ItemType demand = quest.getDemand();
                             ItemType reward = quest.getReward();
                             Boolean isCompleted = quests.get(quest);
-                            
+
                             if (demand == null) {
                                 report.append("  ISSUE: Quest ").append(questId).append(" has null demand\n");
                                 foundIssues = true;
                             }
-                            
+
                             if (isCompleted == null) {
                                 report.append("  ISSUE: Quest ").append(questId).append(" has null completion status\n");
                                 foundIssues = true;
                             }
-                            
+
                             report.append("  OK: Quest ID ").append(questId).append(", completed: ").append(isCompleted).append("\n");
                         }
                         questIndex++;
@@ -2477,42 +2477,42 @@ public class GameMenuController {
                         foundIssues = true;
                     }
                 }
-                
+
             } catch (Exception e) {
                 report.append("ERROR: NPC at index ").append(i).append(" threw exception: ").append(e.getMessage()).append("\n");
                 foundIssues = true;
             }
         }
-        
+
         if (!foundIssues) {
             report.append("\nAll NPCs and quests are healthy!");
         } else {
             report.append("\nFound issues with NPCs/quests. This might cause quest-related commands to fail.");
         }
-        
+
         return new Result(true, report.toString());
     }
 
     public Result debugQuest(String idString) {
         StringBuilder debug = new StringBuilder();
         debug.append("=== QUEST DEBUG INFORMATION ===\n");
-        
+
         // Check basic game state
         debug.append("Game object: ").append(game != null ? "OK" : "NULL").append("\n");
         if (game == null) {
             return new Result(true, debug.toString());
         }
-        
+
         debug.append("Current Player: ").append(game.getCurrentPlayer() != null ? "OK" : "NULL").append("\n");
         debug.append("NPCs list: ").append(game.getNPCs() != null ? "OK" : "NULL").append("\n");
         debug.append("Days passed: ").append(game.getDaysPassed()).append("\n");
-        
+
         if (game.getNPCs() == null) {
             return new Result(true, debug.toString());
         }
-        
+
         debug.append("Number of NPCs: ").append(game.getNPCs().size()).append("\n");
-        
+
         // Parse the quest ID
         int id;
         try {
@@ -2522,12 +2522,12 @@ public class GameMenuController {
             debug.append("ERROR: Invalid quest ID format: ").append(idString).append("\n");
             return new Result(true, debug.toString());
         }
-        
+
         // Search for the specific quest
         NPC targetNpc = null;
         Quest targetQuest = null;
         Boolean questCompleted = null;
-        
+
         for (NPC npc : game.getNPCs()) {
             if (npc != null && npc.getQuests() != null) {
                 for (Quest quest : npc.getQuests().keySet()) {
@@ -2541,7 +2541,7 @@ public class GameMenuController {
                 if (targetQuest != null) break;
             }
         }
-        
+
         debug.append("\n=== TARGET QUEST ANALYSIS ===\n");
         if (targetQuest == null) {
             debug.append("Quest not found!\n");
@@ -2550,11 +2550,11 @@ public class GameMenuController {
             debug.append("NPC: ").append(targetNpc.getType().name()).append("\n");
             debug.append("Quest ID: ").append(targetQuest.getId()).append("\n");
             debug.append("Completed: ").append(questCompleted).append("\n");
-            
+
             // Check demand
             if (targetQuest.getDemand() != null) {
                 debug.append("Demand: ").append(targetQuest.getDemand().getName()).append(" x").append(targetQuest.getDemandAmount()).append("\n");
-                
+
                 // Check if player has the item
                 Item demandedItem = game.getCurrentPlayer().getInventory().findItemByType(targetQuest.getDemand());
                 if (demandedItem != null) {
@@ -2567,28 +2567,28 @@ public class GameMenuController {
             } else {
                 debug.append("Demand: NULL (ERROR!)\n");
             }
-            
+
             // Check reward
             if (targetQuest.getReward() != null) {
                 debug.append("Reward: ").append(targetQuest.getReward().getName()).append(" x").append(targetQuest.getRewardAmount()).append("\n");
             } else {
                 debug.append("Reward: Friendship level upgrade\n");
             }
-            
+
             // Check quest visibility
             boolean isVisible = isQuestVisible(targetQuest, targetNpc);
             debug.append("Quest visible: ").append(isVisible ? "YES" : "NO").append("\n");
-            
+
             if (!isVisible) {
                 debug.append("Visibility requirements:\n");
-                
+
                 // Get quest index
                 HashMap<Quest, Boolean> quests = targetNpc.getQuests();
                 List<Quest> questsList = new ArrayList<>(quests.keySet());
                 int questIndex = questsList.indexOf(targetQuest);
-                
+
                 debug.append("  Quest index: ").append(questIndex).append("\n");
-                
+
                 if (questIndex == 1) {
                     Integer friendshipLevel = targetNpc.getFriendShipLevelWith(game.getCurrentPlayer());
                     debug.append("  Needs friendship level >= 1, current: ").append(friendshipLevel != null ? friendshipLevel : "NULL").append("\n");
@@ -2606,24 +2606,24 @@ public class GameMenuController {
                 }
             }
         }
-        
+
         // Check each NPC for overview
         debug.append("\n=== ALL NPCS OVERVIEW ===\n");
         int npcIndex = 0;
         for (NPC npc : game.getNPCs()) {
             debug.append("NPC ").append(npcIndex).append(": ");
-            
+
             if (npc == null) {
                 debug.append("NULL\n");
                 npcIndex++;
                 continue;
             }
-            
+
             debug.append(npc.getType() != null ? npc.getType().name() : "NULL").append(" - ");
-            
+
             if (npc.getQuests() != null) {
                 debug.append(npc.getQuests().size()).append(" quests: ");
-                
+
                 for (Quest quest : npc.getQuests().keySet()) {
                     if (quest != null) {
                         debug.append("ID").append(quest.getId());
@@ -2637,27 +2637,27 @@ public class GameMenuController {
             }
             npcIndex++;
         }
-        
+
         return new Result(true, debug.toString());
     }
 
     public Result debugQuestVisibility() {
         StringBuilder debug = new StringBuilder();
         debug.append("=== QUEST VISIBILITY DEBUG ===\n");
-        
+
         if (game.getNPCs() == null) {
             debug.append("No NPCs available!\n");
             return new Result(true, debug.toString());
         }
-        
+
         for (NPC npc : game.getNPCs()) {
             if (npc == null || npc.getQuests() == null) {
                 continue;
             }
-            
+
             debug.append("NPC: ").append(npc.getType().name()).append("\n");
             HashMap<Quest, Boolean> quests = npc.getQuests();
-            
+
             for (Quest quest : quests.keySet()) {
                 if (quest != null) {
                     Boolean isCompleted = quests.get(quest);
@@ -2668,18 +2668,18 @@ public class GameMenuController {
                 }
             }
         }
-        
+
         return new Result(true, debug.toString());
     }
 
     public Result debugTalkHistory() {
         StringBuilder debug = new StringBuilder();
         debug.append("=== TALK HISTORY DEBUG ===\n");
-        
+
         Player currentPlayer = game.getCurrentPlayer();
         debug.append("Current player: ").append(currentPlayer.getUsername()).append("\n");
         debug.append("Number of talks in current player's list: ").append(currentPlayer.getTalks().size()).append("\n");
-        
+
         for (int i = 0; i < currentPlayer.getTalks().size(); i++) {
             Talk talk = currentPlayer.getTalks().get(i);
             debug.append("Talk ").append(i).append(": ");
@@ -2691,7 +2691,7 @@ public class GameMenuController {
                 debug.append("NULL sender or receiver\n");
             }
         }
-        
+
         return new Result(true, debug.toString());
     }
 
