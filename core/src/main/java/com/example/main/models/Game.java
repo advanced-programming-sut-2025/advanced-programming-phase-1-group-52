@@ -72,7 +72,8 @@ public class Game {
     /**
      * Contains all the logic that should be executed when a day passes.
      */
-    private void advanceDay() {
+    // From private void advanceDay()
+    public void advanceDay() {
         this.daysPassed++;
         this.date.addDays(1);
         this.todayWeather = this.tomorrowWeather;

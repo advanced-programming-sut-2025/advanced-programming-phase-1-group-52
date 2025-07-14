@@ -1,7 +1,5 @@
 package com.example.main.GDXviews;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Random;
 
 import com.badlogic.gdx.Gdx;
@@ -13,30 +11,12 @@ import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
-import com.badlogic.gdx.scenes.scene2d.ui.Table;
-import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.example.main.controller.GameMenuController;
-import com.example.main.controller.TradeMenuController;
 import com.example.main.enums.design.TileType;
-import com.example.main.models.App;
-import com.example.main.models.Date;
-import com.example.main.models.Game;
-import com.example.main.models.GameMap;
-import com.example.main.models.Player;
-import com.example.main.models.Tile;
-import com.example.main.models.Time;
-import com.example.main.models.User;
-import com.badlogic.gdx.scenes.scene2d.ui.Label;
-import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
-import com.badlogic.gdx.scenes.scene2d.ui.TextField;
-import com.badlogic.gdx.scenes.scene2d.ui.ScrollPane;
-import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
-import com.badlogic.gdx.scenes.scene2d.InputEvent;
-import com.example.main.models.Result;
+import com.example.main.models.*;
 
 public class GDXGameScreen implements Screen {
     private Stage stage;
@@ -55,37 +35,6 @@ public class GDXGameScreen implements Screen {
 
     private boolean showMinimap = false;
     private boolean mKeyPressed = false;
-    
-    // Trade menu variables
-    private boolean showTradeMenu = false;
-    private boolean tKeyPressed = false;
-    private Table tradeMenuTable;
-    
-    // Trade menu state management
-    private enum TradeMenuState {
-        NEW_TRADE_NOTIFICATIONS,
-        MAIN_MENU,
-        PLAYER_SELECTION,
-        TRADE_TYPE_SELECTION,
-        TRADE_DETAILS,
-        ACTIVE_TRADES,
-        TRADE_HISTORY
-    }
-    
-    private TradeMenuState currentTradeMenuState = TradeMenuState.MAIN_MENU;
-    private List<String> newTradeNotifications = new ArrayList<>();
-    
-    // Trade form data
-    private String selectedPlayerForTrade = null;
-    private String selectedTradeType = null;
-    private String itemName = "";
-    private int itemAmount = 1;
-    private int itemPrice = 1;
-    private String givingItemName = "";
-    private int givingItemAmount = 1;
-    private String receivingItemName = "";
-    private int receivingItemAmount = 1;
-    private String tradeErrorMessage = "";
 
     // Time-related variables
     private float timeAccumulator = 0f;
@@ -167,15 +116,15 @@ public class GDXGameScreen implements Screen {
     private static final int[][] HOUSE_POSITIONS = {
         {1, 1},
         {81, 1},
-        {1, 31},
-        {81, 31}
+        {1, 51},
+        {81, 51}
     };
 
     private static final int[][] HOUSE_AREAS = {
         {1, 8, 1, 8},
         {81, 88, 1, 8},
-        {1, 8, 31, 38},
-        {81, 88, 31, 38}
+        {1, 8, 51, 58},
+        {81, 88, 51, 58}
     };
 
     private static final int[][] NPC_HOUSE_POSITIONS = {
@@ -187,11 +136,11 @@ public class GDXGameScreen implements Screen {
     };
 
     private static final int[][] NPC_HOUSE_AREAS = {
-        {42, 46, 40, 46},  // Sebastian: (42,40) to (46,46) - 5x7 including walls
-        {52, 56, 40, 46},  // Abigail: (52,40) to (56,46) - 5x7 including walls  
-        {32, 36, 50, 56},  // Harvey: (32,50) to (36,56) - 5x7 including walls
-        {42, 46, 50, 56},  // Lia: (42,50) to (46,56) - 5x7 including walls
-        {52, 56, 50, 56}   // Robin: (52,50) to (56,56) - 5x7 including walls
+        {32, 35, 40, 45},
+        {42, 45, 40, 45},
+        {52, 55, 40, 45},
+        {37, 40, 50, 55},
+        {47, 50, 50, 55}
     };
 
     private static final int[][] SHOP_POSITIONS = {
@@ -205,21 +154,18 @@ public class GDXGameScreen implements Screen {
     };
 
     private static final int[][] SHOP_AREAS = {
-        {32, 39, 2, 9},   // Blacksmith: (32,2) to (39,9) - 8x8 including walls
-        {46, 53, 2, 9},   // JojaMart: (46,2) to (53,9) - 8x8 including walls
-        {32, 39, 12, 19}, // PierresGeneralStore: (32,12) to (39,19) - 8x8 including walls
-        {46, 53, 12, 19}, // CarpentersShop: (46,12) to (53,19) - 8x8 including walls
-        {32, 39, 22, 29}, // FishShop: (32,22) to (39,29) - 8x8 including walls
-        {46, 53, 22, 29}, // MarniesRanch: (46,22) to (53,29) - 8x8 including walls
-        {32, 39, 32, 39}  // TheStardropSaloon: (32,32) to (39,39) - 8x8 including walls
+        {33, 37, 3, 7},
+        {47, 51, 3, 7},
+        {33, 37, 13, 17},
+        {47, 51, 13, 17},
+        {33, 37, 23, 27},
+        {47, 51, 23, 27},
+        {33, 37, 33, 37}
     };
 
     private static final int TILE_SIZE = 32;
     private static final int MAP_WIDTH = 90;
     private static final int MAP_HEIGHT = 60;
-
-    private Texture menuBackgroundTexture;
-    private TradeMenuController tradeController;
 
     public GDXGameScreen() {
         controller = new GameMenuController();
@@ -266,15 +212,6 @@ public class GDXGameScreen implements Screen {
         generateRandomMaps();
 
         initializePlayerPosition();
-
-        // Initialize trade menu
-        tradeController = new TradeMenuController();
-        try {
-            menuBackgroundTexture = new Texture(Gdx.files.internal("content/Cut/menu_background.png"));
-        } catch (Exception e) {
-            // Fallback: create a simple colored texture
-            menuBackgroundTexture = new Texture(1, 1, com.badlogic.gdx.graphics.Pixmap.Format.RGBA8888);
-        }
     }
 
     private void loadHudAssets() {
@@ -445,13 +382,13 @@ public class GDXGameScreen implements Screen {
         jewelStoneTexture = new Texture("content/Cut/map_elements/jewel_stone.png");
 
         try {
-            blacksmithTexture = new Texture("content/Cut/map_elements/blacksmith.png");
-            jojamartTexture = new Texture("content/Cut/map_elements/jojamart.png");
-            pierresShopTexture = new Texture("content/Cut/map_elements/pierres_shop.png");
-            carpentersShopTexture = new Texture("content/Cut/map_elements/carpenters_shop.png");
-            fishShopTexture = new Texture("content/Cut/map_elements/fish_shop.png");
-            ranchTexture = new Texture("content/Cut/map_elements/marines_ranch.png");
-            saloonTexture = new Texture("content/Cut/map_elements/stardrop_saloon.png");
+            blacksmithTexture = new Texture("content/Cut/map_elements/Blacksmith.png");
+            jojamartTexture = new Texture("content/Cut/map_elements/Jojamart.png");
+            pierresShopTexture = new Texture("content/Cut/map_elements/Pierres_shop.png");
+            carpentersShopTexture = new Texture("content/Cut/map_elements/Carpenter's_Shop.png");
+            fishShopTexture = new Texture("content/Cut/map_elements/Fish_Shop.png");
+            ranchTexture = new Texture("content/Cut/map_elements/Ranch.png");
+            saloonTexture = new Texture("content/Cut/map_elements/Saloon.png");
         } catch (Exception e) {
             blacksmithTexture = ground1Texture;
             jojamartTexture = ground1Texture;
@@ -516,38 +453,83 @@ public class GDXGameScreen implements Screen {
     }
 
     private void handleInput(float delta) {
-        handleTradeMenuToggle();
-        
-        // Only handle game input if trade menu is not showing
-        if (!showTradeMenu) {
-            handleMinimapToggle();
-            handleTurnSwitching();
-            handlePlayerMovement(delta);
-            handleCameraMovement(delta);
-        }
+        handleMinimapToggle();
+        handleTurnSwitching();
+        handlePlayerMovement(delta);
+        handleCameraMovement(delta);
     }
-    
-    private void handleTradeMenuToggle() {
-        boolean tKeyCurrentlyPressed = Gdx.input.isKeyPressed(Input.Keys.T);
-        
-        if (tKeyCurrentlyPressed && !tKeyPressed) {
-            toggleTradeMenu();
+
+    private void handlePlayerMovement(float delta) {
+        Player currentPlayer = game.getCurrentPlayer();
+        if (currentPlayer == null) return;
+
+        playerAnimationTime += delta;
+
+        if (playerMoving && playerMoveProgress < 1.0f) {
+            playerMoveProgress += PLAYER_MOVE_SPEED * delta;
+            if (playerMoveProgress >= 1.0f) {
+                playerMoveProgress = 1.0f;
+                currentPlayer.setCurrentX(playerTargetX);
+                currentPlayer.setCurrentY(playerTargetY);
+                playerMoving = false;
+            }
+            return;
         }
-        
-        tKeyPressed = tKeyCurrentlyPressed;
-    }
-    
-    private void toggleTradeMenu() {
-        if (showTradeMenu) {
-            showTradeMenu = false;
-            if (tradeMenuTable != null) {
-                tradeMenuTable.remove();
-                tradeMenuTable = null;
+
+        boolean upPressed = Gdx.input.isKeyPressed(Input.Keys.W) || Gdx.input.isKeyPressed(Input.Keys.UP);
+        boolean downPressed = Gdx.input.isKeyPressed(Input.Keys.S) || Gdx.input.isKeyPressed(Input.Keys.DOWN);
+        boolean leftPressed = Gdx.input.isKeyPressed(Input.Keys.A) || Gdx.input.isKeyPressed(Input.Keys.LEFT);
+        boolean rightPressed = Gdx.input.isKeyPressed(Input.Keys.D) || Gdx.input.isKeyPressed(Input.Keys.RIGHT);
+
+        int newX = currentPlayer.currentX();
+        int newY = currentPlayer.currentY();
+        PlayerDirection newDirection = playerDirection;
+
+        if (upPressed && leftPressed) {
+            newDirection = PlayerDirection.UP_LEFT;
+            newX -= 1;
+            newY -= 1;
+        } else if (upPressed && rightPressed) {
+            newDirection = PlayerDirection.UP_RIGHT;
+            newX += 1;
+            newY -= 1;
+        } else if (downPressed && leftPressed) {
+            newDirection = PlayerDirection.DOWN_LEFT;
+            newX -= 1;
+            newY += 1;
+        } else if (downPressed && rightPressed) {
+            newDirection = PlayerDirection.DOWN_RIGHT;
+            newX += 1;
+            newY += 1;
+        } else if (upPressed) {
+            newDirection = PlayerDirection.UP;
+            newY -= 1;
+        } else if (downPressed) {
+            newDirection = PlayerDirection.DOWN;
+            newY += 1;
+        } else if (leftPressed) {
+            newDirection = PlayerDirection.LEFT;
+            newX -= 1;
+        } else if (rightPressed) {
+            newDirection = PlayerDirection.RIGHT;
+            newX += 1;
+        }
+
+        playerDirection = newDirection;
+
+        if (newX != currentPlayer.currentX() || newY != currentPlayer.currentY()) {
+            if (newX >= 0 && newX < MAP_WIDTH && newY >= 0 && newY < MAP_HEIGHT) {
+                if (isPlayerWalkable(newX, newY, currentPlayer)) {
+                    playerTargetX = newX;
+                    playerTargetY = newY;
+                    playerMoving = true;
+                    playerMoveProgress = 0f;
+                    playerAnimationTime = 0f;
+                }
             }
         } else {
-            showTradeMenu = true;
-            checkForNewTrades();
-            createTradeMenuUI();
+            playerMoving = false;
+            playerAnimationTime = 0f;
         }
     }
 
@@ -703,35 +685,10 @@ public class GDXGameScreen implements Screen {
             for (int x = 0; x < MAP_WIDTH; x++) {
                 if (tiles[x] != null && tiles[x][y] != null) {
                     Tile tile = tiles[x][y];
-                    TileType tileType = tile.getType();
-                    
-                    if (tileType == TileType.House || tileType == TileType.Wall) {
+                    if (tile.getType() == TileType.Tree) {
                         float worldX = x * TILE_SIZE;
                         float worldY = (MAP_HEIGHT - 1 - y) * TILE_SIZE;
-                        renderHouseSprite(x, y, worldX, worldY);
-                        
-                        // Also check if this Wall tile belongs to an NPC house area or shop area
-                        if (tileType == TileType.Wall) {
-                            // Only render NPC house if this wall belongs to an NPC house area
-                            int npcIndex = getNPCIndexForHouse(x, y);
-                            if (npcIndex != -1) {
-                                renderNPCHouseSprite(x, y, worldX, worldY);
-                            }
-                            
-                            // Only render shop if this wall belongs to a shop area
-                            int shopIndex = getShopIndex(x, y);
-                            if (shopIndex != -1) {
-                                renderShopSprite(x, y, worldX, worldY);
-                            }
-                        }
-                    } else if (tileType == TileType.NPCHouse) {
-                        float worldX = x * TILE_SIZE;
-                        float worldY = (MAP_HEIGHT - 1 - y) * TILE_SIZE;
-                        renderNPCHouseSprite(x, y, worldX, worldY);
-                    } else if (tileType == TileType.Shop) {
-                        float worldX = x * TILE_SIZE;
-                        float worldY = (MAP_HEIGHT - 1 - y) * TILE_SIZE;
-                        renderShopSprite(x, y, worldX, worldY);
+                        renderTreeSprite(x, y, worldX, worldY);
                     }
                 }
             }
@@ -741,10 +698,18 @@ public class GDXGameScreen implements Screen {
             for (int x = 0; x < MAP_WIDTH; x++) {
                 if (tiles[x] != null && tiles[x][y] != null) {
                     Tile tile = tiles[x][y];
-                    if (tile.getType() == TileType.Tree) {
+                    if (tile.getType() == TileType.House) {
                         float worldX = x * TILE_SIZE;
                         float worldY = (MAP_HEIGHT - 1 - y) * TILE_SIZE;
-                        renderTreeSprite(x, y, worldX, worldY);
+                        renderHouseSprite(x, y, worldX, worldY);
+                    } else if (tile.getType() == TileType.NPCHouse) {
+                        float worldX = x * TILE_SIZE;
+                        float worldY = (MAP_HEIGHT - 1 - y) * TILE_SIZE;
+                        renderNPCHouseSprite(x, y, worldX, worldY);
+                    } else if (tile.getType() == TileType.Shop) {
+                        float worldX = x * TILE_SIZE;
+                        float worldY = (MAP_HEIGHT - 1 - y) * TILE_SIZE;
+                        renderShopSprite(x, y, worldX, worldY);
                     }
                 }
             }
@@ -960,30 +925,22 @@ public class GDXGameScreen implements Screen {
 
         int[] houseArea = HOUSE_AREAS[playerIndex];
         int houseStartX = houseArea[0];
-        int houseStartY = houseArea[2];  // This is the top row of the house area
-        int houseEndY = houseArea[3];    // This is the bottom row of the house area
+        int houseStartY = houseArea[2];
 
-        // Only render the house image once at the top-left corner of the house area
         if (tileX == houseStartX && tileY == houseStartY) {
-            // Calculate the size to cover the entire 8x8 house area
-            float houseWidth = 8 * TILE_SIZE;  // 8 tiles wide
-            float houseHeight = 8 * TILE_SIZE; // 8 tiles tall
-            
-            // Calculate the bottom-left position for the house image
-            // The worldY for houseStartY gives us the screen position of the top row
-            // We need to move down by (8-1) tiles to get to the bottom of the house area
+            float houseWidth = houseTexture.getWidth();
+            float houseHeight = houseTexture.getHeight();
+
             float houseX = worldX;
-            float houseY = worldY - (7 * TILE_SIZE); // Move down 7 tiles from the top tile
-            
+            float houseY = worldY;
+
             spriteBatch.draw(houseTexture, houseX, houseY, houseWidth, houseHeight);
         }
     }
 
     private void renderNPCHouseSprite(int tileX, int tileY, float worldX, float worldY) {
         int npcIndex = getNPCIndexForHouse(tileX, tileY);
-        if (npcIndex == -1) {
-            return;
-        }
+        if (npcIndex == -1) return;
 
         Texture npcHouseTexture;
         switch (npcHouseVariants[npcIndex]) {
@@ -996,20 +953,15 @@ public class GDXGameScreen implements Screen {
         }
 
         int[] npcHouseArea = NPC_HOUSE_AREAS[npcIndex];
-        int houseStartX = npcHouseArea[0];
-        int houseStartY = npcHouseArea[2];  // This is the top row of the house area
+        int npcHouseStartX = npcHouseArea[0];
+        int npcHouseStartY = npcHouseArea[2];
 
-        // Only render the house image once at the top-left corner of the house area
-        if (tileX == houseStartX && tileY == houseStartY) {
-            // Calculate the size to cover the entire 5x7 NPC house area
-            float npcHouseWidth = 5 * TILE_SIZE;  // 5 tiles wide
-            float npcHouseHeight = 7 * TILE_SIZE; // 7 tiles tall
-            
-            // Calculate the bottom-left position for the NPC house image
-            // The worldY for houseStartY gives us the screen position of the top row
-            // We need to move down by (7-1) tiles to get to the bottom of the house area
+        if (tileX == npcHouseStartX && tileY == npcHouseStartY) {
+            float npcHouseWidth = npcHouseTexture.getWidth();
+            float npcHouseHeight = npcHouseTexture.getHeight();
+
             float npcHouseX = worldX;
-            float npcHouseY = worldY - (6 * TILE_SIZE); // Move down 6 tiles from the top tile
+            float npcHouseY = worldY;
 
             spriteBatch.draw(npcHouseTexture, npcHouseX, npcHouseY, npcHouseWidth, npcHouseHeight);
         }
@@ -1039,15 +991,14 @@ public class GDXGameScreen implements Screen {
         int shopStartY = shopArea[2];
 
         if (tileX == shopStartX && tileY == shopStartY) {
-            // Calculate the size to cover the entire 8x8 shop area
-            float shopWidth = 8 * TILE_SIZE;  // 8 tiles wide
-            float shopHeight = 8 * TILE_SIZE; // 8 tiles tall
-            
-            // Calculate the bottom-left position for the shop image
-            // The worldY for shopStartY gives us the screen position of the top row
-            // We need to move down by (8-1) tiles to get to the bottom of the shop area
+            int shopWidthInTiles = shopArea[1] - shopArea[0] + 1;
+            int shopHeightInTiles = shopArea[3] - shopArea[2] + 1;
+
+            float shopWidth = shopWidthInTiles * TILE_SIZE;
+            float shopHeight = shopHeightInTiles * TILE_SIZE;
+
             float shopX = worldX;
-            float shopY = worldY - (7 * TILE_SIZE); // Move down 7 tiles from the top tile
+            float shopY = worldY;
 
             spriteBatch.draw(shopTexture, shopX, shopY, shopWidth, shopHeight);
         }
@@ -1299,1038 +1250,5 @@ public class GDXGameScreen implements Screen {
         femaleLeft2Texture.dispose();
         femaleRight1Texture.dispose();
         femaleRight2Texture.dispose();
-        
-        if (menuBackgroundTexture != null) {
-            menuBackgroundTexture.dispose();
-        }
-    }
-    
-    // Missing handlePlayerMovement method
-    private void handlePlayerMovement(float delta) {
-        Player currentPlayer = game.getCurrentPlayer();
-        if (currentPlayer == null) return;
-
-        playerAnimationTime += delta;
-
-        if (playerMoving && playerMoveProgress < 1.0f) {
-            playerMoveProgress += PLAYER_MOVE_SPEED * delta;
-            if (playerMoveProgress >= 1.0f) {
-                playerMoveProgress = 1.0f;
-                currentPlayer.setCurrentX(playerTargetX);
-                currentPlayer.setCurrentY(playerTargetY);
-                playerMoving = false;
-            }
-            return;
-        }
-
-        boolean upPressed = Gdx.input.isKeyPressed(Input.Keys.W) || Gdx.input.isKeyPressed(Input.Keys.UP);
-        boolean downPressed = Gdx.input.isKeyPressed(Input.Keys.S) || Gdx.input.isKeyPressed(Input.Keys.DOWN);
-        boolean leftPressed = Gdx.input.isKeyPressed(Input.Keys.A) || Gdx.input.isKeyPressed(Input.Keys.LEFT);
-        boolean rightPressed = Gdx.input.isKeyPressed(Input.Keys.D) || Gdx.input.isKeyPressed(Input.Keys.RIGHT);
-
-        int newX = currentPlayer.currentX();
-        int newY = currentPlayer.currentY();
-        PlayerDirection newDirection = playerDirection;
-
-        if (upPressed && leftPressed) {
-            newDirection = PlayerDirection.UP_LEFT;
-            newX -= 1;
-            newY -= 1;
-        } else if (upPressed && rightPressed) {
-            newDirection = PlayerDirection.UP_RIGHT;
-            newX += 1;
-            newY -= 1;
-        } else if (downPressed && leftPressed) {
-            newDirection = PlayerDirection.DOWN_LEFT;
-            newX -= 1;
-            newY += 1;
-        } else if (downPressed && rightPressed) {
-            newDirection = PlayerDirection.DOWN_RIGHT;
-            newX += 1;
-            newY += 1;
-        } else if (upPressed) {
-            newDirection = PlayerDirection.UP;
-            newY -= 1;
-        } else if (downPressed) {
-            newDirection = PlayerDirection.DOWN;
-            newY += 1;
-        } else if (leftPressed) {
-            newDirection = PlayerDirection.LEFT;
-            newX -= 1;
-        } else if (rightPressed) {
-            newDirection = PlayerDirection.RIGHT;
-            newX += 1;
-        }
-
-        playerDirection = newDirection;
-
-        if (newX != currentPlayer.currentX() || newY != currentPlayer.currentY()) {
-            if (newX >= 0 && newX < MAP_WIDTH && newY >= 0 && newY < MAP_HEIGHT) {
-                if (isPlayerWalkable(newX, newY, currentPlayer)) {
-                    playerTargetX = newX;
-                    playerTargetY = newY;
-                    playerMoving = true;
-                    playerMoveProgress = 0f;
-                    playerAnimationTime = 0f;
-                }
-            }
-        } else {
-            playerMoving = false;
-            playerAnimationTime = 0f;
-        }
-    }
-    
-    // Trade menu methods
-    private void checkForNewTrades() {
-        tradeErrorMessage = ""; // Clear any previous error messages
-        Result result = tradeController.listTrades();
-        
-        if (result.isSuccessful()) {
-            String message = result.Message();
-            newTradeNotifications.clear();
-            
-            if (message.trim().isEmpty()) {
-                currentTradeMenuState = TradeMenuState.MAIN_MENU;
-                return;
-            }
-            
-            // Split by trade separator
-            String[] trades = message.split("-----------------------");
-            
-            for (int i = 0; i < trades.length; i++) {
-                String tradeEntry = trades[i].trim();
-                if (tradeEntry.isEmpty()) continue;
-                
-                String[] lines = tradeEntry.split("\n");
-                String sender = null;
-                String receiver = null;
-                String tradeType = "Trade";
-                
-                for (String line : lines) {
-                    line = line.trim();
-                    
-                    if (line.startsWith("Buy:")) {
-                        tradeType = "Buy Request";
-                    } else if (line.startsWith("Trade Offer:")) {
-                        tradeType = "Trade Offer";
-                    } else if (line.startsWith("Sender:")) {
-                        sender = line.substring(7).trim(); // Remove "Sender:" prefix
-                    } else if (line.startsWith("Receiver:")) {
-                        receiver = line.substring(9).trim(); // Remove "Receiver:" prefix
-                    }
-                }
-                
-                // Only show notifications for trades where current player is the receiver
-                if (receiver != null && receiver.equals(game.getCurrentPlayer().getUsername()) && sender != null) {
-                    String notificationText = "New " + tradeType + " from " + sender;
-                    newTradeNotifications.add(notificationText);
-                }
-            }
-            
-            if (!newTradeNotifications.isEmpty()) {
-                currentTradeMenuState = TradeMenuState.NEW_TRADE_NOTIFICATIONS;
-            } else {
-                currentTradeMenuState = TradeMenuState.MAIN_MENU;
-            }
-        } else {
-            currentTradeMenuState = TradeMenuState.MAIN_MENU;
-        }
-    }
-    
-    private void createTradeMenuUI() {
-        if (tradeMenuTable != null) {
-            tradeMenuTable.remove();
-        }
-
-        tradeMenuTable = new Table();
-        // Make the background 75% of screen size
-        tradeMenuTable.setSize(Gdx.graphics.getWidth() * 0.75f, Gdx.graphics.getHeight() * 0.75f);
-        tradeMenuTable.setPosition(
-            (Gdx.graphics.getWidth() - tradeMenuTable.getWidth()) / 2f,
-            (Gdx.graphics.getHeight() - tradeMenuTable.getHeight()) / 2f
-        );
-        
-        // Create a background drawable from the menu background texture
-        TextureRegionDrawable backgroundDrawable = new TextureRegionDrawable(menuBackgroundTexture);
-        tradeMenuTable.setBackground(backgroundDrawable);
-        
-        stage.addActor(tradeMenuTable);
-
-        switch (currentTradeMenuState) {
-            case NEW_TRADE_NOTIFICATIONS:
-                createNewTradeNotificationsMenu();
-                break;
-            case MAIN_MENU:
-                createMainTradeMenu();
-                break;
-            case PLAYER_SELECTION:
-                createPlayerSelectionMenu();
-                break;
-            case TRADE_TYPE_SELECTION:
-                createTradeTypeSelectionMenu();
-                break;
-            case TRADE_DETAILS:
-                createTradeDetailsMenu();
-                break;
-            case ACTIVE_TRADES:
-                createActiveTradesMenu();
-                break;
-            case TRADE_HISTORY:
-                createTradeHistoryMenu();
-                break;
-        }
-    }
-    
-    private void createNewTradeNotificationsMenu() {
-        tradeMenuTable.clear();
-        
-        Label titleLabel = new Label("New Trade Notifications", skin);
-        titleLabel.setFontScale(1.5f);
-        tradeMenuTable.add(titleLabel).padBottom(20).row();
-        
-        for (int i = 0; i < newTradeNotifications.size(); i++) {
-            String notification = newTradeNotifications.get(i);
-            
-            Label notificationLabel = new Label(notification, skin);
-            tradeMenuTable.add(notificationLabel).padBottom(10).row();
-        }
-        
-        TextButton continueButton = new TextButton("Continue", skin);
-        continueButton.addListener(new ClickListener() {
-            @Override
-            public void clicked(InputEvent event, float x, float y) {
-                tradeErrorMessage = ""; // Clear error message
-                currentTradeMenuState = TradeMenuState.MAIN_MENU;
-                createMainTradeMenu();
-            }
-        });
-        tradeMenuTable.add(continueButton).padTop(20);
-    }
-    
-    private void createMainTradeMenu() {
-        tradeMenuTable.clear();
-        
-        Label titleLabel = new Label("Trade Menu", skin);
-        titleLabel.setFontScale(1.5f);
-        tradeMenuTable.add(titleLabel).padBottom(20).row();
-        
-        // Show error message if exists
-        if (!tradeErrorMessage.isEmpty()) {
-            Label errorLabel = new Label(tradeErrorMessage, skin);
-            errorLabel.setColor(Color.RED);
-            errorLabel.setFontScale(1.1f);
-            tradeMenuTable.add(errorLabel).padBottom(15).row();
-        }
-        
-        TextButton newTradeButton = new TextButton("New Trade", skin);
-        newTradeButton.addListener(new ClickListener() {
-            @Override
-            public void clicked(InputEvent event, float x, float y) {
-                tradeErrorMessage = ""; // Clear error message
-                currentTradeMenuState = TradeMenuState.PLAYER_SELECTION;
-                createTradeMenuUI();
-            }
-        });
-        tradeMenuTable.add(newTradeButton).width(200).pad(10).row();
-        
-        TextButton activeTradesButton = new TextButton("Active Trades", skin);
-        activeTradesButton.addListener(new ClickListener() {
-            @Override
-            public void clicked(InputEvent event, float x, float y) {
-                tradeErrorMessage = ""; // Clear error message
-                currentTradeMenuState = TradeMenuState.ACTIVE_TRADES;
-                createTradeMenuUI();
-            }
-        });
-        tradeMenuTable.add(activeTradesButton).width(200).pad(10).row();
-        
-        TextButton tradeHistoryButton = new TextButton("Trade History", skin);
-        tradeHistoryButton.addListener(new ClickListener() {
-            @Override
-            public void clicked(InputEvent event, float x, float y) {
-                tradeErrorMessage = ""; // Clear error message
-                currentTradeMenuState = TradeMenuState.TRADE_HISTORY;
-                createTradeMenuUI();
-            }
-        });
-        tradeMenuTable.add(tradeHistoryButton).width(200).pad(10).row();
-        
-        TextButton closeButton = new TextButton("Close", skin);
-        closeButton.addListener(new ClickListener() {
-            @Override
-            public void clicked(InputEvent event, float x, float y) {
-                tradeErrorMessage = ""; // Clear error message
-                showTradeMenu = false;
-                if (tradeMenuTable != null) {
-                    tradeMenuTable.remove();
-                    tradeMenuTable = null;
-                }
-            }
-        });
-        tradeMenuTable.add(closeButton).width(200).pad(10).row();
-    }
-    
-    private void createPlayerSelectionMenu() {
-        tradeMenuTable.clear();
-        
-        Label titleLabel = new Label("Select Player to Trade With", skin);
-        tradeMenuTable.add(titleLabel).padBottom(20).row();
-
-        // Add buttons for each other player in the game
-        for (User user : game.getPlayers()) {
-            if (!user.getPlayer().equals(game.getCurrentPlayer())) {
-                TextButton playerButton = new TextButton(user.getPlayer().getUsername(), skin);
-                playerButton.addListener(new ClickListener() {
-                    @Override
-                    public void clicked(InputEvent event, float x, float y) {
-                        selectedPlayerForTrade = user.getPlayer().getUsername();
-                        currentTradeMenuState = TradeMenuState.TRADE_TYPE_SELECTION;
-                        createTradeMenuUI();
-                    }
-                });
-                tradeMenuTable.add(playerButton).width(200).pad(10).row();
-            }
-        }
-
-        // Add back button
-        TextButton backButton = new TextButton("Back", skin);
-        backButton.addListener(new ClickListener() {
-            @Override
-            public void clicked(InputEvent event, float x, float y) {
-                tradeErrorMessage = ""; // Clear error message
-                currentTradeMenuState = TradeMenuState.MAIN_MENU;
-                createTradeMenuUI();
-            }
-        });
-        tradeMenuTable.add(backButton).width(200).pad(10).row();
-    }
-    
-    private void createTradeTypeSelectionMenu() {
-        tradeMenuTable.clear();
-        
-        Label titleLabel = new Label("Select Trade Type", skin);
-        tradeMenuTable.add(titleLabel).padBottom(20).row();
-        
-        Label playerLabel = new Label("Trading with: " + selectedPlayerForTrade, skin);
-        tradeMenuTable.add(playerLabel).padBottom(15).row();
-        
-        TextButton buyRequestButton = new TextButton("Buy Request", skin);
-        buyRequestButton.addListener(new ClickListener() {
-            @Override
-            public void clicked(InputEvent event, float x, float y) {
-                selectedTradeType = "Buy Request";
-                currentTradeMenuState = TradeMenuState.TRADE_DETAILS;
-                resetTradeFormData();
-                createTradeMenuUI();
-            }
-        });
-        tradeMenuTable.add(buyRequestButton).width(200).pad(10).row();
-        
-        TextButton buyOfferButton = new TextButton("Buy Offer", skin);
-        buyOfferButton.addListener(new ClickListener() {
-            @Override
-            public void clicked(InputEvent event, float x, float y) {
-                selectedTradeType = "Buy Offer";
-                currentTradeMenuState = TradeMenuState.TRADE_DETAILS;
-                resetTradeFormData();
-                createTradeMenuUI();
-            }
-        });
-        tradeMenuTable.add(buyOfferButton).width(200).pad(10).row();
-        
-        TextButton sellRequestButton = new TextButton("Trade Request", skin);
-        sellRequestButton.addListener(new ClickListener() {
-            @Override
-            public void clicked(InputEvent event, float x, float y) {
-                selectedTradeType = "Trade Request";
-                currentTradeMenuState = TradeMenuState.TRADE_DETAILS;
-                resetTradeFormData();
-                createTradeMenuUI();
-            }
-        });
-        tradeMenuTable.add(sellRequestButton).width(200).pad(10).row();
-        
-        TextButton sellOfferButton = new TextButton("Trade Offer", skin);
-        sellOfferButton.addListener(new ClickListener() {
-            @Override
-            public void clicked(InputEvent event, float x, float y) {
-                selectedTradeType = "Trade Offer";
-                currentTradeMenuState = TradeMenuState.TRADE_DETAILS;
-                resetTradeFormData();
-                createTradeMenuUI();
-            }
-        });
-        tradeMenuTable.add(sellOfferButton).width(200).pad(10).row();
-        
-        TextButton backButton = new TextButton("Back", skin);
-        backButton.addListener(new ClickListener() {
-            @Override
-            public void clicked(InputEvent event, float x, float y) {
-                tradeErrorMessage = ""; // Clear error message
-                currentTradeMenuState = TradeMenuState.PLAYER_SELECTION;
-                createTradeMenuUI();
-            }
-        });
-        tradeMenuTable.add(backButton).width(200).pad(10).row();
-    }
-    
-    private void resetTradeFormData() {
-        itemName = "";
-        itemAmount = 1;
-        itemPrice = 1;
-        givingItemName = "";
-        givingItemAmount = 1;
-        receivingItemName = "";
-        receivingItemAmount = 1;
-        tradeErrorMessage = "";
-    }
-    
-    private void createTradeDetailsMenu() {
-        tradeMenuTable.clear();
-        
-        Label titleLabel = new Label(selectedTradeType + " Details", skin);
-        titleLabel.setFontScale(1.2f);
-        tradeMenuTable.add(titleLabel).padBottom(20).row();
-        
-        Label playerLabel = new Label("Trading with: " + selectedPlayerForTrade, skin);
-        tradeMenuTable.add(playerLabel).padBottom(15).row();
-        
-        // Show error message if exists
-        if (!tradeErrorMessage.isEmpty()) {
-            Label errorLabel = new Label(tradeErrorMessage, skin);
-            errorLabel.setColor(1, 0, 0, 1); // Red color
-            tradeMenuTable.add(errorLabel).padBottom(10).row();
-        }
-        
-        if (selectedTradeType.equals("Buy Request") || selectedTradeType.equals("Buy Offer")) {
-            createBuyTradeForm();
-        } else {
-            createSellTradeForm();
-        }
-    }
-    
-    private void createBuyTradeForm() {
-        // Item name
-        Label itemNameLabel = new Label("Item Name:", skin);
-        TextField itemNameField = new TextField(itemName, skin);
-        itemNameField.setTextFieldListener(new TextField.TextFieldListener() {
-            @Override
-            public void keyTyped(TextField textField, char c) {
-                itemName = textField.getText();
-            }
-        });
-        tradeMenuTable.add(itemNameLabel).width(120).pad(5);
-        tradeMenuTable.add(itemNameField).width(200).pad(5).row();
-        
-        // Item amount
-        Label itemAmountLabel = new Label("Amount:", skin);
-        TextField itemAmountField = new TextField(String.valueOf(itemAmount), skin);
-        itemAmountField.setTextFieldFilter(new TextField.TextFieldFilter() {
-            @Override
-            public boolean acceptChar(TextField textField, char c) {
-                return Character.isDigit(c);
-            }
-        });
-        itemAmountField.setTextFieldListener(new TextField.TextFieldListener() {
-            @Override
-            public void keyTyped(TextField textField, char c) {
-                String text = textField.getText();
-                if (text.isEmpty()) {
-                    itemAmount = 1;
-                    textField.setText("1");
-                } else {
-                    try {
-                        itemAmount = Integer.parseInt(text);
-                        if (itemAmount < 1) {
-                            itemAmount = 1;
-                            textField.setText("1");
-                        }
-                    } catch (NumberFormatException e) {
-                        itemAmount = 1;
-                        textField.setText("1");
-                    }
-                }
-            }
-        });
-        TextButton amountPlusButton = new TextButton("+", skin);
-        amountPlusButton.addListener(new ClickListener() {
-            @Override
-            public void clicked(InputEvent event, float x, float y) {
-                itemAmount++;
-                itemAmountField.setText(String.valueOf(itemAmount));
-            }
-        });
-        tradeMenuTable.add(itemAmountLabel).width(120).pad(5);
-        tradeMenuTable.add(itemAmountField).width(200).pad(5);
-        tradeMenuTable.add(amountPlusButton).width(50).pad(5).row();
-        
-        // Item price
-        Label itemPriceLabel = new Label("Price:", skin);
-        TextField itemPriceField = new TextField(String.valueOf(itemPrice), skin);
-        itemPriceField.setTextFieldFilter(new TextField.TextFieldFilter() {
-            @Override
-            public boolean acceptChar(TextField textField, char c) {
-                return Character.isDigit(c);
-            }
-        });
-        itemPriceField.setTextFieldListener(new TextField.TextFieldListener() {
-            @Override
-            public void keyTyped(TextField textField, char c) {
-                String text = textField.getText();
-                if (text.isEmpty()) {
-                    itemPrice = 1;
-                    textField.setText("1");
-                } else {
-                    try {
-                        itemPrice = Integer.parseInt(text);
-                        if (itemPrice < 1) {
-                            itemPrice = 1;
-                            textField.setText("1");
-                        }
-                    } catch (NumberFormatException e) {
-                        itemPrice = 1;
-                        textField.setText("1");
-                    }
-                }
-            }
-        });
-        TextButton pricePlusButton = new TextButton("+", skin);
-        pricePlusButton.addListener(new ClickListener() {
-            @Override
-            public void clicked(InputEvent event, float x, float y) {
-                itemPrice++;
-                itemPriceField.setText(String.valueOf(itemPrice));
-            }
-        });
-        tradeMenuTable.add(itemPriceLabel).width(120).pad(5);
-        tradeMenuTable.add(itemPriceField).width(200).pad(5);
-        tradeMenuTable.add(pricePlusButton).width(50).pad(5).row();
-        
-        // Submit button
-        TextButton submitButton = new TextButton("Submit " + selectedTradeType, skin);
-        submitButton.addListener(new ClickListener() {
-            @Override
-            public void clicked(InputEvent event, float x, float y) {
-                Result result;
-                if (selectedTradeType.equals("Buy Request")) {
-                    result = tradeController.buyRequest(selectedPlayerForTrade, itemName, String.valueOf(itemAmount), String.valueOf(itemPrice));
-                } else {
-                    result = tradeController.buyOffer(selectedPlayerForTrade, itemName, String.valueOf(itemAmount), String.valueOf(itemPrice));
-                }
-                
-                if (result.isSuccessful()) {
-                    showTradeMenu = false;
-                    if (tradeMenuTable != null) {
-                        tradeMenuTable.remove();
-                        tradeMenuTable = null;
-                    }
-                } else {
-                    tradeErrorMessage = result.Message();
-                    createTradeMenuUI();
-                }
-            }
-        });
-        tradeMenuTable.add(submitButton).width(250).colspan(3).pad(10).row();
-        
-        // Back button
-        TextButton backButton = new TextButton("Back", skin);
-        backButton.addListener(new ClickListener() {
-            @Override
-            public void clicked(InputEvent event, float x, float y) {
-                currentTradeMenuState = TradeMenuState.TRADE_TYPE_SELECTION;
-                createTradeMenuUI();
-            }
-        });
-        tradeMenuTable.add(backButton).width(250).colspan(3).pad(10).row();
-    }
-    
-    private void createSellTradeForm() {
-        // Giving item name
-        Label givingItemNameLabel = new Label("Giving Item:", skin);
-        TextField givingItemNameField = new TextField(givingItemName, skin);
-        givingItemNameField.setTextFieldListener(new TextField.TextFieldListener() {
-            @Override
-            public void keyTyped(TextField textField, char c) {
-                givingItemName = textField.getText();
-            }
-        });
-        tradeMenuTable.add(givingItemNameLabel).width(120).pad(5);
-        tradeMenuTable.add(givingItemNameField).width(200).pad(5).row();
-        
-        // Giving item amount
-        Label givingItemAmountLabel = new Label("Giving Amount:", skin);
-        TextField givingItemAmountField = new TextField(String.valueOf(givingItemAmount), skin);
-        givingItemAmountField.setTextFieldFilter(new TextField.TextFieldFilter() {
-            @Override
-            public boolean acceptChar(TextField textField, char c) {
-                return Character.isDigit(c);
-            }
-        });
-        givingItemAmountField.setTextFieldListener(new TextField.TextFieldListener() {
-            @Override
-            public void keyTyped(TextField textField, char c) {
-                String text = textField.getText();
-                if (text.isEmpty()) {
-                    givingItemAmount = 1;
-                    textField.setText("1");
-                } else {
-                    try {
-                        givingItemAmount = Integer.parseInt(text);
-                        if (givingItemAmount < 1) {
-                            givingItemAmount = 1;
-                            textField.setText("1");
-                        }
-                    } catch (NumberFormatException e) {
-                        givingItemAmount = 1;
-                        textField.setText("1");
-                    }
-                }
-            }
-        });
-        TextButton givingAmountPlusButton = new TextButton("+", skin);
-        givingAmountPlusButton.addListener(new ClickListener() {
-            @Override
-            public void clicked(InputEvent event, float x, float y) {
-                givingItemAmount++;
-                givingItemAmountField.setText(String.valueOf(givingItemAmount));
-            }
-        });
-        tradeMenuTable.add(givingItemAmountLabel).width(120).pad(5);
-        tradeMenuTable.add(givingItemAmountField).width(200).pad(5);
-        tradeMenuTable.add(givingAmountPlusButton).width(50).pad(5).row();
-        
-        // Receiving item name
-        Label receivingItemNameLabel = new Label("Receiving Item:", skin);
-        TextField receivingItemNameField = new TextField(receivingItemName, skin);
-        receivingItemNameField.setTextFieldListener(new TextField.TextFieldListener() {
-            @Override
-            public void keyTyped(TextField textField, char c) {
-                receivingItemName = textField.getText();
-            }
-        });
-        tradeMenuTable.add(receivingItemNameLabel).width(120).pad(5);
-        tradeMenuTable.add(receivingItemNameField).width(200).pad(5).row();
-        
-        // Receiving item amount
-        Label receivingItemAmountLabel = new Label("Receiving Amount:", skin);
-        TextField receivingItemAmountField = new TextField(String.valueOf(receivingItemAmount), skin);
-        receivingItemAmountField.setTextFieldFilter(new TextField.TextFieldFilter() {
-            @Override
-            public boolean acceptChar(TextField textField, char c) {
-                return Character.isDigit(c);
-            }
-        });
-        receivingItemAmountField.setTextFieldListener(new TextField.TextFieldListener() {
-            @Override
-            public void keyTyped(TextField textField, char c) {
-                String text = textField.getText();
-                if (text.isEmpty()) {
-                    receivingItemAmount = 1;
-                    textField.setText("1");
-                } else {
-                    try {
-                        receivingItemAmount = Integer.parseInt(text);
-                        if (receivingItemAmount < 1) {
-                            receivingItemAmount = 1;
-                            textField.setText("1");
-                        }
-                    } catch (NumberFormatException e) {
-                        receivingItemAmount = 1;
-                        textField.setText("1");
-                    }
-                }
-            }
-        });
-        TextButton receivingAmountPlusButton = new TextButton("+", skin);
-        receivingAmountPlusButton.addListener(new ClickListener() {
-            @Override
-            public void clicked(InputEvent event, float x, float y) {
-                receivingItemAmount++;
-                receivingItemAmountField.setText(String.valueOf(receivingItemAmount));
-            }
-        });
-        tradeMenuTable.add(receivingItemAmountLabel).width(120).pad(5);
-        tradeMenuTable.add(receivingItemAmountField).width(200).pad(5);
-        tradeMenuTable.add(receivingAmountPlusButton).width(50).pad(5).row();
-        
-        // Submit button
-        TextButton submitButton = new TextButton("Submit " + selectedTradeType, skin);
-        submitButton.addListener(new ClickListener() {
-            @Override
-            public void clicked(InputEvent event, float x, float y) {
-                Result result;
-                if (selectedTradeType.equals("Trade Request")) {
-                    result = tradeController.tradeRequest(selectedPlayerForTrade, givingItemName, String.valueOf(givingItemAmount), receivingItemName, String.valueOf(receivingItemAmount));
-                } else {
-                    result = tradeController.tradeOffer(selectedPlayerForTrade, givingItemName, String.valueOf(givingItemAmount), receivingItemName, String.valueOf(receivingItemAmount));
-                }
-                
-                if (result.isSuccessful()) {
-                    showTradeMenu = false;
-                    if (tradeMenuTable != null) {
-                        tradeMenuTable.remove();
-                        tradeMenuTable = null;
-                    }
-                } else {
-                    tradeErrorMessage = result.Message();
-                    createTradeMenuUI();
-                }
-            }
-        });
-        tradeMenuTable.add(submitButton).width(250).colspan(3).pad(10).row();
-        
-        // Back button
-        TextButton backButton = new TextButton("Back", skin);
-        backButton.addListener(new ClickListener() {
-            @Override
-            public void clicked(InputEvent event, float x, float y) {
-                currentTradeMenuState = TradeMenuState.TRADE_TYPE_SELECTION;
-                createTradeMenuUI();
-            }
-        });
-        tradeMenuTable.add(backButton).width(250).colspan(3).pad(10).row();
-    }
-    
-    private void createActiveTradesMenu() {
-        tradeMenuTable.clear();
-        
-        Label titleLabel = new Label("Active Trades", skin);
-        titleLabel.setFontScale(1.5f);
-        titleLabel.setColor(Color.GOLD);
-        tradeMenuTable.add(titleLabel).padBottom(30).row();
-        
-        // Show error message if exists
-        if (!tradeErrorMessage.isEmpty()) {
-            Label errorLabel = new Label(tradeErrorMessage, skin);
-            errorLabel.setColor(Color.RED);
-            errorLabel.setFontScale(1.1f);
-            tradeMenuTable.add(errorLabel).padBottom(15).row();
-        }
-        
-        // Create a table to hold all trade cards
-        Table tradesTable = new Table();
-        
-        Result result = tradeController.listTrades();
-        if (result.isSuccessful() && !result.Message().trim().isEmpty()) {
-            String[] trades = result.Message().split("-----------------------");
-            
-            for (String tradeEntry : trades) {
-                if (tradeEntry.trim().isEmpty()) continue;
-                
-                String[] lines = tradeEntry.trim().split("\n");
-                String receiver = null;
-                String tradeId = null;
-                String sender = null;
-                String tradeType = "Unknown Trade";
-                String itemInfo = "";
-                
-                // Parse trade info with simple trade type detection
-                for (String line : lines) {
-                    line = line.trim();
-                    if (line.startsWith("Receiver:")) {
-                        receiver = line.substring(9).trim();
-                    } else if (line.startsWith("Sender:")) {
-                        sender = line.substring(7).trim();
-                    } else if (line.startsWith("Id:")) {
-                        tradeId = line.substring(3).trim();
-                    } else if (line.startsWith("Buy:")) {
-                        // For Buy trades, we need to determine if it's request or offer
-                        // This will be set after we know sender/receiver
-                        tradeType = "Buy";
-                    } else if (line.startsWith("Trade Offer:")) {
-                        // For Trade trades, we need to determine if it's request or offer
-                        // This will be set after we know sender/receiver
-                        tradeType = "Trade";
-                    } else if (line.contains("Item:") || line.contains("Amount:") || line.contains("Price:") || line.contains("Giving:") || line.contains("Receiving:")) {
-                        if (!itemInfo.isEmpty()) itemInfo += "\n";
-                        itemInfo += line;
-                    }
-                }
-                
-                // Set final trade type based on what method would have been called
-                if (tradeType.equals("Buy")) {
-                    if (sender != null && sender.equals(game.getCurrentPlayer().getUsername())) {
-                        tradeType = "Buy Offer"; // buyOffer() method
-                    } else {
-                        tradeType = "Buy Request"; // buyRequest() method
-                    }
-                } else if (tradeType.equals("Trade")) {
-                    if (sender != null && sender.equals(game.getCurrentPlayer().getUsername())) {
-                        tradeType = "Trade Offer"; // tradeOffer() method
-                    } else {
-                        tradeType = "Trade Request"; // tradeRequest() method
-                    }
-                }
-                
-                // Create beautiful trade card
-                Table tradeCard = new Table();
-                tradeCard.setBackground(skin.getDrawable("default-round"));
-                tradeCard.pad(15);
-                
-                // Trade type header with color coding
-                Label typeLabel = new Label(tradeType, skin);
-                typeLabel.setFontScale(1.3f);
-                if (tradeType.contains("Buy")) {
-                    typeLabel.setColor(Color.CYAN);
-                } else if (tradeType.contains("Trade")) {
-                    typeLabel.setColor(Color.MAGENTA);
-                } else {
-                    typeLabel.setColor(Color.CYAN);
-                }
-                tradeCard.add(typeLabel).colspan(2).padBottom(10).row();
-                
-                // Trade ID
-                if (tradeId != null) {
-                    Label idLabel = new Label("Trade ID: " + tradeId, skin);
-                    idLabel.setColor(Color.LIGHT_GRAY);
-                    tradeCard.add(idLabel).colspan(2).padBottom(5).row();
-                }
-                
-                // Sender info
-                if (sender != null) {
-                    Label senderLabel = new Label("From: " + sender, skin);
-                    senderLabel.setColor(Color.YELLOW);
-                    tradeCard.add(senderLabel).colspan(2).padBottom(5).row();
-                }
-                
-                // Receiver info
-                if (receiver != null) {
-                    Label receiverLabel = new Label("To: " + receiver, skin);
-                    receiverLabel.setColor(Color.YELLOW);
-                    tradeCard.add(receiverLabel).colspan(2).padBottom(8).row();
-                }
-                
-                // Item info
-                String[] itemLines = itemInfo.split("\n");
-                for (String itemLine : itemLines) {
-                    Label itemLabel = new Label(itemLine, skin);
-                    itemLabel.setColor(Color.WHITE);
-                    tradeCard.add(itemLabel).colspan(2).padBottom(3).row();
-                }
-                
-                // Status and buttons
-                if (receiver != null && receiver.equals(game.getCurrentPlayer().getUsername())) {
-                    Table buttonTable = new Table();
-                    
-                    TextButton acceptButton = new TextButton("Accept", skin);
-                    acceptButton.setColor(Color.GREEN);
-                    final String finalTradeId = tradeId;
-                    acceptButton.addListener(new ClickListener() {
-                        @Override
-                        public void clicked(InputEvent event, float x, float y) {
-                            Result acceptResult = tradeController.respondToTrade("accept", finalTradeId);
-                            if (!acceptResult.isSuccessful()) {
-                                tradeErrorMessage = acceptResult.Message();
-                            } else {
-                                tradeErrorMessage = "";
-                            }
-                            createTradeMenuUI(); // Refresh the menu
-                        }
-                    });
-                    
-                    TextButton rejectButton = new TextButton("Reject", skin);
-                    rejectButton.setColor(Color.RED);
-                    rejectButton.addListener(new ClickListener() {
-                        @Override
-                        public void clicked(InputEvent event, float x, float y) {
-                            Result rejectResult = tradeController.respondToTrade("reject", finalTradeId);
-                            if (!rejectResult.isSuccessful()) {
-                                tradeErrorMessage = rejectResult.Message();
-                            } else {
-                                tradeErrorMessage = "";
-                            }
-                            createTradeMenuUI(); // Refresh the menu
-                        }
-                    });
-                    
-                    buttonTable.add(acceptButton).width(100).pad(5);
-                    buttonTable.add(rejectButton).width(100).pad(5);
-                    tradeCard.add(buttonTable).colspan(2).padTop(10).row();
-                } else {
-                    Label waitingLabel = new Label("Waiting for response...", skin);
-                    waitingLabel.setColor(Color.ORANGE);
-                    waitingLabel.setFontScale(1.1f);
-                    tradeCard.add(waitingLabel).colspan(2).padTop(10).row();
-                }
-                
-                tradesTable.add(tradeCard).width(500).pad(15).row();
-            }
-        } else {
-            Label noTradesLabel = new Label("No active trades", skin);
-            noTradesLabel.setFontScale(1.2f);
-            noTradesLabel.setColor(Color.GRAY);
-            tradesTable.add(noTradesLabel).pad(30).row();
-        }
-        
-        // Create scroll pane for the trades
-        ScrollPane scrollPane = new ScrollPane(tradesTable, skin);
-        scrollPane.setFadeScrollBars(false);
-        scrollPane.setScrollbarsOnTop(true);
-        scrollPane.setScrollBarPositions(false, true);
-        
-        // Add scroll pane to main table with fixed height
-        tradeMenuTable.add(scrollPane).width(550).height(400).pad(10).row();
-        
-        TextButton backButton = new TextButton("Back", skin);
-        backButton.addListener(new ClickListener() {
-            @Override
-            public void clicked(InputEvent event, float x, float y) {
-                tradeErrorMessage = ""; // Clear error message when going back
-                currentTradeMenuState = TradeMenuState.MAIN_MENU;
-                createTradeMenuUI();
-            }
-        });
-        tradeMenuTable.add(backButton).width(200).pad(20).row();
-    }
-    
-    private void createTradeHistoryMenu() {
-        tradeMenuTable.clear();
-        
-        Label titleLabel = new Label("Trade History", skin);
-        titleLabel.setFontScale(1.5f);
-        titleLabel.setColor(Color.GOLD);
-        tradeMenuTable.add(titleLabel).padBottom(30).row();
-        
-        // Create a table to hold all trade cards
-        Table tradesTable = new Table();
-        
-        Result result = tradeController.tradeHistory();
-        if (result.isSuccessful() && !result.Message().trim().isEmpty()) {
-            String[] trades = result.Message().split("-----------------------");
-            
-            for (String tradeEntry : trades) {
-                if (tradeEntry.trim().isEmpty()) continue;
-                
-                String[] lines = tradeEntry.trim().split("\n");
-                String status = "PENDING";
-                String tradeId = null;
-                String sender = null;
-                String receiver = null;
-                String tradeType = "Unknown Trade";
-                String itemInfo = "";
-                
-                // Parse trade info with simple trade type detection
-                for (String line : lines) {
-                    line = line.trim();
-                    if (line.startsWith("Receiver:")) {
-                        receiver = line.substring(9).trim();
-                    } else if (line.startsWith("Sender:")) {
-                        sender = line.substring(7).trim();
-                    } else if (line.startsWith("Id:")) {
-                        tradeId = line.substring(3).trim();
-                    } else if (line.startsWith("Buy:")) {
-                        // For Buy trades, we need to determine if it's request or offer
-                        // This will be set after we know sender/receiver
-                        tradeType = "Buy";
-                    } else if (line.startsWith("Trade Offer:")) {
-                        // For Trade trades, we need to determine if it's request or offer
-                        // This will be set after we know sender/receiver
-                        tradeType = "Trade";
-                    } else if (line.contains("Item:") || line.contains("Amount:") || line.contains("Price:") || line.contains("Giving:") || line.contains("Receiving:")) {
-                        if (!itemInfo.isEmpty()) itemInfo += "\n";
-                        itemInfo += line;
-                    }
-                }
-                
-                // Set final trade type based on what method would have been called
-                if (tradeType.equals("Buy")) {
-                    if (sender != null && sender.equals(game.getCurrentPlayer().getUsername())) {
-                        tradeType = "Buy Offer"; // buyOffer() method
-                    } else {
-                        tradeType = "Buy Request"; // buyRequest() method
-                    }
-                } else if (tradeType.equals("Trade")) {
-                    if (sender != null && sender.equals(game.getCurrentPlayer().getUsername())) {
-                        tradeType = "Trade Offer"; // tradeOffer() method
-                    } else {
-                        tradeType = "Trade Request"; // tradeRequest() method
-                    }
-                }
-                
-                // Create beautiful trade history card
-                Table tradeCard = new Table();
-                tradeCard.setBackground(skin.getDrawable("default-round"));
-                tradeCard.pad(15);
-                
-                // Trade type header with color coding
-                Label typeLabel = new Label(tradeType, skin);
-                typeLabel.setFontScale(1.3f);
-                if (tradeType.contains("Buy")) {
-                    typeLabel.setColor(Color.CYAN);
-                } else if (tradeType.contains("Trade")) {
-                    typeLabel.setColor(Color.MAGENTA);
-                } else {
-                    typeLabel.setColor(Color.CYAN);
-                }
-                tradeCard.add(typeLabel).colspan(2).padBottom(10).row();
-                
-                // Trade ID
-                if (tradeId != null) {
-                    Label idLabel = new Label("Trade ID: " + tradeId, skin);
-                    idLabel.setColor(Color.LIGHT_GRAY);
-                    tradeCard.add(idLabel).colspan(2).padBottom(5).row();
-                }
-                
-                // Status with color coding
-                Label statusLabel = new Label("Status: " + status, skin);
-                statusLabel.setFontScale(1.1f);
-                if (status.equals("ACCEPTED")) {
-                    statusLabel.setColor(Color.GREEN);
-                } else if (status.equals("REJECTED")) {
-                    statusLabel.setColor(Color.RED);
-                } else {
-                    statusLabel.setColor(Color.ORANGE);
-                }
-                tradeCard.add(statusLabel).colspan(2).padBottom(8).row();
-                
-                // Sender info
-                if (sender != null) {
-                    Label senderLabel = new Label("From: " + sender, skin);
-                    senderLabel.setColor(Color.YELLOW);
-                    tradeCard.add(senderLabel).colspan(2).padBottom(5).row();
-                }
-                
-                // Receiver info
-                if (receiver != null) {
-                    Label receiverLabel = new Label("To: " + receiver, skin);
-                    receiverLabel.setColor(Color.YELLOW);
-                    tradeCard.add(receiverLabel).colspan(2).padBottom(8).row();
-                }
-                
-                // Item info
-                String[] itemLines = itemInfo.split("\n");
-                for (String itemLine : itemLines) {
-                    Label itemLabel = new Label(itemLine, skin);
-                    itemLabel.setColor(Color.WHITE);
-                    tradeCard.add(itemLabel).colspan(2).padBottom(3).row();
-                }
-                
-                tradesTable.add(tradeCard).width(500).pad(15).row();
-            }
-        } else {
-            Label noHistoryLabel = new Label("No trade history", skin);
-            noHistoryLabel.setFontScale(1.2f);
-            noHistoryLabel.setColor(Color.GRAY);
-            tradesTable.add(noHistoryLabel).pad(30).row();
-        }
-        
-        // Create scroll pane for the trade history
-        ScrollPane scrollPane = new ScrollPane(tradesTable, skin);
-        scrollPane.setFadeScrollBars(false);
-        scrollPane.setScrollbarsOnTop(true);
-        scrollPane.setScrollBarPositions(false, true);
-        
-        // Add scroll pane to main table with fixed height
-        tradeMenuTable.add(scrollPane).width(550).height(400).pad(10).row();
-        
-        TextButton backButton = new TextButton("Back", skin);
-        backButton.addListener(new ClickListener() {
-            @Override
-            public void clicked(InputEvent event, float x, float y) {
-                currentTradeMenuState = TradeMenuState.MAIN_MENU;
-                createTradeMenuUI();
-            }
-        });
-        tradeMenuTable.add(backButton).width(200).pad(20).row();
     }
 }
