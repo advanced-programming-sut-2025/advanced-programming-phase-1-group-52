@@ -9,13 +9,18 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
+import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.example.main.controller.GameMenuController;
 import com.example.main.enums.design.TileType;
+import com.example.main.enums.design.Weather;
 import com.example.main.models.*;
 
 public class GDXGameScreen implements Screen {
@@ -43,6 +48,19 @@ public class GDXGameScreen implements Screen {
     // HUD Assets
     private Texture clockTexture;
     private BitmapFont hudFont;
+
+    private Texture rainTexture;
+    private Texture snowTexture;
+    private Array<Rectangle> rainParticles;
+    private Array<Rectangle> snowParticles;
+    private float weatherStateTime = 0f;
+
+    // NEW: Storm Effect Fields
+    private float stormEffectTimer = 0f;
+    private float nextLightningTime = 0f;
+    private boolean lightningActive = false;
+    private float lightningDuration = 0f;
+    private boolean cheatLightningActive = false;
 
     private Texture ground1Texture;
     private Texture ground2Texture;
@@ -202,6 +220,7 @@ public class GDXGameScreen implements Screen {
 
         loadTextures();
         loadHudAssets();
+        loadWeatherAssets();
 
         game = App.getInstance().getCurrentGame();
         gameMap = game.getMap();
@@ -250,6 +269,7 @@ public class GDXGameScreen implements Screen {
             renderMinimap();
         }
 
+        renderWeather(delta);
         // Render HUD
         renderHud();
 
@@ -323,7 +343,7 @@ public class GDXGameScreen implements Screen {
 
         // Revert font color to white for the dark background
         hudFont.setColor(Color.WHITE);
-        String seasonString = "Season: " + date.getCurrentSeason().name();
+        String seasonString = "Season: " + controller.showSeason();
         hudFont.draw(spriteBatch, seasonString, 20, Gdx.graphics.getHeight() - 20);
 
         String weatherString = "Weather: " + game.getTodayWeather().name();
@@ -424,6 +444,121 @@ public class GDXGameScreen implements Screen {
         femaleRight2Texture = new Texture("content/Cut/player/female_right2.png");
     }
 
+    // In main/GDXviews/GDXGameScreen.java
+    private void loadWeatherAssets() {
+        // Load the single images
+        rainTexture = new Texture("content/weather/rain1.png");
+        snowTexture = new Texture("content/weather/snow.png");
+
+        // Initialize rain particles
+        rainParticles = new Array<>();
+        for (int i = 0; i < 200; i++) { // Create 200 raindrops
+            rainParticles.add(new Rectangle(
+                (float) (Math.random() * Gdx.graphics.getWidth()),
+                (float) (Math.random() * Gdx.graphics.getHeight()),
+                rainTexture.getWidth(),
+                rainTexture.getHeight()
+            ));
+        }
+
+        // Initialize snow particles
+        snowParticles = new Array<>();
+        for (int i = 0; i < 100; i++) { // Create 100 snowflakes
+            snowParticles.add(new Rectangle(
+                (float) (Math.random() * Gdx.graphics.getWidth()),
+                (float) (Math.random() * Gdx.graphics.getHeight()),
+                snowTexture.getWidth(),
+                snowTexture.getHeight()
+            ));
+        }
+    }
+
+    // In main/GDXviews/GDXGameScreen.java
+
+    private void renderWeather(float delta) {
+        if (game == null || game.getTodayWeather() == null) {
+            return;
+        }
+
+        weatherStateTime += delta;
+        spriteBatch.setProjectionMatrix(hudCamera.combined);
+        spriteBatch.begin();
+
+        switch (game.getTodayWeather()) {
+            case Rainy:
+            case Stormy: // Also show rain during a storm
+                for (Rectangle particle : rainParticles) {
+                    // Move rain straight down
+                    particle.y -= 300 * delta;
+                    // If it goes off screen, reset it to the top
+                    if (particle.y < 0) {
+                        particle.y = Gdx.graphics.getHeight();
+                        particle.x = (float) (Math.random() * Gdx.graphics.getWidth());
+                    }
+                    spriteBatch.draw(rainTexture, particle.x, particle.y);
+                }
+                break;
+
+            case Snowy:
+                for (Rectangle particle : snowParticles) {
+                    // Move snow down and add a gentle side-to-side sway
+                    particle.y -= 60 * delta;
+                    particle.x += (float) (Math.sin(particle.y / 30) * 20 * delta);
+
+                    // If it goes off screen, reset it to the top
+                    if (particle.y < 0) {
+                        particle.y = Gdx.graphics.getHeight();
+                        particle.x = (float) (Math.random() * Gdx.graphics.getWidth());
+                    }
+                    spriteBatch.draw(snowTexture, particle.x, particle.y, 24, 24); // Drawing snow slightly larger
+                }
+                break;
+
+            default:
+                // No weather effect for sunny days
+                break;
+        }
+
+        spriteBatch.end();
+
+        // Handle lightning flash for storms OR manual cheat
+        boolean shouldFlash = false;
+        if (game.getTodayWeather() == Weather.Stormy) {
+            stormEffectTimer += delta;
+            if (stormEffectTimer > nextLightningTime) {
+                lightningActive = true;
+                lightningDuration = 0.15f;
+                nextLightningTime = (float) (stormEffectTimer + 3 + Math.random() * 5);
+            }
+            if (lightningActive) {
+                shouldFlash = true;
+            }
+        }
+
+        // Also check if the cheat is active
+        if (cheatLightningActive) {
+            shouldFlash = true;
+        }
+
+        // If a flash should happen, render it
+        if (shouldFlash) {
+            lightningDuration -= delta;
+            Gdx.gl.glEnable(GL20.GL_BLEND);
+            shapeRenderer.setProjectionMatrix(hudCamera.combined);
+            shapeRenderer.begin(com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType.Filled);
+            shapeRenderer.setColor(1, 1, 1, 0.7f); // White flash
+            shapeRenderer.rect(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+            shapeRenderer.end();
+            Gdx.gl.glDisable(GL20.GL_BLEND);
+
+            // Reset the flags when the duration is over
+            if (lightningDuration <= 0) {
+                lightningActive = false;
+                cheatLightningActive = false;
+            }
+        }
+    }
+
     private void generateRandomMaps() {
         for (int x = 0; x < MAP_WIDTH; x++) {
             for (int y = 0; y < MAP_HEIGHT; y++) {
@@ -457,6 +592,33 @@ public class GDXGameScreen implements Screen {
         handleTurnSwitching();
         handlePlayerMovement(delta);
         handleCameraMovement(delta);
+
+        if (Gdx.input.isKeyJustPressed(Input.Keys.NUM_1)) {
+            if (controller != null) {
+                controller.changeTime("1");
+            }
+        }
+
+        if (Gdx.input.isKeyJustPressed(Input.Keys.NUM_2)) {
+            if (controller != null) {
+                controller.changeDate("1");
+            }
+        }
+
+        // In the handleInput method...
+        if (Gdx.input.isKeyJustPressed(Input.Keys.L)) {
+            // This part is modified to trigger the animation
+            if (controller != null && game != null) {
+                Player currentPlayer = game.getCurrentPlayer();
+                String x = String.valueOf(currentPlayer.currentX());
+                String y = String.valueOf(currentPlayer.currentY());
+                System.out.println(controller.cheatLightning(x, y).Message());
+
+                // Trigger the visual flash effect
+                cheatLightningActive = true;
+                lightningDuration = 0.15f; // Set the duration of the flash
+            }
+        }
     }
 
     private void handlePlayerMovement(float delta) {

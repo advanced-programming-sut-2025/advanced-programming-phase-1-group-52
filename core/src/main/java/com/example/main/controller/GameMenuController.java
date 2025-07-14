@@ -277,26 +277,26 @@ public class GameMenuController {
     }
 
     public Result changeDate(String daysStr) {
-        int days = Integer.parseInt(daysStr);
+        int days;
+        try {
+            days = Integer.parseInt(daysStr);
+        } catch (NumberFormatException e) {
+            return new Result(false, "Invalid number format for days.");
+        }
+        return changeDate(days); // Call the other method
+    }
+
+    // This is the main logic, now corrected
+    public Result changeDate(int days) {
         if (days <= 0) {
             return new Result(false, "Days must be positive");
         }
-        Date date = game.getDate();
-        int originalDay = date.getCurrentDay();
-        Season originalSeason = date.getCurrentSeason();
 
-        int seasonsPassed = date.addDays(days);
-
-        game.getTime().setHour(Time.DAY_START);
-
-        this.onSeasonChanged(seasonsPassed);
-        for(int i = 0; i < days; i++) {
-            game.randomizeTomorrowWeather();
-            game.updateCrops();
-            game.getMap().generateRandomForagingSeeds();
-            game.getMap().generatePlantsFromSeeds();
+        for (int i = 0; i < days; i++) {
+            game.advanceDay(); // Use the centralized method
         }
-        return new Result(true,"date changed!");
+
+        return new Result(true, "Date advanced by " + days + " day(s)!");
     }
 
     public Result showSeason() {
@@ -312,14 +312,12 @@ public class GameMenuController {
         int y = Integer.parseInt(yString);
         Tile tile = map.getTile(x, y);
         if (tile.getType().equals(TileType.Tree)) {
-            System.out.println("1");
             tile.setType(TileType.Stone);
             tile.setPlant(null);
             tile.setTree(null);
             tile.setSeed(null);
         }
         else if (tile.getType().equals(TileType.Planted)) {
-            System.out.println("2");
             tile.setType(TileType.Earth);
             tile.setPlant(null);
             tile.setTree(null);

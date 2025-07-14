@@ -7204,6 +7204,9 @@ content/clock/Clock.png
 content/clock/ClockWithJournal.png
 content/clock/GoldDisplay.png
 content/clock/WeddingDayHeart.png
+content/weather/rain1.png
+content/weather/snow.png
+content/weather/snow.png-autosave.kra
 hs_err_pid32084.log
 hs_err_pid42902.log
 hs_err_pid49723.log
