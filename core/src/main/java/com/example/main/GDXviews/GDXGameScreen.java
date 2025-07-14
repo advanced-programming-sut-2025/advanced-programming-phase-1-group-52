@@ -16,7 +16,14 @@ import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.example.main.controller.GameMenuController;
 import com.example.main.enums.design.TileType;
-import com.example.main.models.*;
+import com.example.main.models.App;
+import com.example.main.models.Date;
+import com.example.main.models.Game;
+import com.example.main.models.GameMap;
+import com.example.main.models.Player;
+import com.example.main.models.Tile;
+import com.example.main.models.Time;
+import com.example.main.models.User;
 
 public class GDXGameScreen implements Screen {
     private Stage stage;
@@ -116,15 +123,15 @@ public class GDXGameScreen implements Screen {
     private static final int[][] HOUSE_POSITIONS = {
         {1, 1},
         {81, 1},
-        {1, 51},
-        {81, 51}
+        {1, 31},
+        {81, 31}
     };
 
     private static final int[][] HOUSE_AREAS = {
         {1, 8, 1, 8},
         {81, 88, 1, 8},
-        {1, 8, 51, 58},
-        {81, 88, 51, 58}
+        {1, 8, 31, 38},
+        {81, 88, 31, 38}
     };
 
     private static final int[][] NPC_HOUSE_POSITIONS = {
@@ -136,11 +143,11 @@ public class GDXGameScreen implements Screen {
     };
 
     private static final int[][] NPC_HOUSE_AREAS = {
-        {32, 35, 40, 45},
-        {42, 45, 40, 45},
-        {52, 55, 40, 45},
-        {37, 40, 50, 55},
-        {47, 50, 50, 55}
+        {42, 46, 40, 46},  // Sebastian: (42,40) to (46,46) - 5x7 including walls
+        {52, 56, 40, 46},  // Abigail: (52,40) to (56,46) - 5x7 including walls  
+        {32, 36, 50, 56},  // Harvey: (32,50) to (36,56) - 5x7 including walls
+        {42, 46, 50, 56},  // Lia: (42,50) to (46,56) - 5x7 including walls
+        {52, 56, 50, 56}   // Robin: (52,50) to (56,56) - 5x7 including walls
     };
 
     private static final int[][] SHOP_POSITIONS = {
@@ -154,13 +161,13 @@ public class GDXGameScreen implements Screen {
     };
 
     private static final int[][] SHOP_AREAS = {
-        {33, 37, 3, 7},
-        {47, 51, 3, 7},
-        {33, 37, 13, 17},
-        {47, 51, 13, 17},
-        {33, 37, 23, 27},
-        {47, 51, 23, 27},
-        {33, 37, 33, 37}
+        {32, 39, 2, 9},   // Blacksmith: (32,2) to (39,9) - 8x8 including walls
+        {46, 53, 2, 9},   // JojaMart: (46,2) to (53,9) - 8x8 including walls
+        {32, 39, 12, 19}, // PierresGeneralStore: (32,12) to (39,19) - 8x8 including walls
+        {46, 53, 12, 19}, // CarpentersShop: (46,12) to (53,19) - 8x8 including walls
+        {32, 39, 22, 29}, // FishShop: (32,22) to (39,29) - 8x8 including walls
+        {46, 53, 22, 29}, // MarniesRanch: (46,22) to (53,29) - 8x8 including walls
+        {32, 39, 32, 39}  // TheStardropSaloon: (32,32) to (39,39) - 8x8 including walls
     };
 
     private static final int TILE_SIZE = 32;
@@ -382,13 +389,13 @@ public class GDXGameScreen implements Screen {
         jewelStoneTexture = new Texture("content/Cut/map_elements/jewel_stone.png");
 
         try {
-            blacksmithTexture = new Texture("content/Cut/map_elements/Blacksmith.png");
-            jojamartTexture = new Texture("content/Cut/map_elements/Jojamart.png");
-            pierresShopTexture = new Texture("content/Cut/map_elements/Pierres_shop.png");
-            carpentersShopTexture = new Texture("content/Cut/map_elements/Carpenter's_Shop.png");
-            fishShopTexture = new Texture("content/Cut/map_elements/Fish_Shop.png");
-            ranchTexture = new Texture("content/Cut/map_elements/Ranch.png");
-            saloonTexture = new Texture("content/Cut/map_elements/Saloon.png");
+            blacksmithTexture = new Texture("content/Cut/map_elements/blacksmith.png");
+            jojamartTexture = new Texture("content/Cut/map_elements/jojamart.png");
+            pierresShopTexture = new Texture("content/Cut/map_elements/pierres_shop.png");
+            carpentersShopTexture = new Texture("content/Cut/map_elements/carpenters_shop.png");
+            fishShopTexture = new Texture("content/Cut/map_elements/fish_shop.png");
+            ranchTexture = new Texture("content/Cut/map_elements/marines_ranch.png");
+            saloonTexture = new Texture("content/Cut/map_elements/stardrop_saloon.png");
         } catch (Exception e) {
             blacksmithTexture = ground1Texture;
             jojamartTexture = ground1Texture;
@@ -685,10 +692,35 @@ public class GDXGameScreen implements Screen {
             for (int x = 0; x < MAP_WIDTH; x++) {
                 if (tiles[x] != null && tiles[x][y] != null) {
                     Tile tile = tiles[x][y];
-                    if (tile.getType() == TileType.Tree) {
+                    TileType tileType = tile.getType();
+                    
+                    if (tileType == TileType.House || tileType == TileType.Wall) {
                         float worldX = x * TILE_SIZE;
                         float worldY = (MAP_HEIGHT - 1 - y) * TILE_SIZE;
-                        renderTreeSprite(x, y, worldX, worldY);
+                        renderHouseSprite(x, y, worldX, worldY);
+                        
+                        // Also check if this Wall tile belongs to an NPC house area or shop area
+                        if (tileType == TileType.Wall) {
+                            // Only render NPC house if this wall belongs to an NPC house area
+                            int npcIndex = getNPCIndexForHouse(x, y);
+                            if (npcIndex != -1) {
+                                renderNPCHouseSprite(x, y, worldX, worldY);
+                            }
+                            
+                            // Only render shop if this wall belongs to a shop area
+                            int shopIndex = getShopIndex(x, y);
+                            if (shopIndex != -1) {
+                                renderShopSprite(x, y, worldX, worldY);
+                            }
+                        }
+                    } else if (tileType == TileType.NPCHouse) {
+                        float worldX = x * TILE_SIZE;
+                        float worldY = (MAP_HEIGHT - 1 - y) * TILE_SIZE;
+                        renderNPCHouseSprite(x, y, worldX, worldY);
+                    } else if (tileType == TileType.Shop) {
+                        float worldX = x * TILE_SIZE;
+                        float worldY = (MAP_HEIGHT - 1 - y) * TILE_SIZE;
+                        renderShopSprite(x, y, worldX, worldY);
                     }
                 }
             }
@@ -698,18 +730,10 @@ public class GDXGameScreen implements Screen {
             for (int x = 0; x < MAP_WIDTH; x++) {
                 if (tiles[x] != null && tiles[x][y] != null) {
                     Tile tile = tiles[x][y];
-                    if (tile.getType() == TileType.House) {
+                    if (tile.getType() == TileType.Tree) {
                         float worldX = x * TILE_SIZE;
                         float worldY = (MAP_HEIGHT - 1 - y) * TILE_SIZE;
-                        renderHouseSprite(x, y, worldX, worldY);
-                    } else if (tile.getType() == TileType.NPCHouse) {
-                        float worldX = x * TILE_SIZE;
-                        float worldY = (MAP_HEIGHT - 1 - y) * TILE_SIZE;
-                        renderNPCHouseSprite(x, y, worldX, worldY);
-                    } else if (tile.getType() == TileType.Shop) {
-                        float worldX = x * TILE_SIZE;
-                        float worldY = (MAP_HEIGHT - 1 - y) * TILE_SIZE;
-                        renderShopSprite(x, y, worldX, worldY);
+                        renderTreeSprite(x, y, worldX, worldY);
                     }
                 }
             }
@@ -925,22 +949,30 @@ public class GDXGameScreen implements Screen {
 
         int[] houseArea = HOUSE_AREAS[playerIndex];
         int houseStartX = houseArea[0];
-        int houseStartY = houseArea[2];
+        int houseStartY = houseArea[2];  // This is the top row of the house area
+        int houseEndY = houseArea[3];    // This is the bottom row of the house area
 
+        // Only render the house image once at the top-left corner of the house area
         if (tileX == houseStartX && tileY == houseStartY) {
-            float houseWidth = houseTexture.getWidth();
-            float houseHeight = houseTexture.getHeight();
-
+            // Calculate the size to cover the entire 8x8 house area
+            float houseWidth = 8 * TILE_SIZE;  // 8 tiles wide
+            float houseHeight = 8 * TILE_SIZE; // 8 tiles tall
+            
+            // Calculate the bottom-left position for the house image
+            // The worldY for houseStartY gives us the screen position of the top row
+            // We need to move down by (8-1) tiles to get to the bottom of the house area
             float houseX = worldX;
-            float houseY = worldY;
-
+            float houseY = worldY - (7 * TILE_SIZE); // Move down 7 tiles from the top tile
+            
             spriteBatch.draw(houseTexture, houseX, houseY, houseWidth, houseHeight);
         }
     }
 
     private void renderNPCHouseSprite(int tileX, int tileY, float worldX, float worldY) {
         int npcIndex = getNPCIndexForHouse(tileX, tileY);
-        if (npcIndex == -1) return;
+        if (npcIndex == -1) {
+            return;
+        }
 
         Texture npcHouseTexture;
         switch (npcHouseVariants[npcIndex]) {
@@ -953,15 +985,20 @@ public class GDXGameScreen implements Screen {
         }
 
         int[] npcHouseArea = NPC_HOUSE_AREAS[npcIndex];
-        int npcHouseStartX = npcHouseArea[0];
-        int npcHouseStartY = npcHouseArea[2];
+        int houseStartX = npcHouseArea[0];
+        int houseStartY = npcHouseArea[2];  // This is the top row of the house area
 
-        if (tileX == npcHouseStartX && tileY == npcHouseStartY) {
-            float npcHouseWidth = npcHouseTexture.getWidth();
-            float npcHouseHeight = npcHouseTexture.getHeight();
-
+        // Only render the house image once at the top-left corner of the house area
+        if (tileX == houseStartX && tileY == houseStartY) {
+            // Calculate the size to cover the entire 5x7 NPC house area
+            float npcHouseWidth = 5 * TILE_SIZE;  // 5 tiles wide
+            float npcHouseHeight = 7 * TILE_SIZE; // 7 tiles tall
+            
+            // Calculate the bottom-left position for the NPC house image
+            // The worldY for houseStartY gives us the screen position of the top row
+            // We need to move down by (7-1) tiles to get to the bottom of the house area
             float npcHouseX = worldX;
-            float npcHouseY = worldY;
+            float npcHouseY = worldY - (6 * TILE_SIZE); // Move down 6 tiles from the top tile
 
             spriteBatch.draw(npcHouseTexture, npcHouseX, npcHouseY, npcHouseWidth, npcHouseHeight);
         }
@@ -991,14 +1028,15 @@ public class GDXGameScreen implements Screen {
         int shopStartY = shopArea[2];
 
         if (tileX == shopStartX && tileY == shopStartY) {
-            int shopWidthInTiles = shopArea[1] - shopArea[0] + 1;
-            int shopHeightInTiles = shopArea[3] - shopArea[2] + 1;
-
-            float shopWidth = shopWidthInTiles * TILE_SIZE;
-            float shopHeight = shopHeightInTiles * TILE_SIZE;
-
+            // Calculate the size to cover the entire 8x8 shop area
+            float shopWidth = 8 * TILE_SIZE;  // 8 tiles wide
+            float shopHeight = 8 * TILE_SIZE; // 8 tiles tall
+            
+            // Calculate the bottom-left position for the shop image
+            // The worldY for shopStartY gives us the screen position of the top row
+            // We need to move down by (8-1) tiles to get to the bottom of the shop area
             float shopX = worldX;
-            float shopY = worldY;
+            float shopY = worldY - (7 * TILE_SIZE); // Move down 7 tiles from the top tile
 
             spriteBatch.draw(shopTexture, shopX, shopY, shopWidth, shopHeight);
         }
