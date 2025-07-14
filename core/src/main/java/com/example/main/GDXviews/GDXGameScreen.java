@@ -294,7 +294,7 @@ public class GDXGameScreen implements Screen {
         hudFont.setColor(Color.BLACK);
         Date date = game.getDate();
         String dateString = date.getCurrentWeekday().name().substring(0, 3) + ". " + date.getCurrentDay();
-        hudFont.draw(spriteBatch, dateString, clockX + 160, clockY + 215);
+        hudFont.draw(spriteBatch, dateString, clockX + 160, clockY + 210);
 
         Time time = game.getTime();
         int hour = time.getHour();
@@ -310,7 +310,16 @@ public class GDXGameScreen implements Screen {
             }
         }
         String timeString = String.format("%d:%02d %s", hour, time.getMinute(), ampm);
-        hudFont.draw(spriteBatch, timeString, clockX + 145, clockY + 120);
+        hudFont.draw(spriteBatch, timeString, clockX + 148, clockY + 120);
+
+        // --- NEW: Draw the player's balance ---
+        Player player = game.getCurrentPlayer();
+        if (player != null) {
+            String balanceString = String.valueOf(player.getBankAccount().getBalance());
+            // You might need to adjust the X and Y coordinates to perfectly align the text
+            hudFont.draw(spriteBatch, balanceString, clockX + 140, clockY + 40);
+        }
+        // --- END NEW ---
 
         // Revert font color to white for the dark background
         hudFont.setColor(Color.WHITE);
