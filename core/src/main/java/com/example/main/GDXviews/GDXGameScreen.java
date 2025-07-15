@@ -277,86 +277,11 @@ public class GDXGameScreen implements Screen {
         }
 
         renderWeather(delta);
-        // Render HUD
         renderHud();
+        renderDayNightOverlay();
 
         stage.act(delta);
         stage.draw();
-    }
-
-    private void renderHud() {
-        // --- Draw UI Backgrounds ---
-        Gdx.gl.glEnable(GL20.GL_BLEND);
-        Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
-        shapeRenderer.setProjectionMatrix(hudCamera.combined);
-        shapeRenderer.begin(com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType.Filled);
-
-        // Set the background color to a deep, semi-transparent blue
-        shapeRenderer.setColor(0.0f, 0.0f, 0.5f, 0.5f);
-
-        // Draw background for weather and season text
-        float infoBgX = 10;
-        float infoBgY = Gdx.graphics.getHeight() - 70;
-        float infoBgWidth = 220; // Adjust width as needed
-        float infoBgHeight = 60;
-        shapeRenderer.rect(infoBgX, infoBgY, infoBgWidth, infoBgHeight);
-
-        shapeRenderer.end();
-        Gdx.gl.glDisable(GL20.GL_BLEND);
-
-        // --- Draw Text and Textures ---
-        spriteBatch.setProjectionMatrix(hudCamera.combined);
-        spriteBatch.begin();
-
-        // Draw the clock texture
-        float screenWidth = Gdx.graphics.getWidth();
-        float clockWidth = clockTexture.getWidth() * 1f;
-        float clockHeight = clockTexture.getHeight() * 1f;
-        float clockX = screenWidth - clockWidth - 20;
-        float clockY = Gdx.graphics.getHeight() - clockHeight - 20;
-        spriteBatch.draw(clockTexture, clockX, clockY, clockWidth, clockHeight);
-
-        // --- Draw Text on top of backgrounds ---
-        // Make font black for the clock text as it's on a light background
-        hudFont.setColor(Color.BLACK);
-        Date date = game.getDate();
-        String dateString = date.getCurrentWeekday().name().substring(0, 3) + ". " + date.getCurrentDay();
-        hudFont.draw(spriteBatch, dateString, clockX + 160, clockY + 210);
-
-        Time time = game.getTime();
-        int hour = time.getHour();
-        String ampm = hour < 12 || hour >= 24 ? "am" : "pm";
-        if (hour == 0) {
-            hour = 12;
-        } else if (hour > 12) {
-            if (hour < 24) {
-                hour -= 12;
-            } else {
-                hour -= 24;
-                if (hour == 0) hour = 12;
-            }
-        }
-        String timeString = String.format("%d:%02d %s", hour, time.getMinute(), ampm);
-        hudFont.draw(spriteBatch, timeString, clockX + 148, clockY + 120);
-
-        // --- NEW: Draw the player's balance ---
-        Player player = game.getCurrentPlayer();
-        if (player != null) {
-            String balanceString = String.valueOf(player.getBankAccount().getBalance());
-            // You might need to adjust the X and Y coordinates to perfectly align the text
-            hudFont.draw(spriteBatch, balanceString, clockX + 140, clockY + 40);
-        }
-        // --- END NEW ---
-
-        // Revert font color to white for the dark background
-        hudFont.setColor(Color.WHITE);
-        String seasonString = "Season: " + controller.showSeason();
-        hudFont.draw(spriteBatch, seasonString, 20, Gdx.graphics.getHeight() - 20);
-
-        String weatherString = "Weather: " + game.getTodayWeather().name();
-        hudFont.draw(spriteBatch, weatherString, 20, Gdx.graphics.getHeight() - 50);
-
-        spriteBatch.end();
     }
 
     private void initializePlayerPosition() {
@@ -451,7 +376,6 @@ public class GDXGameScreen implements Screen {
         femaleRight2Texture = new Texture("content/Cut/player/female_right2.png");
     }
 
-    // In main/GDXviews/GDXGameScreen.java
     private void loadWeatherAssets() {
         // Load the single images
         rainTexture = new Texture("content/weather/rain1.png");
@@ -477,92 +401,6 @@ public class GDXGameScreen implements Screen {
                 snowTexture.getWidth(),
                 snowTexture.getHeight()
             ));
-        }
-    }
-
-    // In main/GDXviews/GDXGameScreen.java
-
-    private void renderWeather(float delta) {
-        if (game == null || game.getTodayWeather() == null) {
-            return;
-        }
-
-        weatherStateTime += delta;
-        spriteBatch.setProjectionMatrix(hudCamera.combined);
-        spriteBatch.begin();
-
-        switch (game.getTodayWeather()) {
-            case Rainy:
-            case Stormy: // Also show rain during a storm
-                for (Rectangle particle : rainParticles) {
-                    // Move rain straight down
-                    particle.y -= 300 * delta;
-                    // If it goes off screen, reset it to the top
-                    if (particle.y < 0) {
-                        particle.y = Gdx.graphics.getHeight();
-                        particle.x = (float) (Math.random() * Gdx.graphics.getWidth());
-                    }
-                    spriteBatch.draw(rainTexture, particle.x, particle.y);
-                }
-                break;
-
-            case Snowy:
-                for (Rectangle particle : snowParticles) {
-                    // Move snow down and add a gentle side-to-side sway
-                    particle.y -= 60 * delta;
-                    particle.x += (float) (Math.sin(particle.y / 30) * 20 * delta);
-
-                    // If it goes off screen, reset it to the top
-                    if (particle.y < 0) {
-                        particle.y = Gdx.graphics.getHeight();
-                        particle.x = (float) (Math.random() * Gdx.graphics.getWidth());
-                    }
-                    spriteBatch.draw(snowTexture, particle.x, particle.y, 24, 24); // Drawing snow slightly larger
-                }
-                break;
-
-            default:
-                // No weather effect for sunny days
-                break;
-        }
-
-        spriteBatch.end();
-
-        // Handle lightning flash for storms OR manual cheat
-        boolean shouldFlash = false;
-        if (game.getTodayWeather() == Weather.Stormy) {
-            stormEffectTimer += delta;
-            if (stormEffectTimer > nextLightningTime) {
-                lightningActive = true;
-                lightningDuration = 0.15f;
-                nextLightningTime = (float) (stormEffectTimer + 3 + Math.random() * 5);
-            }
-            if (lightningActive) {
-                shouldFlash = true;
-            }
-        }
-
-        // Also check if the cheat is active
-        if (cheatLightningActive) {
-            shouldFlash = true;
-        }
-
-        // If a flash should happen, render it
-        if (shouldFlash) {
-            lightningDuration -= delta;
-            Gdx.gl.glEnable(GL20.GL_BLEND);
-            shapeRenderer.setProjectionMatrix(hudCamera.combined);
-            shapeRenderer.begin(com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType.Filled);
-            shapeRenderer.setColor(1, 1, 1, 0.7f); // White flash
-            shapeRenderer.rect(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-            shapeRenderer.end();
-            Gdx.gl.glDisable(GL20.GL_BLEND);
-
-            // Reset the flags when the duration is over
-            if (lightningDuration <= 0) {
-                lightningActive = false;
-                cheatLightningActive = false;
-            }
         }
     }
 
@@ -1365,6 +1203,199 @@ public class GDXGameScreen implements Screen {
         shapeRenderer.setColor(1, 1, 1, 1);
         shapeRenderer.rect(x, y, width, height);
         shapeRenderer.end();
+    }
+
+    private void renderHud() {
+        // --- Draw UI Backgrounds ---
+        Gdx.gl.glEnable(GL20.GL_BLEND);
+        Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
+        shapeRenderer.setProjectionMatrix(hudCamera.combined);
+        shapeRenderer.begin(com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType.Filled);
+
+        shapeRenderer.setColor(0.0f, 0.0f, 0.5f, 0.5f);
+
+        float infoBgX = 10;
+        float infoBgY = Gdx.graphics.getHeight() - 70;
+        float infoBgWidth = 220; // Adjust width as needed
+        float infoBgHeight = 60;
+        shapeRenderer.rect(infoBgX, infoBgY, infoBgWidth, infoBgHeight);
+
+        shapeRenderer.end();
+        Gdx.gl.glDisable(GL20.GL_BLEND);
+
+        spriteBatch.setProjectionMatrix(hudCamera.combined);
+        spriteBatch.begin();
+
+        float screenWidth = Gdx.graphics.getWidth();
+        float clockWidth = clockTexture.getWidth() * 1f;
+        float clockHeight = clockTexture.getHeight() * 1f;
+        float clockX = screenWidth - clockWidth - 20;
+        float clockY = Gdx.graphics.getHeight() - clockHeight - 20;
+        spriteBatch.draw(clockTexture, clockX, clockY, clockWidth, clockHeight);
+
+        hudFont.setColor(Color.BLACK);
+        Date date = game.getDate();
+        String dateString = date.getCurrentWeekday().name().substring(0, 3) + ". " + date.getCurrentDay();
+        hudFont.draw(spriteBatch, dateString, clockX + 160, clockY + 210);
+
+        Time time = game.getTime();
+        int hour = time.getHour();
+        String ampm = hour < 12 || hour >= 24 ? "am" : "pm";
+        if (hour == 0) {
+            hour = 12;
+        } else if (hour > 12) {
+            if (hour < 24) {
+                hour -= 12;
+            } else {
+                hour -= 24;
+                if (hour == 0) hour = 12;
+            }
+        }
+        String timeString = String.format("%d:%02d %s", hour, time.getMinute(), ampm);
+        hudFont.draw(spriteBatch, timeString, clockX + 148, clockY + 120);
+
+        // --- NEW: Draw the player's balance ---
+        Player player = game.getCurrentPlayer();
+        if (player != null) {
+            String balanceString = String.valueOf(player.getBankAccount().getBalance());
+            // You might need to adjust the X and Y coordinates to perfectly align the text
+            hudFont.draw(spriteBatch, balanceString, clockX + 140, clockY + 40);
+        }
+        // --- END NEW ---
+
+        // Revert font color to white for the dark background
+        hudFont.setColor(Color.WHITE);
+        String seasonString = "Season: " + controller.showSeason();
+        hudFont.draw(spriteBatch, seasonString, 20, Gdx.graphics.getHeight() - 20);
+
+        String weatherString = "Weather: " + game.getTodayWeather().name();
+        hudFont.draw(spriteBatch, weatherString, 20, Gdx.graphics.getHeight() - 50);
+
+        spriteBatch.end();
+    }
+
+    private void renderWeather(float delta) {
+        if (game == null || game.getTodayWeather() == null) {
+            return;
+        }
+
+        weatherStateTime += delta;
+        spriteBatch.setProjectionMatrix(hudCamera.combined);
+        spriteBatch.begin();
+
+        switch (game.getTodayWeather()) {
+            case Rainy:
+            case Stormy: // Also show rain during a storm
+                for (Rectangle particle : rainParticles) {
+                    // Move rain straight down
+                    particle.y -= 300 * delta;
+                    // If it goes off screen, reset it to the top
+                    if (particle.y < 0) {
+                        particle.y = Gdx.graphics.getHeight();
+                        particle.x = (float) (Math.random() * Gdx.graphics.getWidth());
+                    }
+                    spriteBatch.draw(rainTexture, particle.x, particle.y);
+                }
+                break;
+
+            case Snowy:
+                for (Rectangle particle : snowParticles) {
+                    // Move snow down and add a gentle side-to-side sway
+                    particle.y -= 60 * delta;
+                    particle.x += (float) (Math.sin(particle.y / 30) * 20 * delta);
+
+                    // If it goes off screen, reset it to the top
+                    if (particle.y < 0) {
+                        particle.y = Gdx.graphics.getHeight();
+                        particle.x = (float) (Math.random() * Gdx.graphics.getWidth());
+                    }
+                    spriteBatch.draw(snowTexture, particle.x, particle.y, 24, 24); // Drawing snow slightly larger
+                }
+                break;
+
+            default:
+                // No weather effect for sunny days
+                break;
+        }
+
+        spriteBatch.end();
+
+        // Handle lightning flash for storms OR manual cheat
+        boolean shouldFlash = false;
+        if (game.getTodayWeather() == Weather.Stormy) {
+            stormEffectTimer += delta;
+            if (stormEffectTimer > nextLightningTime) {
+                lightningActive = true;
+                lightningDuration = 0.15f;
+                nextLightningTime = (float) (stormEffectTimer + 3 + Math.random() * 5);
+            }
+            if (lightningActive) {
+                shouldFlash = true;
+            }
+        }
+
+        // Also check if the cheat is active
+        if (cheatLightningActive) {
+            shouldFlash = true;
+        }
+
+        // If a flash should happen, render it
+        if (shouldFlash) {
+            lightningDuration -= delta;
+            Gdx.gl.glEnable(GL20.GL_BLEND);
+            shapeRenderer.setProjectionMatrix(hudCamera.combined);
+            shapeRenderer.begin(com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType.Filled);
+            shapeRenderer.setColor(1, 1, 1, 0.7f); // White flash
+            shapeRenderer.rect(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+            shapeRenderer.end();
+            Gdx.gl.glDisable(GL20.GL_BLEND);
+
+            // Reset the flags when the duration is over
+            if (lightningDuration <= 0) {
+                lightningActive = false;
+                cheatLightningActive = false;
+            }
+        }
+    }
+
+    private void renderDayNightOverlay() {
+        if (game == null) return;
+
+        Time time = game.getTime();
+        int hour = time.getHour();
+        int minute = time.getMinute();
+
+        // The darkening effect starts at 6 PM (hour 18) and ends at 2 AM (hour 26)
+        float startHour = 18f;
+        float endHour = 26f;
+        float maxOpacity = 0.85f; // End with a dark, but not pitch-black, screen
+
+        float currentHour = hour + (minute / 60f);
+        float opacity = 0f;
+
+        if (currentHour >= startHour) {
+            // Calculate the progress through the evening
+            float progress = (currentHour - startHour) / (endHour - startHour);
+            // Clamp the value between 0 and 1 to prevent errors
+            progress = Math.max(0, Math.min(1, progress));
+            opacity = progress * maxOpacity;
+        }
+
+        // If opacity is greater than 0, draw the overlay
+        if (opacity > 0) {
+            Gdx.gl.glEnable(GL20.GL_BLEND);
+            Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
+
+            shapeRenderer.setProjectionMatrix(hudCamera.combined);
+            shapeRenderer.begin(com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType.Filled);
+
+            // Black color with calculated opacity
+            shapeRenderer.setColor(0, 0, 0, opacity);
+            shapeRenderer.rect(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+
+            shapeRenderer.end();
+            Gdx.gl.glDisable(GL20.GL_BLEND);
+        }
     }
 
     @Override
