@@ -466,7 +466,7 @@ public class GDXGameScreen implements Screen {
     }
 
     private void handleInput(float delta) {
-        if (Gdx.input.isKeyJustPressed(Input.Keys.E)) {
+        if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
             isInventoryOpen = !isInventoryOpen;
             if (isInventoryOpen) {
                 showMainMenuButtons(); // Show the main buttons when opening
@@ -1614,7 +1614,28 @@ public class GDXGameScreen implements Screen {
 
     private void showSocialDisplay() {
         menuContentTable.clear();
-        menuContentTable.add(new Label("Social Screen - Not Implemented", skin)).expand().center().row();
+
+        Stack socialStack = new Stack();
+        socialStack.add(new Image(inventoryBackground));
+
+        Table contentTable = new Table();
+
+        Table socialInfoTable = new Table();
+        String playerFriendships = controller.showAllFriendShips().Message();
+        String npcFriendships = controller.showNPCFriendships().Message();
+
+        socialInfoTable.add(new Label("--- Player Friendships ---", skin)).padBottom(10).row();
+        socialInfoTable.add(new Label(playerFriendships, skin)).left().padBottom(20).row();
+        socialInfoTable.add(new Label("--- NPC Friendships ---", skin)).padBottom(10).row();
+        socialInfoTable.add(new Label(npcFriendships, skin)).left().row();
+
+        ScrollPane scrollPane = new ScrollPane(socialInfoTable, skin);
+        scrollPane.setFadeScrollBars(false);
+
+        contentTable.add(scrollPane).expand().fill().pad(40).row();
+
+        socialStack.add(contentTable);
+        menuContentTable.add(socialStack).width(Gdx.graphics.getWidth() * 0.8f).height(Gdx.graphics.getHeight() * 0.8f);
         addBackButtonToMenu();
     }
 
