@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<AnchorPane prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="view.RegisterMenuController">
+   <children>
+      <VBox alignment="CENTER" layoutX="206.0" layoutY="24.0" prefHeight="360.0" prefWidth="198.0" spacing="10.0">
+         <children>
+            <Label fx:id="welcomeText" alignment="CENTER" prefHeight="17.0" prefWidth="185.0" text="Welcome" />
+            <TextField fx:id="username" alignment="CENTER" promptText="Username" />
+            <Button mnemonicParsing="false" text="Register" onMouseClicked="#register"/>
+         </children>
+      </VBox>
+   </children>
+</AnchorPane>
