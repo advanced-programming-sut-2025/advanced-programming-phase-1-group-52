@@ -21,16 +21,7 @@ import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.example.main.controller.GameMenuController;
 import com.example.main.enums.design.TileType;
 import com.example.main.enums.design.Weather;
-import com.example.main.models.App;
-import com.example.main.models.Date;
-import com.example.main.models.Game;
-import com.example.main.models.GameMap;
-import com.example.main.models.Player;
-import com.example.main.models.Tile;
-import com.example.main.models.Time;
-import com.example.main.models.User;
-import com.example.main.enums.design.Weather;
-
+import com.example.main.models.*;
 
 public class GDXGameScreen implements Screen {
     private Stage stage;
@@ -143,15 +134,15 @@ public class GDXGameScreen implements Screen {
     private static final int[][] HOUSE_POSITIONS = {
         {1, 1},
         {81, 1},
-        {1, 31},
-        {81, 31}
+        {1, 51},
+        {81, 51}
     };
 
     private static final int[][] HOUSE_AREAS = {
         {1, 8, 1, 8},
         {81, 88, 1, 8},
-        {1, 8, 31, 38},
-        {81, 88, 31, 38}
+        {1, 8, 51, 58},
+        {81, 88, 51, 58}
     };
 
     private static final int[][] NPC_HOUSE_POSITIONS = {
@@ -163,11 +154,11 @@ public class GDXGameScreen implements Screen {
     };
 
     private static final int[][] NPC_HOUSE_AREAS = {
-        {42, 46, 40, 46},  // Sebastian: (42,40) to (46,46) - 5x7 including walls
-        {52, 56, 40, 46},  // Abigail: (52,40) to (56,46) - 5x7 including walls
-        {32, 36, 50, 56},  // Harvey: (32,50) to (36,56) - 5x7 including walls
-        {42, 46, 50, 56},  // Lia: (42,50) to (46,56) - 5x7 including walls
-        {52, 56, 50, 56}   // Robin: (52,50) to (56,56) - 5x7 including walls
+        {32, 35, 40, 45},
+        {42, 45, 40, 45},
+        {52, 55, 40, 45},
+        {37, 40, 50, 55},
+        {47, 50, 50, 55}
     };
 
     private static final int[][] SHOP_POSITIONS = {
@@ -181,13 +172,13 @@ public class GDXGameScreen implements Screen {
     };
 
     private static final int[][] SHOP_AREAS = {
-        {32, 39, 2, 9},   // Blacksmith: (32,2) to (39,9) - 8x8 including walls
-        {46, 53, 2, 9},   // JojaMart: (46,2) to (53,9) - 8x8 including walls
-        {32, 39, 12, 19}, // PierresGeneralStore: (32,12) to (39,19) - 8x8 including walls
-        {46, 53, 12, 19}, // CarpentersShop: (46,12) to (53,19) - 8x8 including walls
-        {32, 39, 22, 29}, // FishShop: (32,22) to (39,29) - 8x8 including walls
-        {46, 53, 22, 29}, // MarniesRanch: (46,22) to (53,29) - 8x8 including walls
-        {32, 39, 32, 39}  // TheStardropSaloon: (32,32) to (39,39) - 8x8 including walls
+        {33, 37, 3, 7},
+        {47, 51, 3, 7},
+        {33, 37, 13, 17},
+        {47, 51, 13, 17},
+        {33, 37, 23, 27},
+        {47, 51, 23, 27},
+        {33, 37, 33, 37}
     };
 
     private static final int TILE_SIZE = 32;
@@ -279,11 +270,86 @@ public class GDXGameScreen implements Screen {
         }
 
         renderWeather(delta);
+        // Render HUD
         renderHud();
-        renderDayNightOverlay();
 
         stage.act(delta);
         stage.draw();
+    }
+
+    private void renderHud() {
+        // --- Draw UI Backgrounds ---
+        Gdx.gl.glEnable(GL20.GL_BLEND);
+        Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
+        shapeRenderer.setProjectionMatrix(hudCamera.combined);
+        shapeRenderer.begin(com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType.Filled);
+
+        // Set the background color to a deep, semi-transparent blue
+        shapeRenderer.setColor(0.0f, 0.0f, 0.5f, 0.5f);
+
+        // Draw background for weather and season text
+        float infoBgX = 10;
+        float infoBgY = Gdx.graphics.getHeight() - 70;
+        float infoBgWidth = 220; // Adjust width as needed
+        float infoBgHeight = 60;
+        shapeRenderer.rect(infoBgX, infoBgY, infoBgWidth, infoBgHeight);
+
+        shapeRenderer.end();
+        Gdx.gl.glDisable(GL20.GL_BLEND);
+
+        // --- Draw Text and Textures ---
+        spriteBatch.setProjectionMatrix(hudCamera.combined);
+        spriteBatch.begin();
+
+        // Draw the clock texture
+        float screenWidth = Gdx.graphics.getWidth();
+        float clockWidth = clockTexture.getWidth() * 1f;
+        float clockHeight = clockTexture.getHeight() * 1f;
+        float clockX = screenWidth - clockWidth - 20;
+        float clockY = Gdx.graphics.getHeight() - clockHeight - 20;
+        spriteBatch.draw(clockTexture, clockX, clockY, clockWidth, clockHeight);
+
+        // --- Draw Text on top of backgrounds ---
+        // Make font black for the clock text as it's on a light background
+        hudFont.setColor(Color.BLACK);
+        Date date = game.getDate();
+        String dateString = date.getCurrentWeekday().name().substring(0, 3) + ". " + date.getCurrentDay();
+        hudFont.draw(spriteBatch, dateString, clockX + 160, clockY + 210);
+
+        Time time = game.getTime();
+        int hour = time.getHour();
+        String ampm = hour < 12 || hour >= 24 ? "am" : "pm";
+        if (hour == 0) {
+            hour = 12;
+        } else if (hour > 12) {
+            if (hour < 24) {
+                hour -= 12;
+            } else {
+                hour -= 24;
+                if (hour == 0) hour = 12;
+            }
+        }
+        String timeString = String.format("%d:%02d %s", hour, time.getMinute(), ampm);
+        hudFont.draw(spriteBatch, timeString, clockX + 148, clockY + 120);
+
+        // --- NEW: Draw the player's balance ---
+        Player player = game.getCurrentPlayer();
+        if (player != null) {
+            String balanceString = String.valueOf(player.getBankAccount().getBalance());
+            // You might need to adjust the X and Y coordinates to perfectly align the text
+            hudFont.draw(spriteBatch, balanceString, clockX + 140, clockY + 40);
+        }
+        // --- END NEW ---
+
+        // Revert font color to white for the dark background
+        hudFont.setColor(Color.WHITE);
+        String seasonString = "Season: " + controller.showSeason();
+        hudFont.draw(spriteBatch, seasonString, 20, Gdx.graphics.getHeight() - 20);
+
+        String weatherString = "Weather: " + game.getTodayWeather().name();
+        hudFont.draw(spriteBatch, weatherString, 20, Gdx.graphics.getHeight() - 50);
+
+        spriteBatch.end();
     }
 
     private void initializePlayerPosition() {
@@ -336,13 +402,13 @@ public class GDXGameScreen implements Screen {
         jewelStoneTexture = new Texture("content/Cut/map_elements/jewel_stone.png");
 
         try {
-            blacksmithTexture = new Texture("content/Cut/map_elements/blacksmith.png");
-            jojamartTexture = new Texture("content/Cut/map_elements/jojamart.png");
-            pierresShopTexture = new Texture("content/Cut/map_elements/pierres_shop.png");
-            carpentersShopTexture = new Texture("content/Cut/map_elements/carpenters_shop.png");
-            fishShopTexture = new Texture("content/Cut/map_elements/fish_shop.png");
-            ranchTexture = new Texture("content/Cut/map_elements/marines_ranch.png");
-            saloonTexture = new Texture("content/Cut/map_elements/stardrop_saloon.png");
+            blacksmithTexture = new Texture("content/Cut/map_elements/Blacksmith.png");
+            jojamartTexture = new Texture("content/Cut/map_elements/Jojamart.png");
+            pierresShopTexture = new Texture("content/Cut/map_elements/Pierres_shop.png");
+            carpentersShopTexture = new Texture("content/Cut/map_elements/Carpenter's_Shop.png");
+            fishShopTexture = new Texture("content/Cut/map_elements/Fish_Shop.png");
+            ranchTexture = new Texture("content/Cut/map_elements/Ranch.png");
+            saloonTexture = new Texture("content/Cut/map_elements/Saloon.png");
         } catch (Exception e) {
             blacksmithTexture = ground1Texture;
             jojamartTexture = ground1Texture;
@@ -378,6 +444,7 @@ public class GDXGameScreen implements Screen {
         femaleRight2Texture = new Texture("content/Cut/player/female_right2.png");
     }
 
+    // In main/GDXviews/GDXGameScreen.java
     private void loadWeatherAssets() {
         // Load the single images
         rainTexture = new Texture("content/weather/rain1.png");
@@ -403,6 +470,92 @@ public class GDXGameScreen implements Screen {
                 snowTexture.getWidth(),
                 snowTexture.getHeight()
             ));
+        }
+    }
+
+    // In main/GDXviews/GDXGameScreen.java
+
+    private void renderWeather(float delta) {
+        if (game == null || game.getTodayWeather() == null) {
+            return;
+        }
+
+        weatherStateTime += delta;
+        spriteBatch.setProjectionMatrix(hudCamera.combined);
+        spriteBatch.begin();
+
+        switch (game.getTodayWeather()) {
+            case Rainy:
+            case Stormy: // Also show rain during a storm
+                for (Rectangle particle : rainParticles) {
+                    // Move rain straight down
+                    particle.y -= 300 * delta;
+                    // If it goes off screen, reset it to the top
+                    if (particle.y < 0) {
+                        particle.y = Gdx.graphics.getHeight();
+                        particle.x = (float) (Math.random() * Gdx.graphics.getWidth());
+                    }
+                    spriteBatch.draw(rainTexture, particle.x, particle.y);
+                }
+                break;
+
+            case Snowy:
+                for (Rectangle particle : snowParticles) {
+                    // Move snow down and add a gentle side-to-side sway
+                    particle.y -= 60 * delta;
+                    particle.x += (float) (Math.sin(particle.y / 30) * 20 * delta);
+
+                    // If it goes off screen, reset it to the top
+                    if (particle.y < 0) {
+                        particle.y = Gdx.graphics.getHeight();
+                        particle.x = (float) (Math.random() * Gdx.graphics.getWidth());
+                    }
+                    spriteBatch.draw(snowTexture, particle.x, particle.y, 24, 24); // Drawing snow slightly larger
+                }
+                break;
+
+            default:
+                // No weather effect for sunny days
+                break;
+        }
+
+        spriteBatch.end();
+
+        // Handle lightning flash for storms OR manual cheat
+        boolean shouldFlash = false;
+        if (game.getTodayWeather() == Weather.Stormy) {
+            stormEffectTimer += delta;
+            if (stormEffectTimer > nextLightningTime) {
+                lightningActive = true;
+                lightningDuration = 0.15f;
+                nextLightningTime = (float) (stormEffectTimer + 3 + Math.random() * 5);
+            }
+            if (lightningActive) {
+                shouldFlash = true;
+            }
+        }
+
+        // Also check if the cheat is active
+        if (cheatLightningActive) {
+            shouldFlash = true;
+        }
+
+        // If a flash should happen, render it
+        if (shouldFlash) {
+            lightningDuration -= delta;
+            Gdx.gl.glEnable(GL20.GL_BLEND);
+            shapeRenderer.setProjectionMatrix(hudCamera.combined);
+            shapeRenderer.begin(com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType.Filled);
+            shapeRenderer.setColor(1, 1, 1, 0.7f); // White flash
+            shapeRenderer.rect(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+            shapeRenderer.end();
+            Gdx.gl.glDisable(GL20.GL_BLEND);
+
+            // Reset the flags when the duration is over
+            if (lightningDuration <= 0) {
+                lightningActive = false;
+                cheatLightningActive = false;
+            }
         }
     }
 
@@ -555,8 +708,8 @@ public class GDXGameScreen implements Screen {
         Player tileOwner = tile.getOwner();
 
         return tileOwner == null ||
-            tileOwner.equals(currentPlayer) ||
-            (currentPlayer.getSpouse() != null && tileOwner.equals(currentPlayer.getSpouse()));
+               tileOwner.equals(currentPlayer) ||
+               (currentPlayer.getSpouse() != null && tileOwner.equals(currentPlayer.getSpouse()));
     }
 
     private void handleMinimapToggle() {
@@ -595,9 +748,9 @@ public class GDXGameScreen implements Screen {
         Player currentPlayer = game.getCurrentPlayer();
 
         boolean manualControl = Gdx.input.isKeyPressed(Input.Keys.I) ||
-            Gdx.input.isKeyPressed(Input.Keys.K) ||
-            Gdx.input.isKeyPressed(Input.Keys.J) ||
-            Gdx.input.isKeyPressed(Input.Keys.L);
+                               Gdx.input.isKeyPressed(Input.Keys.K) ||
+                               Gdx.input.isKeyPressed(Input.Keys.J) ||
+                               Gdx.input.isKeyPressed(Input.Keys.L);
 
         if (manualControl) {
             cameraFollowsPlayer = false;
@@ -694,35 +847,10 @@ public class GDXGameScreen implements Screen {
             for (int x = 0; x < MAP_WIDTH; x++) {
                 if (tiles[x] != null && tiles[x][y] != null) {
                     Tile tile = tiles[x][y];
-                    TileType tileType = tile.getType();
-
-                    if (tileType == TileType.House || tileType == TileType.Wall) {
+                    if (tile.getType() == TileType.Tree) {
                         float worldX = x * TILE_SIZE;
                         float worldY = (MAP_HEIGHT - 1 - y) * TILE_SIZE;
-                        renderHouseSprite(x, y, worldX, worldY);
-
-                        // Also check if this Wall tile belongs to an NPC house area or shop area
-                        if (tileType == TileType.Wall) {
-                            // Only render NPC house if this wall belongs to an NPC house area
-                            int npcIndex = getNPCIndexForHouse(x, y);
-                            if (npcIndex != -1) {
-                                renderNPCHouseSprite(x, y, worldX, worldY);
-                            }
-
-                            // Only render shop if this wall belongs to a shop area
-                            int shopIndex = getShopIndex(x, y);
-                            if (shopIndex != -1) {
-                                renderShopSprite(x, y, worldX, worldY);
-                            }
-                        }
-                    } else if (tileType == TileType.NPCHouse) {
-                        float worldX = x * TILE_SIZE;
-                        float worldY = (MAP_HEIGHT - 1 - y) * TILE_SIZE;
-                        renderNPCHouseSprite(x, y, worldX, worldY);
-                    } else if (tileType == TileType.Shop) {
-                        float worldX = x * TILE_SIZE;
-                        float worldY = (MAP_HEIGHT - 1 - y) * TILE_SIZE;
-                        renderShopSprite(x, y, worldX, worldY);
+                        renderTreeSprite(x, y, worldX, worldY);
                     }
                 }
             }
@@ -732,10 +860,18 @@ public class GDXGameScreen implements Screen {
             for (int x = 0; x < MAP_WIDTH; x++) {
                 if (tiles[x] != null && tiles[x][y] != null) {
                     Tile tile = tiles[x][y];
-                    if (tile.getType() == TileType.Tree) {
+                    if (tile.getType() == TileType.House) {
                         float worldX = x * TILE_SIZE;
                         float worldY = (MAP_HEIGHT - 1 - y) * TILE_SIZE;
-                        renderTreeSprite(x, y, worldX, worldY);
+                        renderHouseSprite(x, y, worldX, worldY);
+                    } else if (tile.getType() == TileType.NPCHouse) {
+                        float worldX = x * TILE_SIZE;
+                        float worldY = (MAP_HEIGHT - 1 - y) * TILE_SIZE;
+                        renderNPCHouseSprite(x, y, worldX, worldY);
+                    } else if (tile.getType() == TileType.Shop) {
+                        float worldX = x * TILE_SIZE;
+                        float worldY = (MAP_HEIGHT - 1 - y) * TILE_SIZE;
+                        renderShopSprite(x, y, worldX, worldY);
                     }
                 }
             }
@@ -951,20 +1087,14 @@ public class GDXGameScreen implements Screen {
 
         int[] houseArea = HOUSE_AREAS[playerIndex];
         int houseStartX = houseArea[0];
-        int houseStartY = houseArea[2];  // This is the top row of the house area
-        int houseEndY = houseArea[3];    // This is the bottom row of the house area
+        int houseStartY = houseArea[2];
 
-        // Only render the house image once at the top-left corner of the house area
         if (tileX == houseStartX && tileY == houseStartY) {
-            // Calculate the size to cover the entire 8x8 house area
-            float houseWidth = 8 * TILE_SIZE;  // 8 tiles wide
-            float houseHeight = 8 * TILE_SIZE; // 8 tiles tall
+            float houseWidth = houseTexture.getWidth();
+            float houseHeight = houseTexture.getHeight();
 
-            // Calculate the bottom-left position for the house image
-            // The worldY for houseStartY gives us the screen position of the top row
-            // We need to move down by (8-1) tiles to get to the bottom of the house area
             float houseX = worldX;
-            float houseY = worldY - (7 * TILE_SIZE); // Move down 7 tiles from the top tile
+            float houseY = worldY;
 
             spriteBatch.draw(houseTexture, houseX, houseY, houseWidth, houseHeight);
         }
@@ -972,9 +1102,7 @@ public class GDXGameScreen implements Screen {
 
     private void renderNPCHouseSprite(int tileX, int tileY, float worldX, float worldY) {
         int npcIndex = getNPCIndexForHouse(tileX, tileY);
-        if (npcIndex == -1) {
-            return;
-        }
+        if (npcIndex == -1) return;
 
         Texture npcHouseTexture;
         switch (npcHouseVariants[npcIndex]) {
@@ -987,20 +1115,15 @@ public class GDXGameScreen implements Screen {
         }
 
         int[] npcHouseArea = NPC_HOUSE_AREAS[npcIndex];
-        int houseStartX = npcHouseArea[0];
-        int houseStartY = npcHouseArea[2];  // This is the top row of the house area
+        int npcHouseStartX = npcHouseArea[0];
+        int npcHouseStartY = npcHouseArea[2];
 
-        // Only render the house image once at the top-left corner of the house area
-        if (tileX == houseStartX && tileY == houseStartY) {
-            // Calculate the size to cover the entire 5x7 NPC house area
-            float npcHouseWidth = 5 * TILE_SIZE;  // 5 tiles wide
-            float npcHouseHeight = 7 * TILE_SIZE; // 7 tiles tall
+        if (tileX == npcHouseStartX && tileY == npcHouseStartY) {
+            float npcHouseWidth = npcHouseTexture.getWidth();
+            float npcHouseHeight = npcHouseTexture.getHeight();
 
-            // Calculate the bottom-left position for the NPC house image
-            // The worldY for houseStartY gives us the screen position of the top row
-            // We need to move down by (7-1) tiles to get to the bottom of the house area
             float npcHouseX = worldX;
-            float npcHouseY = worldY - (6 * TILE_SIZE); // Move down 6 tiles from the top tile
+            float npcHouseY = worldY;
 
             spriteBatch.draw(npcHouseTexture, npcHouseX, npcHouseY, npcHouseWidth, npcHouseHeight);
         }
@@ -1030,15 +1153,14 @@ public class GDXGameScreen implements Screen {
         int shopStartY = shopArea[2];
 
         if (tileX == shopStartX && tileY == shopStartY) {
-            // Calculate the size to cover the entire 8x8 shop area
-            float shopWidth = 8 * TILE_SIZE;  // 8 tiles wide
-            float shopHeight = 8 * TILE_SIZE; // 8 tiles tall
+            int shopWidthInTiles = shopArea[1] - shopArea[0] + 1;
+            int shopHeightInTiles = shopArea[3] - shopArea[2] + 1;
 
-            // Calculate the bottom-left position for the shop image
-            // The worldY for shopStartY gives us the screen position of the top row
-            // We need to move down by (8-1) tiles to get to the bottom of the shop area
+            float shopWidth = shopWidthInTiles * TILE_SIZE;
+            float shopHeight = shopHeightInTiles * TILE_SIZE;
+
             float shopX = worldX;
-            float shopY = worldY - (7 * TILE_SIZE); // Move down 7 tiles from the top tile
+            float shopY = worldY;
 
             spriteBatch.draw(shopTexture, shopX, shopY, shopWidth, shopHeight);
         }
@@ -1205,199 +1327,6 @@ public class GDXGameScreen implements Screen {
         shapeRenderer.setColor(1, 1, 1, 1);
         shapeRenderer.rect(x, y, width, height);
         shapeRenderer.end();
-    }
-
-    private void renderHud() {
-        // --- Draw UI Backgrounds ---
-        Gdx.gl.glEnable(GL20.GL_BLEND);
-        Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
-        shapeRenderer.setProjectionMatrix(hudCamera.combined);
-        shapeRenderer.begin(com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType.Filled);
-
-        shapeRenderer.setColor(0.0f, 0.0f, 0.5f, 0.5f);
-
-        float infoBgX = 10;
-        float infoBgY = Gdx.graphics.getHeight() - 70;
-        float infoBgWidth = 220; // Adjust width as needed
-        float infoBgHeight = 60;
-        shapeRenderer.rect(infoBgX, infoBgY, infoBgWidth, infoBgHeight);
-
-        shapeRenderer.end();
-        Gdx.gl.glDisable(GL20.GL_BLEND);
-
-        spriteBatch.setProjectionMatrix(hudCamera.combined);
-        spriteBatch.begin();
-
-        float screenWidth = Gdx.graphics.getWidth();
-        float clockWidth = clockTexture.getWidth() * 1f;
-        float clockHeight = clockTexture.getHeight() * 1f;
-        float clockX = screenWidth - clockWidth - 20;
-        float clockY = Gdx.graphics.getHeight() - clockHeight - 20;
-        spriteBatch.draw(clockTexture, clockX, clockY, clockWidth, clockHeight);
-
-        hudFont.setColor(Color.BLACK);
-        Date date = game.getDate();
-        String dateString = date.getCurrentWeekday().name().substring(0, 3) + ". " + date.getCurrentDay();
-        hudFont.draw(spriteBatch, dateString, clockX + 160, clockY + 210);
-
-        Time time = game.getTime();
-        int hour = time.getHour();
-        String ampm = hour < 12 || hour >= 24 ? "am" : "pm";
-        if (hour == 0) {
-            hour = 12;
-        } else if (hour > 12) {
-            if (hour < 24) {
-                hour -= 12;
-            } else {
-                hour -= 24;
-                if (hour == 0) hour = 12;
-            }
-        }
-        String timeString = String.format("%d:%02d %s", hour, time.getMinute(), ampm);
-        hudFont.draw(spriteBatch, timeString, clockX + 148, clockY + 120);
-
-        // --- NEW: Draw the player's balance ---
-        Player player = game.getCurrentPlayer();
-        if (player != null) {
-            String balanceString = String.valueOf(player.getBankAccount().getBalance());
-            // You might need to adjust the X and Y coordinates to perfectly align the text
-            hudFont.draw(spriteBatch, balanceString, clockX + 140, clockY + 40);
-        }
-        // --- END NEW ---
-
-        // Revert font color to white for the dark background
-        hudFont.setColor(Color.WHITE);
-        String seasonString = "Season: " + controller.showSeason();
-        hudFont.draw(spriteBatch, seasonString, 20, Gdx.graphics.getHeight() - 20);
-
-        String weatherString = "Weather: " + game.getTodayWeather().name();
-        hudFont.draw(spriteBatch, weatherString, 20, Gdx.graphics.getHeight() - 50);
-
-        spriteBatch.end();
-    }
-
-    private void renderWeather(float delta) {
-        if (game == null || game.getTodayWeather() == null) {
-            return;
-        }
-
-        weatherStateTime += delta;
-        spriteBatch.setProjectionMatrix(hudCamera.combined);
-        spriteBatch.begin();
-
-        switch (game.getTodayWeather()) {
-            case Rainy:
-            case Stormy: // Also show rain during a storm
-                for (Rectangle particle : rainParticles) {
-                    // Move rain straight down
-                    particle.y -= 300 * delta;
-                    // If it goes off screen, reset it to the top
-                    if (particle.y < 0) {
-                        particle.y = Gdx.graphics.getHeight();
-                        particle.x = (float) (Math.random() * Gdx.graphics.getWidth());
-                    }
-                    spriteBatch.draw(rainTexture, particle.x, particle.y);
-                }
-                break;
-
-            case Snowy:
-                for (Rectangle particle : snowParticles) {
-                    // Move snow down and add a gentle side-to-side sway
-                    particle.y -= 60 * delta;
-                    particle.x += (float) (Math.sin(particle.y / 30) * 20 * delta);
-
-                    // If it goes off screen, reset it to the top
-                    if (particle.y < 0) {
-                        particle.y = Gdx.graphics.getHeight();
-                        particle.x = (float) (Math.random() * Gdx.graphics.getWidth());
-                    }
-                    spriteBatch.draw(snowTexture, particle.x, particle.y, 24, 24); // Drawing snow slightly larger
-                }
-                break;
-
-            default:
-                // No weather effect for sunny days
-                break;
-        }
-
-        spriteBatch.end();
-
-        // Handle lightning flash for storms OR manual cheat
-        boolean shouldFlash = false;
-        if (game.getTodayWeather() == Weather.Stormy) {
-            stormEffectTimer += delta;
-            if (stormEffectTimer > nextLightningTime) {
-                lightningActive = true;
-                lightningDuration = 0.15f;
-                nextLightningTime = (float) (stormEffectTimer + 3 + Math.random() * 5);
-            }
-            if (lightningActive) {
-                shouldFlash = true;
-            }
-        }
-
-        // Also check if the cheat is active
-        if (cheatLightningActive) {
-            shouldFlash = true;
-        }
-
-        // If a flash should happen, render it
-        if (shouldFlash) {
-            lightningDuration -= delta;
-            Gdx.gl.glEnable(GL20.GL_BLEND);
-            shapeRenderer.setProjectionMatrix(hudCamera.combined);
-            shapeRenderer.begin(com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType.Filled);
-            shapeRenderer.setColor(1, 1, 1, 0.7f); // White flash
-            shapeRenderer.rect(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-            shapeRenderer.end();
-            Gdx.gl.glDisable(GL20.GL_BLEND);
-
-            // Reset the flags when the duration is over
-            if (lightningDuration <= 0) {
-                lightningActive = false;
-                cheatLightningActive = false;
-            }
-        }
-    }
-
-    private void renderDayNightOverlay() {
-        if (game == null) return;
-
-        Time time = game.getTime();
-        int hour = time.getHour();
-        int minute = time.getMinute();
-
-        // The darkening effect starts at 6 PM (hour 18) and ends at 2 AM (hour 26)
-        float startHour = 18f;
-        float endHour = 26f;
-        float maxOpacity = 0.85f; // End with a dark, but not pitch-black, screen
-
-        float currentHour = hour + (minute / 60f);
-        float opacity = 0f;
-
-        if (currentHour >= startHour) {
-            // Calculate the progress through the evening
-            float progress = (currentHour - startHour) / (endHour - startHour);
-            // Clamp the value between 0 and 1 to prevent errors
-            progress = Math.max(0, Math.min(1, progress));
-            opacity = progress * maxOpacity;
-        }
-
-        // If opacity is greater than 0, draw the overlay
-        if (opacity > 0) {
-            Gdx.gl.glEnable(GL20.GL_BLEND);
-            Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
-
-            shapeRenderer.setProjectionMatrix(hudCamera.combined);
-            shapeRenderer.begin(com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType.Filled);
-
-            // Black color with calculated opacity
-            shapeRenderer.setColor(0, 0, 0, opacity);
-            shapeRenderer.rect(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-
-            shapeRenderer.end();
-            Gdx.gl.glDisable(GL20.GL_BLEND);
-        }
     }
 
     @Override
