@@ -165,7 +165,7 @@ public class Player {
     }
 
     public void extract() {
-        addSkillExperience(Skills.Extraction, 10);
+        addSkillExperience(Skills.Mining, 10);
     }
 
     public void foraging() {
@@ -226,7 +226,7 @@ public class Player {
     }
 
     public Result pickaxeHandler(Tile tile) {
-        SkillData extractionData = skills.get(Skills.Extraction);
+        SkillData extractionData = skills.get(Skills.Mining);
         int energyConsumption = currentTool.getToolType().getEnergyConsumption();
         if(extractionData.getLevel() >= 4){
             energyConsumption -= 1;
@@ -235,7 +235,7 @@ public class Player {
             return new Result(false, "You don't have enough energy to mine!(extract)");
         }
         int add = 0;
-        if(getSkillLevel(Skills.Extraction) >= 2){
+        if(getSkillLevel(Skills.Mining) >= 2){
             add = 2;
         }
         this.energy -= energyConsumption;
@@ -537,7 +537,7 @@ public class Player {
     }
 
     private void addMiningRecipes() {
-        SkillData skillData = findSkillData(Skills.Extraction);
+        SkillData skillData = findSkillData(Skills.Mining);
         int level = skillData.getLevel();
 
         if (level >= 1) {

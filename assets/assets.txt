@@ -7965,44 +7965,6 @@ content/clock/Clock.png
 content/clock/ClockWithJournal.png
 content/clock/GoldDisplay.png
 content/clock/WeddingDayHeart.png
-content/v2rayN-linux-64 (1)/v2rayN-linux-64/AmazTool
-content/v2rayN-linux-64 (1)/v2rayN-linux-64/bin/Country.mmdb
-content/v2rayN-linux-64 (1)/v2rayN-linux-64/bin/cache.db
-content/v2rayN-linux-64 (1)/v2rayN-linux-64/bin/geoip-only-cn-private.dat
-content/v2rayN-linux-64 (1)/v2rayN-linux-64/bin/geoip.dat
-content/v2rayN-linux-64 (1)/v2rayN-linux-64/bin/geoip.metadb
-content/v2rayN-linux-64 (1)/v2rayN-linux-64/bin/geosite.dat
-content/v2rayN-linux-64 (1)/v2rayN-linux-64/bin/mihomo/mihomo
-content/v2rayN-linux-64 (1)/v2rayN-linux-64/bin/sing_box/sing-box
-content/v2rayN-linux-64 (1)/v2rayN-linux-64/bin/srss/geoip-cn.srs
-content/v2rayN-linux-64 (1)/v2rayN-linux-64/bin/srss/geoip-facebook.srs
-content/v2rayN-linux-64 (1)/v2rayN-linux-64/bin/srss/geoip-fastly.srs
-content/v2rayN-linux-64 (1)/v2rayN-linux-64/bin/srss/geoip-google.srs
-content/v2rayN-linux-64 (1)/v2rayN-linux-64/bin/srss/geoip-netflix.srs
-content/v2rayN-linux-64 (1)/v2rayN-linux-64/bin/srss/geoip-private.srs
-content/v2rayN-linux-64 (1)/v2rayN-linux-64/bin/srss/geoip-telegram.srs
-content/v2rayN-linux-64 (1)/v2rayN-linux-64/bin/srss/geoip-twitter.srs
-content/v2rayN-linux-64 (1)/v2rayN-linux-64/bin/srss/geosite-category-ads-all.srs
-content/v2rayN-linux-64 (1)/v2rayN-linux-64/bin/srss/geosite-cn.srs
-content/v2rayN-linux-64 (1)/v2rayN-linux-64/bin/srss/geosite-geolocation-cn.srs
-content/v2rayN-linux-64 (1)/v2rayN-linux-64/bin/srss/geosite-gfw.srs
-content/v2rayN-linux-64 (1)/v2rayN-linux-64/bin/srss/geosite-greatfire.srs
-content/v2rayN-linux-64 (1)/v2rayN-linux-64/bin/srss/geosite-private.srs
-content/v2rayN-linux-64 (1)/v2rayN-linux-64/bin/xray/xray
-content/v2rayN-linux-64 (1)/v2rayN-linux-64/binConfigs/config.json
-content/v2rayN-linux-64 (1)/v2rayN-linux-64/binConfigs/configPre.json
-content/v2rayN-linux-64 (1)/v2rayN-linux-64/binConfigs/kill_as_sudo.sh
-content/v2rayN-linux-64 (1)/v2rayN-linux-64/binConfigs/proxy_set_linux_sh.sh
-content/v2rayN-linux-64 (1)/v2rayN-linux-64/binConfigs/run_as_sudo.sh
-content/v2rayN-linux-64 (1)/v2rayN-linux-64/guiConfigs/guiNConfig.json
-content/v2rayN-linux-64 (1)/v2rayN-linux-64/guiConfigs/guiNDB.db
-content/v2rayN-linux-64 (1)/v2rayN-linux-64/guiLogs/2025-07-08.txt
-content/v2rayN-linux-64 (1)/v2rayN-linux-64/libHarfBuzzSharp.so
-content/v2rayN-linux-64 (1)/v2rayN-linux-64/libSkiaSharp.so
-content/v2rayN-linux-64 (1)/v2rayN-linux-64/libe_sqlite3.so
-content/v2rayN-linux-64 (1)/v2rayN-linux-64/v2rayN
-content/v2rayN-linux-64 (1)/v2rayN-linux-64/v2rayN.icns
-content/v2rayN-linux-64 (1)/v2rayN-linux-64/v2rayN.png
 content/w1/.idea/compiler.xml
 content/w1/.idea/encodings.xml
 content/w1/.idea/jarRepositories.xml

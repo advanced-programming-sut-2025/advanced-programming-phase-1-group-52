@@ -20,6 +20,7 @@ import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.*;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
+import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.example.main.GDXmodels.TextureManager;
@@ -27,6 +28,7 @@ import com.example.main.Main;
 import com.example.main.controller.GameMenuController;
 import com.example.main.enums.design.TileType;
 import com.example.main.enums.design.Weather;
+import com.example.main.enums.player.Skills;
 import com.example.main.models.App;
 import com.example.main.models.Date;
 import com.example.main.models.Game;
@@ -1541,17 +1543,72 @@ public class GDXGameScreen implements Screen {
         Table itemsTable = new Table();
         updateInventoryGrid(itemsTable);
 
-        ScrollPane scrollPane = new ScrollPane(itemsTable, skin);
+        // Create a new style for the ScrollPane
+        ScrollPane.ScrollPaneStyle scrollPaneStyle = new ScrollPane.ScrollPaneStyle();
+        // Set its background to be the same as the main menu
+        scrollPaneStyle.background = new TextureRegionDrawable(new TextureRegion(inventoryBackground));
+
+        // Create the ScrollPane with the new style
+        ScrollPane scrollPane = new ScrollPane(itemsTable, scrollPaneStyle);
         scrollPane.setFadeScrollBars(false);
-        scrollPane.setScrollingDisabled(true, false);
+        scrollPane.setScrollingDisabled(true, false); // Enables vertical scrolling
 
         menuContentTable.add(scrollPane).expand().fill().pad(20).row();
         addBackButtonToMenu();
     }
-
     private void showSkillsDisplay() {
         menuContentTable.clear();
-        menuContentTable.add(new Label("Skills Screen - Not Implemented", skin)).expand().center().row();
+        Player currentPlayer = game.getCurrentPlayer();
+        if (currentPlayer == null) return;
+
+        Table skillsTable = new Table();
+        TooltipManager tooltipManager = new TooltipManager();
+        tooltipManager.instant();
+
+        // --- NEW: Programmatically create a style for the ProgressBar ---
+        ProgressBar.ProgressBarStyle barStyle = new ProgressBar.ProgressBarStyle();
+        // Use simple, reliable drawables from the default skin
+        barStyle.background = skin.getDrawable("default-slider");
+        barStyle.knobBefore = skin.getDrawable("default-slider-knob");
+        // --- End of New Code ---
+
+        for (Skills skill : Skills.values()) {
+            Table skillRow = new Table();
+
+            // Icon and Tooltip
+            Texture iconTexture = textureManager.getTexture(skill.name() + "_Skill_Icon");
+            Image icon;
+            if (iconTexture != null) {
+                icon = new Image(iconTexture);
+                Tooltip<Label> tooltip = new Tooltip<>(new Label(skill.getSkillDescription(), skin));
+                icon.addListener(tooltip);
+            } else {
+                icon = new Image(skin.getDrawable("default-round"));
+                Gdx.app.log("Skills", "Missing texture for skill icon: " + skill.name() + "_Skill_Icon.png");
+            }
+            skillRow.add(icon).size(48, 48).padRight(10);
+
+            // Name
+            skillRow.add(new Label(skill.name(), skin)).width(100);
+
+            // Progress Bar - Using the new custom style
+            ProgressBar progressBar = new ProgressBar(0, 100, 1, false, barStyle);
+
+            // Calculate and set progress
+            int currentExp = currentPlayer.getSkillExperience(skill);
+            int expForNextLevel = skill.getExpForNextLevel();
+            float progress = (expForNextLevel > 0) ? ((float)currentExp / expForNextLevel) * 100f : 0f;
+            progressBar.setValue(progress);
+
+            skillRow.add(progressBar).width(200).padRight(10);
+
+            // Level
+            skillRow.add(new Label("Level " + currentPlayer.getSkillLevel(skill), skin));
+
+            skillsTable.add(skillRow).padBottom(10).row();
+        }
+
+        menuContentTable.add(skillsTable).expand().center().row();
         addBackButtonToMenu();
     }
 
@@ -1605,7 +1662,7 @@ public class GDXGameScreen implements Screen {
 
         ArrayList<Item> items = currentPlayer.getInventory().getItems();
         int column = 0;
-        final int ITEMS_PER_ROW = 12;
+        final int ITEMS_PER_ROW = 4;
 
         for (Item item : items) {
             String key = generateTextureKey(item);
