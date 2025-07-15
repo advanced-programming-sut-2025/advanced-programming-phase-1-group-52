@@ -34,7 +34,7 @@ public enum NPCType {
 
         quests.add(new Quest(this, MaterialType.GoldBar, 1, MaterialType.GoldCoin, 0));
         quests.add(new Quest(this, MaterialType.Pumpkin, 1, MaterialType.GoldCoin, 500));
-        quests.add(new Quest(this, MaterialType.Wheat, 50, ToolType.IridiumWateringCan, 1));
+        quests.add(new Quest(this, MaterialType.Wheat, 50, ToolType.Iridium_Watering_Can, 1));
     }},
     Harvey(32, 50) {{
         favorites.add(MaterialType.Coffee);

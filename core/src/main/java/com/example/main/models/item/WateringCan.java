@@ -8,19 +8,19 @@
 
         public WateringCan(ToolType toolType, int number) {
             super(toolType, number);
-            if(toolType.equals(ToolType.PrimitiveWateringCan)){
+            if(toolType.equals(ToolType.Watering_Can)){
                 this.capacity = 40;
             }
-            else if(toolType.equals(ToolType.CopperWateringCan)){
+            else if(toolType.equals(ToolType.Copper_Watering_Can)){
                 this.capacity = 55;
             }
-            else if(toolType.equals(ToolType.IridiumWateringCan)){
+            else if(toolType.equals(ToolType.Iridium_Watering_Can)){
                 this.capacity = 100;
             }
-            else if(toolType.equals(ToolType.GoldenWateringCan)){
+            else if(toolType.equals(ToolType.Gold_Watering_Can)){
                 this.capacity = 85;
             }
-            else if(toolType.equals(ToolType.IronicWateringCan)){
+            else if(toolType.equals(ToolType.Steel_Watering_Can)){
                 this.capacity = 70;
             }
             this.filledCapacity = 0;

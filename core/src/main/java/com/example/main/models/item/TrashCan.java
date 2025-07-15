@@ -7,19 +7,19 @@ public class TrashCan extends Item{
     private int percentage;
     public TrashCan(TrashCanType type, int number) {
         super(type, number);
-        if (type.equals(TrashCanType.PrimitiveTrashCan)){
+        if (type.equals(TrashCanType.Trash_Can)){
             this.percentage = 0;
         }
-        else if (type.equals(TrashCanType.CopperTrashCan)){
+        else if (type.equals(TrashCanType.Copper_Trash_Can)){
             this.percentage = 15;
         }
-        else if (type.equals(TrashCanType.IronicTrashCan)){
+        else if (type.equals(TrashCanType.Steel_Trash_Can)){
             this.percentage = 30;
         }
-        else if (type.equals(TrashCanType.GoldenTrashCan)){
+        else if (type.equals(TrashCanType.Gold_Trash_Can)){
             this.percentage = 45;
         }
-        else if (type.equals(TrashCanType.GoldenTrashCan)){
+        else if (type.equals(TrashCanType.Iridium_Trash_Can)){
             this.percentage = 60;
         }
     }

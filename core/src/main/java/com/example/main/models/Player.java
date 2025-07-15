@@ -701,7 +701,7 @@ public class Player {
     }
 
     private void addTrashCan(){
-        inventory.getItems().add(new TrashCan(TrashCanType.PrimitiveTrashCan,1));
+        inventory.getItems().add(new TrashCan(TrashCanType.Trash_Can,1));
     }
 
     public HouseRefrigerator getHouseRefrigerator() {

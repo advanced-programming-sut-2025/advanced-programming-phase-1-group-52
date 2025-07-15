@@ -329,7 +329,7 @@ public class StoreMenuController {
         if (player.getBankAccount().getBalance() < carpEnum.getPrice()) {
             return new Result(false, "You don't have enough money!");
         }
-        
+
         CageType cageType;
         if (carpEnum.getDisplayName().contains("Coop")) {
             if (carpEnum.getDisplayName().contains("Big")) {
@@ -341,7 +341,7 @@ public class StoreMenuController {
             else {
                 cageType = CageType.NormalCage;
             }
-            
+
             if (map.isPlantThere(x, x + 6, y, y + 3)) {
                 return new Result(false, "You can't place your coop there!");
             }
@@ -352,7 +352,7 @@ public class StoreMenuController {
             }
 
             map.generateBuilding(players, players.indexOf(game.getCurrentPlayer()), TileType.Housing, x, x + 6, y, y + 3);
-        } 
+        }
         else {
             if (carpEnum.getDisplayName().contains("Big")) {
                 cageType = CageType.BigBarn;
@@ -375,7 +375,7 @@ public class StoreMenuController {
 
             map.generateBuilding(players, players.indexOf(game.getCurrentPlayer()), TileType.Housing, x, x + 7, y, y + 4);
         }
-        
+
         req1.forEach((mat, amt) -> inv.remove(mat, amt));
         req2.forEach((mat, amt) -> inv.remove(mat, amt));
         player.getBankAccount().withdraw(carpEnum.getPrice());
@@ -423,16 +423,16 @@ public class StoreMenuController {
                 tool.setLevel(1);
 
                 if (tool.getItemType().getName().contains("hoe")) {
-                    tool.setItemType(ToolType.CopperHoe);
+                    tool.setItemType(ToolType.Copper_Hoe);
                 }
                 else if (tool.getItemType().getName().contains("pickaxe")) {
-                    tool.setItemType(ToolType.CopperPickaxe);
+                    tool.setItemType(ToolType.Copper_Pickaxe);
                 }
                 else if (tool.getItemType().getName().contains("axe")) {
-                    tool.setItemType(ToolType.CopperAxe);
+                    tool.setItemType(ToolType.Copper_Axe);
                 }
                 else if (tool.getItemType().getName().contains("can")) {
-                    tool.setItemType(ToolType.CopperWateringCan);
+                    tool.setItemType(ToolType.Copper_Watering_Can);
                 }
 
                 return new Result(true, "Tool upgraded!");
@@ -455,16 +455,16 @@ public class StoreMenuController {
                 tool.setLevel(2);
 
                 if (tool.getItemType().getName().contains("hoe")) {
-                    tool.setItemType(ToolType.IronicHoe);
+                    tool.setItemType(ToolType.Steel_Hoe);
                 }
                 else if (tool.getItemType().getName().contains("pickaxe")) {
-                    tool.setItemType(ToolType.IronicPickaxe);
+                    tool.setItemType(ToolType.Steel_Pickaxe);
                 }
                 else if (tool.getItemType().getName().contains("axe")) {
-                    tool.setItemType(ToolType.IronicAxe);
+                    tool.setItemType(ToolType.Steel_Axe);
                 }
                 else if (tool.getItemType().getName().contains("can")) {
-                    tool.setItemType(ToolType.IronicWateringCan);
+                    tool.setItemType(ToolType.Steel_Watering_Can);
                 }
 
                 return new Result(true, "Tool upgraded!");
@@ -487,16 +487,16 @@ public class StoreMenuController {
                 tool.setLevel(3);
 
                 if (tool.getItemType().getName().contains("hoe")) {
-                    tool.setItemType(ToolType.GoldenHoe);
+                    tool.setItemType(ToolType.Gold_Hoe);
                 }
                 else if (tool.getItemType().getName().contains("pickaxe")) {
-                    tool.setItemType(ToolType.GoldenPickaxe);
+                    tool.setItemType(ToolType.Gold_Pickaxe);
                 }
                 else if (tool.getItemType().getName().contains("axe")) {
-                    tool.setItemType(ToolType.GoldenAxe);
+                    tool.setItemType(ToolType.Gold_Axe);
                 }
                 else if (tool.getItemType().getName().contains("can")) {
-                    tool.setItemType(ToolType.GoldenWateringCan);
+                    tool.setItemType(ToolType.Gold_Watering_Can);
                 }
 
                 return new Result(true, "Tool upgraded!");
@@ -519,16 +519,16 @@ public class StoreMenuController {
                 tool.setLevel(4);
 
                 if (tool.getItemType().getName().contains("hoe")) {
-                    tool.setItemType(ToolType.IridiumHoe);
+                    tool.setItemType(ToolType.Iridium_Hoe);
                 }
                 else if (tool.getItemType().getName().contains("pickaxe")) {
-                    tool.setItemType(ToolType.IridiumPickaxe);
+                    tool.setItemType(ToolType.Iridium_Pickaxe);
                 }
                 else if (tool.getItemType().getName().contains("axe")) {
-                    tool.setItemType(ToolType.IridiumAxe);
+                    tool.setItemType(ToolType.Iridium_Axe);
                 }
                 else if (tool.getItemType().getName().contains("can")) {
-                    tool.setItemType(ToolType.IridiumWateringCan);
+                    tool.setItemType(ToolType.Iridium_Watering_Can);
                 }
 
                 return new Result(true, "Tool upgraded!");

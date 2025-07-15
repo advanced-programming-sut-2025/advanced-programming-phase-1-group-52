@@ -1,5 +1,6 @@
 package com.example.main.GDXviews;
 
+import java.util.ArrayList;
 import java.util.Random;
 
 import com.badlogic.gdx.Gdx;
@@ -17,9 +18,7 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
-import com.badlogic.gdx.scenes.scene2d.ui.Skin;
-import com.badlogic.gdx.scenes.scene2d.ui.Table;
-import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
+import com.badlogic.gdx.scenes.scene2d.ui.*;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
@@ -36,6 +35,7 @@ import com.example.main.models.Player;
 import com.example.main.models.Tile;
 import com.example.main.models.Time;
 import com.example.main.models.User;
+import com.example.main.models.item.Item;
 
 public class GDXGameScreen implements Screen {
     private Stage stage;
@@ -71,9 +71,12 @@ public class GDXGameScreen implements Screen {
     private Array<Rectangle> snowParticles;
     private float weatherStateTime = 0f;
 
+    //Inventory Fields
     private boolean isInventoryOpen = false;
     private Stage inventoryStage;
     private Texture inventoryBackground;
+    private Table menuContentTable;
+    private Table mainInventoryContainer;
 
     // NEW: Storm Effect Fields
     private float stormEffectTimer = 0f;
@@ -239,7 +242,7 @@ public class GDXGameScreen implements Screen {
         waterVariantMap = new int[MAP_WIDTH][MAP_HEIGHT];
 
         textureManager = new TextureManager();
-        textureManager.loadTextures();
+        textureManager.loadAllItemTextures();
         loadTextures();
         loadHudAssets();
         loadWeatherAssets();
@@ -463,6 +466,9 @@ public class GDXGameScreen implements Screen {
     private void handleInput(float delta) {
         if (Gdx.input.isKeyJustPressed(Input.Keys.E)) {
             isInventoryOpen = !isInventoryOpen;
+            if (isInventoryOpen) {
+                showMainMenuButtons(); // Show the main buttons when opening
+            }
         }
 
         if (isInventoryOpen) {
@@ -1456,51 +1462,62 @@ public class GDXGameScreen implements Screen {
     }
 
     private void setupInventoryUI() {
-        Table container = new Table();
-        inventoryStage.addActor(container);
-        container.setFillParent(true); // Make the container fill the whole stage
-        container.center(); // Center the content within the container
+        mainInventoryContainer = new Table();
+        inventoryStage.addActor(mainInventoryContainer);
+        mainInventoryContainer.setFillParent(true);
+        mainInventoryContainer.center();
+
+        menuContentTable = new Table();
+        mainInventoryContainer.add(menuContentTable).expand().fill();
+    }
+
+    private void showMainMenuButtons() {
+        menuContentTable.clear();
 
         TextButton inventoryButton = new TextButton("Inventory", skin);
-        inventoryButton.setColor(97/255f, 188/255f, 112/255f, 1f);
         TextButton skillsButton = new TextButton("Skills", skin);
-        skillsButton.setColor(97/255f, 188/255f, 112/255f, 1f);
         TextButton socialButton = new TextButton("Social", skin);
-        socialButton.setColor(97/255f, 188/255f, 112/255f, 1f);
         TextButton mapButton = new TextButton("Map", skin);
-        mapButton.setColor(97/255f, 188/255f, 112/255f, 1f);
-        TextButton backButton = new TextButton("Close", skin);
-        backButton.setColor(97/255f, 188/255f, 112/255f, 1f);
+        TextButton settingsButton = new TextButton("Settings", skin);
+        TextButton closeButton = new TextButton("Close", skin);
 
         inventoryButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                System.out.println("Inventory tab clicked");
+                showInventoryDisplay();
             }
         });
 
         skillsButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                System.out.println("Skills tab clicked");
+                showSkillsDisplay();
             }
         });
 
         socialButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                System.out.println("Social tab clicked");
+                showSocialDisplay();
             }
         });
 
         mapButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                System.out.println("Map tab clicked");
+                showMinimap = !showMinimap;
+                isInventoryOpen = false; // Close menu to see the map
             }
         });
 
-        backButton.addListener(new ClickListener() {
+        settingsButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                showSettingsMenu();
+            }
+        });
+
+        closeButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
                 isInventoryOpen = false;
@@ -1510,12 +1527,119 @@ public class GDXGameScreen implements Screen {
         float buttonWidth = 200f;
         float buttonPad = 10f;
 
-        // Add buttons to the container in a single column
-        container.add(inventoryButton).width(buttonWidth).pad(buttonPad).row();
-        container.add(skillsButton).width(buttonWidth).pad(buttonPad).row();
-        container.add(socialButton).width(buttonWidth).pad(buttonPad).row();
-        container.add(mapButton).width(buttonWidth).pad(buttonPad).row();
-        container.add(backButton).width(buttonWidth).pad(buttonPad).row();
+        menuContentTable.add(inventoryButton).width(buttonWidth).pad(buttonPad).row();
+        menuContentTable.add(skillsButton).width(buttonWidth).pad(buttonPad).row();
+        menuContentTable.add(socialButton).width(buttonWidth).pad(buttonPad).row();
+        menuContentTable.add(mapButton).width(buttonWidth).pad(buttonPad).row();
+        menuContentTable.add(settingsButton).width(buttonWidth).pad(buttonPad).row();
+        menuContentTable.add(closeButton).width(buttonWidth).pad(buttonPad).row();
+    }
+
+    private void showInventoryDisplay() {
+        menuContentTable.clear();
+
+        Table itemsTable = new Table();
+        updateInventoryGrid(itemsTable);
+
+        ScrollPane scrollPane = new ScrollPane(itemsTable, skin);
+        scrollPane.setFadeScrollBars(false);
+        scrollPane.setScrollingDisabled(true, false);
+
+        menuContentTable.add(scrollPane).expand().fill().pad(20).row();
+        addBackButtonToMenu();
+    }
+
+    private void showSkillsDisplay() {
+        menuContentTable.clear();
+        menuContentTable.add(new Label("Skills Screen - Not Implemented", skin)).expand().center().row();
+        addBackButtonToMenu();
+    }
+
+    private void showSocialDisplay() {
+        menuContentTable.clear();
+        menuContentTable.add(new Label("Social Screen - Not Implemented", skin)).expand().center().row();
+        addBackButtonToMenu();
+    }
+
+    private void showSettingsMenu() {
+        menuContentTable.clear();
+
+        TextButton leaveGameButton = new TextButton("Leave Game", skin);
+        TextButton kickPlayerButton = new TextButton("Kick Player", skin);
+
+        leaveGameButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                isInventoryOpen = false;
+                Main.getInstance().setScreen(new GDXMainMenu());
+            }
+        });
+
+        kickPlayerButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                System.out.println("Kick Player clicked - functionality not implemented.");
+            }
+        });
+
+        menuContentTable.add(leaveGameButton).width(200).pad(10).row();
+        menuContentTable.add(kickPlayerButton).width(200).pad(10).row();
+        addBackButtonToMenu();
+    }
+
+    private void addBackButtonToMenu() {
+        TextButton backButton = new TextButton("Back", skin);
+        backButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                showMainMenuButtons();
+            }
+        });
+        menuContentTable.add(backButton).pad(10).bottom().left();
+    }
+
+    private void updateInventoryGrid(Table table) {
+        table.clear();
+        Player currentPlayer = game.getCurrentPlayer();
+        if (currentPlayer == null) return;
+
+        ArrayList<Item> items = currentPlayer.getInventory().getItems();
+        int column = 0;
+        final int ITEMS_PER_ROW = 12;
+
+        for (Item item : items) {
+            String key = generateTextureKey(item);
+            Texture texture = textureManager.getTexture(key);
+
+            Table itemSlot = new Table(skin);
+            itemSlot.setBackground("default-round");
+
+            if (texture != null) {
+                itemSlot.add(new Image(texture)).size(48, 48);
+            } else {
+                itemSlot.add(new Label("?", skin)).size(48, 48);
+                Gdx.app.log("Inventory", "Missing texture for item: '" + item.getName() + "' (tried key: '" + key + "')");
+            }
+
+            itemSlot.row();
+            itemSlot.add(new Label(String.valueOf(item.getNumber()), skin));
+
+            table.add(itemSlot).pad(4);
+            column++;
+            if (column >= ITEMS_PER_ROW) {
+                table.row();
+                column = 0;
+            }
+        }
+    }
+
+    private String generateTextureKey(Item item) {
+        if (item == null || item.getName() == null) {
+            return "Unknown";
+        }
+        // This version relies on the item's display name matching the asset file name.
+        // Example: item.getName() -> "Basic Fertilizer" -> "Basic_Fertilizer"
+        return item.getName().replace(" ", "_");
     }
 
     @Override
@@ -1544,6 +1668,7 @@ public class GDXGameScreen implements Screen {
         shapeRenderer.dispose();
         inventoryStage.dispose();
         inventoryBackground.dispose();
+        textureManager.dispose();
 
         clockTexture.dispose();
         hudFont.dispose();
