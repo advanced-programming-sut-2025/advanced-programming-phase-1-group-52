@@ -4,6 +4,7 @@ import java.util.Random;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
+import com.badlogic.gdx.InputMultiplexer;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
@@ -14,10 +15,16 @@ import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Rectangle;
+import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
+import com.badlogic.gdx.scenes.scene2d.ui.Table;
+import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
+import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
+import com.example.main.GDXmodels.TextureManager;
+import com.example.main.Main;
 import com.example.main.controller.GameMenuController;
 import com.example.main.enums.design.TileType;
 import com.example.main.enums.design.Weather;
@@ -52,6 +59,8 @@ public class GDXGameScreen implements Screen {
     private float timeAccumulator = 0f;
     private static final float SECONDS_PER_10_IN_GAME_MINUTES = 0.7f;
 
+    private TextureManager textureManager;
+
     // HUD Assets
     private Texture clockTexture;
     private BitmapFont hudFont;
@@ -61,6 +70,10 @@ public class GDXGameScreen implements Screen {
     private Array<Rectangle> rainParticles;
     private Array<Rectangle> snowParticles;
     private float weatherStateTime = 0f;
+
+    private boolean isInventoryOpen = false;
+    private Stage inventoryStage;
+    private Texture inventoryBackground;
 
     // NEW: Storm Effect Fields
     private float stormEffectTimer = 0f;
@@ -225,6 +238,8 @@ public class GDXGameScreen implements Screen {
         stoneVariantMap = new int[MAP_WIDTH][MAP_HEIGHT];
         waterVariantMap = new int[MAP_WIDTH][MAP_HEIGHT];
 
+        textureManager = new TextureManager();
+        textureManager.loadTextures();
         loadTextures();
         loadHudAssets();
         loadWeatherAssets();
@@ -238,6 +253,15 @@ public class GDXGameScreen implements Screen {
         generateRandomMaps();
 
         initializePlayerPosition();
+
+        inventoryStage = new Stage(new ScreenViewport());
+        inventoryBackground = new Texture("content/Cut/menu_background.png");
+        setupInventoryUI();
+
+        InputMultiplexer multiplexer = new InputMultiplexer();
+        multiplexer.addProcessor(stage);
+        multiplexer.addProcessor(inventoryStage);
+        Gdx.input.setInputProcessor(multiplexer);
     }
 
     private void loadHudAssets() {
@@ -260,25 +284,29 @@ public class GDXGameScreen implements Screen {
     @Override
     public void render(float delta) {
         handleInput(delta);
-        updateTime(delta);
+
+        if (!isInventoryOpen) {
+            updateTime(delta);
+        }
 
         Gdx.gl.glClearColor(0.2f, 0.3f, 0.3f, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
-        // Render Game World
         camera.update();
         spriteBatch.setProjectionMatrix(camera.combined);
         spriteBatch.begin();
         renderMap();
         spriteBatch.end();
 
+        renderWeather(delta);
+        renderDayNightOverlay();
+
         if (showMinimap) {
             renderMinimap();
         }
 
-        renderWeather(delta);
         renderHud();
-        renderDayNightOverlay();
+        renderInventoryOverlay(delta);
 
         stage.act(delta);
         stage.draw();
@@ -433,6 +461,14 @@ public class GDXGameScreen implements Screen {
     }
 
     private void handleInput(float delta) {
+        if (Gdx.input.isKeyJustPressed(Input.Keys.E)) {
+            isInventoryOpen = !isInventoryOpen;
+        }
+
+        if (isInventoryOpen) {
+            return; // Pause game world input while inventory is open
+        }
+
         handleMinimapToggle();
         handleTurnSwitching();
         handlePlayerMovement(delta);
@@ -464,6 +500,7 @@ public class GDXGameScreen implements Screen {
                 lightningDuration = 0.15f; // Set the duration of the flash
             }
         }
+
     }
 
     private void handlePlayerMovement(float delta) {
@@ -1398,6 +1435,89 @@ public class GDXGameScreen implements Screen {
         }
     }
 
+    private void renderInventoryOverlay(float delta) {
+        if (!isInventoryOpen) {
+            return;
+        }
+
+        float width = Gdx.graphics.getWidth() * 0.8f;
+        float height = Gdx.graphics.getHeight() * 0.8f;
+        float x = (Gdx.graphics.getWidth() - width) / 2;
+        float y = (Gdx.graphics.getHeight() - height) / 2;
+
+        spriteBatch.setProjectionMatrix(hudCamera.combined);
+        spriteBatch.begin();
+        spriteBatch.draw(inventoryBackground, x, y, width, height);
+        spriteBatch.end();
+
+        inventoryStage.getViewport().update(Gdx.graphics.getWidth(), Gdx.graphics.getHeight(), true);
+        inventoryStage.act(delta);
+        inventoryStage.draw();
+    }
+
+    private void setupInventoryUI() {
+        Table container = new Table();
+        inventoryStage.addActor(container);
+        container.setFillParent(true); // Make the container fill the whole stage
+        container.center(); // Center the content within the container
+
+        TextButton inventoryButton = new TextButton("Inventory", skin);
+        inventoryButton.setColor(97/255f, 188/255f, 112/255f, 1f);
+        TextButton skillsButton = new TextButton("Skills", skin);
+        skillsButton.setColor(97/255f, 188/255f, 112/255f, 1f);
+        TextButton socialButton = new TextButton("Social", skin);
+        socialButton.setColor(97/255f, 188/255f, 112/255f, 1f);
+        TextButton mapButton = new TextButton("Map", skin);
+        mapButton.setColor(97/255f, 188/255f, 112/255f, 1f);
+        TextButton backButton = new TextButton("Close", skin);
+        backButton.setColor(97/255f, 188/255f, 112/255f, 1f);
+
+        inventoryButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                System.out.println("Inventory tab clicked");
+            }
+        });
+
+        skillsButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                System.out.println("Skills tab clicked");
+            }
+        });
+
+        socialButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                System.out.println("Social tab clicked");
+            }
+        });
+
+        mapButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                System.out.println("Map tab clicked");
+            }
+        });
+
+        backButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                isInventoryOpen = false;
+            }
+        });
+
+        float buttonWidth = 200f;
+        float buttonPad = 10f;
+
+        // Add buttons to the container in a single column
+        container.add(inventoryButton).width(buttonWidth).pad(buttonPad).row();
+        container.add(skillsButton).width(buttonWidth).pad(buttonPad).row();
+        container.add(socialButton).width(buttonWidth).pad(buttonPad).row();
+        container.add(mapButton).width(buttonWidth).pad(buttonPad).row();
+        container.add(backButton).width(buttonWidth).pad(buttonPad).row();
+    }
+
     @Override
     public void resize(int width, int height) {
         stage.getViewport().update(width, height, true);
@@ -1422,6 +1542,9 @@ public class GDXGameScreen implements Screen {
         skin.dispose();
         spriteBatch.dispose();
         shapeRenderer.dispose();
+        inventoryStage.dispose();
+        inventoryBackground.dispose();
+
         clockTexture.dispose();
         hudFont.dispose();
 
@@ -1481,7 +1604,7 @@ public class GDXGameScreen implements Screen {
         femaleLeft2Texture.dispose();
         femaleRight1Texture.dispose();
         femaleRight2Texture.dispose();
+
+        textureManager.dispose();
     }
 }
-//test
-//he
