@@ -1,9 +1,11 @@
 package com.example.main.GDXviews;
 
+import java.util.ArrayList;
 import java.util.Random;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
+import com.badlogic.gdx.InputMultiplexer;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
@@ -16,11 +18,19 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
+import com.badlogic.gdx.scenes.scene2d.InputEvent;
+import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.scenes.scene2d.ui.*;
+import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
+import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
+import com.example.main.GDXmodels.TextureManager;
+import com.example.main.Main;
 import com.example.main.controller.GameMenuController;
 import com.example.main.enums.design.TileType;
 import com.example.main.enums.design.Weather;
+import com.example.main.enums.player.Skills;
 import com.example.main.models.App;
 import com.example.main.models.Date;
 import com.example.main.models.Game;
@@ -29,6 +39,7 @@ import com.example.main.models.Player;
 import com.example.main.models.Tile;
 import com.example.main.models.Time;
 import com.example.main.models.User;
+import com.example.main.models.item.Item;
 
 public class GDXGameScreen implements Screen {
     private Stage stage;
@@ -52,6 +63,8 @@ public class GDXGameScreen implements Screen {
     private float timeAccumulator = 0f;
     private static final float SECONDS_PER_10_IN_GAME_MINUTES = 0.7f;
 
+    private TextureManager textureManager;
+
     // HUD Assets
     private Texture clockTexture;
     private BitmapFont hudFont;
@@ -61,6 +74,13 @@ public class GDXGameScreen implements Screen {
     private Array<Rectangle> rainParticles;
     private Array<Rectangle> snowParticles;
     private float weatherStateTime = 0f;
+
+    //Inventory Fields
+    private boolean isInventoryOpen = false;
+    private Stage inventoryStage;
+    private Texture inventoryBackground;
+    private Table menuContentTable;
+    private Table mainInventoryContainer;
 
     // NEW: Storm Effect Fields
     private float stormEffectTimer = 0f;
@@ -225,6 +245,8 @@ public class GDXGameScreen implements Screen {
         stoneVariantMap = new int[MAP_WIDTH][MAP_HEIGHT];
         waterVariantMap = new int[MAP_WIDTH][MAP_HEIGHT];
 
+        textureManager = new TextureManager();
+        textureManager.loadAllItemTextures();
         loadTextures();
         loadHudAssets();
         loadWeatherAssets();
@@ -238,6 +260,15 @@ public class GDXGameScreen implements Screen {
         generateRandomMaps();
 
         initializePlayerPosition();
+
+        inventoryStage = new Stage(new ScreenViewport());
+        inventoryBackground = new Texture("content/Cut/menu_background.png");
+        setupInventoryUI();
+
+        InputMultiplexer multiplexer = new InputMultiplexer();
+        multiplexer.addProcessor(stage);
+        multiplexer.addProcessor(inventoryStage);
+        Gdx.input.setInputProcessor(multiplexer);
     }
 
     private void loadHudAssets() {
@@ -260,17 +291,22 @@ public class GDXGameScreen implements Screen {
     @Override
     public void render(float delta) {
         handleInput(delta);
-        updateTime(delta);
+
+        if (!isInventoryOpen) {
+            updateTime(delta);
+        }
 
         Gdx.gl.glClearColor(0.2f, 0.3f, 0.3f, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
-        // Render Game World
         camera.update();
         spriteBatch.setProjectionMatrix(camera.combined);
         spriteBatch.begin();
         renderMap();
         spriteBatch.end();
+
+        renderWeather(delta);
+        renderDayNightOverlay();
 
         if (showMinimap) {
             renderMinimap();
@@ -279,6 +315,8 @@ public class GDXGameScreen implements Screen {
         renderWeather(delta);
         renderHud();
         renderDayNightOverlay();
+        renderHud();
+        renderInventoryOverlay(delta);
 
         stage.act(delta);
         stage.draw();
@@ -433,6 +471,17 @@ public class GDXGameScreen implements Screen {
     }
 
     private void handleInput(float delta) {
+        if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
+            isInventoryOpen = !isInventoryOpen;
+            if (isInventoryOpen) {
+                showMainMenuButtons(); // Show the main buttons when opening
+            }
+        }
+
+        if (isInventoryOpen) {
+            return; // Pause game world input while inventory is open
+        }
+
         handleMinimapToggle();
         handleTurnSwitching();
         handlePlayerMovement(delta);
@@ -1398,6 +1447,283 @@ public class GDXGameScreen implements Screen {
         }
     }
 
+    private void renderInventoryOverlay(float delta) {
+        if (!isInventoryOpen) {
+            return;
+        }
+
+        float width = Gdx.graphics.getWidth() * 0.8f;
+        float height = Gdx.graphics.getHeight() * 0.8f;
+        float x = (Gdx.graphics.getWidth() - width) / 2;
+        float y = (Gdx.graphics.getHeight() - height) / 2;
+
+        spriteBatch.setProjectionMatrix(hudCamera.combined);
+        spriteBatch.begin();
+        spriteBatch.draw(inventoryBackground, x, y, width, height);
+        spriteBatch.end();
+
+        inventoryStage.getViewport().update(Gdx.graphics.getWidth(), Gdx.graphics.getHeight(), true);
+        inventoryStage.act(delta);
+        inventoryStage.draw();
+    }
+
+    private void setupInventoryUI() {
+        mainInventoryContainer = new Table();
+        inventoryStage.addActor(mainInventoryContainer);
+        mainInventoryContainer.setFillParent(true);
+        mainInventoryContainer.center();
+
+        menuContentTable = new Table();
+        mainInventoryContainer.add(menuContentTable).expand().fill();
+    }
+
+    private void showMainMenuButtons() {
+        menuContentTable.clear();
+
+        TextButton inventoryButton = new TextButton("Inventory", skin);
+        TextButton skillsButton = new TextButton("Skills", skin);
+        TextButton socialButton = new TextButton("Social", skin);
+        TextButton mapButton = new TextButton("Map", skin);
+        TextButton settingsButton = new TextButton("Settings", skin);
+        TextButton closeButton = new TextButton("Close", skin);
+
+        inventoryButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                showInventoryDisplay();
+            }
+        });
+
+        skillsButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                showSkillsDisplay();
+            }
+        });
+
+        socialButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                showSocialDisplay();
+            }
+        });
+
+        mapButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                showMinimap = !showMinimap;
+                isInventoryOpen = false; // Close menu to see the map
+            }
+        });
+
+        settingsButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                showSettingsMenu();
+            }
+        });
+
+        closeButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                isInventoryOpen = false;
+            }
+        });
+
+        float buttonWidth = 200f;
+        float buttonPad = 10f;
+
+        menuContentTable.add(inventoryButton).width(buttonWidth).pad(buttonPad).row();
+        menuContentTable.add(skillsButton).width(buttonWidth).pad(buttonPad).row();
+        menuContentTable.add(socialButton).width(buttonWidth).pad(buttonPad).row();
+        menuContentTable.add(mapButton).width(buttonWidth).pad(buttonPad).row();
+        menuContentTable.add(settingsButton).width(buttonWidth).pad(buttonPad).row();
+        menuContentTable.add(closeButton).width(buttonWidth).pad(buttonPad).row();
+    }
+
+    private void showInventoryDisplay() {
+        menuContentTable.clear();
+
+        Table itemsTable = new Table();
+        updateInventoryGrid(itemsTable);
+
+        // Create a new style for the ScrollPane
+        ScrollPane.ScrollPaneStyle scrollPaneStyle = new ScrollPane.ScrollPaneStyle();
+        // Set its background to be the same as the main menu
+        scrollPaneStyle.background = new TextureRegionDrawable(new TextureRegion(inventoryBackground));
+
+        // Create the ScrollPane with the new style
+        ScrollPane scrollPane = new ScrollPane(itemsTable, scrollPaneStyle);
+        scrollPane.setFadeScrollBars(false);
+        scrollPane.setScrollingDisabled(true, false); // Enables vertical scrolling
+
+        menuContentTable.add(scrollPane).expand().fill().pad(20).row();
+        addBackButtonToMenu();
+    }
+    private void showSkillsDisplay() {
+        menuContentTable.clear();
+        Player currentPlayer = game.getCurrentPlayer();
+        if (currentPlayer == null) return;
+
+        Table skillsTable = new Table();
+        TooltipManager tooltipManager = new TooltipManager();
+        tooltipManager.instant();
+
+        // --- NEW: Programmatically create a style for the ProgressBar ---
+        ProgressBar.ProgressBarStyle barStyle = new ProgressBar.ProgressBarStyle();
+        // Use simple, reliable drawables from the default skin
+        barStyle.background = skin.getDrawable("default-slider");
+        barStyle.knobBefore = skin.getDrawable("default-slider-knob");
+        // --- End of New Code ---
+
+        for (Skills skill : Skills.values()) {
+            Table skillRow = new Table();
+
+            // Icon and Tooltip
+            Texture iconTexture = textureManager.getTexture(skill.name() + "_Skill_Icon");
+            Image icon;
+            if (iconTexture != null) {
+                icon = new Image(iconTexture);
+                Tooltip<Label> tooltip = new Tooltip<>(new Label(skill.getSkillDescription(), skin));
+                icon.addListener(tooltip);
+            } else {
+                icon = new Image(skin.getDrawable("default-round"));
+                Gdx.app.log("Skills", "Missing texture for skill icon: " + skill.name() + "_Skill_Icon.png");
+            }
+            skillRow.add(icon).size(48, 48).padRight(10);
+
+            // Name
+            skillRow.add(new Label(skill.name(), skin)).width(100);
+
+            // Progress Bar - Using the new custom style
+            ProgressBar progressBar = new ProgressBar(0, 100, 1, false, barStyle);
+
+            // Calculate and set progress
+            int currentExp = currentPlayer.getSkillExperience(skill);
+            int expForNextLevel = skill.getExpForNextLevel();
+            float progress = (expForNextLevel > 0) ? ((float)currentExp / expForNextLevel) * 100f : 0f;
+            progressBar.setValue(progress);
+
+            skillRow.add(progressBar).width(200).padRight(10);
+
+            // Level
+            skillRow.add(new Label("Level " + currentPlayer.getSkillLevel(skill), skin));
+
+            skillsTable.add(skillRow).padBottom(10).row();
+        }
+
+        menuContentTable.add(skillsTable).expand().center().row();
+        addBackButtonToMenu();
+    }
+
+    private void showSocialDisplay() {
+        menuContentTable.clear();
+
+        Stack socialStack = new Stack();
+        socialStack.add(new Image(inventoryBackground));
+
+        Table contentTable = new Table();
+
+        Table socialInfoTable = new Table();
+        String playerFriendships = controller.showAllFriendShips().Message();
+        String npcFriendships = controller.showNPCFriendships().Message();
+
+        socialInfoTable.add(new Label("--- Player Friendships ---", skin)).padBottom(10).row();
+        socialInfoTable.add(new Label(playerFriendships, skin)).left().padBottom(20).row();
+        socialInfoTable.add(new Label("--- NPC Friendships ---", skin)).padBottom(10).row();
+        socialInfoTable.add(new Label(npcFriendships, skin)).left().row();
+
+        ScrollPane scrollPane = new ScrollPane(socialInfoTable, skin);
+        scrollPane.setFadeScrollBars(false);
+
+        contentTable.add(scrollPane).expand().fill().pad(40).row();
+
+        socialStack.add(contentTable);
+        menuContentTable.add(socialStack).width(Gdx.graphics.getWidth() * 0.8f).height(Gdx.graphics.getHeight() * 0.8f);
+        addBackButtonToMenu();
+    }
+
+    private void showSettingsMenu() {
+        menuContentTable.clear();
+
+        TextButton leaveGameButton = new TextButton("Leave Game", skin);
+        TextButton kickPlayerButton = new TextButton("Kick Player", skin);
+
+        leaveGameButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                isInventoryOpen = false;
+                Main.getInstance().setScreen(new GDXMainMenu());
+            }
+        });
+
+        kickPlayerButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                System.out.println("Kick Player clicked - functionality not implemented.");
+            }
+        });
+
+        menuContentTable.add(leaveGameButton).width(200).pad(10).row();
+        menuContentTable.add(kickPlayerButton).width(200).pad(10).row();
+        addBackButtonToMenu();
+    }
+
+    private void addBackButtonToMenu() {
+        TextButton backButton = new TextButton("Back", skin);
+        backButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                showMainMenuButtons();
+            }
+        });
+        menuContentTable.add(backButton).pad(10).bottom().left();
+    }
+
+    private void updateInventoryGrid(Table table) {
+        table.clear();
+        Player currentPlayer = game.getCurrentPlayer();
+        if (currentPlayer == null) return;
+
+        ArrayList<Item> items = currentPlayer.getInventory().getItems();
+        int column = 0;
+        final int ITEMS_PER_ROW = 4;
+
+        for (Item item : items) {
+            String key = generateTextureKey(item);
+            Texture texture = textureManager.getTexture(key);
+
+            Table itemSlot = new Table(skin);
+            itemSlot.setBackground("default-round");
+
+            if (texture != null) {
+                itemSlot.add(new Image(texture)).size(48, 48);
+            } else {
+                itemSlot.add(new Label("?", skin)).size(48, 48);
+                Gdx.app.log("Inventory", "Missing texture for item: '" + item.getName() + "' (tried key: '" + key + "')");
+            }
+
+            itemSlot.row();
+            itemSlot.add(new Label(String.valueOf(item.getNumber()), skin));
+
+            table.add(itemSlot).pad(4);
+            column++;
+            if (column >= ITEMS_PER_ROW) {
+                table.row();
+                column = 0;
+            }
+        }
+    }
+
+    private String generateTextureKey(Item item) {
+        if (item == null || item.getName() == null) {
+            return "Unknown";
+        }
+        // This version relies on the item's display name matching the asset file name.
+        // Example: item.getName() -> "Basic Fertilizer" -> "Basic_Fertilizer"
+        return item.getName().replace(" ", "_");
+    }
+
     @Override
     public void resize(int width, int height) {
         stage.getViewport().update(width, height, true);
@@ -1422,6 +1748,10 @@ public class GDXGameScreen implements Screen {
         skin.dispose();
         spriteBatch.dispose();
         shapeRenderer.dispose();
+        inventoryStage.dispose();
+        inventoryBackground.dispose();
+        textureManager.dispose();
+
         clockTexture.dispose();
         hudFont.dispose();
 
@@ -1481,6 +1811,8 @@ public class GDXGameScreen implements Screen {
         femaleLeft2Texture.dispose();
         femaleRight1Texture.dispose();
         femaleRight2Texture.dispose();
+
+        textureManager.dispose();
     }
 }
 //test

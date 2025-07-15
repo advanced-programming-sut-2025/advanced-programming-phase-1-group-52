@@ -28,7 +28,7 @@ public enum FoodType implements ItemType {
     SurvivalBurger("Survival Burger", 125, 180, Skills.Foraging, false, 5),
     DishOfTheSea("Dish O' the Sea", 150, 220, Skills.Fishing, false, 5),
     SeaFormPudding("SeaFoam Pudding", 175, 300, Skills.Fishing, false, 10),
-    MinersTreat("Miner's Treat", 125, 200, Skills.Extraction, false, 5),
+    MinersTreat("Miner's Treat", 125, 200, Skills.Mining, false, 5),
     Beer("Beer", 100, 0, null, false, 0),
     Coffee("Coffee", 100, 0, null, false, 0);
 

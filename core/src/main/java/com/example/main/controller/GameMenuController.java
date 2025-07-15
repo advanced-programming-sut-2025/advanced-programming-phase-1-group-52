@@ -1708,7 +1708,7 @@ public class GameMenuController {
             if (food.getFoodType().getSkillBuff().equals(Skills.Foraging)){
                 player.foraging();
             }
-            if (food.getFoodType().getSkillBuff().equals(Skills.Extraction)){
+            if (food.getFoodType().getSkillBuff().equals(Skills.Mining)){
                 player.extract();
             }
         }
@@ -2037,7 +2037,7 @@ public class GameMenuController {
 
     public Result showExtractionSkill() {
         Player player = game.getCurrentPlayer();
-        return new Result(true, "your mining skill is: " + player.getSkillLevel(Skills.Extraction));
+        return new Result(true, "your mining skill is: " + player.getSkillLevel(Skills.Mining));
     }
 
     public void menuExit() {
