@@ -46,7 +46,7 @@ public class TradeMenuController {
             return new Result(false, "Insufficient funds.");
         }
 
-        Buy buyRequest = new Buy(buyer, seller, itemName, amount, price);
+        Buy buyRequest = new Buy(buyer, seller, buyer, seller, itemName, amount, price);
         buyer.addTrade(buyRequest);
         seller.addTrade(buyRequest);
         seller.addNotif(buyer, "Buy request received!");
@@ -92,7 +92,7 @@ public class TradeMenuController {
             return new Result(false, "Not enough items in inventory.");
         }
 
-        Buy buyOffer = new Buy(buyer, seller, itemName, amount, price);
+        Buy buyOffer = new Buy(seller, buyer, buyer, seller, itemName, amount, price);
         buyer.addTrade(buyOffer);
         seller.addTrade(buyOffer);
         buyer.addNotif(seller, "Buy offer received!");
@@ -130,7 +130,7 @@ public class TradeMenuController {
             return new Result(false, "Not enough giving items in inventory.");
         }
 
-        TradeRequest tradeRequest = new TradeRequest(buyer, seller, givingItemName, givingAmountInt, receivingItemName, receivingAmountInt);
+        TradeRequest tradeRequest = new TradeRequest(buyer, seller, buyer, seller, givingItemName, givingAmountInt, receivingItemName, receivingAmountInt);
         buyer.addTrade(tradeRequest);
         seller.addTrade(tradeRequest);
         seller.addNotif(buyer, "Trade request received!");
@@ -168,7 +168,7 @@ public class TradeMenuController {
             return new Result(false, "Not enough giving items in inventory.");
         }
 
-        Trade tradeOffer = new TradeRequest(buyer, seller, givingItemName, givingAmountInt, receivingItemName, receivingAmountInt);
+        Trade tradeOffer = new TradeRequest(seller, buyer, buyer, seller, givingItemName, givingAmountInt, receivingItemName, receivingAmountInt);
         buyer.addTrade(tradeOffer);
         seller.addTrade(tradeOffer);
         buyer.addNotif(buyer, "Trade offer received!");

@@ -11,11 +11,11 @@ public abstract class Trade {
     protected boolean isAccepted = false;
     protected boolean isAnswered = false;
 
-    public Trade(Player buyer, Player seller) {
+    public Trade(Player sender, Player receiver, Player buyer, Player seller) {
+        this.sender = sender;
+        this.receiver = receiver;
         this.buyer = buyer;
         this.seller = seller;
-        this.sender = buyer;  // For trades, sender is typically the buyer
-        this.receiver = seller; // For trades, receiver is typically the seller
         this.tradeId = tradeCounter++;
     }
 

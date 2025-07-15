@@ -5,8 +5,8 @@ public class Buy extends Trade {
     private final int amount;
     private final int price;
 
-    public Buy(Player buyer, Player seller, String itemName, int amount, int price) {
-        super(buyer, seller);
+    public Buy(Player sender, Player receiver, Player buyer, Player seller, String itemName, int amount, int price) {
+        super(sender, receiver, buyer, seller);
         this.itemName = itemName;
         this.amount = amount;
         this.price = price;
