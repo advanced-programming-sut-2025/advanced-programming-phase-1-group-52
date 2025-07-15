@@ -26,10 +26,18 @@ public class Buy extends Trade {
 
     @Override
     public String toString() {
+        String status = "PENDING";
+        if (this.isAccepted) {
+            status = "ACCEPTED";
+        } else if (this.isAnswered && !this.isAccepted) {
+            status = "REJECTED";
+        }
+        
         return """
                Buy:
-               Buyer: """ + this.buyer.getUsername() + "\nSeller: " + this.seller.getUsername() +
+               Sender:""" + this.sender.getUsername() + "\nReceiver: " + this.receiver.getUsername() +
+            "\nBuyer: " + this.buyer.getUsername() + "\nSeller: " + this.seller.getUsername() +
             "\nGiving Item: " + this.itemName + "\nGiving Amount: " + this.amount + "\nPrice: " + this.price +
-            "\nId: " + this.tradeId + "\n-----------------------\n";
+            "\nStatus: " + status + "\nId: " + this.tradeId + "\n-----------------------\n";
     }
 }

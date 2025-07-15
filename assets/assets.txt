@@ -4535,15 +4535,11 @@ content/Content (unpacked)/TileSheets/weapons.png
 content/Content (unpacked)/TileSheets/wizard_furniture.png
 content/Content (unpacked)/TileSheets/wizard_furnitureFront.png
 content/Content (unpacked)/VolcanoLayouts/Layouts.png
-content/Cut/map_elements/Blacksmith.png
-content/Cut/map_elements/Carpenter's_Shop.png
-content/Cut/map_elements/Fish_Shop.png
-content/Cut/map_elements/Jojamart.png
-content/Cut/map_elements/Pierres_shop.png
-content/Cut/map_elements/Ranch.png
-content/Cut/map_elements/Saloon.png
+content/Cut/map_elements/blacksmith.png
 content/Cut/map_elements/bush.png
+content/Cut/map_elements/carpenters_shop.png
 content/Cut/map_elements/copper_stone.png
+content/Cut/map_elements/fish_shop.png
 content/Cut/map_elements/gold_stone.png
 content/Cut/map_elements/grass1.png
 content/Cut/map_elements/grass2.png
@@ -4552,23 +4548,28 @@ content/Cut/map_elements/ground2.png
 content/Cut/map_elements/iridium_stone.png
 content/Cut/map_elements/iron_stone.png
 content/Cut/map_elements/jewel_stone.png
+content/Cut/map_elements/jojamart.png
 content/Cut/map_elements/lake1.png
 content/Cut/map_elements/lake2.png
 content/Cut/map_elements/lake3.png
+content/Cut/map_elements/marines_ranch.png
 content/Cut/map_elements/npc_house1.png
 content/Cut/map_elements/npc_house2.png
 content/Cut/map_elements/npc_house3.png
 content/Cut/map_elements/npc_house4.png
 content/Cut/map_elements/npc_house5.png
+content/Cut/map_elements/pierres_shop.png
 content/Cut/map_elements/player_house1.png
 content/Cut/map_elements/player_house2.png
 content/Cut/map_elements/player_house3.png
 content/Cut/map_elements/shoveled.png
+content/Cut/map_elements/stardrop_saloon.png
 content/Cut/map_elements/stone1.png
 content/Cut/map_elements/stone2.png
 content/Cut/map_elements/tree1.png
 content/Cut/map_elements/tree2.png
 content/Cut/map_elements/tree3.png
+content/Cut/menu_background.png
 content/Cut/player/female_down1.png
 content/Cut/player/female_down2.png
 content/Cut/player/female_idle.png
@@ -7200,6 +7201,10 @@ content/TileSheets/weapons.png
 content/TileSheets/wizard_furniture.png
 content/TileSheets/wizard_furnitureFront.png
 content/VolcanoLayouts/Layouts.png
+content/clock/Clock.png
+content/clock/ClockWithJournal.png
+content/clock/GoldDisplay.png
+content/clock/WeddingDayHeart.png
 hs_err_pid100131.log
 hs_err_pid102893.log
 hs_err_pid103945.log
@@ -7277,11 +7282,14 @@ hs_err_pid4753.log
 hs_err_pid48027.log
 hs_err_pid49151.log
 hs_err_pid49723.log
+hs_err_pid55758.log
 hs_err_pid56364.log
 hs_err_pid59134.log
+hs_err_pid59597.log
 hs_err_pid5976.log
 hs_err_pid61294.log
 hs_err_pid61693.log
+hs_err_pid61741.log
 hs_err_pid64833.log
 hs_err_pid66319.log
 hs_err_pid66461.log
