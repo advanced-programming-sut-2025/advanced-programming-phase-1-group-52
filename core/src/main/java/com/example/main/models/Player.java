@@ -96,6 +96,14 @@ public class Player {
         else this.energy += amount;
     }
 
+    public void reduceEnergy(int amount) {
+        this.energy -= amount;
+        if (this.energy < 0) {
+            this.energy = 0;
+            this.isFainted = true;
+        }
+    }
+
     public BankAccount getBankAccount() {
         return this.bankAccount;
     }
@@ -193,10 +201,10 @@ public class Player {
             return wateringCanHandler(tile);
         } else if (typeName.equals("Scythe")) {
             return scytheHandler(tile);
-        // } else if (typeName.equals("MilkPail")) {
-        //     return milkPaleHandler();
-        // } else if (typeName.equals("Shear")) {
-        //     return shearHandler();
+            // } else if (typeName.equals("MilkPail")) {
+            //     return milkPaleHandler();
+            // } else if (typeName.equals("Shear")) {
+            //     return shearHandler();
         } else {
             return new Result(false, "Unknown tool type");
         }
@@ -677,18 +685,18 @@ public class Player {
             if (h.getId() == housingId) {
                 if (h.addAnimal(purchasedAnimal)) {
                     return new Result(true,
-                            purchasedAnimal.getType().getName() +
-                                    " named \"" + purchasedAnimal.getName() +
-                                    "\" was successfully added to " +
-                                    h.getType().getName() +
-                                    " number " + housingId + "."
+                        purchasedAnimal.getType().getName() +
+                            " named \"" + purchasedAnimal.getName() +
+                            "\" was successfully added to " +
+                            h.getType().getName() +
+                            " number " + housingId + "."
                     );
                 } else {
                     return new Result(false,
-                            "The capacity of " +
-                                    h.getType().getName() +
-                                    " number " + housingId +
-                                    " is full."
+                        "The capacity of " +
+                            h.getType().getName() +
+                            " number " + housingId +
+                            " is full."
                     );
                 }
             }
@@ -714,5 +722,15 @@ public class Player {
 
     public int getGiftId() {
         return giftId;
+    }
+
+    public ArrayList<Tool> getTools() {
+        ArrayList<Tool> tools = new ArrayList<>();
+        for (Item item : this.inventory.getItems()) {
+            if (item instanceof Tool) {
+                tools.add((Tool) item);
+            }
+        }
+        return tools;
     }
 }

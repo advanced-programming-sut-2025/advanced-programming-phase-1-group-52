@@ -9,7 +9,6 @@ import com.example.main.enums.design.TileType;
 import com.example.main.enums.design.Weather;
 import com.example.main.enums.items.CropType;
 import com.example.main.models.item.Crop;
-import com.example.main.models.item.Fruit;
 import com.example.main.models.item.Good;
 import com.example.main.models.item.Item;
 
@@ -79,7 +78,7 @@ public class Game {
         this.todayWeather = this.tomorrowWeather;
         randomizeTomorrowWeather();
         handlePlayersCoordinateInMorning();
-        handleFaintedPlayers();
+        handlePlayersEnergy();
         if (map != null) {
             map.generateRandomForagingSeeds();
             map.generatePlantsFromSeeds();
@@ -293,13 +292,16 @@ public class Game {
         this.tomorrowWeather = Weather.Sunny;
     }
 
-    private void handleFaintedPlayers(){
+    private void handlePlayersEnergy(){
         Player player;
         for(User user : players){
             player = user.currentPlayer();
             if(player.isFainted()){
                 player.setFainted(false);
                 player.setEnergy(150);
+            }
+            else {
+                player.setEnergy(200);
             }
         }
     }

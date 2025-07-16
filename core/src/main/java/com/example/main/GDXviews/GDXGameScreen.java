@@ -40,6 +40,7 @@ import com.example.main.models.Tile;
 import com.example.main.models.Time;
 import com.example.main.models.User;
 import com.example.main.models.item.Item;
+import com.example.main.models.item.Tool;
 
 public class GDXGameScreen implements Screen {
     private Stage stage;
@@ -81,6 +82,19 @@ public class GDXGameScreen implements Screen {
     private Texture inventoryBackground;
     private Table menuContentTable;
     private Table mainInventoryContainer;
+
+    // NEW: Tool Selection Menu Fields
+    private boolean isToolMenuOpen = false;
+    private Stage toolMenuStage;
+    private ArrayList<Tool> playerTools;
+    private int currentToolIndex = 0;
+    private Image currentToolImage;
+    private Label currentToolLabel;
+
+    // NEW: Fainted Player UI Fields
+    private Label faintedMessageLabel;
+    private float faintedMessageTimer = 0f;
+    private static final float FAINTED_MESSAGE_DURATION = 2.5f;
 
     // NEW: Storm Effect Fields
     private float stormEffectTimer = 0f;
@@ -236,6 +250,16 @@ public class GDXGameScreen implements Screen {
         camera.position.set(worldWidth / 2f, worldHeight / 2f, 0);
         camera.update();
 
+        faintedMessageLabel = new Label("I'm too exhausted to move...", skin);
+        faintedMessageLabel.setColor(Color.RED);
+        faintedMessageLabel.setVisible(false); // Start with the message hidden
+
+        Table messageTable = new Table();
+        messageTable.top().padTop(50);
+        messageTable.setFillParent(true);
+        messageTable.add(faintedMessageLabel);
+        stage.addActor(messageTable);
+
         random = new Random();
         baseGroundMap = new int[MAP_WIDTH][MAP_HEIGHT];
         grassVariantMap = new int[MAP_WIDTH][MAP_HEIGHT];
@@ -265,9 +289,12 @@ public class GDXGameScreen implements Screen {
         inventoryBackground = new Texture("content/Cut/menu_background.png");
         setupInventoryUI();
 
+        setupToolMenuUI();
+
         InputMultiplexer multiplexer = new InputMultiplexer();
-        multiplexer.addProcessor(stage);
         multiplexer.addProcessor(inventoryStage);
+        multiplexer.addProcessor(toolMenuStage); // Add the new stage
+        multiplexer.addProcessor(stage);
         Gdx.input.setInputProcessor(multiplexer);
     }
 
@@ -316,7 +343,17 @@ public class GDXGameScreen implements Screen {
         renderHud();
         renderDayNightOverlay();
         renderHud();
+        renderDayNightOverlay();
+        renderHud();
+        renderToolMenu(delta);
         renderInventoryOverlay(delta);
+
+        if (faintedMessageTimer > 0) {
+            faintedMessageTimer -= delta;
+            if (faintedMessageTimer <= 0) {
+                faintedMessageLabel.setVisible(false);
+            }
+        }
 
         stage.act(delta);
         stage.draw();
@@ -478,8 +515,17 @@ public class GDXGameScreen implements Screen {
             }
         }
 
-        if (isInventoryOpen) {
-            return; // Pause game world input while inventory is open
+        if (Gdx.input.isKeyJustPressed(Input.Keys.T)) {
+            isToolMenuOpen = !isToolMenuOpen;
+            if (isToolMenuOpen) {
+                playerTools = game.getCurrentPlayer().getTools();
+                currentToolIndex = 0;
+                updateToolMenuDisplay();
+            }
+        }
+
+        if (isInventoryOpen || isToolMenuOpen) {
+            return;
         }
 
         handleMinimapToggle();
@@ -497,6 +543,10 @@ public class GDXGameScreen implements Screen {
             if (controller != null) {
                 controller.changeDate("1");
             }
+        }
+
+        if(Gdx.input.isKeyJustPressed(Input.Keys.F1)){
+            controller.cheatSetEnergy(200);
         }
 
         // In the handleInput method...
@@ -528,6 +578,7 @@ public class GDXGameScreen implements Screen {
                 currentPlayer.setCurrentX(playerTargetX);
                 currentPlayer.setCurrentY(playerTargetY);
                 playerMoving = false;
+                currentPlayer.reduceEnergy(10);
             }
             return;
         }
@@ -536,6 +587,12 @@ public class GDXGameScreen implements Screen {
         boolean downPressed = Gdx.input.isKeyPressed(Input.Keys.S) || Gdx.input.isKeyPressed(Input.Keys.DOWN);
         boolean leftPressed = Gdx.input.isKeyPressed(Input.Keys.A) || Gdx.input.isKeyPressed(Input.Keys.LEFT);
         boolean rightPressed = Gdx.input.isKeyPressed(Input.Keys.D) || Gdx.input.isKeyPressed(Input.Keys.RIGHT);
+
+        if (currentPlayer.isFainted() && (upPressed || downPressed || leftPressed || rightPressed)) {
+            faintedMessageLabel.setVisible(true);
+            faintedMessageTimer = FAINTED_MESSAGE_DURATION;
+            return; // Prevent any further movement logic
+        }
 
         int newX = currentPlayer.currentX();
         int newY = currentPlayer.currentY();
@@ -818,6 +875,29 @@ public class GDXGameScreen implements Screen {
 
             float worldX = playerX * TILE_SIZE;
             float worldY = (MAP_HEIGHT - 1 - playerY) * TILE_SIZE;
+
+            if (player.isFainted()) {
+                // Draw the sleeping "Z z Z" animation
+                hudFont.setColor(Color.WHITE);
+                // Animate the text bobbing up and down
+                float bobOffset = (float) (Math.sin(weatherStateTime * 4) * 5);
+                hudFont.draw(spriteBatch, "Z z Z", worldX + 8, worldY + 48 + bobOffset);
+            } else {
+                // Draw the normal player sprite
+                Texture playerTexture = getPlayerTexture(player);
+                float playerWidth = playerTexture.getWidth() * 2;
+                float playerHeight = playerTexture.getHeight() * 2;
+                float renderX = worldX + (TILE_SIZE - playerWidth) / 2f;
+                float renderY = worldY;
+
+                if (player.equals(game.getCurrentPlayer())) {
+                    spriteBatch.draw(playerTexture, renderX, renderY, playerWidth, playerHeight);
+                } else {
+                    spriteBatch.setColor(1f, 1f, 1f, 0.7f);
+                    spriteBatch.draw(playerTexture, renderX, renderY, playerWidth, playerHeight);
+                    spriteBatch.setColor(1f, 1f, 1f, 1f);
+                }
+            }
 
             Texture playerTexture = getPlayerTexture(player);
 
@@ -1307,8 +1387,10 @@ public class GDXGameScreen implements Screen {
         Player player = game.getCurrentPlayer();
         if (player != null) {
             String balanceString = String.valueOf(player.getBankAccount().getBalance());
-            // You might need to adjust the X and Y coordinates to perfectly align the text
-            hudFont.draw(spriteBatch, balanceString, clockX + 140, clockY + 40);
+            balanceString += " | ";
+            String energyString = String.valueOf(player.getEnergy());
+            hudFont.draw(spriteBatch, balanceString, clockX + 110, clockY + 40);
+            hudFont.draw(spriteBatch, energyString,clockX + 170, clockY + 40);
         }
         // --- END NEW ---
 
@@ -1467,6 +1549,13 @@ public class GDXGameScreen implements Screen {
         inventoryStage.draw();
     }
 
+    private void renderToolMenu(float delta) {
+        if (!isToolMenuOpen) return;
+
+        toolMenuStage.act(delta);
+        toolMenuStage.draw();
+    }
+
     private void setupInventoryUI() {
         mainInventoryContainer = new Table();
         inventoryStage.addActor(mainInventoryContainer);
@@ -1560,6 +1649,7 @@ public class GDXGameScreen implements Screen {
         menuContentTable.add(scrollPane).expand().fill().pad(20).row();
         addBackButtonToMenu();
     }
+
     private void showSkillsDisplay() {
         menuContentTable.clear();
         Player currentPlayer = game.getCurrentPlayer();
@@ -1724,6 +1814,85 @@ public class GDXGameScreen implements Screen {
         return item.getName().replace(" ", "_");
     }
 
+    private void setupToolMenuUI() {
+        toolMenuStage = new Stage(new ScreenViewport());
+
+        Table toolTable = new Table();
+        toolTable.setBackground(skin.newDrawable("white", new Color(0, 0, 0, 0.5f)));
+        toolMenuStage.addActor(toolTable);
+
+        // Initial placeholder image and label
+        currentToolImage = new Image();
+        currentToolLabel = new Label("", skin);
+
+        TextButton leftButton = new TextButton("<", skin);
+        TextButton rightButton = new TextButton(">", skin);
+        TextButton acceptButton = new TextButton("Equip", skin);
+
+        leftButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                if (!playerTools.isEmpty()) {
+                    currentToolIndex = (currentToolIndex - 1 + playerTools.size()) % playerTools.size();
+                    updateToolMenuDisplay();
+                }
+            }
+        });
+
+        rightButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                if (!playerTools.isEmpty()) {
+                    currentToolIndex = (currentToolIndex + 1) % playerTools.size();
+                    updateToolMenuDisplay();
+                }
+            }
+        });
+
+        acceptButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                if (!playerTools.isEmpty()) {
+                    Tool selectedTool = playerTools.get(currentToolIndex);
+                    game.getCurrentPlayer().setCurrentTool(selectedTool);
+                    isToolMenuOpen = false; // Close menu after equipping
+                }
+            }
+        });
+
+        // Layout the tool menu
+        toolTable.add(leftButton).pad(5);
+        toolTable.add(currentToolImage).size(64, 64).pad(5);
+        toolTable.add(rightButton).pad(5);
+        toolTable.row();
+        toolTable.add(currentToolLabel).colspan(3).pad(5);
+        toolTable.row();
+        toolTable.add(acceptButton).colspan(3).pad(5);
+
+        // Position the table in the bottom-left corner
+        toolTable.pack();
+        toolTable.setPosition(10, 10);
+    }
+
+    private void updateToolMenuDisplay() {
+        if (playerTools.isEmpty()) {
+            currentToolImage.setDrawable(null);
+            currentToolLabel.setText("No Tools");
+            return;
+        }
+
+        Tool tool = playerTools.get(currentToolIndex);
+        Texture texture = textureManager.getTexture(generateTextureKey(tool));
+
+        if (texture != null) {
+            currentToolImage.setDrawable(new Image(texture).getDrawable());
+        } else {
+            // Fallback if texture is missing
+            currentToolImage.setDrawable(skin.getDrawable("default-round"));
+        }
+        currentToolLabel.setText(tool.getName());
+    }
+
     @Override
     public void resize(int width, int height) {
         stage.getViewport().update(width, height, true);
@@ -1751,6 +1920,7 @@ public class GDXGameScreen implements Screen {
         inventoryStage.dispose();
         inventoryBackground.dispose();
         textureManager.dispose();
+        toolMenuStage.dispose();
 
         clockTexture.dispose();
         hudFont.dispose();
@@ -1815,5 +1985,3 @@ public class GDXGameScreen implements Screen {
         textureManager.dispose();
     }
 }
-//test
-//he

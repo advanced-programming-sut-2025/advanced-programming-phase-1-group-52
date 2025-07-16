@@ -73,7 +73,7 @@ public class GameMenu implements AppMenu {
             System.out.println(controller.energyShow().Message());
         }
         else if ((matcher = GameMenuCommands.CHEATEnergySet.getMatcher(input)) != null) {
-            System.out.println(controller.cheatSetEnergy(matcher.group("value")).Message());
+            //System.out.println(controller.cheatSetEnergy(matcher.group("value")).Message());
         }
         else if ((matcher = GameMenuCommands.CHEATEnergyUnlimited.getMatcher(input)) != null) {
             System.out.println(controller.cheatUnlimitedEnergy().Message());
