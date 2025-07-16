@@ -517,7 +517,7 @@ public class GDXGameScreen implements Screen {
             isToolMenuOpen = !isToolMenuOpen;
             if (isToolMenuOpen) {
                 playerTools = game.getCurrentPlayer().getTools();
-                currentToolIndex = 0; // Reset to the first tool
+                currentToolIndex = 0;
                 updateToolMenuDisplay();
             }
         }
