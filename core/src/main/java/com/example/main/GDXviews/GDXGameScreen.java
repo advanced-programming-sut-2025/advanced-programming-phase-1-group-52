@@ -522,7 +522,7 @@ public class GDXGameScreen implements Screen {
             }
         }
 
-        if (isInventoryOpen || isToolMenuOpen) { // Pause game if either menu is open
+        if (isInventoryOpen || isToolMenuOpen) {
             return;
         }
 
