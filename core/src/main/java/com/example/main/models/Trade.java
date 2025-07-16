@@ -5,11 +5,15 @@ public abstract class Trade {
     protected static int tradeCounter = 1;
     protected final Player buyer;
     protected final Player seller;
+    protected final Player sender;
+    protected final Player receiver;
     protected final int tradeId;
     protected boolean isAccepted = false;
     protected boolean isAnswered = false;
 
-    public Trade(Player buyer, Player seller) {
+    public Trade(Player sender, Player receiver, Player buyer, Player seller) {
+        this.sender = sender;
+        this.receiver = receiver;
         this.buyer = buyer;
         this.seller = seller;
         this.tradeId = tradeCounter++;
@@ -25,6 +29,14 @@ public abstract class Trade {
 
     public Player getSeller() {
         return seller;
+    }
+
+    public Player getSender() {
+        return sender;
+    }
+
+    public Player getReceiver() {
+        return receiver;
     }
 
     public int getTradeId() {

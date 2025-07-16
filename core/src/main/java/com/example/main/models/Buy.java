@@ -5,8 +5,8 @@ public class Buy extends Trade {
     private final int amount;
     private final int price;
 
-    public Buy(Player buyer, Player seller, String itemName, int amount, int price) {
-        super(buyer, seller);
+    public Buy(Player sender, Player receiver, Player buyer, Player seller, String itemName, int amount, int price) {
+        super(sender, receiver, buyer, seller);
         this.itemName = itemName;
         this.amount = amount;
         this.price = price;
@@ -26,10 +26,18 @@ public class Buy extends Trade {
 
     @Override
     public String toString() {
+        String status = "PENDING";
+        if (this.isAccepted) {
+            status = "ACCEPTED";
+        } else if (this.isAnswered && !this.isAccepted) {
+            status = "REJECTED";
+        }
+        
         return """
                Buy:
-               Buyer: """ + this.buyer.getUsername() + "\nSeller: " + this.seller.getUsername() +
+               Sender:""" + this.sender.getUsername() + "\nReceiver: " + this.receiver.getUsername() +
+            "\nBuyer: " + this.buyer.getUsername() + "\nSeller: " + this.seller.getUsername() +
             "\nGiving Item: " + this.itemName + "\nGiving Amount: " + this.amount + "\nPrice: " + this.price +
-            "\nId: " + this.tradeId + "\n-----------------------\n";
+            "\nStatus: " + status + "\nId: " + this.tradeId + "\n-----------------------\n";
     }
 }

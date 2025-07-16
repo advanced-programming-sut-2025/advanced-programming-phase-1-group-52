@@ -343,6 +343,8 @@ public class GDXGameScreen implements Screen {
         renderHud();
         renderDayNightOverlay();
         renderHud();
+        renderDayNightOverlay();
+        renderHud();
         renderToolMenu(delta);
         renderInventoryOverlay(delta);
 
@@ -1983,4 +1985,3 @@ public class GDXGameScreen implements Screen {
         textureManager.dispose();
     }
 }
-
