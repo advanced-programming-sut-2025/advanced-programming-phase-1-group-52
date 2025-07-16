@@ -40,6 +40,11 @@ public enum MineralType implements ItemType {
         return this.name;
     }
 
+    @Override
+    public String getEnumName() {
+        return name();
+    }
+
     public int getPrice() {
         return this.sellPrice;
     }

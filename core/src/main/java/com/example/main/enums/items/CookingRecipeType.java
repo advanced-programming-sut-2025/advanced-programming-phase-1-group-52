@@ -9,7 +9,7 @@ import com.example.main.enums.player.Skills;
 public enum CookingRecipeType implements ItemType {
     FriedEgg("Fried egg Recipe",50,null, false,0, 35, FoodType.FriedEgg) {
         {
-            ingredients.put(AnimalProductType.ChickenEgg, 1);
+            ingredients.put(AnimalProductType.Egg, 1);
         }
     },
 
@@ -229,6 +229,11 @@ public enum CookingRecipeType implements ItemType {
     @Override
     public String getName() {
         return this.displayName;
+    }
+
+    @Override
+    public String getEnumName() {
+        return name();
     }
 
     public FoodType getFoodType() {

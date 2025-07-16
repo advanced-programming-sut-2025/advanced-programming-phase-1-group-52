@@ -2,7 +2,7 @@ package com.example.main.enums.items;
 
 
 public enum MaterialType implements ItemType {
-    
+
     Egg("egg"),
     Milk("milk"),
     Cheese("cheese"),
@@ -107,5 +107,10 @@ public enum MaterialType implements ItemType {
     @Override
     public String getName() {
         return this.name;
+    }
+
+    @Override
+    public String getEnumName() {
+        return name();
     }
 }

@@ -5,56 +5,26 @@ import java.util.ArrayList;
 public enum AnimalType implements ItemType{
     Chicken("Chicken",800, true) {
         {
-            products.add(AnimalProductType.ChickenEgg);
-            products.add(AnimalProductType.BigChickenEgg);
+            products.add(AnimalProductType.Egg);
+            products.add(AnimalProductType.Large_Egg);
         }
     },
+    Blue_Chicken("Blue Chicken", 800, true),
+    Brown_Chicken("Brown Chicken", 800, true),
+    Golden_Chicken("Golden Chicken", 100000, true),
+    Void_Chicken("Void Chicken", 8000, true),
+    Duck("Duck", 1200, true),
+    Rabbit("Rabbit", 8000, true),
+    Dinosaur("Dinosaur", 10000, false),
 
-    Duck("Duck", 1200, true) {
-        {
-            products.add(AnimalProductType.DuckEgg);
-            products.add(AnimalProductType.DuckFeather);
-        }
-    },
+    Cow("Cow",5000, false),
+    Brown_Cow("Brown Cow", 5000, false),
+    White_Cow("White Cow", 5000, false),
+    Goat("Goat",4000, false),
+    Sheep("Sheep",8000, false),
+    Pig("Pig",16000, false),
+    Ostrich("Ostrich", 20000, false);
 
-    Rabbit("Rabbit", 1500, true) {
-        {
-            products.add(AnimalProductType.RabbitWool);
-            products.add(AnimalProductType.RabbitLeg);
-        }
-    },
-
-    Cow("Cow",5000, false) {
-        {
-            products.add(AnimalProductType.NormalCowMilk);
-            products.add(AnimalProductType.LargeCowMilk);
-        }
-    },
-
-    Goat("Goat",4000, false) {
-        {
-            products.add(AnimalProductType.NormalGoatMilk);
-            products.add(AnimalProductType.LargeGoatMilk);
-        }
-    },
-
-    Sheep("Sheep",3000, false) {
-        {
-            products.add(AnimalProductType.SheepWool);
-        }
-    },
-
-    Dinosaur("Dinosaur",10000, false) {
-        {
-            products.add(AnimalProductType.DinosaurEgg);
-        }
-    },
-
-    Pig("Pig",2500, false) {
-        {
-            products.add(AnimalProductType.Truffle);
-        }
-    };
 
     protected final ArrayList<AnimalProductType> products = new ArrayList<>();
     private final String name;
@@ -84,5 +54,10 @@ public enum AnimalType implements ItemType{
     @Override
     public String getName() {
         return this.name;
+    }
+
+    @Override
+    public String getEnumName() {
+        return name();
     }
 }

@@ -3,19 +3,19 @@ package com.example.main.enums.items;
 import java.util.Map;
 
 public enum ArtisanProductType implements ItemType {
-    Cloth(CraftingMachineType.LOOM,"cloth", "A bolt of fine wool cloth.", 0,4,Map.of(AnimalProductType.SheepWool, 1),470),
+    Cloth(CraftingMachineType.LOOM,"cloth", "A bolt of fine wool cloth.", 0,4,Map.of(AnimalProductType.Wool, 1),470),
     HONEY(CraftingMachineType.BEE_HOUSE,"honey", "It's a sweet syrup produced by bees.", 75, 52, null,350),
-    CHEESE(CraftingMachineType.CHEESE_PRESS, "cheese", "It's your basic cheese.", 100, 3, Map.of(AnimalProductType.NormalCowMilk, 1), 230),
-    BIG_CHEESE(CraftingMachineType.CHEESE_PRESS ,"big cheese", "It's your basic cheese.", 100, 3, Map.of(AnimalProductType.LargeCowMilk, 1), 345),
+    CHEESE(CraftingMachineType.CHEESE_PRESS, "cheese", "It's your basic cheese.", 100, 3, Map.of(AnimalProductType.Milk, 1), 230),
+    BIG_CHEESE(CraftingMachineType.CHEESE_PRESS ,"big cheese", "It's your basic cheese.", 100, 3, Map.of(AnimalProductType.Large_Milk, 1), 345),
 
-    GOAT_CHEESE(CraftingMachineType.CHEESE_PRESS ,"goat cheese", "Soft cheese made from goat's milk.", 100, 3, Map.of(AnimalProductType.NormalGoatMilk, 1), 400),
-    BIG_GOAT_CHEESE(CraftingMachineType.CHEESE_PRESS ,"big goat Cheese", "Soft cheese made from goat's milk.", 100, 3, Map.of(AnimalProductType.LargeGoatMilk, 1), 600),
+    GOAT_CHEESE(CraftingMachineType.CHEESE_PRESS ,"goat cheese", "Soft cheese made from goat's milk.", 100, 3, Map.of(AnimalProductType.Goat_Milk, 1), 400),
+    BIG_GOAT_CHEESE(CraftingMachineType.CHEESE_PRESS ,"big goat Cheese", "Soft cheese made from goat's milk.", 100, 3, Map.of(AnimalProductType.Large_Goat_Milk, 1), 600),
 
     // Mayonnaise
-    MAYONNAISE(CraftingMachineType.MAYONNAISE_MACHINE,"mayonnaise", "It looks spreadable.", 50, 3, Map.of(AnimalProductType.ChickenEgg, 1), 190),
-    BIG_MAYONNAISE(CraftingMachineType.MAYONNAISE_MACHINE,"big mayonnaise", "It looks spreadable.", 50,3, Map.of(AnimalProductType.BigChickenEgg, 1), 237),
-    DUCK_MAYONNAISE(CraftingMachineType.MAYONNAISE_MACHINE,"duck Mayonnaise", "It's a rich, yellow mayonnaise.", 75, 3, Map.of(AnimalProductType.DuckEgg, 1), 375),
-    DINOSAUR_MAYONNAISE(CraftingMachineType.MAYONNAISE_MACHINE,"dinosaur Mayonnaise", "It's thick and creamy, with a vivid green hue. It smells like grass and leather.", 125, 3, Map.of(AnimalProductType.DinosaurEgg, 1), 800),
+    MAYONNAISE(CraftingMachineType.MAYONNAISE_MACHINE,"mayonnaise", "It looks spreadable.", 50, 3, Map.of(AnimalProductType.Egg, 1), 190),
+    BIG_MAYONNAISE(CraftingMachineType.MAYONNAISE_MACHINE,"big mayonnaise", "It looks spreadable.", 50,3, Map.of(AnimalProductType.Large_Egg, 1), 237),
+    DUCK_MAYONNAISE(CraftingMachineType.MAYONNAISE_MACHINE,"duck Mayonnaise", "It's a rich, yellow mayonnaise.", 75, 3, Map.of(AnimalProductType.Duck_Egg, 1), 375),
+    DINOSAUR_MAYONNAISE(CraftingMachineType.MAYONNAISE_MACHINE,"dinosaur Mayonnaise", "It's thick and creamy, with a vivid green hue. It smells like grass and leather.", 125, 3, Map.of(AnimalProductType.Dinosaur_Egg, 1), 800),
 
     // Beverages
     BEER(CraftingMachineType.KEG,"Beer", "Drink in moderation.", 50, 24, Map.of(MaterialType.Wheat, 1), 200),
@@ -110,11 +110,11 @@ public enum ArtisanProductType implements ItemType {
 
     SMOKED_BLUE_DISCUS(CraftingMachineType.FISH_SMOKER, "smoked blue discus",
             "Exotic smoked tropical fish.", -1, 1,
-            Map.of(FishType.BlueDiscus, 1), 240),
+            Map.of(FishType.Blue_Discus, 1), 240),
 
     SMOKED_MIDNIGHT_CARP(CraftingMachineType.FISH_SMOKER, "smoked midnight carp",
             "Dark-fleshed smoked fish with unique aroma.", -1, 1,
-            Map.of(FishType.MidnightCarp, 1), 300),
+            Map.of(FishType.Midnight_Carp, 1), 300),
 
     SMOKED_SQUID(CraftingMachineType.FISH_SMOKER, "smoked squid",
             "Tender smoked cephalopod.", -1, 1,
@@ -142,7 +142,7 @@ public enum ArtisanProductType implements ItemType {
 
     SMOKED_GHOST_FISH(CraftingMachineType.FISH_SMOKER, "smoked ghost fish",
             "Eerily translucent smoked fish.", -1, 1,
-            Map.of(FishType.GhostFish, 1), 90),
+            Map.of(FishType.Ghostfish, 1), 90),
 
     SMOKED_TILAPIA(CraftingMachineType.FISH_SMOKER, "smoked tilapia",
             "Mild and versatile smoked fish.", -1, 1,
@@ -158,7 +158,7 @@ public enum ArtisanProductType implements ItemType {
 
     SMOKED_RAINBOW_TROUT(CraftingMachineType.FISH_SMOKER, "smoked rainbow trout",
             "Beautifully colored smoked fish.", -1, 1,
-            Map.of(FishType.RainbowTrout, 1), 130),
+            Map.of(FishType.Rainbow_Trout, 1), 130),
 
     // Legendary fish variants
     SMOKED_LEGEND(CraftingMachineType.FISH_SMOKER, "smoked legend",
@@ -167,7 +167,7 @@ public enum ArtisanProductType implements ItemType {
 
     SMOKED_GLACIERFISH(CraftingMachineType.FISH_SMOKER, "smoked glacierfish",
             "Icy-cold smoked legendary fish.", -1, 1,
-            Map.of(FishType.GlacierFish, 1), 2000),
+            Map.of(FishType.Glacierfish, 1), 2000),
 
     SMOKED_ANGLER(CraftingMachineType.FISH_SMOKER, "smoked angler",
             "Odd-looking but delicious smoked fish.", -1, 1,
@@ -175,7 +175,7 @@ public enum ArtisanProductType implements ItemType {
 
     SMOKED_CRIMSONFISH(CraftingMachineType.FISH_SMOKER, "smoked crimsonfish",
             "Vibrant red smoked legendary fish.", -1, 1,
-            Map.of(FishType.CrimsonFish, 1), 3000),
+            Map.of(FishType.Crimsonfish, 1), 3000),
     // Fuel/Refined
     COAL(CraftingMachineType.CHARCOAL_KILN,"coal", "Turns 10 pieces of wood into one piece of coal.", -1, 1, Map.of(MaterialType.Wood, 1), 50),
 
@@ -233,6 +233,11 @@ public enum ArtisanProductType implements ItemType {
     @Override
     public String getName() {
         return this.name;
+    }
+
+    @Override
+    public String getEnumName() {
+        return name();
     }
 
     public String getDescription() {

@@ -101,6 +101,11 @@ public enum ForagingSeedType implements ItemType {
         return this.name;
     }
 
+    @Override
+    public String getEnumName() {
+        return name();
+    }
+
     public int getPrice() {
         return this.price;
     }

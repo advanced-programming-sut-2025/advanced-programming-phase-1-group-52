@@ -150,6 +150,11 @@ public enum CropType implements ItemType {
         return name;
     }
 
+    @Override
+    public String getEnumName() {
+        return name();
+    }
+
     public ForagingSeedType getSeed() {
         for (ForagingSeedType type : ForagingSeedType.values()) {
                 if (type.getPlantType().equals(this)) return type;

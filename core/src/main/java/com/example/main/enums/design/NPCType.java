@@ -19,7 +19,7 @@ import com.example.main.models.Quest;
 
 public enum NPCType {
     Sebastian(42, 40) {{
-        favorites.add(AnimalProductType.SheepWool);
+        favorites.add(AnimalProductType.Wool);
         favorites.add(FoodType.PumpkinPie);
         favorites.add(FoodType.Pizza);
 

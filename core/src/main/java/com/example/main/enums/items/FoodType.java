@@ -65,4 +65,9 @@ public enum FoodType implements ItemType {
         foodItem.setNumber(count);
         return foodItem;
     }
+
+    @Override
+    public String getEnumName() {
+        return name();
+    }
 }

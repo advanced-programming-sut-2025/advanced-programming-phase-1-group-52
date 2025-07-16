@@ -41,6 +41,11 @@ public enum CraftingMachineType implements ItemType {
         return this.productName;
     }
 
+    @Override
+    public String getEnumName() {
+        return name();
+    }
+
     public Integer getPrice() {
         return this.price;
     }

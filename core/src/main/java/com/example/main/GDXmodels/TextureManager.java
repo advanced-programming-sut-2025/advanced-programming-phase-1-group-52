@@ -21,8 +21,13 @@ public class TextureManager {
      */
     public void loadAllItemTextures() {
         Gdx.app.log("TextureManager", "Starting to load all item textures...");
-        String[] assetDirs = {"Foraging", "Gem", "Ingredient", "Mineral", "Resource", "Rock", "Special_item", "Tools","Tools/Axe",
-            "Tools/Hoe", "Tools/Pickaxe", "Tools/Trash_can", "Tools/Watering_Can", "Fishing_Pole", "Skill"};
+        String[] assetDirs = {
+            "Animal_product", "Animals", "Artisan_good", "Craftable_item",
+            "Crafting", "Crops", "Fence", "Fertilizer", "Fish", "Foraging",
+            "Gem", "Ingredient", "Mineral", "Recipe", "Resource", "Rock",
+            "Tools", "Portraits", "Fishing_Pole", "Skill",
+            "Tools/Axe", "Tools/Hoe", "Tools/Pickaxe", "Tools/Trash_can", "Tools/Watering_Can"
+        };
 
         for (String dir : assetDirs) {
             recursivelyLoadTextures(Gdx.files.internal("content/" + dir));

@@ -154,6 +154,11 @@ public enum CraftingRecipes implements ItemType {
         return this.displayName;
     }
 
+    @Override
+    public String getEnumName() {
+        return name();
+    }
+
     public ItemType getProduct() {
         return product;
     }

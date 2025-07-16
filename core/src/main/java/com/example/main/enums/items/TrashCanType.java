@@ -25,4 +25,9 @@ public enum TrashCanType implements ItemType {
     public String getName() {
         return name();
     }
+
+    @Override
+    public String getEnumName() {
+        return name();
+    }
 }

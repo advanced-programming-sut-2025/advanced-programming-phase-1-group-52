@@ -94,6 +94,11 @@ public enum TreeType implements ItemType{
 
     @Override
     public String getName() {
-        return "";
+        return name;
+    }
+
+    @Override
+    public String getEnumName() {
+        return name();
     }
 }

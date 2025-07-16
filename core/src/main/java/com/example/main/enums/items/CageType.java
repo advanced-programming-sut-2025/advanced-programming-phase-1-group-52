@@ -27,5 +27,11 @@ public enum CageType implements ItemType {
     }
 
     public int getCapacity() { return this.capacity; }
+
+    @Override
+    public String getEnumName() {
+        return name();
+    }
+
 }
 

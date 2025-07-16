@@ -31,14 +31,7 @@ import com.example.main.controller.GameMenuController;
 import com.example.main.enums.design.TileType;
 import com.example.main.enums.design.Weather;
 import com.example.main.enums.player.Skills;
-import com.example.main.models.App;
-import com.example.main.models.Date;
-import com.example.main.models.Game;
-import com.example.main.models.GameMap;
-import com.example.main.models.Player;
-import com.example.main.models.Tile;
-import com.example.main.models.Time;
-import com.example.main.models.User;
+import com.example.main.models.*;
 import com.example.main.models.item.Item;
 import com.example.main.models.item.Tool;
 
@@ -102,6 +95,14 @@ public class GDXGameScreen implements Screen {
     private boolean lightningActive = false;
     private float lightningDuration = 0f;
     private boolean cheatLightningActive = false;
+
+    // Cheat Menu Fields
+    private boolean isCheatMenuOpen = false;
+    private Stage cheatMenuStage;
+    private TextField cheatItemNameField;
+    private TextField cheatItemQuantityField;
+
+    private InputMultiplexer multiplexer;
 
     private Texture ground1Texture;
     private Texture ground2Texture;
@@ -277,24 +278,22 @@ public class GDXGameScreen implements Screen {
 
         game = App.getInstance().getCurrentGame();
         gameMap = game.getMap();
-
         controller.setGame(game);
         controller.setMap(gameMap);
-
         generateRandomMaps();
-
         initializePlayerPosition();
 
         inventoryStage = new Stage(new ScreenViewport());
         inventoryBackground = new Texture("content/Cut/menu_background.png");
         setupInventoryUI();
-
         setupToolMenuUI();
+        setupCheatMenuUI();
 
-        InputMultiplexer multiplexer = new InputMultiplexer();
+        multiplexer = new InputMultiplexer();
+        multiplexer.addProcessor(stage); // Add the main game stage first
         multiplexer.addProcessor(inventoryStage);
-        multiplexer.addProcessor(toolMenuStage); // Add the new stage
-        multiplexer.addProcessor(stage);
+        multiplexer.addProcessor(toolMenuStage);
+        multiplexer.addProcessor(cheatMenuStage);
         Gdx.input.setInputProcessor(multiplexer);
     }
 
@@ -334,6 +333,7 @@ public class GDXGameScreen implements Screen {
 
         renderWeather(delta);
         renderDayNightOverlay();
+        renderCheatMenu(delta);
 
         if (showMinimap) {
             renderMinimap();
@@ -508,10 +508,22 @@ public class GDXGameScreen implements Screen {
     }
 
     private void handleInput(float delta) {
+        if (Gdx.input.isKeyJustPressed(Input.Keys.I)) {
+            isCheatMenuOpen = !isCheatMenuOpen;
+            if (isCheatMenuOpen) {
+                Gdx.input.setInputProcessor(cheatMenuStage); // Give focus to the cheat menu
+            } else {
+                Gdx.input.setInputProcessor(multiplexer); // Return focus to the multiplexer
+            }
+        }
+
         if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
             isInventoryOpen = !isInventoryOpen;
             if (isInventoryOpen) {
-                showMainMenuButtons(); // Show the main buttons when opening
+                showMainMenuButtons();
+                Gdx.input.setInputProcessor(inventoryStage); // Give focus to the inventory
+            } else {
+                Gdx.input.setInputProcessor(multiplexer); // Return focus to the multiplexer
             }
         }
 
@@ -521,10 +533,13 @@ public class GDXGameScreen implements Screen {
                 playerTools = game.getCurrentPlayer().getTools();
                 currentToolIndex = 0;
                 updateToolMenuDisplay();
+                Gdx.input.setInputProcessor(toolMenuStage); // Give focus to the tool menu
+            } else {
+                Gdx.input.setInputProcessor(multiplexer); // Return focus to the multiplexer
             }
         }
 
-        if (isInventoryOpen || isToolMenuOpen) {
+        if (isInventoryOpen || isToolMenuOpen || isCheatMenuOpen) {
             return;
         }
 
@@ -549,18 +564,15 @@ public class GDXGameScreen implements Screen {
             controller.cheatSetEnergy(200);
         }
 
-        // In the handleInput method...
         if (Gdx.input.isKeyJustPressed(Input.Keys.L)) {
-            // This part is modified to trigger the animation
             if (controller != null && game != null) {
                 Player currentPlayer = game.getCurrentPlayer();
                 String x = String.valueOf(currentPlayer.currentX());
                 String y = String.valueOf(currentPlayer.currentY());
                 System.out.println(controller.cheatLightning(x, y).Message());
 
-                // Trigger the visual flash effect
                 cheatLightningActive = true;
-                lightningDuration = 0.15f; // Set the duration of the flash
+                lightningDuration = 0.15f;
             }
         }
     }
@@ -1811,7 +1823,7 @@ public class GDXGameScreen implements Screen {
         }
         // This version relies on the item's display name matching the asset file name.
         // Example: item.getName() -> "Basic Fertilizer" -> "Basic_Fertilizer"
-        return item.getName().replace(" ", "_");
+        return item.getItemType().getEnumName();
     }
 
     private void setupToolMenuUI() {
@@ -1893,6 +1905,62 @@ public class GDXGameScreen implements Screen {
         currentToolLabel.setText(tool.getName());
     }
 
+    private void renderCheatMenu(float delta) {
+        if (!isCheatMenuOpen) return;
+        cheatMenuStage.act(delta);
+        cheatMenuStage.draw();
+    }
+
+    private void setupCheatMenuUI() {
+        cheatMenuStage = new Stage(new ScreenViewport());
+        Table cheatTable = new Table(skin);
+        cheatTable.setBackground(skin.newDrawable("white", new Color(0.1f, 0.1f, 0.1f, 0.8f)));
+        cheatMenuStage.addActor(cheatTable);
+
+        cheatItemNameField = new TextField("", skin);
+        cheatItemNameField.setMessageText("Item Name");
+        cheatItemQuantityField = new TextField("", skin);
+        cheatItemQuantityField.setMessageText("Quantity");
+
+        TextButton addButton = new TextButton("Add Item", skin);
+        TextButton closeButton = new TextButton("Close", skin); // Create a close button
+        Label cheatMessageLabel = new Label("", skin);
+
+        addButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                String itemName = cheatItemNameField.getText();
+                String quantityStr = cheatItemQuantityField.getText();
+                Result result = controller.cheatAddItem(itemName, quantityStr);
+                cheatMessageLabel.setText(result.Message());
+            }
+        });
+
+        // Add a listener to the close button
+        closeButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                isCheatMenuOpen = false;
+                Gdx.input.setInputProcessor(multiplexer); // Return focus to the game
+            }
+        });
+
+        cheatTable.add(new Label("Cheat Menu", skin)).colspan(2).pad(10).row();
+        cheatTable.add(cheatItemNameField).width(200).pad(5);
+        cheatTable.add(cheatItemQuantityField).width(100).pad(5).row();
+
+        // Add both buttons to the table
+        Table buttonTable = new Table();
+        buttonTable.add(addButton).pad(5);
+        buttonTable.add(closeButton).pad(5);
+        cheatTable.add(buttonTable).colspan(2).pad(10).row();
+
+        cheatTable.add(cheatMessageLabel).colspan(2).pad(10);
+        cheatTable.pack();
+        cheatTable.setPosition(Gdx.graphics.getWidth() / 2f - cheatTable.getWidth() / 2f,
+            Gdx.graphics.getHeight() / 2f - cheatTable.getHeight() / 2f);
+    }
+
     @Override
     public void resize(int width, int height) {
         stage.getViewport().update(width, height, true);
@@ -1921,6 +1989,7 @@ public class GDXGameScreen implements Screen {
         inventoryBackground.dispose();
         textureManager.dispose();
         toolMenuStage.dispose();
+        cheatMenuStage.dispose();
 
         clockTexture.dispose();
         hudFont.dispose();
