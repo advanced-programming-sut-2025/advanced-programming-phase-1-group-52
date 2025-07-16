@@ -2698,4 +2698,9 @@ public class GameMenuController {
     public Result showBalance() {
         return new Result(true, "Your balance is " + game.getCurrentPlayer().getBankAccount().getBalance());
     }
+
+    public Result goToStoreMenu() {
+        App.getInstance().setCurrentMenu(Menu.StoreMenu);
+        return new Result(true, "You are now in store menu!");
+    }
 }

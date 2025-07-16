@@ -69,8 +69,6 @@ public enum TheStardropSaloon implements ShopEntry {
 
     @Override
     public String toString() {
-        return this.name() + "\nPrice: " + 
-        this.price + "\nDescription: " + this.description + 
-        "\n----------------------\n";
+        return this.name + " - Price: " + this.price;
     }
 }

@@ -1,13 +1,13 @@
 package com.example.main.enums.design;
 
 public enum ShopType {
-    Blacksmith("Clint", 32, 2),
-    JojaMart("Morris", 46, 2),
-    PierresGeneralStore("Pierre", 32, 12),
-    CarpentersShop("Robin", 46, 12),
-    FishShop("Willy", 32, 22),
-    MarniesRanch("Marnie", 46, 22),
-    TheStardropSaloon("Gus", 32, 32);
+    Blacksmith("Blacksmith", 32, 2),
+    JojaMart("Joja Mart", 46, 2),
+    PierresGeneralStore("Pierre's General Store", 32, 12),
+    CarpentersShop("Carpenter's Shop", 46, 12),
+    FishShop("Willy's Fish Shop", 32, 22),
+    MarniesRanch("Marnie's Ranch", 46, 22),
+    TheStardropSaloon("The Stardrop Saloon", 32, 32);
 
     private final String name;
     private final int cornerX;

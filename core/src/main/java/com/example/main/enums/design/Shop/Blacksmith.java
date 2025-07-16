@@ -1,8 +1,9 @@
 package com.example.main.enums.design.Shop;
 
-import com.example.main.enums.items.MaterialType;
 import java.util.HashMap;
 import java.util.Map;
+
+import com.example.main.enums.items.MaterialType;
 
 public enum Blacksmith implements ShopEntry{
     // Stock items
@@ -66,8 +67,6 @@ public enum Blacksmith implements ShopEntry{
 
     @Override
     public String toString() {
-        return this.displayName + "\nPrice: " + this.price + 
-        "\nDescription: " + this.description + 
-        "\n---------------------\n";
+        return this.displayName + " - Price: " + this.price;
     }
 }

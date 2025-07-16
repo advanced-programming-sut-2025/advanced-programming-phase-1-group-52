@@ -14,6 +14,7 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
@@ -21,6 +22,8 @@ import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.example.main.controller.GameMenuController;
 import com.example.main.controller.TradeMenuController;
+import com.example.main.controller.StoreMenuController;
+import com.example.main.enums.design.ShopType;
 import com.example.main.enums.design.TileType;
 import com.example.main.models.App;
 import com.example.main.models.Date;
@@ -86,6 +89,23 @@ public class GDXGameScreen implements Screen {
     private String receivingItemName = "";
     private int receivingItemAmount = 1;
     private String tradeErrorMessage = "";
+    
+    // Shop menu variables
+    private boolean showShopMenu = false;
+    private Table shopMenuTable;
+    private ShopType currentShopType = null;
+    private StoreMenuController shopController;
+    
+    // Shop menu state management
+    private enum ShopMenuState {
+        MAIN_MENU,
+        ALL_PRODUCTS,
+        AVAILABLE_PRODUCTS
+    }
+    
+    private ShopMenuState currentShopMenuState = ShopMenuState.MAIN_MENU;
+    private String shopResultMessage = "";
+    private boolean shopResultSuccess = false;
 
     // Time-related variables
     private float timeAccumulator = 0f;
@@ -223,6 +243,7 @@ public class GDXGameScreen implements Screen {
 
     public GDXGameScreen() {
         controller = new GameMenuController();
+        shopController = new StoreMenuController();
         stage = new Stage(new ScreenViewport());
         Gdx.input.setInputProcessor(stage);
         skin = new Skin(Gdx.files.internal("uiskin.json"));
@@ -318,6 +339,8 @@ public class GDXGameScreen implements Screen {
 
         stage.act(delta);
         stage.draw();
+        
+        // Shop menu is handled by the stage, no need to recreate it every frame
     }
 
     private void renderHud() {
@@ -516,15 +539,22 @@ public class GDXGameScreen implements Screen {
     }
 
     private void handleInput(float delta) {
-        handleTradeMenuToggle();
-        
-        // Only handle game input if trade menu is not showing
-        if (!showTradeMenu) {
-            handleMinimapToggle();
-            handleTurnSwitching();
-            handlePlayerMovement(delta);
-            handleCameraMovement(delta);
+        // If shop menu is open, only allow shop menu UI to handle input
+        if (showShopMenu) {
+            // Allow UI events (handled by scene2d stage) but block game input
+            return;
         }
+        // If trade menu is open, only allow trade menu UI
+        if (showTradeMenu) {
+            return;
+        }
+        handleTradeMenuToggle();
+        // Only handle game input if trade menu and shop menu are not showing
+        handleMinimapToggle();
+        handleTurnSwitching();
+        handlePlayerMovement(delta);
+        handleCameraMovement(delta);
+        handleShopInteraction();
     }
     
     private void handleTradeMenuToggle() {
@@ -598,6 +628,47 @@ public class GDXGameScreen implements Screen {
         }
 
         nKeyPressed = nKeyCurrentlyPressed;
+    }
+    
+    private void handleShopInteraction() {
+        // Check for mouse click
+        if (Gdx.input.isButtonJustPressed(Input.Buttons.LEFT)) {
+            // Get mouse position in screen coordinates
+            int mouseX = Gdx.input.getX();
+            int mouseY = Gdx.input.getY();
+            
+            // Convert screen coordinates to world coordinates
+            Vector3 worldCoords = camera.unproject(new Vector3(mouseX, mouseY, 0));
+            
+            // Convert world coordinates to tile coordinates
+            int tileX = (int) (worldCoords.x / TILE_SIZE);
+            int tileY = (int) ((MAP_HEIGHT * TILE_SIZE - worldCoords.y) / TILE_SIZE);
+            
+            // Check if the clicked tile is within a shop area
+            int shopIndex = getShopIndex(tileX, tileY);
+            if (shopIndex != -1) {
+                // Get the shop type based on the index
+                ShopType[] shopTypes = ShopType.values();
+                if (shopIndex < shopTypes.length) {
+                    currentShopType = shopTypes[shopIndex];
+                    
+                    // Move player to the shop location for the shop controller to work
+                    Player currentPlayer = game.getCurrentPlayer();
+                    if (currentPlayer != null) {
+                        // Set player position to the shop corner + 1 to be inside the shop area
+                        // (the corner is a wall, so we need to be inside)
+                        currentPlayer.setCurrentX(currentShopType.getCornerX() + 1);
+                        currentPlayer.setCurrentY(currentShopType.getCornerY() + 1);
+                        
+                        // Update camera to follow player
+                        updateCameraToFollowPlayer(currentPlayer);
+                    }
+                    
+                    showShopMenu = true;
+                    createShopMenuUI();
+                }
+            }
+        }
     }
 
     private void handleCameraMovement(float delta) {
@@ -2333,4 +2404,305 @@ public class GDXGameScreen implements Screen {
         });
         tradeMenuTable.add(backButton).width(200).pad(20).row();
     }
+    
+    private void createShopMenuUI() {
+        if (shopMenuTable != null) {
+            shopMenuTable.remove();
+        }
+
+        shopMenuTable = new Table();
+        // Make the background 75% of screen size
+        shopMenuTable.setSize(Gdx.graphics.getWidth() * 0.75f, Gdx.graphics.getHeight() * 0.75f);
+        shopMenuTable.setPosition(
+            (Gdx.graphics.getWidth() - shopMenuTable.getWidth()) / 2f,
+            (Gdx.graphics.getHeight() - shopMenuTable.getHeight()) / 2f
+        );
+        
+        // Create a background drawable from the menu background texture
+        TextureRegionDrawable backgroundDrawable = new TextureRegionDrawable(menuBackgroundTexture);
+        shopMenuTable.setBackground(backgroundDrawable);
+        
+        stage.addActor(shopMenuTable);
+        
+        // Create the appropriate menu based on state
+        switch (currentShopMenuState) {
+            case MAIN_MENU:
+                createMainShopMenu();
+                break;
+            case ALL_PRODUCTS:
+                createAllProductsMenu();
+                break;
+            case AVAILABLE_PRODUCTS:
+                createAvailableProductsMenu();
+                break;
+        }
+    }
+    
+    private void createMainShopMenu() {
+        shopMenuTable.clear();
+        
+        // Add shop name at the top with blue color
+        Label titleLabel = new Label(currentShopType.getName(), skin);
+        titleLabel.setFontScale(1.5f);
+        titleLabel.setColor(Color.BLUE);
+        shopMenuTable.add(titleLabel).padBottom(20).row();
+        
+        // Available Products button
+        TextButton availableProductsButton = new TextButton("Available Products", skin);
+        availableProductsButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                currentShopMenuState = ShopMenuState.AVAILABLE_PRODUCTS;
+                shopResultMessage = "";
+                createShopMenuUI();
+            }
+        });
+        shopMenuTable.add(availableProductsButton).width(200).pad(10).row();
+        
+        // All Products button
+        TextButton allProductsButton = new TextButton("All Products", skin);
+        allProductsButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                currentShopMenuState = ShopMenuState.ALL_PRODUCTS;
+                shopResultMessage = "";
+                createShopMenuUI();
+            }
+        });
+        shopMenuTable.add(allProductsButton).width(200).pad(10).row();
+        
+        // Close button
+        TextButton closeButton = new TextButton("Close", skin);
+        closeButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                showShopMenu = false;
+                if (shopMenuTable != null) {
+                    shopMenuTable.remove();
+                    shopMenuTable = null;
+                }
+            }
+        });
+        shopMenuTable.add(closeButton).width(200).pad(10).row();
+    }
+    
+    private void createAllProductsMenu() {
+        shopMenuTable.clear();
+        // Add shop name at the top with blue color
+        Label titleLabel = new Label(currentShopType.getName() + " - All Products", skin);
+        titleLabel.setFontScale(1.5f);
+        titleLabel.setColor(Color.BLUE);
+        shopMenuTable.add(titleLabel).padBottom(20).row();
+        // Show result message if exists
+        if (!shopResultMessage.isEmpty()) {
+            Label resultLabel = new Label(shopResultMessage, skin);
+            resultLabel.setColor(shopResultSuccess ? Color.GREEN : Color.RED);
+            resultLabel.setFontScale(1.1f);
+            shopMenuTable.add(resultLabel).padBottom(15).row();
+        }
+        // Get all products from the shop controller
+        Result result = shopController.showAllProducts();
+        String productsText = result.isSuccessful() ? result.Message() : "Failed to load products";
+        // Create a table to hold all product cards
+        Table productsTable = new Table();
+        if (result.isSuccessful() && !productsText.trim().isEmpty()) {
+            String[] products = productsText.split("\n");
+            for (String product : products) {
+                if (product.trim().isEmpty()) continue;
+                
+                // Create beautiful product card similar to trade menu
+                Table productCard = new Table();
+                productCard.setBackground(skin.getDrawable("default-round"));
+                productCard.pad(15);
+                
+                // Product name and price
+                Label productLabel = new Label(product.trim(), skin);
+                productLabel.setColor(Color.WHITE);
+                productLabel.setFontScale(1.2f);
+                productCard.add(productLabel).colspan(2).padBottom(10).row();
+                
+                productsTable.add(productCard).width(500).pad(15).row();
+            }
+        } else {
+            Label noProductsLabel = new Label("No products available", skin);
+            noProductsLabel.setFontScale(1.2f);
+            noProductsLabel.setColor(Color.GRAY);
+            productsTable.add(noProductsLabel).pad(30).row();
+        }
+        // Create scroll pane for the products with proper configuration
+        ScrollPane scrollPane = new ScrollPane(productsTable, skin);
+        scrollPane.setFadeScrollBars(false);
+        scrollPane.setScrollbarsOnTop(true);
+        scrollPane.setScrollBarPositions(false, true);
+        scrollPane.setScrollingDisabled(false, false);
+        // Add scroll pane to main table with fixed height
+        shopMenuTable.add(scrollPane).width(550).height(400).pad(10).row();
+        // Back and Close buttons (always show both)
+        Table buttonTable = new Table();
+        TextButton backButton = new TextButton("Back", skin);
+        backButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                currentShopMenuState = ShopMenuState.MAIN_MENU;
+                shopResultMessage = "";
+                createShopMenuUI();
+            }
+        });
+        buttonTable.add(backButton).width(200).pad(20);
+        TextButton closeButton = new TextButton("Close", skin);
+        closeButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                showShopMenu = false;
+                if (shopMenuTable != null) {
+                    shopMenuTable.remove();
+                    shopMenuTable = null;
+                }
+            }
+        });
+        buttonTable.add(closeButton).width(200).pad(20);
+        shopMenuTable.add(buttonTable).row();
+    }
+    
+    private void createAvailableProductsMenu() {
+        shopMenuTable.clear();
+        // Add shop name at the top with blue color
+        Label titleLabel = new Label(currentShopType.getName() + " - Available Products", skin);
+        titleLabel.setFontScale(1.5f);
+        titleLabel.setColor(Color.BLUE);
+        shopMenuTable.add(titleLabel).padBottom(20).row();
+        // Show result message if exists
+        if (!shopResultMessage.isEmpty()) {
+            Label resultLabel = new Label(shopResultMessage, skin);
+            resultLabel.setColor(shopResultSuccess ? Color.GREEN : Color.RED);
+            resultLabel.setFontScale(1.1f);
+            shopMenuTable.add(resultLabel).padBottom(15).row();
+        }
+        // Get available products from the shop controller
+        Result result = shopController.showAvailableProducts();
+        String productsText = result.isSuccessful() ? result.Message() : "Failed to load products";
+        // Create a table to hold all product cards
+        Table productsTable = new Table();
+        if (result.isSuccessful() && !productsText.trim().isEmpty()) {
+            String[] products = productsText.split("\n");
+            for (int i = 0; i < products.length; i += 2) { // Each product and its stock info
+                if (i >= products.length) break;
+                String product = products[i];
+                String stockInfo = (i + 1 < products.length) ? products[i + 1] : "";
+                if (product.trim().isEmpty()) continue;
+                
+                // Extract product name for purchase
+                String productName = extractProductName(product);
+                
+                // Create display text with stock info
+                String displayText = product.trim();
+                if (!stockInfo.isEmpty()) {
+                    displayText += " | " + stockInfo;
+                }
+                Table productCard = new Table();
+                productCard.setBackground(skin.getDrawable("default-round"));
+                productCard.pad(15);
+                
+                // Product name and price with stock info
+                Label productLabel = new Label(displayText, skin);
+                productLabel.setColor(Color.WHITE);
+                productLabel.setFontScale(1.2f);
+                productCard.add(productLabel).colspan(4).padBottom(10).row();
+                // Purchase controls
+                Label amountLabel = new Label("Amount:", skin);
+                amountLabel.setColor(Color.WHITE);
+                productCard.add(amountLabel).padRight(5);
+                TextField amountField = new TextField("1", skin);
+                amountField.setWidth(80);
+                amountField.setMaxLength(3);
+                amountField.setTextFieldFilter(new TextField.TextFieldFilter.DigitsOnlyFilter());
+                productCard.add(amountField).padRight(5);
+                TextButton plusButton = new TextButton("+", skin);
+                plusButton.setWidth(30);
+                plusButton.addListener(new ClickListener() {
+                    @Override
+                    public void clicked(InputEvent event, float x, float y) {
+                        try {
+                            int currentAmount = Integer.parseInt(amountField.getText());
+                            amountField.setText(String.valueOf(currentAmount + 1));
+                        } catch (NumberFormatException e) {
+                            amountField.setText("1");
+                        }
+                    }
+                });
+                productCard.add(plusButton).padRight(10);
+                TextButton purchaseButton = new TextButton("Purchase", skin);
+                purchaseButton.setWidth(100);
+                purchaseButton.addListener(new ClickListener() {
+                    @Override
+                    public void clicked(InputEvent event, float x, float y) {
+                        try {
+                            int amount = Integer.parseInt(amountField.getText());
+                            if (amount > 0) {
+                                Result purchaseResult = shopController.purchase(productName, String.valueOf(amount));
+                                shopResultMessage = purchaseResult.Message();
+                                shopResultSuccess = purchaseResult.isSuccessful();
+                                createShopMenuUI(); // Refresh the menu to show result
+                            }
+                        } catch (NumberFormatException e) {
+                            shopResultMessage = "Invalid amount!";
+                            shopResultSuccess = false;
+                            createShopMenuUI();
+                        }
+                    }
+                });
+                productCard.add(purchaseButton).row();
+                productsTable.add(productCard).width(500).pad(15).row();
+            }
+        } else {
+            Label noProductsLabel = new Label("No products available", skin);
+            noProductsLabel.setFontScale(1.2f);
+            noProductsLabel.setColor(Color.GRAY);
+            productsTable.add(noProductsLabel).pad(30).row();
+        }
+        // Create scroll pane for the products with proper configuration
+        ScrollPane scrollPane = new ScrollPane(productsTable, skin);
+        scrollPane.setFadeScrollBars(false);
+        scrollPane.setScrollbarsOnTop(true);
+        scrollPane.setScrollBarPositions(false, true);
+        scrollPane.setScrollingDisabled(false, false);
+        // Add scroll pane to main table with fixed height
+        shopMenuTable.add(scrollPane).width(550).height(400).pad(10).row();
+        // Back and Close buttons (always show both)
+        Table buttonTable = new Table();
+        TextButton backButton = new TextButton("Back", skin);
+        backButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                currentShopMenuState = ShopMenuState.MAIN_MENU;
+                shopResultMessage = "";
+                createShopMenuUI();
+            }
+        });
+        buttonTable.add(backButton).width(200).pad(20);
+        TextButton closeButton = new TextButton("Close", skin);
+        closeButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                showShopMenu = false;
+                if (shopMenuTable != null) {
+                    shopMenuTable.remove();
+                    shopMenuTable = null;
+                }
+            }
+        });
+        buttonTable.add(closeButton).width(200).pad(20);
+        shopMenuTable.add(buttonTable).row();
+    }
+    
+    private String extractProductName(String productText) {
+        // Extract the product name from the product text
+        // The format is usually "Product Name - Price: X"
+        if (productText.contains(" - ")) {
+            return productText.split(" - ")[0].trim();
+        }
+        return productText.trim();
+    }
+    
+
 }
