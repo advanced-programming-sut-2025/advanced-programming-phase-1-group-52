@@ -166,7 +166,7 @@ public enum CookingRecipeType implements ItemType {
         }
     },
 
-    MinersTreat("Miner's treat Recipe", 125, Skills.Extraction, false, 5, 200, FoodType.MinersTreat) {
+    MinersTreat("Miner's treat Recipe", 125, Skills.Mining, false, 5, 200, FoodType.MinersTreat) {
         {
             ingredients.put(MaterialType.Carrot, 2);
             ingredients.put(MaterialType.Sugar, 1);

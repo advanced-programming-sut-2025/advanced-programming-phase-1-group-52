@@ -245,7 +245,7 @@ public class GameMenuController {
 
     public Result showDate() {
         return new Result(true,"Season: " + game.getDate().getCurrentSeason().name() +
-                "\nDay: " + game.getDate().getCurrentDay());
+            "\nDay: " + game.getDate().getCurrentDay());
     }
 
     public Result showDateAndTime() {
@@ -277,26 +277,26 @@ public class GameMenuController {
     }
 
     public Result changeDate(String daysStr) {
-        int days = Integer.parseInt(daysStr);
+        int days;
+        try {
+            days = Integer.parseInt(daysStr);
+        } catch (NumberFormatException e) {
+            return new Result(false, "Invalid number format for days.");
+        }
+        return changeDate(days); // Call the other method
+    }
+
+    // This is the main logic, now corrected
+    public Result changeDate(int days) {
         if (days <= 0) {
             return new Result(false, "Days must be positive");
         }
-        Date date = game.getDate();
-        int originalDay = date.getCurrentDay();
-        Season originalSeason = date.getCurrentSeason();
 
-        int seasonsPassed = date.addDays(days);
-
-        game.getTime().setHour(Time.DAY_START);
-
-        this.onSeasonChanged(seasonsPassed);
-        for(int i = 0; i < days; i++) {
-            game.randomizeTomorrowWeather();
-            game.updateCrops();
-            game.getMap().generateRandomForagingSeeds();
-            game.getMap().generatePlantsFromSeeds();
+        for (int i = 0; i < days; i++) {
+            game.advanceDay(); // Use the centralized method
         }
-        return new Result(true,"date changed!");
+
+        return new Result(true, "Date advanced by " + days + " day(s)!");
     }
 
     public Result showSeason() {
@@ -312,14 +312,12 @@ public class GameMenuController {
         int y = Integer.parseInt(yString);
         Tile tile = map.getTile(x, y);
         if (tile.getType().equals(TileType.Tree)) {
-            System.out.println("1");
             tile.setType(TileType.Stone);
             tile.setPlant(null);
             tile.setTree(null);
             tile.setSeed(null);
         }
         else if (tile.getType().equals(TileType.Planted)) {
-            System.out.println("2");
             tile.setType(TileType.Earth);
             tile.setPlant(null);
             tile.setTree(null);
@@ -441,18 +439,18 @@ public class GameMenuController {
 
     public Result mapInfo() {
         return new Result(true, "earth : blank space\n" +
-                "grass : ^\n" +
-                "water, shoveled, planted, branch : ~\n" +
-                "all kinds of stone : #\n" +
-                "wall : /\n" +
-                "door : %\n" +
-                "house : @\n" +
-                "greenhouse : G\n" +
-                "broken green house : B\n" +
-                "quarry : Q\n" +
-                "tree : T\n" +
-                "shop : $\n" +
-                "NPC house : H");
+            "grass : ^\n" +
+            "water, shoveled, planted, branch : ~\n" +
+            "all kinds of stone : #\n" +
+            "wall : /\n" +
+            "door : %\n" +
+            "house : @\n" +
+            "greenhouse : G\n" +
+            "broken green house : B\n" +
+            "quarry : Q\n" +
+            "tree : T\n" +
+            "shop : $\n" +
+            "NPC house : H");
     }
 
     public Result showPlayerCoordinates() {
@@ -475,10 +473,10 @@ public class GameMenuController {
         }
 
         ArrayList<NPCDialogs> dialogs = Arrays.stream(NPCDialogs.values())
-                .filter(dialog -> dialog.getLevel() == npc.getFriendShipLevelWith(game.getCurrentPlayer()))
-                .filter(dialog -> dialog.getWeather() == null || dialog.getWeather() == game.getTodayWeather())
-                .filter(dialog -> dialog.getSeason() == null || dialog.getSeason() == game.getDate().getCurrentSeason())
-                .collect(Collectors.toCollection(ArrayList::new));
+            .filter(dialog -> dialog.getLevel() == npc.getFriendShipLevelWith(game.getCurrentPlayer()))
+            .filter(dialog -> dialog.getWeather() == null || dialog.getWeather() == game.getTodayWeather())
+            .filter(dialog -> dialog.getSeason() == null || dialog.getSeason() == game.getDate().getCurrentSeason())
+            .collect(Collectors.toCollection(ArrayList::new));
 
         Random rand = new Random();
         npc.getFriendShipWith(game.getCurrentPlayer()).addFriendshipPoints(20);
@@ -615,7 +613,7 @@ public class GameMenuController {
         // Second quest is visible if friendship level >= 1 (if not completed)
         if (questIndex == 1) {
             return npc.getFriendShipLevelWith(game.getCurrentPlayer()) != null &&
-                   npc.getFriendShipLevelWith(game.getCurrentPlayer()) >= 1;
+                npc.getFriendShipLevelWith(game.getCurrentPlayer()) >= 1;
         }
 
         // Third quest is visible based on NPC type and days passed (if not completed)
@@ -1141,8 +1139,7 @@ public class GameMenuController {
         return Math.abs(playerX - x) <= 1 && Math.abs(playerY - y) <= 1;
     }
 
-    public Result cheatSetEnergy(String valueStr) {
-        int value = Integer.parseInt(valueStr);
+    public Result cheatSetEnergy(int value) {
         Player player = game.getCurrentPlayer();
         player.setEnergy(value);
         return new Result(true, player.getUsername() + "'s energy: is set to " + value);
@@ -1239,13 +1236,13 @@ public class GameMenuController {
 
         info.deleteCharAt(info.length() - 1);
         info.append("\nTotal Harvest Time: " + cropType.getTotalHarvestTime()).
-                append("\nOne Time: " + cropType.isOneTimeHarvest()).
-                append("\nRegrowth Time: " + cropType.getRegrowthTime()).
-                append("\nBase Sell Price: " + cropType.getBaseSellPrice()).
-                append("\nIs Edible: " + cropType.isEdible()).
-                append("\nBase Energy: " + cropType.getEnergy()).
-                append("\nBase Health: " + cropType.getBaseHealth()).
-                append(("\nSeason: "));
+            append("\nOne Time: " + cropType.isOneTimeHarvest()).
+            append("\nRegrowth Time: " + cropType.getRegrowthTime()).
+            append("\nBase Sell Price: " + cropType.getBaseSellPrice()).
+            append("\nIs Edible: " + cropType.isEdible()).
+            append("\nBase Energy: " + cropType.getEnergy()).
+            append("\nBase Health: " + cropType.getBaseHealth()).
+            append(("\nSeason: "));
 
         info.append(cropType.getSeasons());
         info.deleteCharAt(info.length() - 1);
@@ -1265,12 +1262,12 @@ public class GameMenuController {
         }
         info.deleteCharAt(info.length() - 1);
         info.append("\nTotal Harvest Time: " + treeType.getTotalHarvestTime()).
-                append("\nFruit: " + treeType.getProduct().getName()).
-                append("\nHarvest cycle time: " + treeType.getHarvestCycle()).
-                append("\nBase Sell Price: " + treeType.getBaseSellPrice()).
-                append("\nIs Edible: " + treeType.isEdible()).
-                append("\nBase Energy: " + treeType.getEnergy()).
-                append(("\nSeason: "));
+            append("\nFruit: " + treeType.getProduct().getName()).
+            append("\nHarvest cycle time: " + treeType.getHarvestCycle()).
+            append("\nBase Sell Price: " + treeType.getBaseSellPrice()).
+            append("\nIs Edible: " + treeType.isEdible()).
+            append("\nBase Energy: " + treeType.getEnergy()).
+            append(("\nSeason: "));
         for(Season season : treeType.getSeasons()){
             info.append(season.name()).append(", ");
         }
@@ -1301,7 +1298,7 @@ public class GameMenuController {
 
         if (crop != null) {
             if (!targetTile.getType().equals(TileType.Shoveled) ||
-                    targetTile.getType().equals(TileType.Planted)) {
+                targetTile.getType().equals(TileType.Planted)) {
                 return new Result(false, "Crops can only be planted on shoveled, unplanted soil");
             }
 
@@ -1656,8 +1653,8 @@ public class GameMenuController {
 
         boolean ok = house.refrigerator().putMaterial(material, quantity);
         return ok
-                ? Result.success(quantity + " × " + material + " It was placed in the refrigerator.")
-                : Result.failure("Error in placing the material in the refrigerator.");
+            ? Result.success(quantity + " × " + material + " It was placed in the refrigerator.")
+            : Result.failure("Error in placing the material in the refrigerator.");
     }
 
     private Result cookingRefrigeratorPick(String materialName, String quantityStr) {
@@ -1677,8 +1674,8 @@ public class GameMenuController {
 
         boolean ok = house.refrigerator().pickMaterial(mat, quantity);
         return ok
-                ? Result.success(quantity + " × " + mat + " Removed from the refrigerator.")
-                : Result.failure("There is not enough " + mat + " in the refrigerator.");
+            ? Result.success(quantity + " × " + mat + " Removed from the refrigerator.")
+            : Result.failure("There is not enough " + mat + " in the refrigerator.");
     }
 
     private Result cookingShowRecipes() {
@@ -1710,7 +1707,7 @@ public class GameMenuController {
             if (food.getFoodType().getSkillBuff().equals(Skills.Foraging)){
                 player.foraging();
             }
-            if (food.getFoodType().getSkillBuff().equals(Skills.Extraction)){
+            if (food.getFoodType().getSkillBuff().equals(Skills.Mining)){
                 player.extract();
             }
         }
@@ -1820,8 +1817,8 @@ public class GameMenuController {
             if (item instanceof Tool) {
                 Tool tool = (Tool) item;
                 toolList.append(tool.getToolType().name())
-                        .append(" x").append(tool.getNumber())
-                        .append("\n");
+                    .append(" x").append(tool.getNumber())
+                    .append("\n");
             }
         }
         return toolList.toString();
@@ -2039,7 +2036,7 @@ public class GameMenuController {
 
     public Result showExtractionSkill() {
         Player player = game.getCurrentPlayer();
-        return new Result(true, "your mining skill is: " + player.getSkillLevel(Skills.Extraction));
+        return new Result(true, "your mining skill is: " + player.getSkillLevel(Skills.Mining));
     }
 
     public void menuExit() {
@@ -2053,9 +2050,9 @@ public class GameMenuController {
         int rows = tiles.length;
         int cols = tiles[0].length;
         int[][] directions = {
-                {-1, -1}, {-1, 0}, {-1, 1},
-                {0, -1},          {0, 1},
-                {1, -1},  {1, 0},  {1, 1}
+            {-1, -1}, {-1, 0}, {-1, 1},
+            {0, -1},          {0, 1},
+            {1, -1},  {1, 0},  {1, 1}
         };
 
         for (int[] dir : directions) {
@@ -2663,8 +2660,8 @@ public class GameMenuController {
                     Boolean isCompleted = quests.get(quest);
                     boolean isVisible = isQuestVisible(quest, npc);
                     debug.append("  Quest ID ").append(quest.getId())
-                         .append(": Completed=").append(isCompleted)
-                         .append(", Visible=").append(isVisible).append("\n");
+                        .append(": Completed=").append(isCompleted)
+                        .append(", Visible=").append(isVisible).append("\n");
                 }
             }
         }
@@ -2685,8 +2682,8 @@ public class GameMenuController {
             debug.append("Talk ").append(i).append(": ");
             if (talk.getSender() != null && talk.getReceiver() != null) {
                 debug.append(talk.getSender().getUsername())
-                     .append(" -> ").append(talk.getReceiver().getUsername())
-                     .append(": ").append(talk.getMessage()).append("\n");
+                    .append(" -> ").append(talk.getReceiver().getUsername())
+                    .append(": ").append(talk.getMessage()).append("\n");
             } else {
                 debug.append("NULL sender or receiver\n");
             }

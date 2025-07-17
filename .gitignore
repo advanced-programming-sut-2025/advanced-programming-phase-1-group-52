@@ -17,6 +17,13 @@ gradle-app.setting
 /server/build/
 /shared/build/
 
+## radin added this
+.gradle/8.14
+.gradle/buildOutputCleanup
+.gradle/nb-cache
+.gradle/vcs-1
+.gradle/file-system.probe
+
 ## Java:
 *.class
 *.war

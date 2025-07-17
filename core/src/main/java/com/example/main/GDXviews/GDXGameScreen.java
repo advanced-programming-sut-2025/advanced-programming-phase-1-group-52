@@ -1,30 +1,40 @@
 package com.example.main.GDXviews;
 
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Random;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
+import com.badlogic.gdx.InputMultiplexer;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
-import com.badlogic.gdx.scenes.scene2d.ui.Table;
+import com.badlogic.gdx.scenes.scene2d.InputEvent;
+import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.scenes.scene2d.ui.*;
+import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
+import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
+import com.example.main.GDXmodels.TextureManager;
+import com.example.main.Main;
 import com.example.main.controller.GameMenuController;
 import com.example.main.controller.TradeMenuController;
 import com.example.main.controller.StoreMenuController;
 import com.example.main.enums.design.ShopType;
 import com.example.main.enums.design.TileType;
+import com.example.main.enums.design.Weather;
+import com.example.main.enums.player.Skills;
 import com.example.main.models.App;
 import com.example.main.models.Date;
 import com.example.main.models.Game;
@@ -33,13 +43,8 @@ import com.example.main.models.Player;
 import com.example.main.models.Tile;
 import com.example.main.models.Time;
 import com.example.main.models.User;
-import com.badlogic.gdx.scenes.scene2d.ui.Label;
-import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
-import com.badlogic.gdx.scenes.scene2d.ui.TextField;
-import com.badlogic.gdx.scenes.scene2d.ui.ScrollPane;
-import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
-import com.badlogic.gdx.scenes.scene2d.InputEvent;
-import com.example.main.models.Result;
+import com.example.main.models.item.Item;
+import com.example.main.models.item.Tool;
 
 public class GDXGameScreen implements Screen {
     private Stage stage;
@@ -111,9 +116,44 @@ public class GDXGameScreen implements Screen {
     private float timeAccumulator = 0f;
     private static final float SECONDS_PER_10_IN_GAME_MINUTES = 0.7f;
 
+    private TextureManager textureManager;
+
     // HUD Assets
     private Texture clockTexture;
     private BitmapFont hudFont;
+
+    private Texture rainTexture;
+    private Texture snowTexture;
+    private Array<Rectangle> rainParticles;
+    private Array<Rectangle> snowParticles;
+    private float weatherStateTime = 0f;
+
+    //Inventory Fields
+    private boolean isInventoryOpen = false;
+    private Stage inventoryStage;
+    private Texture inventoryBackground;
+    private Table menuContentTable;
+    private Table mainInventoryContainer;
+
+    // NEW: Tool Selection Menu Fields
+    private boolean isToolMenuOpen = false;
+    private Stage toolMenuStage;
+    private ArrayList<Tool> playerTools;
+    private int currentToolIndex = 0;
+    private Image currentToolImage;
+    private Label currentToolLabel;
+
+    // NEW: Fainted Player UI Fields
+    private Label faintedMessageLabel;
+    private float faintedMessageTimer = 0f;
+    private static final float FAINTED_MESSAGE_DURATION = 2.5f;
+
+    // NEW: Storm Effect Fields
+    private float stormEffectTimer = 0f;
+    private float nextLightningTime = 0f;
+    private boolean lightningActive = false;
+    private float lightningDuration = 0f;
+    private boolean cheatLightningActive = false;
 
     private Texture ground1Texture;
     private Texture ground2Texture;
@@ -208,7 +248,7 @@ public class GDXGameScreen implements Screen {
 
     private static final int[][] NPC_HOUSE_AREAS = {
         {42, 46, 40, 46},  // Sebastian: (42,40) to (46,46) - 5x7 including walls
-        {52, 56, 40, 46},  // Abigail: (52,40) to (56,46) - 5x7 including walls  
+        {52, 56, 40, 46},  // Abigail: (52,40) to (56,46) - 5x7 including walls
         {32, 36, 50, 56},  // Harvey: (32,50) to (36,56) - 5x7 including walls
         {42, 46, 50, 56},  // Lia: (42,50) to (46,56) - 5x7 including walls
         {52, 56, 50, 56}   // Robin: (52,50) to (56,56) - 5x7 including walls
@@ -238,9 +278,6 @@ public class GDXGameScreen implements Screen {
     private static final int MAP_WIDTH = 90;
     private static final int MAP_HEIGHT = 60;
 
-    private Texture menuBackgroundTexture;
-    private TradeMenuController tradeController;
-
     public GDXGameScreen() {
         controller = new GameMenuController();
         shopController = new StoreMenuController();
@@ -266,6 +303,16 @@ public class GDXGameScreen implements Screen {
         camera.position.set(worldWidth / 2f, worldHeight / 2f, 0);
         camera.update();
 
+        faintedMessageLabel = new Label("I'm too exhausted to move...", skin);
+        faintedMessageLabel.setColor(Color.RED);
+        faintedMessageLabel.setVisible(false); // Start with the message hidden
+
+        Table messageTable = new Table();
+        messageTable.top().padTop(50);
+        messageTable.setFillParent(true);
+        messageTable.add(faintedMessageLabel);
+        stage.addActor(messageTable);
+
         random = new Random();
         baseGroundMap = new int[MAP_WIDTH][MAP_HEIGHT];
         grassVariantMap = new int[MAP_WIDTH][MAP_HEIGHT];
@@ -275,8 +322,11 @@ public class GDXGameScreen implements Screen {
         stoneVariantMap = new int[MAP_WIDTH][MAP_HEIGHT];
         waterVariantMap = new int[MAP_WIDTH][MAP_HEIGHT];
 
+        textureManager = new TextureManager();
+        textureManager.loadAllItemTextures();
         loadTextures();
         loadHudAssets();
+        loadWeatherAssets();
 
         game = App.getInstance().getCurrentGame();
         gameMap = game.getMap();
@@ -288,14 +338,17 @@ public class GDXGameScreen implements Screen {
 
         initializePlayerPosition();
 
-        // Initialize trade menu
-        tradeController = new TradeMenuController();
-        try {
-            menuBackgroundTexture = new Texture(Gdx.files.internal("content/Cut/menu_background.png"));
-        } catch (Exception e) {
-            // Fallback: create a simple colored texture
-            menuBackgroundTexture = new Texture(1, 1, com.badlogic.gdx.graphics.Pixmap.Format.RGBA8888);
-        }
+        inventoryStage = new Stage(new ScreenViewport());
+        inventoryBackground = new Texture("content/Cut/menu_background.png");
+        setupInventoryUI();
+
+        setupToolMenuUI();
+
+        InputMultiplexer multiplexer = new InputMultiplexer();
+        multiplexer.addProcessor(inventoryStage);
+        multiplexer.addProcessor(toolMenuStage); // Add the new stage
+        multiplexer.addProcessor(stage);
+        Gdx.input.setInputProcessor(multiplexer);
     }
 
     private void loadHudAssets() {
@@ -318,24 +371,35 @@ public class GDXGameScreen implements Screen {
     @Override
     public void render(float delta) {
         handleInput(delta);
-        updateTime(delta);
+
+        if (!isInventoryOpen) {
+            updateTime(delta);
+        }
 
         Gdx.gl.glClearColor(0.2f, 0.3f, 0.3f, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
-        // Render Game World
         camera.update();
         spriteBatch.setProjectionMatrix(camera.combined);
         spriteBatch.begin();
         renderMap();
         spriteBatch.end();
 
+        renderWeather(delta);
+        renderDayNightOverlay();
+
         if (showMinimap) {
             renderMinimap();
         }
 
-        // Render HUD
+        renderWeather(delta);
         renderHud();
+        renderDayNightOverlay();
+        renderHud();
+        renderDayNightOverlay();
+        renderHud();
+        renderToolMenu(delta);
+        renderInventoryOverlay(delta);
 
         stage.act(delta);
         stage.draw();
@@ -393,29 +457,16 @@ public class GDXGameScreen implements Screen {
             } else {
                 hour -= 24;
                 if (hour == 0) hour = 12;
+              
+        if (faintedMessageTimer > 0) {
+            faintedMessageTimer -= delta;
+            if (faintedMessageTimer <= 0) {
+                faintedMessageLabel.setVisible(false);
             }
         }
-        String timeString = String.format("%d:%02d %s", hour, time.getMinute(), ampm);
-        hudFont.draw(spriteBatch, timeString, clockX + 148, clockY + 120);
 
-        // --- NEW: Draw the player's balance ---
-        Player player = game.getCurrentPlayer();
-        if (player != null) {
-            String balanceString = String.valueOf(player.getBankAccount().getBalance());
-            // You might need to adjust the X and Y coordinates to perfectly align the text
-            hudFont.draw(spriteBatch, balanceString, clockX + 140, clockY + 40);
-        }
-        // --- END NEW ---
-
-        // Revert font color to white for the dark background
-        hudFont.setColor(Color.WHITE);
-        String seasonString = "Season: " + date.getCurrentSeason().name();
-        hudFont.draw(spriteBatch, seasonString, 20, Gdx.graphics.getHeight() - 20);
-
-        String weatherString = "Weather: " + game.getTodayWeather().name();
-        hudFont.draw(spriteBatch, weatherString, 20, Gdx.graphics.getHeight() - 50);
-
-        spriteBatch.end();
+        stage.act(delta);
+        stage.draw();
     }
 
     private void initializePlayerPosition() {
@@ -510,6 +561,34 @@ public class GDXGameScreen implements Screen {
         femaleRight2Texture = new Texture("content/Cut/player/female_right2.png");
     }
 
+    private void loadWeatherAssets() {
+        // Load the single images
+        rainTexture = new Texture("content/weather/rain1.png");
+        snowTexture = new Texture("content/weather/snow.png");
+
+        // Initialize rain particles
+        rainParticles = new Array<>();
+        for (int i = 0; i < 200; i++) { // Create 200 raindrops
+            rainParticles.add(new Rectangle(
+                (float) (Math.random() * Gdx.graphics.getWidth()),
+                (float) (Math.random() * Gdx.graphics.getHeight()),
+                rainTexture.getWidth(),
+                rainTexture.getHeight()
+            ));
+        }
+
+        // Initialize snow particles
+        snowParticles = new Array<>();
+        for (int i = 0; i < 100; i++) { // Create 100 snowflakes
+            snowParticles.add(new Rectangle(
+                (float) (Math.random() * Gdx.graphics.getWidth()),
+                (float) (Math.random() * Gdx.graphics.getHeight()),
+                snowTexture.getWidth(),
+                snowTexture.getHeight()
+            ));
+        }
+    }
+
     private void generateRandomMaps() {
         for (int x = 0; x < MAP_WIDTH; x++) {
             for (int y = 0; y < MAP_HEIGHT; y++) {
@@ -540,14 +619,63 @@ public class GDXGameScreen implements Screen {
 
     private void handleInput(float delta) {
         // If shop menu is open, only allow shop menu UI to handle input
-        if (showShopMenu) {
+        if (showShopMenu || isInventoryOpen || isToolMenuOpen || showTradeMenu) {
             // Allow UI events (handled by scene2d stage) but block game input
             return;
         }
-        // If trade menu is open, only allow trade menu UI
-        if (showTradeMenu) {
-            return;
+      
+        if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
+            isInventoryOpen = !isInventoryOpen;
+            if (isInventoryOpen) {
+                showMainMenuButtons(); // Show the main buttons when opening
+            }
         }
+
+        if (Gdx.input.isKeyJustPressed(Input.Keys.T)) {
+            isToolMenuOpen = !isToolMenuOpen;
+            if (isToolMenuOpen) {
+                playerTools = game.getCurrentPlayer().getTools();
+                currentToolIndex = 0;
+                updateToolMenuDisplay();
+            }
+        }
+
+        handleMinimapToggle();
+        handleTurnSwitching();
+        handlePlayerMovement(delta);
+        handleCameraMovement(delta);
+
+        if (Gdx.input.isKeyJustPressed(Input.Keys.NUM_1)) {
+            if (controller != null) {
+                controller.changeTime("1");
+            }
+        }
+
+        if (Gdx.input.isKeyJustPressed(Input.Keys.NUM_2)) {
+            if (controller != null) {
+                controller.changeDate("1");
+            }
+        }
+
+        if(Gdx.input.isKeyJustPressed(Input.Keys.F1)){
+            controller.cheatSetEnergy(200);
+        }
+
+        // In the handleInput method...
+        if (Gdx.input.isKeyJustPressed(Input.Keys.L)) {
+            // This part is modified to trigger the animation
+            if (controller != null && game != null) {
+                Player currentPlayer = game.getCurrentPlayer();
+                String x = String.valueOf(currentPlayer.currentX());
+                String y = String.valueOf(currentPlayer.currentY());
+                System.out.println(controller.cheatLightning(x, y).Message());
+
+                // Trigger the visual flash effect
+                cheatLightningActive = true;
+                lightningDuration = 0.15f; // Set the duration of the flash
+            }
+        }
+        
         handleTradeMenuToggle();
         // Only handle game input if trade menu and shop menu are not showing
         handleMinimapToggle();
@@ -556,28 +684,85 @@ public class GDXGameScreen implements Screen {
         handleCameraMovement(delta);
         handleShopInteraction();
     }
-    
-    private void handleTradeMenuToggle() {
-        boolean tKeyCurrentlyPressed = Gdx.input.isKeyPressed(Input.Keys.T);
-        
-        if (tKeyCurrentlyPressed && !tKeyPressed) {
-            toggleTradeMenu();
+
+    private void handlePlayerMovement(float delta) {
+        Player currentPlayer = game.getCurrentPlayer();
+        if (currentPlayer == null) return;
+
+        playerAnimationTime += delta;
+
+        if (playerMoving && playerMoveProgress < 1.0f) {
+            playerMoveProgress += PLAYER_MOVE_SPEED * delta;
+            if (playerMoveProgress >= 1.0f) {
+                playerMoveProgress = 1.0f;
+                currentPlayer.setCurrentX(playerTargetX);
+                currentPlayer.setCurrentY(playerTargetY);
+                playerMoving = false;
+                currentPlayer.reduceEnergy(10);
+            }
+            return;
         }
-        
-        tKeyPressed = tKeyCurrentlyPressed;
-    }
-    
-    private void toggleTradeMenu() {
-        if (showTradeMenu) {
-            showTradeMenu = false;
-            if (tradeMenuTable != null) {
-                tradeMenuTable.remove();
-                tradeMenuTable = null;
+
+        boolean upPressed = Gdx.input.isKeyPressed(Input.Keys.W) || Gdx.input.isKeyPressed(Input.Keys.UP);
+        boolean downPressed = Gdx.input.isKeyPressed(Input.Keys.S) || Gdx.input.isKeyPressed(Input.Keys.DOWN);
+        boolean leftPressed = Gdx.input.isKeyPressed(Input.Keys.A) || Gdx.input.isKeyPressed(Input.Keys.LEFT);
+        boolean rightPressed = Gdx.input.isKeyPressed(Input.Keys.D) || Gdx.input.isKeyPressed(Input.Keys.RIGHT);
+
+        if (currentPlayer.isFainted() && (upPressed || downPressed || leftPressed || rightPressed)) {
+            faintedMessageLabel.setVisible(true);
+            faintedMessageTimer = FAINTED_MESSAGE_DURATION;
+            return; // Prevent any further movement logic
+        }
+
+        int newX = currentPlayer.currentX();
+        int newY = currentPlayer.currentY();
+        PlayerDirection newDirection = playerDirection;
+
+        if (upPressed && leftPressed) {
+            newDirection = PlayerDirection.UP_LEFT;
+            newX -= 1;
+            newY -= 1;
+        } else if (upPressed && rightPressed) {
+            newDirection = PlayerDirection.UP_RIGHT;
+            newX += 1;
+            newY -= 1;
+        } else if (downPressed && leftPressed) {
+            newDirection = PlayerDirection.DOWN_LEFT;
+            newX -= 1;
+            newY += 1;
+        } else if (downPressed && rightPressed) {
+            newDirection = PlayerDirection.DOWN_RIGHT;
+            newX += 1;
+            newY += 1;
+        } else if (upPressed) {
+            newDirection = PlayerDirection.UP;
+            newY -= 1;
+        } else if (downPressed) {
+            newDirection = PlayerDirection.DOWN;
+            newY += 1;
+        } else if (leftPressed) {
+            newDirection = PlayerDirection.LEFT;
+            newX -= 1;
+        } else if (rightPressed) {
+            newDirection = PlayerDirection.RIGHT;
+            newX += 1;
+        }
+
+        playerDirection = newDirection;
+
+        if (newX != currentPlayer.currentX() || newY != currentPlayer.currentY()) {
+            if (newX >= 0 && newX < MAP_WIDTH && newY >= 0 && newY < MAP_HEIGHT) {
+                if (isPlayerWalkable(newX, newY, currentPlayer)) {
+                    playerTargetX = newX;
+                    playerTargetY = newY;
+                    playerMoving = true;
+                    playerMoveProgress = 0f;
+                    playerAnimationTime = 0f;
+                }
             }
         } else {
-            showTradeMenu = true;
-            checkForNewTrades();
-            createTradeMenuUI();
+            playerMoving = false;
+            playerAnimationTime = 0f;
         }
     }
 
@@ -594,8 +779,8 @@ public class GDXGameScreen implements Screen {
         Player tileOwner = tile.getOwner();
 
         return tileOwner == null ||
-               tileOwner.equals(currentPlayer) ||
-               (currentPlayer.getSpouse() != null && tileOwner.equals(currentPlayer.getSpouse()));
+            tileOwner.equals(currentPlayer) ||
+            (currentPlayer.getSpouse() != null && tileOwner.equals(currentPlayer.getSpouse()));
     }
 
     private void handleMinimapToggle() {
@@ -675,9 +860,9 @@ public class GDXGameScreen implements Screen {
         Player currentPlayer = game.getCurrentPlayer();
 
         boolean manualControl = Gdx.input.isKeyPressed(Input.Keys.I) ||
-                               Gdx.input.isKeyPressed(Input.Keys.K) ||
-                               Gdx.input.isKeyPressed(Input.Keys.J) ||
-                               Gdx.input.isKeyPressed(Input.Keys.L);
+            Gdx.input.isKeyPressed(Input.Keys.K) ||
+            Gdx.input.isKeyPressed(Input.Keys.J) ||
+            Gdx.input.isKeyPressed(Input.Keys.L);
 
         if (manualControl) {
             cameraFollowsPlayer = false;
@@ -775,12 +960,12 @@ public class GDXGameScreen implements Screen {
                 if (tiles[x] != null && tiles[x][y] != null) {
                     Tile tile = tiles[x][y];
                     TileType tileType = tile.getType();
-                    
+
                     if (tileType == TileType.House || tileType == TileType.Wall) {
                         float worldX = x * TILE_SIZE;
                         float worldY = (MAP_HEIGHT - 1 - y) * TILE_SIZE;
                         renderHouseSprite(x, y, worldX, worldY);
-                        
+
                         // Also check if this Wall tile belongs to an NPC house area or shop area
                         if (tileType == TileType.Wall) {
                             // Only render NPC house if this wall belongs to an NPC house area
@@ -788,7 +973,7 @@ public class GDXGameScreen implements Screen {
                             if (npcIndex != -1) {
                                 renderNPCHouseSprite(x, y, worldX, worldY);
                             }
-                            
+
                             // Only render shop if this wall belongs to a shop area
                             int shopIndex = getShopIndex(x, y);
                             if (shopIndex != -1) {
@@ -851,6 +1036,29 @@ public class GDXGameScreen implements Screen {
 
             float worldX = playerX * TILE_SIZE;
             float worldY = (MAP_HEIGHT - 1 - playerY) * TILE_SIZE;
+
+            if (player.isFainted()) {
+                // Draw the sleeping "Z z Z" animation
+                hudFont.setColor(Color.WHITE);
+                // Animate the text bobbing up and down
+                float bobOffset = (float) (Math.sin(weatherStateTime * 4) * 5);
+                hudFont.draw(spriteBatch, "Z z Z", worldX + 8, worldY + 48 + bobOffset);
+            } else {
+                // Draw the normal player sprite
+                Texture playerTexture = getPlayerTexture(player);
+                float playerWidth = playerTexture.getWidth() * 2;
+                float playerHeight = playerTexture.getHeight() * 2;
+                float renderX = worldX + (TILE_SIZE - playerWidth) / 2f;
+                float renderY = worldY;
+
+                if (player.equals(game.getCurrentPlayer())) {
+                    spriteBatch.draw(playerTexture, renderX, renderY, playerWidth, playerHeight);
+                } else {
+                    spriteBatch.setColor(1f, 1f, 1f, 0.7f);
+                    spriteBatch.draw(playerTexture, renderX, renderY, playerWidth, playerHeight);
+                    spriteBatch.setColor(1f, 1f, 1f, 1f);
+                }
+            }
 
             Texture playerTexture = getPlayerTexture(player);
 
@@ -1039,13 +1247,13 @@ public class GDXGameScreen implements Screen {
             // Calculate the size to cover the entire 8x8 house area
             float houseWidth = 8 * TILE_SIZE;  // 8 tiles wide
             float houseHeight = 8 * TILE_SIZE; // 8 tiles tall
-            
+
             // Calculate the bottom-left position for the house image
             // The worldY for houseStartY gives us the screen position of the top row
             // We need to move down by (8-1) tiles to get to the bottom of the house area
             float houseX = worldX;
             float houseY = worldY - (7 * TILE_SIZE); // Move down 7 tiles from the top tile
-            
+
             spriteBatch.draw(houseTexture, houseX, houseY, houseWidth, houseHeight);
         }
     }
@@ -1075,7 +1283,7 @@ public class GDXGameScreen implements Screen {
             // Calculate the size to cover the entire 5x7 NPC house area
             float npcHouseWidth = 5 * TILE_SIZE;  // 5 tiles wide
             float npcHouseHeight = 7 * TILE_SIZE; // 7 tiles tall
-            
+
             // Calculate the bottom-left position for the NPC house image
             // The worldY for houseStartY gives us the screen position of the top row
             // We need to move down by (7-1) tiles to get to the bottom of the house area
@@ -1113,7 +1321,7 @@ public class GDXGameScreen implements Screen {
             // Calculate the size to cover the entire 8x8 shop area
             float shopWidth = 8 * TILE_SIZE;  // 8 tiles wide
             float shopHeight = 8 * TILE_SIZE; // 8 tiles tall
-            
+
             // Calculate the bottom-left position for the shop image
             // The worldY for shopStartY gives us the screen position of the top row
             // We need to move down by (8-1) tiles to get to the bottom of the shop area
@@ -1287,6 +1495,565 @@ public class GDXGameScreen implements Screen {
         shapeRenderer.end();
     }
 
+    private void renderHud() {
+        // --- Draw UI Backgrounds ---
+        Gdx.gl.glEnable(GL20.GL_BLEND);
+        Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
+        shapeRenderer.setProjectionMatrix(hudCamera.combined);
+        shapeRenderer.begin(com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType.Filled);
+
+        shapeRenderer.setColor(0.0f, 0.0f, 0.5f, 0.5f);
+
+        float infoBgX = 10;
+        float infoBgY = Gdx.graphics.getHeight() - 70;
+        float infoBgWidth = 220; // Adjust width as needed
+        float infoBgHeight = 60;
+        shapeRenderer.rect(infoBgX, infoBgY, infoBgWidth, infoBgHeight);
+
+        shapeRenderer.end();
+        Gdx.gl.glDisable(GL20.GL_BLEND);
+
+        spriteBatch.setProjectionMatrix(hudCamera.combined);
+        spriteBatch.begin();
+
+        float screenWidth = Gdx.graphics.getWidth();
+        float clockWidth = clockTexture.getWidth() * 1f;
+        float clockHeight = clockTexture.getHeight() * 1f;
+        float clockX = screenWidth - clockWidth - 20;
+        float clockY = Gdx.graphics.getHeight() - clockHeight - 20;
+        spriteBatch.draw(clockTexture, clockX, clockY, clockWidth, clockHeight);
+
+        hudFont.setColor(Color.BLACK);
+        Date date = game.getDate();
+        String dateString = date.getCurrentWeekday().name().substring(0, 3) + ". " + date.getCurrentDay();
+        hudFont.draw(spriteBatch, dateString, clockX + 160, clockY + 210);
+
+        Time time = game.getTime();
+        int hour = time.getHour();
+        String ampm = hour < 12 || hour >= 24 ? "am" : "pm";
+        if (hour == 0) {
+            hour = 12;
+        } else if (hour > 12) {
+            if (hour < 24) {
+                hour -= 12;
+            } else {
+                hour -= 24;
+                if (hour == 0) hour = 12;
+            }
+        }
+        String timeString = String.format("%d:%02d %s", hour, time.getMinute(), ampm);
+        hudFont.draw(spriteBatch, timeString, clockX + 148, clockY + 120);
+
+        // --- NEW: Draw the player's balance ---
+        Player player = game.getCurrentPlayer();
+        if (player != null) {
+            String balanceString = String.valueOf(player.getBankAccount().getBalance());
+            balanceString += " | ";
+            String energyString = String.valueOf(player.getEnergy());
+            hudFont.draw(spriteBatch, balanceString, clockX + 110, clockY + 40);
+            hudFont.draw(spriteBatch, energyString,clockX + 170, clockY + 40);
+        }
+        // --- END NEW ---
+
+        // Revert font color to white for the dark background
+        hudFont.setColor(Color.WHITE);
+        String seasonString = "Season: " + controller.showSeason();
+        hudFont.draw(spriteBatch, seasonString, 20, Gdx.graphics.getHeight() - 20);
+
+        String weatherString = "Weather: " + game.getTodayWeather().name();
+        hudFont.draw(spriteBatch, weatherString, 20, Gdx.graphics.getHeight() - 50);
+
+        spriteBatch.end();
+    }
+
+    private void renderWeather(float delta) {
+        if (game == null || game.getTodayWeather() == null) {
+            return;
+        }
+
+        weatherStateTime += delta;
+        spriteBatch.setProjectionMatrix(hudCamera.combined);
+        spriteBatch.begin();
+
+        switch (game.getTodayWeather()) {
+            case Rainy:
+            case Stormy: // Also show rain during a storm
+                for (Rectangle particle : rainParticles) {
+                    // Move rain straight down
+                    particle.y -= 300 * delta;
+                    // If it goes off screen, reset it to the top
+                    if (particle.y < 0) {
+                        particle.y = Gdx.graphics.getHeight();
+                        particle.x = (float) (Math.random() * Gdx.graphics.getWidth());
+                    }
+                    spriteBatch.draw(rainTexture, particle.x, particle.y);
+                }
+                break;
+
+            case Snowy:
+                for (Rectangle particle : snowParticles) {
+                    // Move snow down and add a gentle side-to-side sway
+                    particle.y -= 60 * delta;
+                    particle.x += (float) (Math.sin(particle.y / 30) * 20 * delta);
+
+                    // If it goes off screen, reset it to the top
+                    if (particle.y < 0) {
+                        particle.y = Gdx.graphics.getHeight();
+                        particle.x = (float) (Math.random() * Gdx.graphics.getWidth());
+                    }
+                    spriteBatch.draw(snowTexture, particle.x, particle.y, 24, 24); // Drawing snow slightly larger
+                }
+                break;
+
+            default:
+                // No weather effect for sunny days
+                break;
+        }
+
+        spriteBatch.end();
+
+        // Handle lightning flash for storms OR manual cheat
+        boolean shouldFlash = false;
+        if (game.getTodayWeather() == Weather.Stormy) {
+            stormEffectTimer += delta;
+            if (stormEffectTimer > nextLightningTime) {
+                lightningActive = true;
+                lightningDuration = 0.15f;
+                nextLightningTime = (float) (stormEffectTimer + 3 + Math.random() * 5);
+            }
+            if (lightningActive) {
+                shouldFlash = true;
+            }
+        }
+
+        // Also check if the cheat is active
+        if (cheatLightningActive) {
+            shouldFlash = true;
+        }
+
+        // If a flash should happen, render it
+        if (shouldFlash) {
+            lightningDuration -= delta;
+            Gdx.gl.glEnable(GL20.GL_BLEND);
+            shapeRenderer.setProjectionMatrix(hudCamera.combined);
+            shapeRenderer.begin(com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType.Filled);
+            shapeRenderer.setColor(1, 1, 1, 0.7f); // White flash
+            shapeRenderer.rect(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+            shapeRenderer.end();
+            Gdx.gl.glDisable(GL20.GL_BLEND);
+
+            // Reset the flags when the duration is over
+            if (lightningDuration <= 0) {
+                lightningActive = false;
+                cheatLightningActive = false;
+            }
+        }
+    }
+
+    private void renderDayNightOverlay() {
+        if (game == null) return;
+
+        Time time = game.getTime();
+        int hour = time.getHour();
+        int minute = time.getMinute();
+
+        // The darkening effect starts at 6 PM (hour 18) and ends at 2 AM (hour 26)
+        float startHour = 18f;
+        float endHour = 26f;
+        float maxOpacity = 0.85f; // End with a dark, but not pitch-black, screen
+
+        float currentHour = hour + (minute / 60f);
+        float opacity = 0f;
+
+        if (currentHour >= startHour) {
+            // Calculate the progress through the evening
+            float progress = (currentHour - startHour) / (endHour - startHour);
+            // Clamp the value between 0 and 1 to prevent errors
+            progress = Math.max(0, Math.min(1, progress));
+            opacity = progress * maxOpacity;
+        }
+
+        // If opacity is greater than 0, draw the overlay
+        if (opacity > 0) {
+            Gdx.gl.glEnable(GL20.GL_BLEND);
+            Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
+
+            shapeRenderer.setProjectionMatrix(hudCamera.combined);
+            shapeRenderer.begin(com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType.Filled);
+
+            // Black color with calculated opacity
+            shapeRenderer.setColor(0, 0, 0, opacity);
+            shapeRenderer.rect(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+
+            shapeRenderer.end();
+            Gdx.gl.glDisable(GL20.GL_BLEND);
+        }
+    }
+
+    private void renderInventoryOverlay(float delta) {
+        if (!isInventoryOpen) {
+            return;
+        }
+
+        float width = Gdx.graphics.getWidth() * 0.8f;
+        float height = Gdx.graphics.getHeight() * 0.8f;
+        float x = (Gdx.graphics.getWidth() - width) / 2;
+        float y = (Gdx.graphics.getHeight() - height) / 2;
+
+        spriteBatch.setProjectionMatrix(hudCamera.combined);
+        spriteBatch.begin();
+        spriteBatch.draw(inventoryBackground, x, y, width, height);
+        spriteBatch.end();
+
+        inventoryStage.getViewport().update(Gdx.graphics.getWidth(), Gdx.graphics.getHeight(), true);
+        inventoryStage.act(delta);
+        inventoryStage.draw();
+    }
+
+    private void renderToolMenu(float delta) {
+        if (!isToolMenuOpen) return;
+
+        toolMenuStage.act(delta);
+        toolMenuStage.draw();
+    }
+
+    private void setupInventoryUI() {
+        mainInventoryContainer = new Table();
+        inventoryStage.addActor(mainInventoryContainer);
+        mainInventoryContainer.setFillParent(true);
+        mainInventoryContainer.center();
+
+        menuContentTable = new Table();
+        mainInventoryContainer.add(menuContentTable).expand().fill();
+    }
+
+    private void showMainMenuButtons() {
+        menuContentTable.clear();
+
+        TextButton inventoryButton = new TextButton("Inventory", skin);
+        TextButton skillsButton = new TextButton("Skills", skin);
+        TextButton socialButton = new TextButton("Social", skin);
+        TextButton mapButton = new TextButton("Map", skin);
+        TextButton settingsButton = new TextButton("Settings", skin);
+        TextButton closeButton = new TextButton("Close", skin);
+
+        inventoryButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                showInventoryDisplay();
+            }
+        });
+
+        skillsButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                showSkillsDisplay();
+            }
+        });
+
+        socialButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                showSocialDisplay();
+            }
+        });
+
+        mapButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                showMinimap = !showMinimap;
+                isInventoryOpen = false; // Close menu to see the map
+            }
+        });
+
+        settingsButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                showSettingsMenu();
+            }
+        });
+
+        closeButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                isInventoryOpen = false;
+            }
+        });
+
+        float buttonWidth = 200f;
+        float buttonPad = 10f;
+
+        menuContentTable.add(inventoryButton).width(buttonWidth).pad(buttonPad).row();
+        menuContentTable.add(skillsButton).width(buttonWidth).pad(buttonPad).row();
+        menuContentTable.add(socialButton).width(buttonWidth).pad(buttonPad).row();
+        menuContentTable.add(mapButton).width(buttonWidth).pad(buttonPad).row();
+        menuContentTable.add(settingsButton).width(buttonWidth).pad(buttonPad).row();
+        menuContentTable.add(closeButton).width(buttonWidth).pad(buttonPad).row();
+    }
+
+    private void showInventoryDisplay() {
+        menuContentTable.clear();
+
+        Table itemsTable = new Table();
+        updateInventoryGrid(itemsTable);
+
+        // Create a new style for the ScrollPane
+        ScrollPane.ScrollPaneStyle scrollPaneStyle = new ScrollPane.ScrollPaneStyle();
+        // Set its background to be the same as the main menu
+        scrollPaneStyle.background = new TextureRegionDrawable(new TextureRegion(inventoryBackground));
+
+        // Create the ScrollPane with the new style
+        ScrollPane scrollPane = new ScrollPane(itemsTable, scrollPaneStyle);
+        scrollPane.setFadeScrollBars(false);
+        scrollPane.setScrollingDisabled(true, false); // Enables vertical scrolling
+
+        menuContentTable.add(scrollPane).expand().fill().pad(20).row();
+        addBackButtonToMenu();
+    }
+
+    private void showSkillsDisplay() {
+        menuContentTable.clear();
+        Player currentPlayer = game.getCurrentPlayer();
+        if (currentPlayer == null) return;
+
+        Table skillsTable = new Table();
+        TooltipManager tooltipManager = new TooltipManager();
+        tooltipManager.instant();
+
+        // --- NEW: Programmatically create a style for the ProgressBar ---
+        ProgressBar.ProgressBarStyle barStyle = new ProgressBar.ProgressBarStyle();
+        // Use simple, reliable drawables from the default skin
+        barStyle.background = skin.getDrawable("default-slider");
+        barStyle.knobBefore = skin.getDrawable("default-slider-knob");
+        // --- End of New Code ---
+
+        for (Skills skill : Skills.values()) {
+            Table skillRow = new Table();
+
+            // Icon and Tooltip
+            Texture iconTexture = textureManager.getTexture(skill.name() + "_Skill_Icon");
+            Image icon;
+            if (iconTexture != null) {
+                icon = new Image(iconTexture);
+                Tooltip<Label> tooltip = new Tooltip<>(new Label(skill.getSkillDescription(), skin));
+                icon.addListener(tooltip);
+            } else {
+                icon = new Image(skin.getDrawable("default-round"));
+                Gdx.app.log("Skills", "Missing texture for skill icon: " + skill.name() + "_Skill_Icon.png");
+            }
+            skillRow.add(icon).size(48, 48).padRight(10);
+
+            // Name
+            skillRow.add(new Label(skill.name(), skin)).width(100);
+
+            // Progress Bar - Using the new custom style
+            ProgressBar progressBar = new ProgressBar(0, 100, 1, false, barStyle);
+
+            // Calculate and set progress
+            int currentExp = currentPlayer.getSkillExperience(skill);
+            int expForNextLevel = skill.getExpForNextLevel();
+            float progress = (expForNextLevel > 0) ? ((float)currentExp / expForNextLevel) * 100f : 0f;
+            progressBar.setValue(progress);
+
+            skillRow.add(progressBar).width(200).padRight(10);
+
+            // Level
+            skillRow.add(new Label("Level " + currentPlayer.getSkillLevel(skill), skin));
+
+            skillsTable.add(skillRow).padBottom(10).row();
+        }
+
+        menuContentTable.add(skillsTable).expand().center().row();
+        addBackButtonToMenu();
+    }
+
+    private void showSocialDisplay() {
+        menuContentTable.clear();
+
+        Stack socialStack = new Stack();
+        socialStack.add(new Image(inventoryBackground));
+
+        Table contentTable = new Table();
+
+        Table socialInfoTable = new Table();
+        String playerFriendships = controller.showAllFriendShips().Message();
+        String npcFriendships = controller.showNPCFriendships().Message();
+
+        socialInfoTable.add(new Label("--- Player Friendships ---", skin)).padBottom(10).row();
+        socialInfoTable.add(new Label(playerFriendships, skin)).left().padBottom(20).row();
+        socialInfoTable.add(new Label("--- NPC Friendships ---", skin)).padBottom(10).row();
+        socialInfoTable.add(new Label(npcFriendships, skin)).left().row();
+
+        ScrollPane scrollPane = new ScrollPane(socialInfoTable, skin);
+        scrollPane.setFadeScrollBars(false);
+
+        contentTable.add(scrollPane).expand().fill().pad(40).row();
+
+        socialStack.add(contentTable);
+        menuContentTable.add(socialStack).width(Gdx.graphics.getWidth() * 0.8f).height(Gdx.graphics.getHeight() * 0.8f);
+        addBackButtonToMenu();
+    }
+
+    private void showSettingsMenu() {
+        menuContentTable.clear();
+
+        TextButton leaveGameButton = new TextButton("Leave Game", skin);
+        TextButton kickPlayerButton = new TextButton("Kick Player", skin);
+
+        leaveGameButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                isInventoryOpen = false;
+                Main.getInstance().setScreen(new GDXMainMenu());
+            }
+        });
+
+        kickPlayerButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                System.out.println("Kick Player clicked - functionality not implemented.");
+            }
+        });
+
+        menuContentTable.add(leaveGameButton).width(200).pad(10).row();
+        menuContentTable.add(kickPlayerButton).width(200).pad(10).row();
+        addBackButtonToMenu();
+    }
+
+    private void addBackButtonToMenu() {
+        TextButton backButton = new TextButton("Back", skin);
+        backButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                showMainMenuButtons();
+            }
+        });
+        menuContentTable.add(backButton).pad(10).bottom().left();
+    }
+
+    private void updateInventoryGrid(Table table) {
+        table.clear();
+        Player currentPlayer = game.getCurrentPlayer();
+        if (currentPlayer == null) return;
+
+        ArrayList<Item> items = currentPlayer.getInventory().getItems();
+        int column = 0;
+        final int ITEMS_PER_ROW = 4;
+
+        for (Item item : items) {
+            String key = generateTextureKey(item);
+            Texture texture = textureManager.getTexture(key);
+
+            Table itemSlot = new Table(skin);
+            itemSlot.setBackground("default-round");
+
+            if (texture != null) {
+                itemSlot.add(new Image(texture)).size(48, 48);
+            } else {
+                itemSlot.add(new Label("?", skin)).size(48, 48);
+                Gdx.app.log("Inventory", "Missing texture for item: '" + item.getName() + "' (tried key: '" + key + "')");
+            }
+
+            itemSlot.row();
+            itemSlot.add(new Label(String.valueOf(item.getNumber()), skin));
+
+            table.add(itemSlot).pad(4);
+            column++;
+            if (column >= ITEMS_PER_ROW) {
+                table.row();
+                column = 0;
+            }
+        }
+    }
+
+    private String generateTextureKey(Item item) {
+        if (item == null || item.getName() == null) {
+            return "Unknown";
+        }
+        // This version relies on the item's display name matching the asset file name.
+        // Example: item.getName() -> "Basic Fertilizer" -> "Basic_Fertilizer"
+        return item.getName().replace(" ", "_");
+    }
+
+    private void setupToolMenuUI() {
+        toolMenuStage = new Stage(new ScreenViewport());
+
+        Table toolTable = new Table();
+        toolTable.setBackground(skin.newDrawable("white", new Color(0, 0, 0, 0.5f)));
+        toolMenuStage.addActor(toolTable);
+
+        // Initial placeholder image and label
+        currentToolImage = new Image();
+        currentToolLabel = new Label("", skin);
+
+        TextButton leftButton = new TextButton("<", skin);
+        TextButton rightButton = new TextButton(">", skin);
+        TextButton acceptButton = new TextButton("Equip", skin);
+
+        leftButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                if (!playerTools.isEmpty()) {
+                    currentToolIndex = (currentToolIndex - 1 + playerTools.size()) % playerTools.size();
+                    updateToolMenuDisplay();
+                }
+            }
+        });
+
+        rightButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                if (!playerTools.isEmpty()) {
+                    currentToolIndex = (currentToolIndex + 1) % playerTools.size();
+                    updateToolMenuDisplay();
+                }
+            }
+        });
+
+        acceptButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                if (!playerTools.isEmpty()) {
+                    Tool selectedTool = playerTools.get(currentToolIndex);
+                    game.getCurrentPlayer().setCurrentTool(selectedTool);
+                    isToolMenuOpen = false; // Close menu after equipping
+                }
+            }
+        });
+
+        // Layout the tool menu
+        toolTable.add(leftButton).pad(5);
+        toolTable.add(currentToolImage).size(64, 64).pad(5);
+        toolTable.add(rightButton).pad(5);
+        toolTable.row();
+        toolTable.add(currentToolLabel).colspan(3).pad(5);
+        toolTable.row();
+        toolTable.add(acceptButton).colspan(3).pad(5);
+
+        // Position the table in the bottom-left corner
+        toolTable.pack();
+        toolTable.setPosition(10, 10);
+    }
+
+    private void updateToolMenuDisplay() {
+        if (playerTools.isEmpty()) {
+            currentToolImage.setDrawable(null);
+            currentToolLabel.setText("No Tools");
+            return;
+        }
+
+        Tool tool = playerTools.get(currentToolIndex);
+        Texture texture = textureManager.getTexture(generateTextureKey(tool));
+
+        if (texture != null) {
+            currentToolImage.setDrawable(new Image(texture).getDrawable());
+        } else {
+            // Fallback if texture is missing
+            currentToolImage.setDrawable(skin.getDrawable("default-round"));
+        }
+        currentToolLabel.setText(tool.getName());
+    }
+
     @Override
     public void resize(int width, int height) {
         stage.getViewport().update(width, height, true);
@@ -1311,6 +2078,11 @@ public class GDXGameScreen implements Screen {
         skin.dispose();
         spriteBatch.dispose();
         shapeRenderer.dispose();
+        inventoryStage.dispose();
+        inventoryBackground.dispose();
+        textureManager.dispose();
+        toolMenuStage.dispose();
+
         clockTexture.dispose();
         hudFont.dispose();
 
@@ -1370,1039 +2142,8 @@ public class GDXGameScreen implements Screen {
         femaleLeft2Texture.dispose();
         femaleRight1Texture.dispose();
         femaleRight2Texture.dispose();
-        
-        if (menuBackgroundTexture != null) {
-            menuBackgroundTexture.dispose();
-        }
-    }
-    
-    // Missing handlePlayerMovement method
-    private void handlePlayerMovement(float delta) {
-        Player currentPlayer = game.getCurrentPlayer();
-        if (currentPlayer == null) return;
 
-        playerAnimationTime += delta;
-
-        if (playerMoving && playerMoveProgress < 1.0f) {
-            playerMoveProgress += PLAYER_MOVE_SPEED * delta;
-            if (playerMoveProgress >= 1.0f) {
-                playerMoveProgress = 1.0f;
-                currentPlayer.setCurrentX(playerTargetX);
-                currentPlayer.setCurrentY(playerTargetY);
-                playerMoving = false;
-            }
-            return;
-        }
-
-        boolean upPressed = Gdx.input.isKeyPressed(Input.Keys.W) || Gdx.input.isKeyPressed(Input.Keys.UP);
-        boolean downPressed = Gdx.input.isKeyPressed(Input.Keys.S) || Gdx.input.isKeyPressed(Input.Keys.DOWN);
-        boolean leftPressed = Gdx.input.isKeyPressed(Input.Keys.A) || Gdx.input.isKeyPressed(Input.Keys.LEFT);
-        boolean rightPressed = Gdx.input.isKeyPressed(Input.Keys.D) || Gdx.input.isKeyPressed(Input.Keys.RIGHT);
-
-        int newX = currentPlayer.currentX();
-        int newY = currentPlayer.currentY();
-        PlayerDirection newDirection = playerDirection;
-
-        if (upPressed && leftPressed) {
-            newDirection = PlayerDirection.UP_LEFT;
-            newX -= 1;
-            newY -= 1;
-        } else if (upPressed && rightPressed) {
-            newDirection = PlayerDirection.UP_RIGHT;
-            newX += 1;
-            newY -= 1;
-        } else if (downPressed && leftPressed) {
-            newDirection = PlayerDirection.DOWN_LEFT;
-            newX -= 1;
-            newY += 1;
-        } else if (downPressed && rightPressed) {
-            newDirection = PlayerDirection.DOWN_RIGHT;
-            newX += 1;
-            newY += 1;
-        } else if (upPressed) {
-            newDirection = PlayerDirection.UP;
-            newY -= 1;
-        } else if (downPressed) {
-            newDirection = PlayerDirection.DOWN;
-            newY += 1;
-        } else if (leftPressed) {
-            newDirection = PlayerDirection.LEFT;
-            newX -= 1;
-        } else if (rightPressed) {
-            newDirection = PlayerDirection.RIGHT;
-            newX += 1;
-        }
-
-        playerDirection = newDirection;
-
-        if (newX != currentPlayer.currentX() || newY != currentPlayer.currentY()) {
-            if (newX >= 0 && newX < MAP_WIDTH && newY >= 0 && newY < MAP_HEIGHT) {
-                if (isPlayerWalkable(newX, newY, currentPlayer)) {
-                    playerTargetX = newX;
-                    playerTargetY = newY;
-                    playerMoving = true;
-                    playerMoveProgress = 0f;
-                    playerAnimationTime = 0f;
-                }
-            }
-        } else {
-            playerMoving = false;
-            playerAnimationTime = 0f;
-        }
-    }
-    
-    // Trade menu methods
-    private void checkForNewTrades() {
-        tradeErrorMessage = ""; // Clear any previous error messages
-        Result result = tradeController.listTrades();
-        
-        if (result.isSuccessful()) {
-            String message = result.Message();
-            newTradeNotifications.clear();
-            
-            if (message.trim().isEmpty()) {
-                currentTradeMenuState = TradeMenuState.MAIN_MENU;
-                return;
-            }
-            
-            // Split by trade separator
-            String[] trades = message.split("-----------------------");
-            
-            for (int i = 0; i < trades.length; i++) {
-                String tradeEntry = trades[i].trim();
-                if (tradeEntry.isEmpty()) continue;
-                
-                String[] lines = tradeEntry.split("\n");
-                String sender = null;
-                String receiver = null;
-                String tradeType = "Trade";
-                
-                for (String line : lines) {
-                    line = line.trim();
-                    
-                    if (line.startsWith("Buy:")) {
-                        tradeType = "Buy Request";
-                    } else if (line.startsWith("Trade Offer:")) {
-                        tradeType = "Trade Offer";
-                    } else if (line.startsWith("Sender:")) {
-                        sender = line.substring(7).trim(); // Remove "Sender:" prefix
-                    } else if (line.startsWith("Receiver:")) {
-                        receiver = line.substring(9).trim(); // Remove "Receiver:" prefix
-                    }
-                }
-                
-                // Only show notifications for trades where current player is the receiver
-                if (receiver != null && receiver.equals(game.getCurrentPlayer().getUsername()) && sender != null) {
-                    String notificationText = "New " + tradeType + " from " + sender;
-                    newTradeNotifications.add(notificationText);
-                }
-            }
-            
-            if (!newTradeNotifications.isEmpty()) {
-                currentTradeMenuState = TradeMenuState.NEW_TRADE_NOTIFICATIONS;
-            } else {
-                currentTradeMenuState = TradeMenuState.MAIN_MENU;
-            }
-        } else {
-            currentTradeMenuState = TradeMenuState.MAIN_MENU;
-        }
-    }
-    
-    private void createTradeMenuUI() {
-        if (tradeMenuTable != null) {
-            tradeMenuTable.remove();
-        }
-
-        tradeMenuTable = new Table();
-        // Make the background 75% of screen size
-        tradeMenuTable.setSize(Gdx.graphics.getWidth() * 0.75f, Gdx.graphics.getHeight() * 0.75f);
-        tradeMenuTable.setPosition(
-            (Gdx.graphics.getWidth() - tradeMenuTable.getWidth()) / 2f,
-            (Gdx.graphics.getHeight() - tradeMenuTable.getHeight()) / 2f
-        );
-        
-        // Create a background drawable from the menu background texture
-        TextureRegionDrawable backgroundDrawable = new TextureRegionDrawable(menuBackgroundTexture);
-        tradeMenuTable.setBackground(backgroundDrawable);
-        
-        stage.addActor(tradeMenuTable);
-
-        switch (currentTradeMenuState) {
-            case NEW_TRADE_NOTIFICATIONS:
-                createNewTradeNotificationsMenu();
-                break;
-            case MAIN_MENU:
-                createMainTradeMenu();
-                break;
-            case PLAYER_SELECTION:
-                createPlayerSelectionMenu();
-                break;
-            case TRADE_TYPE_SELECTION:
-                createTradeTypeSelectionMenu();
-                break;
-            case TRADE_DETAILS:
-                createTradeDetailsMenu();
-                break;
-            case ACTIVE_TRADES:
-                createActiveTradesMenu();
-                break;
-            case TRADE_HISTORY:
-                createTradeHistoryMenu();
-                break;
-        }
-    }
-    
-    private void createNewTradeNotificationsMenu() {
-        tradeMenuTable.clear();
-        
-        Label titleLabel = new Label("New Trade Notifications", skin);
-        titleLabel.setFontScale(1.5f);
-        tradeMenuTable.add(titleLabel).padBottom(20).row();
-        
-        for (int i = 0; i < newTradeNotifications.size(); i++) {
-            String notification = newTradeNotifications.get(i);
-            
-            Label notificationLabel = new Label(notification, skin);
-            tradeMenuTable.add(notificationLabel).padBottom(10).row();
-        }
-        
-        TextButton continueButton = new TextButton("Continue", skin);
-        continueButton.addListener(new ClickListener() {
-            @Override
-            public void clicked(InputEvent event, float x, float y) {
-                tradeErrorMessage = ""; // Clear error message
-                currentTradeMenuState = TradeMenuState.MAIN_MENU;
-                createMainTradeMenu();
-            }
-        });
-        tradeMenuTable.add(continueButton).padTop(20);
-    }
-    
-    private void createMainTradeMenu() {
-        tradeMenuTable.clear();
-        
-        Label titleLabel = new Label("Trade Menu", skin);
-        titleLabel.setFontScale(1.5f);
-        tradeMenuTable.add(titleLabel).padBottom(20).row();
-        
-        // Show error message if exists
-        if (!tradeErrorMessage.isEmpty()) {
-            Label errorLabel = new Label(tradeErrorMessage, skin);
-            errorLabel.setColor(Color.RED);
-            errorLabel.setFontScale(1.1f);
-            tradeMenuTable.add(errorLabel).padBottom(15).row();
-        }
-        
-        TextButton newTradeButton = new TextButton("New Trade", skin);
-        newTradeButton.addListener(new ClickListener() {
-            @Override
-            public void clicked(InputEvent event, float x, float y) {
-                tradeErrorMessage = ""; // Clear error message
-                currentTradeMenuState = TradeMenuState.PLAYER_SELECTION;
-                createTradeMenuUI();
-            }
-        });
-        tradeMenuTable.add(newTradeButton).width(200).pad(10).row();
-        
-        TextButton activeTradesButton = new TextButton("Active Trades", skin);
-        activeTradesButton.addListener(new ClickListener() {
-            @Override
-            public void clicked(InputEvent event, float x, float y) {
-                tradeErrorMessage = ""; // Clear error message
-                currentTradeMenuState = TradeMenuState.ACTIVE_TRADES;
-                createTradeMenuUI();
-            }
-        });
-        tradeMenuTable.add(activeTradesButton).width(200).pad(10).row();
-        
-        TextButton tradeHistoryButton = new TextButton("Trade History", skin);
-        tradeHistoryButton.addListener(new ClickListener() {
-            @Override
-            public void clicked(InputEvent event, float x, float y) {
-                tradeErrorMessage = ""; // Clear error message
-                currentTradeMenuState = TradeMenuState.TRADE_HISTORY;
-                createTradeMenuUI();
-            }
-        });
-        tradeMenuTable.add(tradeHistoryButton).width(200).pad(10).row();
-        
-        TextButton closeButton = new TextButton("Close", skin);
-        closeButton.addListener(new ClickListener() {
-            @Override
-            public void clicked(InputEvent event, float x, float y) {
-                tradeErrorMessage = ""; // Clear error message
-                showTradeMenu = false;
-                if (tradeMenuTable != null) {
-                    tradeMenuTable.remove();
-                    tradeMenuTable = null;
-                }
-            }
-        });
-        tradeMenuTable.add(closeButton).width(200).pad(10).row();
-    }
-    
-    private void createPlayerSelectionMenu() {
-        tradeMenuTable.clear();
-        
-        Label titleLabel = new Label("Select Player to Trade With", skin);
-        tradeMenuTable.add(titleLabel).padBottom(20).row();
-
-        // Add buttons for each other player in the game
-        for (User user : game.getPlayers()) {
-            if (!user.getPlayer().equals(game.getCurrentPlayer())) {
-                TextButton playerButton = new TextButton(user.getPlayer().getUsername(), skin);
-                playerButton.addListener(new ClickListener() {
-                    @Override
-                    public void clicked(InputEvent event, float x, float y) {
-                        selectedPlayerForTrade = user.getPlayer().getUsername();
-                        currentTradeMenuState = TradeMenuState.TRADE_TYPE_SELECTION;
-                        createTradeMenuUI();
-                    }
-                });
-                tradeMenuTable.add(playerButton).width(200).pad(10).row();
-            }
-        }
-
-        // Add back button
-        TextButton backButton = new TextButton("Back", skin);
-        backButton.addListener(new ClickListener() {
-            @Override
-            public void clicked(InputEvent event, float x, float y) {
-                tradeErrorMessage = ""; // Clear error message
-                currentTradeMenuState = TradeMenuState.MAIN_MENU;
-                createTradeMenuUI();
-            }
-        });
-        tradeMenuTable.add(backButton).width(200).pad(10).row();
-    }
-    
-    private void createTradeTypeSelectionMenu() {
-        tradeMenuTable.clear();
-        
-        Label titleLabel = new Label("Select Trade Type", skin);
-        tradeMenuTable.add(titleLabel).padBottom(20).row();
-        
-        Label playerLabel = new Label("Trading with: " + selectedPlayerForTrade, skin);
-        tradeMenuTable.add(playerLabel).padBottom(15).row();
-        
-        TextButton buyRequestButton = new TextButton("Buy Request", skin);
-        buyRequestButton.addListener(new ClickListener() {
-            @Override
-            public void clicked(InputEvent event, float x, float y) {
-                selectedTradeType = "Buy Request";
-                currentTradeMenuState = TradeMenuState.TRADE_DETAILS;
-                resetTradeFormData();
-                createTradeMenuUI();
-            }
-        });
-        tradeMenuTable.add(buyRequestButton).width(200).pad(10).row();
-        
-        TextButton buyOfferButton = new TextButton("Buy Offer", skin);
-        buyOfferButton.addListener(new ClickListener() {
-            @Override
-            public void clicked(InputEvent event, float x, float y) {
-                selectedTradeType = "Buy Offer";
-                currentTradeMenuState = TradeMenuState.TRADE_DETAILS;
-                resetTradeFormData();
-                createTradeMenuUI();
-            }
-        });
-        tradeMenuTable.add(buyOfferButton).width(200).pad(10).row();
-        
-        TextButton sellRequestButton = new TextButton("Trade Request", skin);
-        sellRequestButton.addListener(new ClickListener() {
-            @Override
-            public void clicked(InputEvent event, float x, float y) {
-                selectedTradeType = "Trade Request";
-                currentTradeMenuState = TradeMenuState.TRADE_DETAILS;
-                resetTradeFormData();
-                createTradeMenuUI();
-            }
-        });
-        tradeMenuTable.add(sellRequestButton).width(200).pad(10).row();
-        
-        TextButton sellOfferButton = new TextButton("Trade Offer", skin);
-        sellOfferButton.addListener(new ClickListener() {
-            @Override
-            public void clicked(InputEvent event, float x, float y) {
-                selectedTradeType = "Trade Offer";
-                currentTradeMenuState = TradeMenuState.TRADE_DETAILS;
-                resetTradeFormData();
-                createTradeMenuUI();
-            }
-        });
-        tradeMenuTable.add(sellOfferButton).width(200).pad(10).row();
-        
-        TextButton backButton = new TextButton("Back", skin);
-        backButton.addListener(new ClickListener() {
-            @Override
-            public void clicked(InputEvent event, float x, float y) {
-                tradeErrorMessage = ""; // Clear error message
-                currentTradeMenuState = TradeMenuState.PLAYER_SELECTION;
-                createTradeMenuUI();
-            }
-        });
-        tradeMenuTable.add(backButton).width(200).pad(10).row();
-    }
-    
-    private void resetTradeFormData() {
-        itemName = "";
-        itemAmount = 1;
-        itemPrice = 1;
-        givingItemName = "";
-        givingItemAmount = 1;
-        receivingItemName = "";
-        receivingItemAmount = 1;
-        tradeErrorMessage = "";
-    }
-    
-    private void createTradeDetailsMenu() {
-        tradeMenuTable.clear();
-        
-        Label titleLabel = new Label(selectedTradeType + " Details", skin);
-        titleLabel.setFontScale(1.2f);
-        tradeMenuTable.add(titleLabel).padBottom(20).row();
-        
-        Label playerLabel = new Label("Trading with: " + selectedPlayerForTrade, skin);
-        tradeMenuTable.add(playerLabel).padBottom(15).row();
-        
-        // Show error message if exists
-        if (!tradeErrorMessage.isEmpty()) {
-            Label errorLabel = new Label(tradeErrorMessage, skin);
-            errorLabel.setColor(1, 0, 0, 1); // Red color
-            tradeMenuTable.add(errorLabel).padBottom(10).row();
-        }
-        
-        if (selectedTradeType.equals("Buy Request") || selectedTradeType.equals("Buy Offer")) {
-            createBuyTradeForm();
-        } else {
-            createSellTradeForm();
-        }
-    }
-    
-    private void createBuyTradeForm() {
-        // Item name
-        Label itemNameLabel = new Label("Item Name:", skin);
-        TextField itemNameField = new TextField(itemName, skin);
-        itemNameField.setTextFieldListener(new TextField.TextFieldListener() {
-            @Override
-            public void keyTyped(TextField textField, char c) {
-                itemName = textField.getText();
-            }
-        });
-        tradeMenuTable.add(itemNameLabel).width(120).pad(5);
-        tradeMenuTable.add(itemNameField).width(200).pad(5).row();
-        
-        // Item amount
-        Label itemAmountLabel = new Label("Amount:", skin);
-        TextField itemAmountField = new TextField(String.valueOf(itemAmount), skin);
-        itemAmountField.setTextFieldFilter(new TextField.TextFieldFilter() {
-            @Override
-            public boolean acceptChar(TextField textField, char c) {
-                return Character.isDigit(c);
-            }
-        });
-        itemAmountField.setTextFieldListener(new TextField.TextFieldListener() {
-            @Override
-            public void keyTyped(TextField textField, char c) {
-                String text = textField.getText();
-                if (text.isEmpty()) {
-                    itemAmount = 1;
-                    textField.setText("1");
-                } else {
-                    try {
-                        itemAmount = Integer.parseInt(text);
-                        if (itemAmount < 1) {
-                            itemAmount = 1;
-                            textField.setText("1");
-                        }
-                    } catch (NumberFormatException e) {
-                        itemAmount = 1;
-                        textField.setText("1");
-                    }
-                }
-            }
-        });
-        TextButton amountPlusButton = new TextButton("+", skin);
-        amountPlusButton.addListener(new ClickListener() {
-            @Override
-            public void clicked(InputEvent event, float x, float y) {
-                itemAmount++;
-                itemAmountField.setText(String.valueOf(itemAmount));
-            }
-        });
-        tradeMenuTable.add(itemAmountLabel).width(120).pad(5);
-        tradeMenuTable.add(itemAmountField).width(200).pad(5);
-        tradeMenuTable.add(amountPlusButton).width(50).pad(5).row();
-        
-        // Item price
-        Label itemPriceLabel = new Label("Price:", skin);
-        TextField itemPriceField = new TextField(String.valueOf(itemPrice), skin);
-        itemPriceField.setTextFieldFilter(new TextField.TextFieldFilter() {
-            @Override
-            public boolean acceptChar(TextField textField, char c) {
-                return Character.isDigit(c);
-            }
-        });
-        itemPriceField.setTextFieldListener(new TextField.TextFieldListener() {
-            @Override
-            public void keyTyped(TextField textField, char c) {
-                String text = textField.getText();
-                if (text.isEmpty()) {
-                    itemPrice = 1;
-                    textField.setText("1");
-                } else {
-                    try {
-                        itemPrice = Integer.parseInt(text);
-                        if (itemPrice < 1) {
-                            itemPrice = 1;
-                            textField.setText("1");
-                        }
-                    } catch (NumberFormatException e) {
-                        itemPrice = 1;
-                        textField.setText("1");
-                    }
-                }
-            }
-        });
-        TextButton pricePlusButton = new TextButton("+", skin);
-        pricePlusButton.addListener(new ClickListener() {
-            @Override
-            public void clicked(InputEvent event, float x, float y) {
-                itemPrice++;
-                itemPriceField.setText(String.valueOf(itemPrice));
-            }
-        });
-        tradeMenuTable.add(itemPriceLabel).width(120).pad(5);
-        tradeMenuTable.add(itemPriceField).width(200).pad(5);
-        tradeMenuTable.add(pricePlusButton).width(50).pad(5).row();
-        
-        // Submit button
-        TextButton submitButton = new TextButton("Submit " + selectedTradeType, skin);
-        submitButton.addListener(new ClickListener() {
-            @Override
-            public void clicked(InputEvent event, float x, float y) {
-                Result result;
-                if (selectedTradeType.equals("Buy Request")) {
-                    result = tradeController.buyRequest(selectedPlayerForTrade, itemName, String.valueOf(itemAmount), String.valueOf(itemPrice));
-                } else {
-                    result = tradeController.buyOffer(selectedPlayerForTrade, itemName, String.valueOf(itemAmount), String.valueOf(itemPrice));
-                }
-                
-                if (result.isSuccessful()) {
-                    showTradeMenu = false;
-                    if (tradeMenuTable != null) {
-                        tradeMenuTable.remove();
-                        tradeMenuTable = null;
-                    }
-                } else {
-                    tradeErrorMessage = result.Message();
-                    createTradeMenuUI();
-                }
-            }
-        });
-        tradeMenuTable.add(submitButton).width(250).colspan(3).pad(10).row();
-        
-        // Back button
-        TextButton backButton = new TextButton("Back", skin);
-        backButton.addListener(new ClickListener() {
-            @Override
-            public void clicked(InputEvent event, float x, float y) {
-                currentTradeMenuState = TradeMenuState.TRADE_TYPE_SELECTION;
-                createTradeMenuUI();
-            }
-        });
-        tradeMenuTable.add(backButton).width(250).colspan(3).pad(10).row();
-    }
-    
-    private void createSellTradeForm() {
-        // Giving item name
-        Label givingItemNameLabel = new Label("Giving Item:", skin);
-        TextField givingItemNameField = new TextField(givingItemName, skin);
-        givingItemNameField.setTextFieldListener(new TextField.TextFieldListener() {
-            @Override
-            public void keyTyped(TextField textField, char c) {
-                givingItemName = textField.getText();
-            }
-        });
-        tradeMenuTable.add(givingItemNameLabel).width(120).pad(5);
-        tradeMenuTable.add(givingItemNameField).width(200).pad(5).row();
-        
-        // Giving item amount
-        Label givingItemAmountLabel = new Label("Giving Amount:", skin);
-        TextField givingItemAmountField = new TextField(String.valueOf(givingItemAmount), skin);
-        givingItemAmountField.setTextFieldFilter(new TextField.TextFieldFilter() {
-            @Override
-            public boolean acceptChar(TextField textField, char c) {
-                return Character.isDigit(c);
-            }
-        });
-        givingItemAmountField.setTextFieldListener(new TextField.TextFieldListener() {
-            @Override
-            public void keyTyped(TextField textField, char c) {
-                String text = textField.getText();
-                if (text.isEmpty()) {
-                    givingItemAmount = 1;
-                    textField.setText("1");
-                } else {
-                    try {
-                        givingItemAmount = Integer.parseInt(text);
-                        if (givingItemAmount < 1) {
-                            givingItemAmount = 1;
-                            textField.setText("1");
-                        }
-                    } catch (NumberFormatException e) {
-                        givingItemAmount = 1;
-                        textField.setText("1");
-                    }
-                }
-            }
-        });
-        TextButton givingAmountPlusButton = new TextButton("+", skin);
-        givingAmountPlusButton.addListener(new ClickListener() {
-            @Override
-            public void clicked(InputEvent event, float x, float y) {
-                givingItemAmount++;
-                givingItemAmountField.setText(String.valueOf(givingItemAmount));
-            }
-        });
-        tradeMenuTable.add(givingItemAmountLabel).width(120).pad(5);
-        tradeMenuTable.add(givingItemAmountField).width(200).pad(5);
-        tradeMenuTable.add(givingAmountPlusButton).width(50).pad(5).row();
-        
-        // Receiving item name
-        Label receivingItemNameLabel = new Label("Receiving Item:", skin);
-        TextField receivingItemNameField = new TextField(receivingItemName, skin);
-        receivingItemNameField.setTextFieldListener(new TextField.TextFieldListener() {
-            @Override
-            public void keyTyped(TextField textField, char c) {
-                receivingItemName = textField.getText();
-            }
-        });
-        tradeMenuTable.add(receivingItemNameLabel).width(120).pad(5);
-        tradeMenuTable.add(receivingItemNameField).width(200).pad(5).row();
-        
-        // Receiving item amount
-        Label receivingItemAmountLabel = new Label("Receiving Amount:", skin);
-        TextField receivingItemAmountField = new TextField(String.valueOf(receivingItemAmount), skin);
-        receivingItemAmountField.setTextFieldFilter(new TextField.TextFieldFilter() {
-            @Override
-            public boolean acceptChar(TextField textField, char c) {
-                return Character.isDigit(c);
-            }
-        });
-        receivingItemAmountField.setTextFieldListener(new TextField.TextFieldListener() {
-            @Override
-            public void keyTyped(TextField textField, char c) {
-                String text = textField.getText();
-                if (text.isEmpty()) {
-                    receivingItemAmount = 1;
-                    textField.setText("1");
-                } else {
-                    try {
-                        receivingItemAmount = Integer.parseInt(text);
-                        if (receivingItemAmount < 1) {
-                            receivingItemAmount = 1;
-                            textField.setText("1");
-                        }
-                    } catch (NumberFormatException e) {
-                        receivingItemAmount = 1;
-                        textField.setText("1");
-                    }
-                }
-            }
-        });
-        TextButton receivingAmountPlusButton = new TextButton("+", skin);
-        receivingAmountPlusButton.addListener(new ClickListener() {
-            @Override
-            public void clicked(InputEvent event, float x, float y) {
-                receivingItemAmount++;
-                receivingItemAmountField.setText(String.valueOf(receivingItemAmount));
-            }
-        });
-        tradeMenuTable.add(receivingItemAmountLabel).width(120).pad(5);
-        tradeMenuTable.add(receivingItemAmountField).width(200).pad(5);
-        tradeMenuTable.add(receivingAmountPlusButton).width(50).pad(5).row();
-        
-        // Submit button
-        TextButton submitButton = new TextButton("Submit " + selectedTradeType, skin);
-        submitButton.addListener(new ClickListener() {
-            @Override
-            public void clicked(InputEvent event, float x, float y) {
-                Result result;
-                if (selectedTradeType.equals("Trade Request")) {
-                    result = tradeController.tradeRequest(selectedPlayerForTrade, givingItemName, String.valueOf(givingItemAmount), receivingItemName, String.valueOf(receivingItemAmount));
-                } else {
-                    result = tradeController.tradeOffer(selectedPlayerForTrade, givingItemName, String.valueOf(givingItemAmount), receivingItemName, String.valueOf(receivingItemAmount));
-                }
-                
-                if (result.isSuccessful()) {
-                    showTradeMenu = false;
-                    if (tradeMenuTable != null) {
-                        tradeMenuTable.remove();
-                        tradeMenuTable = null;
-                    }
-                } else {
-                    tradeErrorMessage = result.Message();
-                    createTradeMenuUI();
-                }
-            }
-        });
-        tradeMenuTable.add(submitButton).width(250).colspan(3).pad(10).row();
-        
-        // Back button
-        TextButton backButton = new TextButton("Back", skin);
-        backButton.addListener(new ClickListener() {
-            @Override
-            public void clicked(InputEvent event, float x, float y) {
-                currentTradeMenuState = TradeMenuState.TRADE_TYPE_SELECTION;
-                createTradeMenuUI();
-            }
-        });
-        tradeMenuTable.add(backButton).width(250).colspan(3).pad(10).row();
-    }
-    
-    private void createActiveTradesMenu() {
-        tradeMenuTable.clear();
-        
-        Label titleLabel = new Label("Active Trades", skin);
-        titleLabel.setFontScale(1.5f);
-        titleLabel.setColor(Color.GOLD);
-        tradeMenuTable.add(titleLabel).padBottom(30).row();
-        
-        // Show error message if exists
-        if (!tradeErrorMessage.isEmpty()) {
-            Label errorLabel = new Label(tradeErrorMessage, skin);
-            errorLabel.setColor(Color.RED);
-            errorLabel.setFontScale(1.1f);
-            tradeMenuTable.add(errorLabel).padBottom(15).row();
-        }
-        
-        // Create a table to hold all trade cards
-        Table tradesTable = new Table();
-        
-        Result result = tradeController.listTrades();
-        if (result.isSuccessful() && !result.Message().trim().isEmpty()) {
-            String[] trades = result.Message().split("-----------------------");
-            
-            for (String tradeEntry : trades) {
-                if (tradeEntry.trim().isEmpty()) continue;
-                
-                String[] lines = tradeEntry.trim().split("\n");
-                String receiver = null;
-                String tradeId = null;
-                String sender = null;
-                String tradeType = "Unknown Trade";
-                String itemInfo = "";
-                
-                // Parse trade info with simple trade type detection
-                for (String line : lines) {
-                    line = line.trim();
-                    if (line.startsWith("Receiver:")) {
-                        receiver = line.substring(9).trim();
-                    } else if (line.startsWith("Sender:")) {
-                        sender = line.substring(7).trim();
-                    } else if (line.startsWith("Id:")) {
-                        tradeId = line.substring(3).trim();
-                    } else if (line.startsWith("Buy:")) {
-                        // For Buy trades, we need to determine if it's request or offer
-                        // This will be set after we know sender/receiver
-                        tradeType = "Buy";
-                    } else if (line.startsWith("Trade Offer:")) {
-                        // For Trade trades, we need to determine if it's request or offer
-                        // This will be set after we know sender/receiver
-                        tradeType = "Trade";
-                    } else if (line.contains("Item:") || line.contains("Amount:") || line.contains("Price:") || line.contains("Giving:") || line.contains("Receiving:")) {
-                        if (!itemInfo.isEmpty()) itemInfo += "\n";
-                        itemInfo += line;
-                    }
-                }
-                
-                // Set final trade type based on what method would have been called
-                if (tradeType.equals("Buy")) {
-                    if (sender != null && sender.equals(game.getCurrentPlayer().getUsername())) {
-                        tradeType = "Buy Offer"; // buyOffer() method
-                    } else {
-                        tradeType = "Buy Request"; // buyRequest() method
-                    }
-                } else if (tradeType.equals("Trade")) {
-                    if (sender != null && sender.equals(game.getCurrentPlayer().getUsername())) {
-                        tradeType = "Trade Offer"; // tradeOffer() method
-                    } else {
-                        tradeType = "Trade Request"; // tradeRequest() method
-                    }
-                }
-                
-                // Create beautiful trade card
-                Table tradeCard = new Table();
-                tradeCard.setBackground(skin.getDrawable("default-round"));
-                tradeCard.pad(15);
-                
-                // Trade type header with color coding
-                Label typeLabel = new Label(tradeType, skin);
-                typeLabel.setFontScale(1.3f);
-                if (tradeType.contains("Buy")) {
-                    typeLabel.setColor(Color.CYAN);
-                } else if (tradeType.contains("Trade")) {
-                    typeLabel.setColor(Color.MAGENTA);
-                } else {
-                    typeLabel.setColor(Color.CYAN);
-                }
-                tradeCard.add(typeLabel).colspan(2).padBottom(10).row();
-                
-                // Trade ID
-                if (tradeId != null) {
-                    Label idLabel = new Label("Trade ID: " + tradeId, skin);
-                    idLabel.setColor(Color.LIGHT_GRAY);
-                    tradeCard.add(idLabel).colspan(2).padBottom(5).row();
-                }
-                
-                // Sender info
-                if (sender != null) {
-                    Label senderLabel = new Label("From: " + sender, skin);
-                    senderLabel.setColor(Color.YELLOW);
-                    tradeCard.add(senderLabel).colspan(2).padBottom(5).row();
-                }
-                
-                // Receiver info
-                if (receiver != null) {
-                    Label receiverLabel = new Label("To: " + receiver, skin);
-                    receiverLabel.setColor(Color.YELLOW);
-                    tradeCard.add(receiverLabel).colspan(2).padBottom(8).row();
-                }
-                
-                // Item info
-                String[] itemLines = itemInfo.split("\n");
-                for (String itemLine : itemLines) {
-                    Label itemLabel = new Label(itemLine, skin);
-                    itemLabel.setColor(Color.WHITE);
-                    tradeCard.add(itemLabel).colspan(2).padBottom(3).row();
-                }
-                
-                // Status and buttons
-                if (receiver != null && receiver.equals(game.getCurrentPlayer().getUsername())) {
-                    Table buttonTable = new Table();
-                    
-                    TextButton acceptButton = new TextButton("Accept", skin);
-                    acceptButton.setColor(Color.GREEN);
-                    final String finalTradeId = tradeId;
-                    acceptButton.addListener(new ClickListener() {
-                        @Override
-                        public void clicked(InputEvent event, float x, float y) {
-                            Result acceptResult = tradeController.respondToTrade("accept", finalTradeId);
-                            if (!acceptResult.isSuccessful()) {
-                                tradeErrorMessage = acceptResult.Message();
-                            } else {
-                                tradeErrorMessage = "";
-                            }
-                            createTradeMenuUI(); // Refresh the menu
-                        }
-                    });
-                    
-                    TextButton rejectButton = new TextButton("Reject", skin);
-                    rejectButton.setColor(Color.RED);
-                    rejectButton.addListener(new ClickListener() {
-                        @Override
-                        public void clicked(InputEvent event, float x, float y) {
-                            Result rejectResult = tradeController.respondToTrade("reject", finalTradeId);
-                            if (!rejectResult.isSuccessful()) {
-                                tradeErrorMessage = rejectResult.Message();
-                            } else {
-                                tradeErrorMessage = "";
-                            }
-                            createTradeMenuUI(); // Refresh the menu
-                        }
-                    });
-                    
-                    buttonTable.add(acceptButton).width(100).pad(5);
-                    buttonTable.add(rejectButton).width(100).pad(5);
-                    tradeCard.add(buttonTable).colspan(2).padTop(10).row();
-                } else {
-                    Label waitingLabel = new Label("Waiting for response...", skin);
-                    waitingLabel.setColor(Color.ORANGE);
-                    waitingLabel.setFontScale(1.1f);
-                    tradeCard.add(waitingLabel).colspan(2).padTop(10).row();
-                }
-                
-                tradesTable.add(tradeCard).width(500).pad(15).row();
-            }
-        } else {
-            Label noTradesLabel = new Label("No active trades", skin);
-            noTradesLabel.setFontScale(1.2f);
-            noTradesLabel.setColor(Color.GRAY);
-            tradesTable.add(noTradesLabel).pad(30).row();
-        }
-        
-        // Create scroll pane for the trades
-        ScrollPane scrollPane = new ScrollPane(tradesTable, skin);
-        scrollPane.setFadeScrollBars(false);
-        scrollPane.setScrollbarsOnTop(true);
-        scrollPane.setScrollBarPositions(false, true);
-        
-        // Add scroll pane to main table with fixed height
-        tradeMenuTable.add(scrollPane).width(550).height(400).pad(10).row();
-        
-        TextButton backButton = new TextButton("Back", skin);
-        backButton.addListener(new ClickListener() {
-            @Override
-            public void clicked(InputEvent event, float x, float y) {
-                tradeErrorMessage = ""; // Clear error message when going back
-                currentTradeMenuState = TradeMenuState.MAIN_MENU;
-                createTradeMenuUI();
-            }
-        });
-        tradeMenuTable.add(backButton).width(200).pad(20).row();
-    }
-    
-    private void createTradeHistoryMenu() {
-        tradeMenuTable.clear();
-        
-        Label titleLabel = new Label("Trade History", skin);
-        titleLabel.setFontScale(1.5f);
-        titleLabel.setColor(Color.GOLD);
-        tradeMenuTable.add(titleLabel).padBottom(30).row();
-        
-        // Create a table to hold all trade cards
-        Table tradesTable = new Table();
-        
-        Result result = tradeController.tradeHistory();
-        if (result.isSuccessful() && !result.Message().trim().isEmpty()) {
-            String[] trades = result.Message().split("-----------------------");
-            
-            for (String tradeEntry : trades) {
-                if (tradeEntry.trim().isEmpty()) continue;
-                
-                String[] lines = tradeEntry.trim().split("\n");
-                String status = "PENDING";
-                String tradeId = null;
-                String sender = null;
-                String receiver = null;
-                String tradeType = "Unknown Trade";
-                String itemInfo = "";
-                
-                // Parse trade info with simple trade type detection
-                for (String line : lines) {
-                    line = line.trim();
-                    if (line.startsWith("Receiver:")) {
-                        receiver = line.substring(9).trim();
-                    } else if (line.startsWith("Sender:")) {
-                        sender = line.substring(7).trim();
-                    } else if (line.startsWith("Id:")) {
-                        tradeId = line.substring(3).trim();
-                    } else if (line.startsWith("Buy:")) {
-                        // For Buy trades, we need to determine if it's request or offer
-                        // This will be set after we know sender/receiver
-                        tradeType = "Buy";
-                    } else if (line.startsWith("Trade Offer:")) {
-                        // For Trade trades, we need to determine if it's request or offer
-                        // This will be set after we know sender/receiver
-                        tradeType = "Trade";
-                    } else if (line.contains("Item:") || line.contains("Amount:") || line.contains("Price:") || line.contains("Giving:") || line.contains("Receiving:")) {
-                        if (!itemInfo.isEmpty()) itemInfo += "\n";
-                        itemInfo += line;
-                    }
-                }
-                
-                // Set final trade type based on what method would have been called
-                if (tradeType.equals("Buy")) {
-                    if (sender != null && sender.equals(game.getCurrentPlayer().getUsername())) {
-                        tradeType = "Buy Offer"; // buyOffer() method
-                    } else {
-                        tradeType = "Buy Request"; // buyRequest() method
-                    }
-                } else if (tradeType.equals("Trade")) {
-                    if (sender != null && sender.equals(game.getCurrentPlayer().getUsername())) {
-                        tradeType = "Trade Offer"; // tradeOffer() method
-                    } else {
-                        tradeType = "Trade Request"; // tradeRequest() method
-                    }
-                }
-                
-                // Create beautiful trade history card
-                Table tradeCard = new Table();
-                tradeCard.setBackground(skin.getDrawable("default-round"));
-                tradeCard.pad(15);
-                
-                // Trade type header with color coding
-                Label typeLabel = new Label(tradeType, skin);
-                typeLabel.setFontScale(1.3f);
-                if (tradeType.contains("Buy")) {
-                    typeLabel.setColor(Color.CYAN);
-                } else if (tradeType.contains("Trade")) {
-                    typeLabel.setColor(Color.MAGENTA);
-                } else {
-                    typeLabel.setColor(Color.CYAN);
-                }
-                tradeCard.add(typeLabel).colspan(2).padBottom(10).row();
-                
-                // Trade ID
-                if (tradeId != null) {
-                    Label idLabel = new Label("Trade ID: " + tradeId, skin);
-                    idLabel.setColor(Color.LIGHT_GRAY);
-                    tradeCard.add(idLabel).colspan(2).padBottom(5).row();
-                }
-                
-                // Status with color coding
-                Label statusLabel = new Label("Status: " + status, skin);
-                statusLabel.setFontScale(1.1f);
-                if (status.equals("ACCEPTED")) {
-                    statusLabel.setColor(Color.GREEN);
-                } else if (status.equals("REJECTED")) {
-                    statusLabel.setColor(Color.RED);
-                } else {
-                    statusLabel.setColor(Color.ORANGE);
-                }
-                tradeCard.add(statusLabel).colspan(2).padBottom(8).row();
-                
-                // Sender info
-                if (sender != null) {
-                    Label senderLabel = new Label("From: " + sender, skin);
-                    senderLabel.setColor(Color.YELLOW);
-                    tradeCard.add(senderLabel).colspan(2).padBottom(5).row();
-                }
-                
-                // Receiver info
-                if (receiver != null) {
-                    Label receiverLabel = new Label("To: " + receiver, skin);
-                    receiverLabel.setColor(Color.YELLOW);
-                    tradeCard.add(receiverLabel).colspan(2).padBottom(8).row();
-                }
-                
-                // Item info
-                String[] itemLines = itemInfo.split("\n");
-                for (String itemLine : itemLines) {
-                    Label itemLabel = new Label(itemLine, skin);
-                    itemLabel.setColor(Color.WHITE);
-                    tradeCard.add(itemLabel).colspan(2).padBottom(3).row();
-                }
-                
-                tradesTable.add(tradeCard).width(500).pad(15).row();
-            }
-        } else {
-            Label noHistoryLabel = new Label("No trade history", skin);
-            noHistoryLabel.setFontScale(1.2f);
-            noHistoryLabel.setColor(Color.GRAY);
-            tradesTable.add(noHistoryLabel).pad(30).row();
-        }
-        
-        // Create scroll pane for the trade history
-        ScrollPane scrollPane = new ScrollPane(tradesTable, skin);
-        scrollPane.setFadeScrollBars(false);
-        scrollPane.setScrollbarsOnTop(true);
-        scrollPane.setScrollBarPositions(false, true);
-        
-        // Add scroll pane to main table with fixed height
-        tradeMenuTable.add(scrollPane).width(550).height(400).pad(10).row();
-        
-        TextButton backButton = new TextButton("Back", skin);
-        backButton.addListener(new ClickListener() {
-            @Override
-            public void clicked(InputEvent event, float x, float y) {
-                currentTradeMenuState = TradeMenuState.MAIN_MENU;
-                createTradeMenuUI();
-            }
-        });
-        tradeMenuTable.add(backButton).width(200).pad(20).row();
+        textureManager.dispose();
     }
     
     private void createShopMenuUI() {

@@ -96,6 +96,14 @@ public class Player {
         else this.energy += amount;
     }
 
+    public void reduceEnergy(int amount) {
+        this.energy -= amount;
+        if (this.energy < 0) {
+            this.energy = 0;
+            this.isFainted = true;
+        }
+    }
+
     public BankAccount getBankAccount() {
         return this.bankAccount;
     }
@@ -165,7 +173,7 @@ public class Player {
     }
 
     public void extract() {
-        addSkillExperience(Skills.Extraction, 10);
+        addSkillExperience(Skills.Mining, 10);
     }
 
     public void foraging() {
@@ -193,10 +201,10 @@ public class Player {
             return wateringCanHandler(tile);
         } else if (typeName.equals("Scythe")) {
             return scytheHandler(tile);
-        // } else if (typeName.equals("MilkPail")) {
-        //     return milkPaleHandler();
-        // } else if (typeName.equals("Shear")) {
-        //     return shearHandler();
+            // } else if (typeName.equals("MilkPail")) {
+            //     return milkPaleHandler();
+            // } else if (typeName.equals("Shear")) {
+            //     return shearHandler();
         } else {
             return new Result(false, "Unknown tool type");
         }
@@ -226,7 +234,7 @@ public class Player {
     }
 
     public Result pickaxeHandler(Tile tile) {
-        SkillData extractionData = skills.get(Skills.Extraction);
+        SkillData extractionData = skills.get(Skills.Mining);
         int energyConsumption = currentTool.getToolType().getEnergyConsumption();
         if(extractionData.getLevel() >= 4){
             energyConsumption -= 1;
@@ -235,7 +243,7 @@ public class Player {
             return new Result(false, "You don't have enough energy to mine!(extract)");
         }
         int add = 0;
-        if(getSkillLevel(Skills.Extraction) >= 2){
+        if(getSkillLevel(Skills.Mining) >= 2){
             add = 2;
         }
         this.energy -= energyConsumption;
@@ -537,7 +545,7 @@ public class Player {
     }
 
     private void addMiningRecipes() {
-        SkillData skillData = findSkillData(Skills.Extraction);
+        SkillData skillData = findSkillData(Skills.Mining);
         int level = skillData.getLevel();
 
         if (level >= 1) {
@@ -677,18 +685,18 @@ public class Player {
             if (h.getId() == housingId) {
                 if (h.addAnimal(purchasedAnimal)) {
                     return new Result(true,
-                            purchasedAnimal.getType().getName() +
-                                    " named \"" + purchasedAnimal.getName() +
-                                    "\" was successfully added to " +
-                                    h.getType().getName() +
-                                    " number " + housingId + "."
+                        purchasedAnimal.getType().getName() +
+                            " named \"" + purchasedAnimal.getName() +
+                            "\" was successfully added to " +
+                            h.getType().getName() +
+                            " number " + housingId + "."
                     );
                 } else {
                     return new Result(false,
-                            "The capacity of " +
-                                    h.getType().getName() +
-                                    " number " + housingId +
-                                    " is full."
+                        "The capacity of " +
+                            h.getType().getName() +
+                            " number " + housingId +
+                            " is full."
                     );
                 }
             }
@@ -701,7 +709,7 @@ public class Player {
     }
 
     private void addTrashCan(){
-        inventory.getItems().add(new TrashCan(TrashCanType.PrimitiveTrashCan,1));
+        inventory.getItems().add(new TrashCan(TrashCanType.Trash_Can,1));
     }
 
     public HouseRefrigerator getHouseRefrigerator() {
@@ -714,5 +722,15 @@ public class Player {
 
     public int getGiftId() {
         return giftId;
+    }
+
+    public ArrayList<Tool> getTools() {
+        ArrayList<Tool> tools = new ArrayList<>();
+        for (Item item : this.inventory.getItems()) {
+            if (item instanceof Tool) {
+                tools.add((Tool) item);
+            }
+        }
+        return tools;
     }
 }

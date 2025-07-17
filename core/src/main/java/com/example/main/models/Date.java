@@ -20,15 +20,14 @@ public class Date {
     public int addDays(int days) {
         if (days <= 0) return 0;
 
-        int totalDays = this.currentDay + days;
-        int seasonsPassed = totalDays / DAYS_PER_SEASON;
-        int remainingDays = totalDays % DAYS_PER_SEASON;
+        int seasonsPassed = 0;
+        this.currentDay += days;
 
-        for (int i = 0; i < seasonsPassed; i++) {
+        while (this.currentDay > DAYS_PER_SEASON) {
+            this.currentDay -= DAYS_PER_SEASON;
             this.currentSeason = this.currentSeason.getNextSeason();
+            seasonsPassed++;
         }
-
-        this.currentDay = remainingDays == 0 ? DAYS_PER_SEASON : remainingDays;
 
         int weekdayAdvances = days % DAYS_PER_WEEK;
         for (int i = 0; i < weekdayAdvances; i++) {
