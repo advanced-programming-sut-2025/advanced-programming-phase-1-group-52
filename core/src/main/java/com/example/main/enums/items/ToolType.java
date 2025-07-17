@@ -62,6 +62,11 @@ public enum ToolType implements ItemType {
 
     @Override
     public String getName() {
+        return toolName;
+    }
+
+    @Override
+    public String getEnumName() {
         return name();
     }
 

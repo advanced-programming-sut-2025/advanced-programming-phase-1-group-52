@@ -3,6 +3,7 @@ package com.example.main.enums.design.Shop;
 import com.example.main.enums.items.AnimalType;
 import com.example.main.enums.items.ItemType;
 import com.example.main.enums.items.MaterialType;
+import com.example.main.enums.items.ToolType;
 
 public enum MarniesRanch implements ShopEntry{
 
@@ -10,10 +11,10 @@ public enum MarniesRanch implements ShopEntry{
     Hay(MaterialType.Hay, null, "Hay",
             "Dried grass used as animal food.",
             50, Integer.MAX_VALUE, null),
-    MilkPail(MaterialType.MilkPail, null, "Milk Pail",
+    MilkPail(ToolType.Milk_Pail, null, "Milk Pail",
             "Gather milk from your animals.",
             1000, 1, null),
-    Shears(MaterialType.Shears, null, "Shears",
+    Shears(ToolType.Shears, null, "Shears",
             "Use this to collect wool from sheep",
             1000, 1, null),
 
@@ -76,8 +77,8 @@ public enum MarniesRanch implements ShopEntry{
 
     @Override
     public String toString() {
-        return this.name() + "\nPrice: " + 
-        this.price + "\nDescription: " + this.description + 
+        return this.name() + "\nPrice: " +
+        this.price + "\nDescription: " + this.description +
         "\n----------------------\n";
     }
 

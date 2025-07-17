@@ -2,7 +2,7 @@ package com.example.main.enums.items;
 
 
 public enum MaterialType implements ItemType {
-    
+
     Egg("egg"),
     Milk("milk"),
     Cheese("cheese"),
@@ -11,7 +11,7 @@ public enum MaterialType implements ItemType {
 
     // Crops
     Wheat("Wheat mat"),
-    WheatFlour("Wheat flour mat"),
+    Wheat_Flour("Wheat flour mat"),
     Pumpkin("Pumpkin mat"),
     Tomato("Tomato mat"),
     Corn("Corn mat"),
@@ -19,7 +19,7 @@ public enum MaterialType implements ItemType {
     Blueberry("Blueberry mat"),
     Melon("Melon mat"),
     Apricot("Apricot mat"),
-    RedCabbage("Red cabbage mat"),
+    Red_Cabbage("Red cabbage mat"),
     Radish("Radish mat"),
     Amaranth("Amaranth mat"),
     Kale("Kale mat"),
@@ -34,7 +34,7 @@ public enum MaterialType implements ItemType {
     Salmon("Salmon"),
     AnyFish("Any fish"),
     Flounder("Flounder"),
-    MidnightCarp("Midnight carp"),
+    Midnight_Carp("Midnight carp"),
 
     // Foraged Type
     Dandelion("Dandelion"),
@@ -43,55 +43,49 @@ public enum MaterialType implements ItemType {
     // Processed Type
     Rice("Rice"),
     Bread("Bread mat"),
-    HashBrowns("Hash browns mat"),
+    Hashbrowns("Hash browns mat"),
     Omelet("Omelet mat"),
 
     // Handicrafts Type
-    CopperOre("Copper ore"),
-    IronOre("Iron ore"),
-    GoldOre("Gold ore"),
-    IridiumOre("Iridium ore"),
-    CopperBar("Copper bar"),
-    IronBar("Iron bar"),
-    GoldBar("Gold bar"),
-    IridiumBar("Iridium bar"),
+    Copper_Ore("Copper ore"),
+    Iron_Ore("Iron ore"),
+    Gold_Ore("Gold ore"),
+    Iridium_Ore("Iridium ore"),
+    Copper_Bar("Copper bar"),
+    Iron_Bar("Iron bar"),
+    Gold_Bar("Gold bar"),
+    Iridium_Bar("Iridium bar"),
     Wood("Wood"),
     Stone("Stone"),
     Coal("Coal"),
     Fiber("Fiber"),
     Iron("Iron"),
-    HardWood("Hard wood"),
-    GoldCoin("Gold coin"),
+    Hardwood("Hard wood"),
+    Gold_Coin("Gold coin"),
     Diamond("Diamond"),
 
     // pierre's remainings
     Bouquet("Bouquet"),
-    WeddingRing("Wedding Ring"),
-    DehydratorRecipe("Dehydrator recipe"),
-    GrassStarterRecipe("Grass Starter recipe"),
+    Wedding_Ring("Wedding Ring"),
+    Dehydrator_Recipe("Dehydrator recipe"),
+    Grass_Starter_Recipe("Grass Starter recipe"),
     Vinegar("Vinegar"),
-    DeluxeRetainingSoil("Deluxe retaining Soil"),
-    GrassStarter("Grass Starter"),
-    SpeedGro("Speed-Gro"),
-    BasicRetainingSoil("Basic retaining Soil"),
-    QualityRetainingSoil("Quality-Retaining Soil"),
+    Deluxe_Retaining_Soil("Deluxe retaining Soil"),
+    Grass_Starter("Grass Starter"),
+    Speed_Gro("Speed-Gro"),
+    Basic_Retaining_Soil("Basic retaining Soil"),
+    Quality_Retaining_Soil("Quality-Retaining Soil"),
 
     // Joja's remainings
-    JojaCola("Joja Cola"),
+    Joja_Cola("Joja Cola"),
 
     // Carpenter's items,
 
     // Marine's Ranch items:
     Hay("Hay"),
-    MilkPail("Milk Pail"),
-    Shears("Shears"),
 
-    // Fishing poles :
-    TroutSoup( "Trout Soup"),
-    BambooPole( "Bamboo Pole"),
-    TrainingRod("Training Rod"),
-    FiberglassRod("Fiberglass Rod"),
-    IridiumRod("Iridium Rod");
+    //todo: what is this :|
+    Trout_Soup( "Trout Soup");
 
     private final String name;
 
@@ -107,5 +101,10 @@ public enum MaterialType implements ItemType {
     @Override
     public String getName() {
         return this.name;
+    }
+
+    @Override
+    public String getEnumName() {
+        return name();
     }
 }

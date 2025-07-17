@@ -3,21 +3,22 @@ package com.example.main.enums.design.Shop;
 import com.example.main.enums.items.CraftingRecipes;
 import com.example.main.enums.items.ItemType;
 import com.example.main.enums.items.MaterialType;
+import com.example.main.enums.items.ToolType;
 
 
 public enum FishShop implements ShopEntry{
 
     FishSmokerRecipe(CraftingRecipes.FishSmokerRecipe, "Fish Smoker (Recipe)",
             "A recipe to make Fish Smoker", 10000, -1, 1),
-    TroutSoup(MaterialType.TroutSoup,  "Trout Soup",
+    TroutSoup(MaterialType.Trout_Soup,  "Trout Soup",
             "Pretty salty.", 250, -1, 1),
-    BambooPole(MaterialType.BambooPole, "Bamboo Pole",
+    BambooPole(ToolType.Bamboo_Pole, "Bamboo Pole",
             "Use in the water to catch fish.", 500, -1, 1),
-    TrainingRod(MaterialType.TrainingRod, "Training Rod",
+    TrainingRod(ToolType.Training_Rod, "Training Rod",
             "It's a lot easier to use than other rods, but can only catch basic fish.", 25, -1, 1),
-    FiberglassRod(MaterialType.FiberglassRod, "Fiberglass Rod",
+    FiberglassRod(ToolType.Fiberglass_Rod, "Fiberglass Rod",
             "Use in the water to catch fish.", 1800, 2, 1),
-    IridiumRod(MaterialType.IridiumRod, "Iridium Rod",
+    IridiumRod(ToolType.Iridium_Rod, "Iridium Rod",
             "Use in the water to catch fish.", 7500, 4, 1);
 
 
@@ -48,8 +49,8 @@ public enum FishShop implements ShopEntry{
 
     @Override
     public String toString() {
-        return this.name() + "\nPrice: " + 
-        this.price + "\nDescription: " + this.description + 
+        return this.name() + "\nPrice: " +
+        this.price + "\nDescription: " + this.description +
         "\n----------------------\n";
     }
 }

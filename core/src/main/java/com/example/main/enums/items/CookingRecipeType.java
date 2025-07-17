@@ -7,13 +7,13 @@ import java.util.Map;
 import com.example.main.enums.player.Skills;
 
 public enum CookingRecipeType implements ItemType {
-    FriedEgg("Fried egg Recipe",50,null, false,0, 35, FoodType.FriedEgg) {
+    FriedEgg("Fried egg Recipe",50,null, false,0, 35, FoodType.Fried_Egg) {
         {
-            ingredients.put(AnimalProductType.ChickenEgg, 1);
+            ingredients.put(AnimalProductType.Egg, 1);
         }
     },
 
-    BakedFish("Baked Fish Recipe", 75, null, false, 0, 100, FoodType.BakedFish) {
+    BakedFish("Baked Fish Recipe", 75, null, false, 0, 100, FoodType.Baked_Fish) {
         {
             ingredients.put(MaterialType.Sardine, 1);
             ingredients.put(MaterialType.Salmon, 1);
@@ -28,17 +28,17 @@ public enum CookingRecipeType implements ItemType {
         }
     },
 
-    Omelet("Omelet Recipe", 100, null, false, 0, 125, FoodType.Olmelet) {
+    Omelet("Omelet Recipe", 100, null, false, 0, 125, FoodType.Omelet) {
         {
             ingredients.put(MaterialType.Egg, 1);
             ingredients.put(MaterialType.Milk, 1);
         }
     },
 
-    PumpkinPie("Pumpkin pie Recipe", 225, null, false, 0, 385, FoodType.PumpkinPie) {
+    PumpkinPie("Pumpkin pie Recipe", 225, null, false, 0, 385, FoodType.Pumpkin_Pie) {
         {
             ingredients.put(MaterialType.Pumpkin, 1);
-            ingredients.put(MaterialType.WheatFlour, 1);
+            ingredients.put(MaterialType.Wheat_Flour, 1);
             ingredients.put(MaterialType.Milk, 1);
             ingredients.put(MaterialType.Sugar, 1);
         }
@@ -46,14 +46,14 @@ public enum CookingRecipeType implements ItemType {
 
     Spaghetti("Spaghetti Recipe", 75, null, false, 0, 120, FoodType.Spaghetti) {
         {
-            ingredients.put(MaterialType.WheatFlour, 1);
+            ingredients.put(MaterialType.Wheat_Flour, 1);
             ingredients.put(MaterialType.Tomato, 1);
         }
     },
 
     Pizza("Pizza Recipe", 150, null, false, 0, 300, FoodType.Pizza) {
         {
-            ingredients.put(MaterialType.WheatFlour, 1);
+            ingredients.put(MaterialType.Wheat_Flour, 1);
             ingredients.put(MaterialType.Tomato, 1);
             ingredients.put(MaterialType.Cheese, 1);
         }
@@ -65,7 +65,7 @@ public enum CookingRecipeType implements ItemType {
         }
     },
 
-    MakiRoll("Maki Roll Recipe", 100, null, false, 0, 220, FoodType.MakiRoll) {
+    MakiRoll("Maki Roll Recipe", 100, null, false, 0, 220, FoodType.Maki_Roll) {
         {
             ingredients.put(MaterialType.AnyFish, 1);
             ingredients.put(MaterialType.Rice, 1);
@@ -73,7 +73,7 @@ public enum CookingRecipeType implements ItemType {
         }
     },
 
-    TripleShotEspresso("Triple Shot Espresso Recipe", 200, null, true, 5, 450, FoodType.TripleShotEspresso) {
+    TripleShotEspresso("Triple Shot Espresso Recipe", 200, null, true, 5, 450, FoodType.Triple_Shot_Espresso) {
         {
             ingredients.put(MaterialType.Coffee, 3);
         }
@@ -81,13 +81,13 @@ public enum CookingRecipeType implements ItemType {
 
     Cookie("Cookie Recipe", 90, null, false, 0, 140, FoodType.Cookie) {
         {
-            ingredients.put(MaterialType.WheatFlour, 1);
+            ingredients.put(MaterialType.Wheat_Flour, 1);
             ingredients.put(MaterialType.Sugar, 1);
             ingredients.put(MaterialType.Egg, 1);
         }
     },
 
-    HashBrowns("Hash browns Recipe", 90, Skills.Farming, false, 5, 120, FoodType.HashBrowns) {
+    HashBrowns("Hash browns Recipe", 90, Skills.Farming, false, 5, 120, FoodType.Hashbrowns) {
         {
             ingredients.put(MaterialType.Potato, 1);
             ingredients.put(MaterialType.Oil, 1);
@@ -96,12 +96,12 @@ public enum CookingRecipeType implements ItemType {
 
     Pancakes("Pancakes Recipe", 90, Skills.Foraging, false, 11, 80, FoodType.Pancakes) {
         {
-            ingredients.put(MaterialType.WheatFlour, 1);
+            ingredients.put(MaterialType.Wheat_Flour, 1);
             ingredients.put(MaterialType.Egg, 1);
         }
     },
 
-    FruitSalad("Fruit salad Recipe", 263, null, false, 0, 450, FoodType.FruitSalad) {
+    FruitSalad("Fruit salad Recipe", 263, null, false, 0, 450, FoodType.Fruit_Salad) {
         {
             ingredients.put(MaterialType.Blueberry, 1);
             ingredients.put(MaterialType.Melon, 1);
@@ -109,20 +109,20 @@ public enum CookingRecipeType implements ItemType {
         }
     },
 
-    RedPlate("Red plate Recipe", 240, null, true, 3, 400, FoodType.RedPlate) {
+    RedPlate("Red plate Recipe", 240, null, true, 3, 400, FoodType.Red_Plate) {
         {
-            ingredients.put(MaterialType.RedCabbage, 1);
+            ingredients.put(MaterialType.Red_Cabbage, 1);
             ingredients.put(MaterialType.Radish, 1);
         }
     },
 
     Bread("Bread Recipe", 50, null, false, 0, 60, FoodType.Bread) {
         {
-            ingredients.put(MaterialType.WheatFlour, 1);
+            ingredients.put(MaterialType.Wheat_Flour, 1);
         }
     },
 
-    SalmonDinner("Salmon Dinner Recipe", 125, null, false, 0, 300, FoodType.SalmonDinner) {
+    SalmonDinner("Salmon Dinner Recipe", 125, null, false, 0, 300, FoodType.Salmon_Dinner) {
         {
             ingredients.put(MaterialType.Salmon, 1);
             ingredients.put(MaterialType.Amaranth, 1);
@@ -130,21 +130,21 @@ public enum CookingRecipeType implements ItemType {
         }
     },
 
-    VegetableMedley("Vegetable medley Recipe", 165, null, false, 0, 120, FoodType.VegetableMedley) {
+    VegetableMedley("Vegetable medley Recipe", 165, null, false, 0, 120, FoodType.Vegetable_Medley) {
         {
             ingredients.put(MaterialType.Tomato, 1);
             ingredients.put(MaterialType.Beet, 1);
         }
     },
 
-    FarmersLunch("Farmer's lunch Recipe", 200, Skills.Farming, false, 5, 150, FoodType.FarmersLunch) {
+    FarmersLunch("Farmer's lunch Recipe", 200, Skills.Farming, false, 5, 150, FoodType.Farmers_Lunch) {
         {
             ingredients.put(MaterialType.Omelet, 1);
             ingredients.put(MaterialType.Parsnip, 1);
         }
     },
 
-    SurvivalBurger("Survival burger Recipe", 125, Skills.Foraging, false, 5, 180, FoodType.SurvivalBurger) {
+    SurvivalBurger("Survival burger Recipe", 125, Skills.Foraging, false, 5, 180, FoodType.Survival_Burger) {
         {
             ingredients.put(MaterialType.Bread, 1);
             ingredients.put(MaterialType.Carrot, 1);
@@ -152,21 +152,21 @@ public enum CookingRecipeType implements ItemType {
         }
     },
 
-    DishOTheSea("Dish O' the Sea Recipe", 150, Skills.Fishing, false, 5, 220, FoodType.DishOfTheSea) {
+    DishOTheSea("Dish O' the Sea Recipe", 150, Skills.Fishing, false, 5, 220, FoodType.Dish_O_The_Sea) {
         {
             ingredients.put(MaterialType.Sardine, 2);
-            ingredients.put(MaterialType.HashBrowns, 1);
+            ingredients.put(MaterialType.Hashbrowns, 1);
         }
     },
 
-    SeaFoamPudding("SeaFoam Pudding Recipe", 175, Skills.Fishing, false, 10, 300, FoodType.SeaFormPudding) {
+    SeaFoamPudding("SeaFoam Pudding Recipe", 175, Skills.Fishing, false, 10, 300, FoodType.Seafoam_Pudding) {
         {
             ingredients.put(MaterialType.Flounder, 1);
-            ingredients.put(MaterialType.MidnightCarp, 1);
+            ingredients.put(MaterialType.Midnight_Carp, 1);
         }
     },
 
-    MinersTreat("Miner's treat Recipe", 125, Skills.Mining, false, 5, 200, FoodType.MinersTreat) {
+    MinersTreat("Miner's treat Recipe", 125, Skills.Mining, false, 5, 200, FoodType.Miners_Treat) {
         {
             ingredients.put(MaterialType.Carrot, 2);
             ingredients.put(MaterialType.Sugar, 1);
@@ -229,6 +229,11 @@ public enum CookingRecipeType implements ItemType {
     @Override
     public String getName() {
         return this.displayName;
+    }
+
+    @Override
+    public String getEnumName() {
+        return name();
     }
 
     public FoodType getFoodType() {

@@ -2,23 +2,23 @@ package com.example.main.enums.items;
 
 
 public enum MineralType implements ItemType {
-    QUARTZ("quartz", "A clear crystal commonly found in caves and mines.", 25),
-    EARTH_CRYSTAL("earth crystal", "A resinous substance found near the surface.", 50),
-    FROZEN_TEAR("frozen tear", "A crystal fabled to be the frozen tears of a yeti.", 75),
-    FIRE_QUARTZ("fire quartz", "A glowing red crystal commonly found near hot lava.", 100),
-    EMERALD("emerald", "A precious stone with a brilliant green color.", 250),
-    AQUAMARINE("aquamarine", "A shimmery blue-green gem.", 180),
-    RUBY("ruby", "A precious stone that is sought after for its rich color and beautiful luster.", 250),
-    AMETHYST("amethyst", "A purple variant of quartz.", 100),
-    TOPAZ("topaz", "Fairly common but still prized for its beauty.", 80),
-    JADE("jade", "A pale green ornamental stone.", 200),
-    DIAMOND("diamond", "A rare and valuable gem.", 750),
-    PRISMATIC_SHARD("prismatic shard", "A very rare and powerful substance with unknown origins.", 2000),
-    COPPER("copper ore", "A common ore that can be smelted into bars.", 5),
-    IRON("iron ore", "A fairly common ore that can be smelted into bars.", 10),
-    GOLD("gold ore", "A precious ore that can be smelted into bars.", 25),
-    IRIDIUM("iridium ore", "An exotic ore with many curious properties. Can be smelted into bars.", 100),
-    COAL("coal", "A combustible rock that is useful for crafting and smelting.", 15);
+    Quartz("quartz", "A clear crystal commonly found in caves and mines.", 25),
+    Earth_Crystal("earth crystal", "A resinous substance found near the surface.", 50),
+    Frozen_Tear("frozen tear", "A crystal fabled to be the frozen tears of a yeti.", 75),
+    Fire_Quartz("fire quartz", "A glowing red crystal commonly found near hot lava.", 100),
+    Emerald("emerald", "A precious stone with a brilliant green color.", 250),
+    Aquamarine("aquamarine", "A shimmery blue-green gem.", 180),
+    Ruby("ruby", "A precious stone that is sought after for its rich color and beautiful luster.", 250),
+    Amethyst("amethyst", "A purple variant of quartz.", 100),
+    Topaz("topaz", "Fairly common but still prized for its beauty.", 80),
+    Jade("jade", "A pale green ornamental stone.", 200),
+    Diamond("diamond", "A rare and valuable gem.", 750),
+    Prismatic_Shard("prismatic shard", "A very rare and powerful substance with unknown origins.", 2000),
+    Copper("copper ore", "A common ore that can be smelted into bars.", 5),
+    Iron("iron ore", "A fairly common ore that can be smelted into bars.", 10),
+    Gold("gold ore", "A precious ore that can be smelted into bars.", 25),
+    Iridium("iridium ore", "An exotic ore with many curious properties. Can be smelted into bars.", 100),
+    Coal("coal", "A combustible rock that is useful for crafting and smelting.", 15);
 
     private final String name;
     public final String description;
@@ -42,5 +42,9 @@ public enum MineralType implements ItemType {
 
     public int getPrice() {
         return this.sellPrice;
+    }
+
+    public String getEnumName() {
+        return name();
     }
 }

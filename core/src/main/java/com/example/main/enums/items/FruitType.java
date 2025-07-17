@@ -28,6 +28,11 @@ public enum FruitType implements ItemType{
     }
 
     @Override
+    public String getEnumName() {
+        return name();
+    }
+
+    @Override
     public boolean isTool() {
         return false;
     }
