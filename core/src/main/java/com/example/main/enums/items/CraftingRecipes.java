@@ -6,42 +6,42 @@ import java.util.Map;
 
 public enum CraftingRecipes implements ItemType {
     CherryBombRecipe("Cherry Bomb Recipe", Map.of(
-        MaterialType.CopperOre, 4,
+        MaterialType.Copper_Ore, 4,
         MaterialType.Coal, 1
     ), 50, CraftingMachineType.CHERRY_BOMB),
 
     BombRecipe("Bomb Recipe", Map.of(
-            MaterialType.IronOre, 4,
+            MaterialType.Iron_Ore, 4,
             MaterialType.Coal, 1
     ), 50, CraftingMachineType.BOMB ),
 
     MegaBombRecipe("Mega Bomb Recipe", Map.of(
-            MaterialType.GoldOre, 4,
+            MaterialType.Gold_Ore, 4,
             MaterialType.Coal, 1
     ), 50 , CraftingMachineType.MEGA_BOMB),
 
     SprinklerRecipe("Sprinkler Recipe", Map.of (
-            MaterialType.CopperBar, 1,
-            MaterialType.IronBar, 1
+            MaterialType.Copper_Bar, 1,
+            MaterialType.Iron_Bar, 1
     ), 0 , CraftingMachineType.SPRINKLER),
 
     QualitySprinklerRecipe("Quality Sprinkler Recipe", Map.of(
-            MaterialType.IronBar, 1,
-            MaterialType.GoldBar, 1
+            MaterialType.Iron_Bar, 1,
+            MaterialType.Gold_Bar, 1
     ), 0 , CraftingMachineType.QUALITY_SPRINKLER),
 
     IridiumSprinklerRecipe("Iridium Sprinkler Recipe", Map.of(
-            MaterialType.GoldBar, 1,
-            MaterialType.IridiumBar, 1
+            MaterialType.Gold_Bar, 1,
+            MaterialType.Iridium_Bar, 1
     ), 0 , CraftingMachineType.IRIDIUM_SPRINKLER),
 
     CharcoalKilnRecipe("Charcoal Kiln Recipe", Map.of(
             MaterialType.Wood, 20,
-            MaterialType.CopperBar, 2
+            MaterialType.Copper_Bar, 2
     ), 0 , CraftingMachineType.CHARCOAL_KILN),
 
     FurnaceRecipe("Furnace Recipe", Map.of(
-            MaterialType.CopperOre, 20,
+            MaterialType.Copper_Ore, 20,
             MaterialType.Stone, 25
     ), 0, CraftingMachineType.FURNACE),
 
@@ -55,25 +55,25 @@ public enum CraftingRecipes implements ItemType {
             MaterialType.Wood, 50,
             MaterialType.Coal, 1,
             MaterialType.Fiber, 20,
-            MaterialType.IridiumOre, 1
+            MaterialType.Iridium_Ore, 1
     ), 0 , CraftingMachineType.DELUXE_SCARECROW),
 
     BeeHouseRecipe("Bee House Recipe", Map.of(
             MaterialType.Wood, 40,
             MaterialType.Coal, 8,
-            MaterialType.IronBar, 1
+            MaterialType.Iron_Bar, 1
     ), 0 , CraftingMachineType.BEE_HOUSE),
 
     CheesePressRecipe("Cheese Press Recipe", Map.of(
             MaterialType.Wood, 45,
             MaterialType.Stone, 45,
-            MaterialType.CopperBar, 1
+            MaterialType.Copper_Bar, 1
     ), 0, CraftingMachineType.CHEESE_PRESS ),
 
     KegRecipe("Keg Recipe", Map.of(
             MaterialType.Wood, 30,
-            MaterialType.CopperBar, 1,
-            MaterialType.IronBar, 1
+            MaterialType.Copper_Bar, 1,
+            MaterialType.Iron_Bar, 1
     ), 0 , CraftingMachineType.KEG),
 
     LoomRecipe("Loom Recipe", Map.of(
@@ -84,13 +84,13 @@ public enum CraftingRecipes implements ItemType {
     MayonnaiseMachineRecipe("Mayonnaise Machine Recipe", Map.of(
             MaterialType.Wood, 15,
             MaterialType.Stone, 15,
-            MaterialType.CopperBar, 1
+            MaterialType.Copper_Bar, 1
     ), 0, CraftingMachineType.MAYONNAISE_MACHINE),
 
     OilMakerRecipe("Oil Maker Recipe", Map.of(
             MaterialType.Wood, 100,
-            MaterialType.GoldBar, 1,
-            MaterialType.IronBar, 1
+            MaterialType.Gold_Bar, 1,
+            MaterialType.Iron_Bar, 1
     ), 0, CraftingMachineType.OIL_MAKER),
 
     PreservesJarRecipe("Preserves Jar Recipe", Map.of(
@@ -107,16 +107,16 @@ public enum CraftingRecipes implements ItemType {
 
     FishSmokerRecipe("Fish Smoker Recipe", Map.of(
             MaterialType.Wood, 50,
-            MaterialType.IronBar, 3,
+            MaterialType.Iron_Bar, 3,
             MaterialType.Coal, 10
     ), 0, CraftingMachineType.FISH_SMOKER),
 
     MysticTreeSeedRecipe("Mystic Tree Seed Recipe", Map.of(
             ForagingSeedType.Acorn, 5,
-            ForagingSeedType.MapleSeed, 5,
-            ForagingSeedType.PineCone, 5,
-            ForagingSeedType.MahoganySeed, 5
-    ), 100, ForagingSeedType.MysticTreeSeed),
+            ForagingSeedType.Maple_Seed, 5,
+            ForagingSeedType.Pine_Cone, 5,
+            ForagingSeedType.Mahogany_Seed, 5
+    ), 100, ForagingSeedType.Mystic_Tree_Seed),
 
     GrassStarterRecipe("Grass Starter Recipe", Map.of(
             MaterialType.Wood, 1,

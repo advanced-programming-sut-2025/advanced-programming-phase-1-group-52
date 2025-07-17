@@ -256,28 +256,28 @@ public class Player {
             this.inventory.addItem(newMaterial);
             tile.setType(TileType.Earth);
         } else if (type.equals(TileType.CopperStone)) {
-            newMineral = new Mineral(MineralType.COPPER, 10 + add);
+            newMineral = new Mineral(MineralType.Copper, 10 + add);
             tile.setType(TileType.Earth);
         } else if (type.equals(TileType.GoldStone)) {
-            newMineral = new Mineral(MineralType.GOLD, 10 + add);
+            newMineral = new Mineral(MineralType.Gold, 10 + add);
             tile.setType(TileType.Earth);
         } else if (type.equals(TileType.IridiumStone)) {
-            newMineral = new Mineral(MineralType.IRIDIUM, 10 + add);
+            newMineral = new Mineral(MineralType.Iridium, 10 + add);
             tile.setType(TileType.Earth);
         } else if (type.equals(TileType.JewelStone)) {
             Random rand = new Random();
             int prob = rand.nextInt(10);
             if (prob < 5) {
-                newMineral = new Mineral(MineralType.QUARTZ, 10 + add);
+                newMineral = new Mineral(MineralType.Quartz, 10 + add);
             }
             else if (prob < 8) {
-                newMineral = new Mineral(MineralType.EMERALD, 10 + add);
+                newMineral = new Mineral(MineralType.Emerald, 10 + add);
             }
             else {
-                newMineral = new Mineral(MineralType.DIAMOND, 10 + add);
+                newMineral = new Mineral(MineralType.Diamond, 10 + add);
             }
         } else if (type.equals(TileType.IronStone)) {
-            newMineral = new Mineral(MineralType.IRON, 10 + add);
+            newMineral = new Mineral(MineralType.Iron, 10 + add);
         } else if (type.equals(TileType.Shoveled)) {
             tile.setType(TileType.Earth);
         } else if (type.equals(TileType.Earth)) {
@@ -550,7 +550,8 @@ public class Player {
 
         if (level >= 1) {
             if (!hasRecipe(CraftingRecipes.CherryBombRecipe)) {
-                craftingRecipes.add(new CraftingRecipe(CraftingRecipes.CherryBombRecipe, 1));
+                craftingRecipes.add(new CraftingRecipe(CraftingRecipes.
+                    CherryBombRecipe, 1));
             }
             if(!this.cookingRecipes.contains(CookingRecipeType.MinersTreat)){
                 this.cookingRecipes.add(new CookingRecipe(CookingRecipeType.MinersTreat));

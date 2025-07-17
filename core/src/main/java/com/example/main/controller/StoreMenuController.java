@@ -418,7 +418,7 @@ public class StoreMenuController {
                     return new Result(false, "You don't have enough Copper bars!");
                 }
 
-                game.getCurrentPlayer().getInventory().remove(MaterialType.CopperBar, 5);
+                game.getCurrentPlayer().getInventory().remove(MaterialType.Copper_Bar, 5);
                 game.getCurrentPlayer().getBankAccount().withdraw(2000);
                 tool.setLevel(1);
 
@@ -450,7 +450,7 @@ public class StoreMenuController {
                     return new Result(false, "You don't have enough Iron bars!");
                 }
 
-                game.getCurrentPlayer().getInventory().remove(MaterialType.IronBar, 5);
+                game.getCurrentPlayer().getInventory().remove(MaterialType.Iron_Bar, 5);
                 game.getCurrentPlayer().getBankAccount().withdraw(5000);
                 tool.setLevel(2);
 
@@ -482,7 +482,7 @@ public class StoreMenuController {
                     return new Result(false, "You don't have enough Gold bars!");
                 }
 
-                game.getCurrentPlayer().getInventory().remove(MaterialType.GoldBar, 5);
+                game.getCurrentPlayer().getInventory().remove(MaterialType.Gold_Bar, 5);
                 game.getCurrentPlayer().getBankAccount().withdraw(10000);
                 tool.setLevel(3);
 
@@ -514,7 +514,7 @@ public class StoreMenuController {
                     return new Result(false, "You don't have enough Iridium bars!");
                 }
 
-                game.getCurrentPlayer().getInventory().remove(MaterialType.IridiumBar, 5);
+                game.getCurrentPlayer().getInventory().remove(MaterialType.Iridium_Bar, 5);
                 game.getCurrentPlayer().getBankAccount().withdraw(25000);
                 tool.setLevel(4);
 

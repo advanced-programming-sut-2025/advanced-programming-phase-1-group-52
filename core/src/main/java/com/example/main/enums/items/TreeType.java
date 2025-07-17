@@ -6,22 +6,22 @@ import com.example.main.enums.design.Season;
 
 public enum TreeType implements ItemType{
     // Fruit trees
-    APRICOT_TREE("apricot tree", ForagingSeedType.ApricotSapling, List.of(7, 7, 7, 7), 28, FruitType.Apricot, 1, 59, true, 38, List.of(Season.Spring), false),
-    CHERRY_TREE("cherry tree", ForagingSeedType.CherrySapling, List.of(7, 7, 7, 7), 28, FruitType.Cherry, 1, 80, true, 38, List.of(Season.Spring), false),
-    BANANA_TREE("banana tree", ForagingSeedType.BananaSapling, List.of(7, 7, 7, 7), 28, FruitType.Banana, 1, 150, true, 75, List.of(Season.Summer), false),
-    MANGO_TREE("mango tree", ForagingSeedType.MangoSapling, List.of(7, 7, 7, 7), 28, FruitType.Mango, 1, 130, true, 100, List.of(Season.Summer), false),
-    ORANGE_TREE("orange tree", ForagingSeedType.OrangeSapling, List.of(7, 7, 7, 7), 28, FruitType.Orange, 1, 100, true, 38, List.of(Season.Summer), false),
-    PEACH_TREE("peach tree", ForagingSeedType.PeachSapling, List.of(7, 7, 7, 7), 28, FruitType.Peach, 1, 140, true, 38, List.of(Season.Summer), false),
-    APPLE_TREE("apple tree", ForagingSeedType.AppleSapling, List.of(7, 7, 7, 7), 28, FruitType.Apple, 1, 100, true, 38, List.of(Season.Fall), false),
-    POMEGRANATE_TREE("pomegranate tree", ForagingSeedType.PomegranateSapling, List.of(7, 7, 7, 7), 28, FruitType.Pomegranate, 1, 140, true, 38, List.of(Season.Fall), false),
+    APRICOT_TREE("apricot tree", ForagingSeedType.Apricot_Sapling, List.of(7, 7, 7, 7), 28, FruitType.Apricot, 1, 59, true, 38, List.of(Season.Spring), false),
+    CHERRY_TREE("cherry tree", ForagingSeedType.Cherry_Sapling, List.of(7, 7, 7, 7), 28, FruitType.Cherry, 1, 80, true, 38, List.of(Season.Spring), false),
+    BANANA_TREE("banana tree", ForagingSeedType.Banana_Sapling, List.of(7, 7, 7, 7), 28, FruitType.Banana, 1, 150, true, 75, List.of(Season.Summer), false),
+    MANGO_TREE("mango tree", ForagingSeedType.Mango_Sapling, List.of(7, 7, 7, 7), 28, FruitType.Mango, 1, 130, true, 100, List.of(Season.Summer), false),
+    ORANGE_TREE("orange tree", ForagingSeedType.Orange_Sapling, List.of(7, 7, 7, 7), 28, FruitType.Orange, 1, 100, true, 38, List.of(Season.Summer), false),
+    PEACH_TREE("peach tree", ForagingSeedType.Peach_Sapling, List.of(7, 7, 7, 7), 28, FruitType.Peach, 1, 140, true, 38, List.of(Season.Summer), false),
+    APPLE_TREE("apple tree", ForagingSeedType.Apple_Sapling, List.of(7, 7, 7, 7), 28, FruitType.Apple, 1, 100, true, 38, List.of(Season.Fall), false),
+    POMEGRANATE_TREE("pomegranate tree", ForagingSeedType.Pomegranate_Sapling, List.of(7, 7, 7, 7), 28, FruitType.Pomegranate, 1, 140, true, 38, List.of(Season.Fall), false),
 
     // Special trees
     OAK_TREE("oak tree", ForagingSeedType.Acorn, List.of(7, 7, 7, 7), 28, FruitType.OakResin, 7, 150, false, -1, List.of(Season.Spring, Season.Summer, Season.Fall, Season.Winter), true),
-    MAPLE_TREE("maple tree", ForagingSeedType.MapleSeed, List.of(7, 7, 7, 7), 28, FruitType.MapleSyrup, 9, 200, false, -1, List.of(Season.Spring, Season.Summer, Season.Fall, Season.Winter), true),
-    PINE_TREE("pine tree", ForagingSeedType.PineCone, List.of(7, 7, 7, 7), 28, FruitType.PineTar, 5, 100, false, -1, List.of(Season.Spring, Season.Summer, Season.Fall, Season.Winter), true),
-    MAHOGANY_TREE("mahogany tree", ForagingSeedType.MahoganySeed, List.of(7, 7, 7, 7), 28, FruitType.Sap, 1, 2, true, -2, List.of(Season.Spring, Season.Summer, Season.Fall, Season.Winter), true),
-    MUSHROOM_TREE("mushroom tree", ForagingSeedType.MushroomTreeSeed, List.of(7, 7, 7, 7), 28, FruitType.CommonMushroom, 1, 40, true, 38, List.of(Season.Spring, Season.Summer, Season.Fall, Season.Winter), true),
-    MYSTIC_TREE("mystic tree", ForagingSeedType.MysticTreeSeed, List.of(7, 7, 7, 7), 28, FruitType.MysticSyrup, 7, 1000, true, 500, List.of(Season.Spring, Season.Summer, Season.Fall, Season.Winter), false);
+    MAPLE_TREE("maple tree", ForagingSeedType.Maple_Seed, List.of(7, 7, 7, 7), 28, FruitType.MapleSyrup, 9, 200, false, -1, List.of(Season.Spring, Season.Summer, Season.Fall, Season.Winter), true),
+    PINE_TREE("pine tree", ForagingSeedType.Pine_Cone, List.of(7, 7, 7, 7), 28, FruitType.PineTar, 5, 100, false, -1, List.of(Season.Spring, Season.Summer, Season.Fall, Season.Winter), true),
+    MAHOGANY_TREE("mahogany tree", ForagingSeedType.Mahogany_Seed, List.of(7, 7, 7, 7), 28, FruitType.Sap, 1, 2, true, -2, List.of(Season.Spring, Season.Summer, Season.Fall, Season.Winter), true),
+    MUSHROOM_TREE("mushroom tree", ForagingSeedType.Mushroom_Tree_Seed, List.of(7, 7, 7, 7), 28, FruitType.CommonMushroom, 1, 40, true, 38, List.of(Season.Spring, Season.Summer, Season.Fall, Season.Winter), true),
+    MYSTIC_TREE("mystic tree", ForagingSeedType.Mystic_Tree_Seed, List.of(7, 7, 7, 7), 28, FruitType.MysticSyrup, 7, 1000, true, 500, List.of(Season.Spring, Season.Summer, Season.Fall, Season.Winter), false);
 
     private final String name;
     private final ForagingSeedType source;

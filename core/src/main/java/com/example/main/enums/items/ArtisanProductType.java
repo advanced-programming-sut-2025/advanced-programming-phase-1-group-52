@@ -20,7 +20,7 @@ public enum ArtisanProductType implements ItemType {
     // Beverages
     BEER(CraftingMachineType.KEG,"Beer", "Drink in moderation.", 50, 24, Map.of(MaterialType.Wheat, 1), 200),
     VINEGAR(CraftingMachineType.KEG,"Vinegar", "An aged fermented liquid used in many cooking recipes.", 13, 10, Map.of(MaterialType.Rice,1), 100),
-    COFFEE(CraftingMachineType.KEG,"Coffee", "It smells delicious. This is sure to give you a boost.", 75, 2, Map.of(ForagingSeedType.CoffeeBean, 5), 150),
+    COFFEE(CraftingMachineType.KEG,"Coffee", "It smells delicious. This is sure to give you a boost.", 75, 2, Map.of(ForagingSeedType.Coffee_Bean, 5), 150),
     CARROT_JUICE(CraftingMachineType.KEG,"carrot juice", "A sweet, nutritious beverage.", -1, 96, Map.of(CropType.Carrot, 1), 80), // Uses multiplier
 
     BLUE_JAZZ_JUICE(CraftingMachineType.KEG, "blue jazz juice",
@@ -83,14 +83,14 @@ public enum ArtisanProductType implements ItemType {
     TRUFFLE_OIL(CraftingMachineType.OIL_MAKER,"truffle Oil", "A gourmet cooking ingredient.", 38, 6, Map.of(AnimalProductType.Truffle, 1), 1065),
     SUNFLOWER_OIL(CraftingMachineType.OIL_MAKER,"sunflower oil", "All purpose cooking oil.", 13, -1, Map.of(CropType.Sunflower, 1), 100), // Variable processing time
     CORN_OIL(CraftingMachineType.OIL_MAKER,"corn oil", "All purpose cooking oil.", 13, -1, Map.of(CropType.Corn, 1), 100), // Variable processing time
-    SUNFLOWER_SEED_OIL(CraftingMachineType.OIL_MAKER,"sunflower seed oil", "All purpose cooking oil.", 13, -1, Map.of(ForagingSeedType.SunflowerSeeds, 1), 100), // Variable processing time
+    SUNFLOWER_SEED_OIL(CraftingMachineType.OIL_MAKER,"sunflower seed oil", "All purpose cooking oil.", 13, -1, Map.of(ForagingSeedType.Sunflower_Seeds, 1), 100), // Variable processing time
 
     // Preserves
     PICKLES(CraftingMachineType.PRESERVES_JAR,"pickles", "A jar of your home-made pickles.", -1, 6, Map.of(CropType.Broccoli, 1), 190), // Uses multiplier
     JELLY(CraftingMachineType.PRESERVES_JAR,"jelly", "Gooey.", -1, 72, Map.of(FruitType.Cherry, 1), 210), // Uses multiplier
 
     // Dried Goods
-    DRIED_MUSHROOMS(CraftingMachineType.DEHYDRATOR,"dried Mushrooms", "A package of gourmet mushrooms.", 50, -1, Map.of(ForagingCropType.CommonMushroom, 5), 325), // Uses multiplier
+    DRIED_MUSHROOMS(CraftingMachineType.DEHYDRATOR,"dried Mushrooms", "A package of gourmet mushrooms.", 50, -1, Map.of(ForagingCropType.Common_Mushroom, 5), 325), // Uses multiplier
     DRIED_FRUIT(CraftingMachineType.DEHYDRATOR,"dried Fruit", "Chewy pieces of dried fruit.", 75, -1, Map.of(FruitType.Apple, 5), 775), // Uses multiplier
     RAISINS(CraftingMachineType.DEHYDRATOR,"raisins", "It's said to be the Junimos' favorite food.", 125, -1, Map.of(CropType.Grape, 5), 600),
 
@@ -183,28 +183,28 @@ public enum ArtisanProductType implements ItemType {
             "A bar of smelted copper. Useful for crafting.",
             -1,
             4,
-            Map.of(MineralType.COPPER, 5),
+            Map.of(MineralType.Copper, 5),
             60),
 
     IRON_BAR(CraftingMachineType.FURNACE,"iron bar",
             "A bar of smelted iron. Useful for crafting.",
             -1,
             4,
-            Map.of(MineralType.IRON, 5),
+            Map.of(MineralType.Iron, 5),
             120),
 
     GOLD_BAR(CraftingMachineType.FURNACE,"gold bar",
             "A bar of smelted gold. Valuable and useful for crafting.",
             -1,
             4,
-            Map.of(MineralType.GOLD, 5),
+            Map.of(MineralType.Gold, 5),
             250),
 
     IRIDIUM_BAR(CraftingMachineType.FURNACE,"iridium bar",
             "A bar of smelted iridium. Extremely valuable with special properties.",
             -1,
             4,
-            Map.of(MineralType.IRIDIUM, 5),
+            Map.of(MineralType.Iridium, 5),
             1000);
 
     private final CraftingMachineType machine;

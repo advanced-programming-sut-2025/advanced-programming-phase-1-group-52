@@ -1,3 +1,5 @@
+// In main/enums/items/FoodType.java
+
 package com.example.main.enums.items;
 
 
@@ -6,29 +8,29 @@ import com.example.main.models.item.Food;
 import com.example.main.models.item.Item;
 
 public enum FoodType implements ItemType {
-    FriedEgg("Fried egg", 50, 35, null, false, 0),
-    BakedFish("Baked Fish", 75, 100, null, false, 0),
+    Fried_Egg("Fried egg", 50, 35, null, false, 0),
+    Baked_Fish("Baked Fish", 75, 100, null, false, 0),
     Salad("Salad", 113, 110, null, false, 0),
-    Olmelet("Omelet", 100, 125, null, false, 0),
-    PumpkinPie("Pumpkin Pie", 225, 385, null, false, 0),
+    Omelet("Omelet", 100, 125, null, false, 0),
+    Pumpkin_Pie("Pumpkin Pie", 225, 385, null, false, 0),
     Spaghetti("Spaghetti", 75, 120, null, false, 0),
     Pizza("Pizza", 150, 300, null, false, 0),
     Tortilla("Tortilla", 50, 50, null, false, 0),
-    MakiRoll("Maki Roll", 100, 220, null, false, 0),
-    TripleShotEspresso("Triple Shot Espresso", 200, 450, null, true, 5),
+    Maki_Roll("Maki Roll", 100, 220, null, false, 0),
+    Triple_Shot_Espresso("Triple Shot Espresso", 200, 450, null, true, 5),
     Cookie("Cookie", 90, 140, null, false, 0),
-    HashBrowns("Hash Browns", 90, 120, Skills.Farming, false, 5),
+    Hashbrowns("Hashbrowns", 90, 120, Skills.Farming, false, 5),
     Pancakes("Pancakes", 90, 80, Skills.Foraging, false, 11),
-    FruitSalad("Fruit Salad", 263, 450, null, false, 0),
-    RedPlate("Red Plate", 240, 400, null, true, 3),
+    Fruit_Salad("Fruit Salad", 263, 450, null, false, 0),
+    Red_Plate("Red Plate", 240, 400, null, true, 3),
     Bread("Bread", 50, 60, null, false, 0),
-    SalmonDinner("Salmon Dinner", 125, 300, null, false, 0),
-    VegetableMedley("Vegetable Medley", 165, 120, null, false, 0),
-    FarmersLunch("Farmer's Lunch", 200, 150, Skills.Farming, false, 5),
-    SurvivalBurger("Survival Burger", 125, 180, Skills.Foraging, false, 5),
-    DishOfTheSea("Dish O' the Sea", 150, 220, Skills.Fishing, false, 5),
-    SeaFormPudding("SeaFoam Pudding", 175, 300, Skills.Fishing, false, 10),
-    MinersTreat("Miner's Treat", 125, 200, Skills.Mining, false, 5),
+    Salmon_Dinner("Salmon Dinner", 125, 300, null, false, 0),
+    Vegetable_Medley("Vegetable Medley", 165, 120, null, false, 0),
+    Farmers_Lunch("Farmer's Lunch", 200, 150, Skills.Farming, false, 5),
+    Survival_Burger("Survival Burger", 125, 180, Skills.Foraging, false, 5),
+    Dish_O_The_Sea("Dish O' the Sea", 150, 220, Skills.Fishing, false, 5),
+    Seafoam_Pudding("Seafoam Pudding", 175, 300, Skills.Fishing, false, 10),
+    Miners_Treat("Miner's Treat", 125, 200, Skills.Mining, false, 5),
     Beer("Beer", 100, 0, null, false, 0),
     Coffee("Coffee", 100, 0, null, false, 0);
 
@@ -48,7 +50,6 @@ public enum FoodType implements ItemType {
         this.effectiveTime = effectiveTime;
     }
 
-    // Getters
     @Override
     public String getName() { return name; }
     public int getEnergy() { return energy; }

@@ -269,8 +269,7 @@ public class GameMenuController {
 
 
         if (daysPassed > 0) {
-            int seasonsPassed = date.addDays(daysPassed);
-            this.onDayPassed(daysPassed);
+            game.advanceDay();
         }
 
         return new Result(true, "time changed!");
@@ -1114,7 +1113,7 @@ public class GameMenuController {
             player.addNotif(game.getCurrentPlayer(), "You are now married to " + game.getCurrentPlayer().getUsername());
 
             player.getInventory().removeItem(player.getInventory().getItemByName("Wedding Ring").getClass(), 1);
-            Material newRing = new Material(MaterialType.WeddingRing, 1);
+            Material newRing = new Material(MaterialType.Wedding_Ring, 1);
             player.getInventory().addItem(newRing);
 
             return new Result(true, "You are happily married!");
@@ -1365,14 +1364,14 @@ public class GameMenuController {
             return new Result(false, "Fertilizer not found in inventory");
         }
 
-        if(fertilizer.getMaterialName().equals(MaterialType.BasicRetainingSoil.getName())){
+        if(fertilizer.getMaterialName().equals(MaterialType.Basic_Retaining_Soil.getName())){
             targetTile.getPlant().setFertilizedToday(true);
         }
-        else if(fertilizer.getMaterialName().equals(MaterialType.QualityRetainingSoil.getName())){
+        else if(fertilizer.getMaterialName().equals(MaterialType.Quality_Retaining_Soil.getName())){
             targetTile.getPlant().setFertilizedToday(true);
             targetTile.getPlant().growFaster();
         }
-        else if(fertilizer.getMaterialName().equals(MaterialType.DeluxeRetainingSoil.getName())){
+        else if(fertilizer.getMaterialName().equals(MaterialType.Deluxe_Retaining_Soil.getName())){
             targetTile.getPlant().setFertilizedToday(true);
             targetTile.getPlant().setWateredToday(true);
         }
@@ -1564,11 +1563,6 @@ public class GameMenuController {
             builder.append(recipe.getRecipeType().getName()).append("\n");
         }
         return new Result(true, builder.toString());
-    }
-    private void onDayPassed(int days) {
-    }
-
-    private void onSeasonChanged(int seasons) {
     }
 
     private User findUser(String username) {

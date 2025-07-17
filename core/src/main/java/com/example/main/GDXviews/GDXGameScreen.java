@@ -84,11 +84,6 @@ public class GDXGameScreen implements Screen {
     private Image currentToolImage;
     private Label currentToolLabel;
 
-    // NEW: Fainted Player UI Fields
-    private Label faintedMessageLabel;
-    private float faintedMessageTimer = 0f;
-    private static final float FAINTED_MESSAGE_DURATION = 2.5f;
-
     // NEW: Storm Effect Fields
     private float stormEffectTimer = 0f;
     private float nextLightningTime = 0f;
@@ -103,6 +98,10 @@ public class GDXGameScreen implements Screen {
     private TextField cheatItemQuantityField;
 
     private InputMultiplexer multiplexer;
+
+    private Label generalMessageLabel;
+    private float generalMessageTimer = 0f;
+    private static final float GENERAL_MESSAGE_DURATION = 2.0f;
 
     private Texture ground1Texture;
     private Texture ground2Texture;
@@ -172,6 +171,7 @@ public class GDXGameScreen implements Screen {
     private static final float PLAYER_MOVE_SPEED = 4.5f;
     private float playerMoveProgress = 0f;
     private int playerTargetX, playerTargetY;
+    private float toolRotation = 0f;
 
     private static final int[][] HOUSE_POSITIONS = {
         {1, 1},
@@ -251,15 +251,15 @@ public class GDXGameScreen implements Screen {
         camera.position.set(worldWidth / 2f, worldHeight / 2f, 0);
         camera.update();
 
-        faintedMessageLabel = new Label("I'm too exhausted to move...", skin);
-        faintedMessageLabel.setColor(Color.RED);
-        faintedMessageLabel.setVisible(false); // Start with the message hidden
-
         Table messageTable = new Table();
         messageTable.top().padTop(50);
         messageTable.setFillParent(true);
-        messageTable.add(faintedMessageLabel);
+        messageTable.add(generalMessageLabel);
         stage.addActor(messageTable);
+
+        generalMessageLabel = new Label("", skin);
+        generalMessageLabel.setColor(Color.WHITE);
+        generalMessageLabel.setVisible(false);
 
         random = new Random();
         baseGroundMap = new int[MAP_WIDTH][MAP_HEIGHT];
@@ -322,6 +322,25 @@ public class GDXGameScreen implements Screen {
             updateTime(delta);
         }
 
+        Player currentPlayer = game.getCurrentPlayer();
+        if (currentPlayer != null && currentPlayer.getCurrentTool() != null) {
+            // Get mouse position in screen coordinates
+            float mouseX = Gdx.input.getX();
+            float mouseY = Gdx.input.getY();
+
+            // Convert mouse position to world coordinates
+            com.badlogic.gdx.math.Vector3 mouseInWorld = camera.unproject(new com.badlogic.gdx.math.Vector3(mouseX, mouseY, 0));
+
+            // Get player's center position in world coordinates
+            float playerCenterX = (currentPlayer.currentX() * TILE_SIZE) + (TILE_SIZE / 2f);
+            float playerCenterY = ((MAP_HEIGHT - 1 - currentPlayer.currentY()) * TILE_SIZE) + (TILE_SIZE / 2f);
+
+            // Calculate the angle
+            float deltaX = mouseInWorld.x - playerCenterX;
+            float deltaY = mouseInWorld.y - playerCenterY;
+            toolRotation = com.badlogic.gdx.math.MathUtils.atan2(deltaY, deltaX) * com.badlogic.gdx.math.MathUtils.radiansToDegrees;
+        }
+
         Gdx.gl.glClearColor(0.2f, 0.3f, 0.3f, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
@@ -348,10 +367,10 @@ public class GDXGameScreen implements Screen {
         renderToolMenu(delta);
         renderInventoryOverlay(delta);
 
-        if (faintedMessageTimer > 0) {
-            faintedMessageTimer -= delta;
-            if (faintedMessageTimer <= 0) {
-                faintedMessageLabel.setVisible(false);
+        if (generalMessageTimer > 0) {
+            generalMessageTimer -= delta;
+            if (generalMessageTimer <= 0) {
+                generalMessageLabel.setVisible(false);
             }
         }
 
@@ -575,6 +594,25 @@ public class GDXGameScreen implements Screen {
                 lightningDuration = 0.15f;
             }
         }
+
+        if (Gdx.input.isKeyJustPressed(Input.Keys.ENTER)) {
+            if (controller != null && game.getCurrentPlayer() != null) {
+                String message;
+                if (game.getCurrentPlayer().getCurrentTool() == null) {
+                    message = "No tool equipped!";
+                    generalMessageLabel.setColor(Color.YELLOW); // Use a warning color
+                } else {
+                    String direction = getDirectionFromAngle(toolRotation);
+                    Result result = controller.useTool(direction);
+                    message = result.Message();
+                    // Reset color to white for normal messages
+                    generalMessageLabel.setColor(Color.WHITE);
+                }
+                generalMessageLabel.setText(message);
+                generalMessageLabel.setVisible(true);
+                generalMessageTimer = GENERAL_MESSAGE_DURATION;
+            }
+        }
     }
 
     private void handlePlayerMovement(float delta) {
@@ -601,9 +639,11 @@ public class GDXGameScreen implements Screen {
         boolean rightPressed = Gdx.input.isKeyPressed(Input.Keys.D) || Gdx.input.isKeyPressed(Input.Keys.RIGHT);
 
         if (currentPlayer.isFainted() && (upPressed || downPressed || leftPressed || rightPressed)) {
-            faintedMessageLabel.setVisible(true);
-            faintedMessageTimer = FAINTED_MESSAGE_DURATION;
-            return; // Prevent any further movement logic
+            generalMessageLabel.setText("I'm too exhausted to move...");
+            generalMessageLabel.setColor(Color.RED); // Set color to red for fainted message
+            generalMessageLabel.setVisible(true);
+            generalMessageTimer = GENERAL_MESSAGE_DURATION; // Use the general timer
+            return;
         }
 
         int newX = currentPlayer.currentX();
@@ -860,6 +900,8 @@ public class GDXGameScreen implements Screen {
         renderPlayer();
     }
 
+// In main/GDXviews/GDXGameScreen.java
+
     private void renderPlayer() {
         for (User user : game.getPlayers()) {
             Player player = user.getPlayer();
@@ -867,9 +909,9 @@ public class GDXGameScreen implements Screen {
                 continue;
             }
 
+            // --- Player Position Calculation ---
             float playerX = player.currentX();
             float playerY = player.currentY();
-
             Player currentPlayer = game.getCurrentPlayer();
             if (player.equals(currentPlayer) && playerMoving && playerMoveProgress < 1.0f) {
                 float startX = player.currentX();
@@ -888,42 +930,54 @@ public class GDXGameScreen implements Screen {
             float worldX = playerX * TILE_SIZE;
             float worldY = (MAP_HEIGHT - 1 - playerY) * TILE_SIZE;
 
-            if (player.isFainted()) {
-                // Draw the sleeping "Z z Z" animation
-                hudFont.setColor(Color.WHITE);
-                // Animate the text bobbing up and down
-                float bobOffset = (float) (Math.sin(weatherStateTime * 4) * 5);
-                hudFont.draw(spriteBatch, "Z z Z", worldX + 8, worldY + 48 + bobOffset);
-            } else {
-                // Draw the normal player sprite
-                Texture playerTexture = getPlayerTexture(player);
-                float playerWidth = playerTexture.getWidth() * 2;
-                float playerHeight = playerTexture.getHeight() * 2;
-                float renderX = worldX + (TILE_SIZE - playerWidth) / 2f;
-                float renderY = worldY;
-
-                if (player.equals(game.getCurrentPlayer())) {
-                    spriteBatch.draw(playerTexture, renderX, renderY, playerWidth, playerHeight);
-                } else {
-                    spriteBatch.setColor(1f, 1f, 1f, 0.7f);
-                    spriteBatch.draw(playerTexture, renderX, renderY, playerWidth, playerHeight);
-                    spriteBatch.setColor(1f, 1f, 1f, 1f);
-                }
-            }
-
-            Texture playerTexture = getPlayerTexture(player);
-
+            // --- Draw Player Sprite (Now handles fainted state correctly) ---
+            Texture playerTexture = getPlayerTexture(player); // Get texture regardless of fainted state
             float playerWidth = playerTexture.getWidth() * 2;
             float playerHeight = playerTexture.getHeight() * 2;
             float renderX = worldX + (TILE_SIZE - playerWidth) / 2f;
             float renderY = worldY;
 
-            if (player.equals(currentPlayer)) {
-                spriteBatch.draw(playerTexture, renderX, renderY, playerWidth, playerHeight);
-            } else {
+            // Set transparency for non-current players
+            if (!player.equals(game.getCurrentPlayer())) {
                 spriteBatch.setColor(1f, 1f, 1f, 0.7f);
-                spriteBatch.draw(playerTexture, renderX, renderY, playerWidth, playerHeight);
-                spriteBatch.setColor(1f, 1f, 1f, 1f);
+            }
+
+            spriteBatch.draw(playerTexture, renderX, renderY, playerWidth, playerHeight);
+
+            // Reset color to default
+            spriteBatch.setColor(1f, 1f, 1f, 1f);
+
+            // If fainted, draw the "Z z Z" animation on top of the player
+            if (player.isFainted()) {
+                hudFont.setColor(Color.WHITE);
+                float bobOffset = (float) (Math.sin(weatherStateTime * 4) * 5);
+                hudFont.draw(spriteBatch, "Z z Z", worldX + 8, worldY + 48 + bobOffset);
+                if(player.getEnergy() > 0) player.setFainted(false);
+            }
+
+
+            // --- Draw Equipped Tool (Always After Player) ---
+            if (player.equals(game.getCurrentPlayer()) && player.getCurrentTool() != null) {
+                Tool currentTool = player.getCurrentTool();
+                String key = generateTextureKey(currentTool);
+                Texture toolTexture = textureManager.getTexture(key);
+
+                if (toolTexture != null) {
+                    float toolWidth = toolTexture.getWidth() * 1.0f;
+                    float toolHeight = toolTexture.getHeight() * 1.0f;
+
+                    float toolX = (worldX + (TILE_SIZE / 2f)) - (toolWidth / 2f);
+                    float toolY = (worldY + (TILE_SIZE / 2f)) - (toolHeight / 4f);
+
+                    spriteBatch.draw(
+                        new TextureRegion(toolTexture),
+                        toolX, toolY,
+                        toolWidth / 2f, toolHeight / 4f,
+                        toolWidth, toolHeight,
+                        1f, 1f,
+                        toolRotation - 90f
+                    );
+                }
             }
         }
     }
@@ -1833,13 +1887,13 @@ public class GDXGameScreen implements Screen {
         toolTable.setBackground(skin.newDrawable("white", new Color(0, 0, 0, 0.5f)));
         toolMenuStage.addActor(toolTable);
 
-        // Initial placeholder image and label
         currentToolImage = new Image();
         currentToolLabel = new Label("", skin);
 
         TextButton leftButton = new TextButton("<", skin);
         TextButton rightButton = new TextButton(">", skin);
         TextButton acceptButton = new TextButton("Equip", skin);
+        TextButton unequipButton = new TextButton("Unequip", skin); // Create the new button
 
         leftButton.addListener(new ClickListener() {
             @Override
@@ -1867,8 +1921,17 @@ public class GDXGameScreen implements Screen {
                 if (!playerTools.isEmpty()) {
                     Tool selectedTool = playerTools.get(currentToolIndex);
                     game.getCurrentPlayer().setCurrentTool(selectedTool);
-                    isToolMenuOpen = false; // Close menu after equipping
+                    isToolMenuOpen = false;
                 }
+            }
+        });
+
+        // Add listener for the unequip button
+        unequipButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                game.getCurrentPlayer().setCurrentTool(null); // Set the current tool to null
+                isToolMenuOpen = false; // Close menu
             }
         });
 
@@ -1879,9 +1942,15 @@ public class GDXGameScreen implements Screen {
         toolTable.row();
         toolTable.add(currentToolLabel).colspan(3).pad(5);
         toolTable.row();
-        toolTable.add(acceptButton).colspan(3).pad(5);
 
-        // Position the table in the bottom-left corner
+        // Create a horizontal group for the buttons
+        HorizontalGroup buttonGroup = new HorizontalGroup();
+        buttonGroup.space(10);
+        buttonGroup.addActor(acceptButton);
+        buttonGroup.addActor(unequipButton); // Add the unequip button to the group
+
+        toolTable.add(buttonGroup).colspan(3).pad(5);
+
         toolTable.pack();
         toolTable.setPosition(10, 10);
     }
@@ -1959,6 +2028,18 @@ public class GDXGameScreen implements Screen {
         cheatTable.pack();
         cheatTable.setPosition(Gdx.graphics.getWidth() / 2f - cheatTable.getWidth() / 2f,
             Gdx.graphics.getHeight() / 2f - cheatTable.getHeight() / 2f);
+    }
+
+    private String getDirectionFromAngle(float angle) {
+        if (angle >= -22.5 && angle < 22.5) return "right";
+        if (angle >= 22.5 && angle < 67.5) return "up_right";
+        if (angle >= 67.5 && angle < 112.5) return "up";
+        if (angle >= 112.5 && angle < 157.5) return "up_left";
+        if (angle >= 157.5 || angle < -157.5) return "left";
+        if (angle >= -157.5 && angle < -112.5) return "down_left";
+        if (angle >= -112.5 && angle < -67.5) return "down";
+        if (angle >= -67.5 && angle < -22.5) return "down_right";
+        return "down"; // Default case
     }
 
     @Override

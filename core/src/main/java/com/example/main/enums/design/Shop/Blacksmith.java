@@ -7,15 +7,15 @@ import java.util.Map;
 public enum Blacksmith implements ShopEntry{
     // Stock items
     CopperOre(Type.STOCK, "Copper Ore", "A common ore that can be smelted into bars.",
-            75, MaterialType.CopperOre, Integer.MAX_VALUE,0, null),
+            75, MaterialType.Copper_Ore, Integer.MAX_VALUE,0, null),
     IronOre(Type.STOCK, "Iron Ore", "A fairly common ore that can be smelted into bars.",
-            150, MaterialType.IronOre, Integer.MAX_VALUE, 0, null),
+            150, MaterialType.Iron_Ore, Integer.MAX_VALUE, 0, null),
     Coal(Type.STOCK, "Coal", "A combustible rock that is useful for crafting and smelting.",
             150, MaterialType.Coal, Integer.MAX_VALUE, 0, null),
     GoldOre(Type.STOCK, "Gold Ore", "A precious ore that can be smelted into bars.",
-            400, MaterialType.GoldOre, Integer.MAX_VALUE, 0, null),
+            400, MaterialType.Gold_Ore, Integer.MAX_VALUE, 0, null),
     IridiumOre(Type.STOCK, "Iridium Ore", "A rare and valuable ore used for advanced crafts.",
-            1000, MaterialType.IridiumOre, Integer.MAX_VALUE, 0, null);
+            1000, MaterialType.Iridium_Ore, Integer.MAX_VALUE, 0, null);
 
     public enum Type {
         STOCK,
@@ -66,8 +66,8 @@ public enum Blacksmith implements ShopEntry{
 
     @Override
     public String toString() {
-        return this.displayName + "\nPrice: " + this.price + 
-        "\nDescription: " + this.description + 
+        return this.displayName + "\nPrice: " + this.price +
+        "\nDescription: " + this.description +
         "\n---------------------\n";
     }
 }
