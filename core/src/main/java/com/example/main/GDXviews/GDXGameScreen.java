@@ -2,6 +2,7 @@ package com.example.main.GDXviews;
 
 import java.util.ArrayList;
 import java.util.Random;
+import java.util.stream.Collectors;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
@@ -35,10 +36,7 @@ import com.example.main.enums.items.ItemType;
 import com.example.main.enums.items.TreeType;
 import com.example.main.enums.player.Skills;
 import com.example.main.models.*;
-import com.example.main.models.item.Crop;
-import com.example.main.models.item.Fruit;
-import com.example.main.models.item.Item;
-import com.example.main.models.item.Tool;
+import com.example.main.models.item.*;
 
 public class GDXGameScreen implements Screen {
     private Stage stage;
@@ -95,6 +93,10 @@ public class GDXGameScreen implements Screen {
     private boolean lightningActive = false;
     private float lightningDuration = 0f;
     private boolean cheatLightningActive = false;
+
+    private boolean isPlantingMode = false;
+    private Tile plantingTargetTile = null;
+    private Label plantingPromptLabel;
 
     // Cheat Menu Fields
     private boolean isCheatMenuOpen = false;
@@ -235,6 +237,33 @@ public class GDXGameScreen implements Screen {
     public GDXGameScreen() {
         controller = new GameMenuController();
         stage = new Stage(new ScreenViewport());
+        stage.addListener(new ClickListener(Input.Buttons.LEFT) {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                if (getTapCount() >= 2) { // Double-click detected
+                    // Don't trigger if a menu is already open
+                    if (isInventoryOpen || isToolMenuOpen || isCheatMenuOpen || isPlantingMode) {
+                        return;
+                    }
+                    com.badlogic.gdx.math.Vector3 worldCoords = camera.unproject(new com.badlogic.gdx.math.Vector3(event.getStageX(), event.getStageY(), 0));
+                    int targetTileX = (int) (worldCoords.x / TILE_SIZE);
+                    int targetTileY = MAP_HEIGHT - 1 - (int) (worldCoords.y / TILE_SIZE);
+
+                    if (targetTileX >= 0 && targetTileX < MAP_WIDTH && targetTileY >= 0 && targetTileY < MAP_HEIGHT) {
+                        Tile clickedTile = gameMap.getTiles()[targetTileX][targetTileY];
+                        // Check if the tile is a valid planting spot
+                        if (clickedTile.getType() == TileType.Shoveled && clickedTile.getPlant() == null && clickedTile.getSeed() == null) {
+                            isPlantingMode = true;
+                            plantingTargetTile = clickedTile;
+                            isInventoryOpen = true;
+                            plantingPromptLabel.setVisible(true);
+                            showInventoryDisplay(true); // Show filtered inventory
+                            Gdx.input.setInputProcessor(inventoryStage);
+                        }
+                    }
+                }
+            }
+        });
         Gdx.input.setInputProcessor(stage);
         skin = new Skin(Gdx.files.internal("uiskin.json"));
 
@@ -259,10 +288,15 @@ public class GDXGameScreen implements Screen {
         generalMessageLabel = new Label("", skin);
         generalMessageLabel.setVisible(false);
 
+        plantingPromptLabel = new Label("Double-click a seed to plant", skin);
+        plantingPromptLabel.setColor(Color.LIME);
+        plantingPromptLabel.setVisible(false);
+
         Table messageTable = new Table();
         messageTable.top().padTop(20);
         messageTable.setFillParent(true);
         messageTable.add(generalMessageLabel);
+        messageTable.add(plantingPromptLabel);
         stage.addActor(messageTable);
 
         random = new Random();
@@ -540,22 +574,23 @@ public class GDXGameScreen implements Screen {
     }
 
     private void handleInput(float delta) {
-        if (Gdx.input.isKeyJustPressed(Input.Keys.I)) {
-            isCheatMenuOpen = !isCheatMenuOpen;
-            if (isCheatMenuOpen) {
-                Gdx.input.setInputProcessor(cheatMenuStage); // Give focus to the cheat menu
-            } else {
-                Gdx.input.setInputProcessor(multiplexer); // Return focus to the multiplexer
-            }
-        }
+        // --- Calculate Mouse Position in World (Moved to the top) ---
+        com.badlogic.gdx.math.Vector3 mouseInWorld = camera.unproject(new com.badlogic.gdx.math.Vector3(Gdx.input.getX(), Gdx.input.getY(), 0));
+        int targetTileX = (int) (mouseInWorld.x / TILE_SIZE);
+        int targetTileY = MAP_HEIGHT - 1 - (int) (mouseInWorld.y / TILE_SIZE);
 
+        // --- Menu Toggles ---
         if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
             isInventoryOpen = !isInventoryOpen;
             if (isInventoryOpen) {
                 showMainMenuButtons();
-                Gdx.input.setInputProcessor(inventoryStage); // Give focus to the inventory
+                Gdx.input.setInputProcessor(inventoryStage);
             } else {
-                Gdx.input.setInputProcessor(multiplexer); // Return focus to the multiplexer
+                // When closing inventory, ensure planting mode also closes
+                isPlantingMode = false;
+                plantingTargetTile = null;
+                plantingPromptLabel.setVisible(false);
+                Gdx.input.setInputProcessor(multiplexer);
             }
         }
 
@@ -565,16 +600,64 @@ public class GDXGameScreen implements Screen {
                 playerTools = game.getCurrentPlayer().getTools();
                 currentToolIndex = 0;
                 updateToolMenuDisplay();
-                Gdx.input.setInputProcessor(toolMenuStage); // Give focus to the tool menu
+                Gdx.input.setInputProcessor(toolMenuStage);
             } else {
-                Gdx.input.setInputProcessor(multiplexer); // Return focus to the multiplexer
+                Gdx.input.setInputProcessor(multiplexer);
             }
         }
 
+        if (Gdx.input.isKeyJustPressed(Input.Keys.C)) {
+            isCheatMenuOpen = !isCheatMenuOpen;
+            if(isCheatMenuOpen) {
+                Gdx.input.setInputProcessor(cheatMenuStage);
+            } else {
+                Gdx.input.setInputProcessor(multiplexer);
+            }
+        }
+
+
+        // If any menu is open, we stop processing game world inputs.
         if (isInventoryOpen || isToolMenuOpen || isCheatMenuOpen) {
+            // This block handles exiting planting mode if the mouse moves away from the tile
+            if (isPlantingMode) {
+                if (plantingTargetTile == null || targetTileX != plantingTargetTile.getX() || targetTileY != plantingTargetTile.getY()) {
+                    isPlantingMode = false;
+                    plantingTargetTile = null;
+                    isInventoryOpen = false;
+                    plantingPromptLabel.setVisible(false);
+                    Gdx.input.setInputProcessor(multiplexer);
+                }
+            }
             return;
         }
 
+        // The hover-to-plant logic has been removed from here and replaced by the double-click listener.
+
+        // --- Tool Use Logic (Now correctly accesses targetTileX/Y) ---
+        if (Gdx.input.isKeyJustPressed(Input.Keys.ENTER)) {
+            if (controller != null && game.getCurrentPlayer() != null) {
+                String message;
+                if (game.getCurrentPlayer().getCurrentTool() == null) {
+                    message = "No tool equipped!";
+                    generalMessageLabel.setColor(Color.YELLOW);
+                } else {
+                    Result result;
+                    if (targetTileX >= 0 && targetTileX < MAP_WIDTH && targetTileY >= 0 && targetTileY < MAP_HEIGHT) {
+                        Tile targetTile = gameMap.getTiles()[targetTileX][targetTileY];
+                        result = controller.useTool(targetTile);
+                    } else {
+                        result = new Result(false, "Target is outside the map.");
+                    }
+                    message = result.Message();
+                    generalMessageLabel.setColor(Color.WHITE);
+                }
+                generalMessageLabel.setText(message);
+                generalMessageLabel.setVisible(true);
+                generalMessageTimer = GENERAL_MESSAGE_DURATION;
+            }
+        }
+
+        // --- Game World Inputs ---
         handleMinimapToggle();
         handleTurnSwitching();
         handlePlayerMovement(delta);
@@ -607,45 +690,8 @@ public class GDXGameScreen implements Screen {
                 lightningDuration = 0.15f;
             }
         }
-
-        if (Gdx.input.isKeyJustPressed(Input.Keys.ENTER)) {
-            if (controller != null && game.getCurrentPlayer() != null) {
-                String message;
-                if (game.getCurrentPlayer().getCurrentTool() == null) {
-                    message = "No tool equipped!";
-                    generalMessageLabel.setColor(Color.YELLOW);
-                } else {
-                    // --- NEW TARGETING LOGIC ---
-                    // 1. Get mouse position in screen coordinates
-                    float mouseX = Gdx.input.getX();
-                    float mouseY = Gdx.input.getY();
-
-                    // 2. Convert mouse position to world coordinates
-                    com.badlogic.gdx.math.Vector3 mouseInWorld = camera.unproject(new com.badlogic.gdx.math.Vector3(mouseX, mouseY, 0));
-
-                    // 3. Convert world coordinates to tile indices
-                    int targetTileX = (int) (mouseInWorld.x / TILE_SIZE);
-                    int targetTileY = MAP_HEIGHT - 1 - (int) (mouseInWorld.y / TILE_SIZE);
-
-                    Result result;
-                    // 4. Check if the tile is valid before using the tool
-                    if (targetTileX >= 0 && targetTileX < MAP_WIDTH && targetTileY >= 0 && targetTileY < MAP_HEIGHT) {
-                        Tile targetTile = gameMap.getTiles()[targetTileX][targetTileY];
-                        result = controller.useTool(targetTile); // Call the controller with the direct tile
-                    } else {
-                        result = new Result(false, "Target is outside the map.");
-                    }
-
-                    message = result.Message();
-                    generalMessageLabel.setColor(Color.WHITE);
-                }
-                // Display the result on screen
-                generalMessageLabel.setText(message);
-                generalMessageLabel.setVisible(true);
-                generalMessageTimer = GENERAL_MESSAGE_DURATION;
-            }
-        }
     }
+
 
     private void handlePlayerMovement(float delta) {
         Player currentPlayer = game.getCurrentPlayer();
@@ -1737,7 +1783,7 @@ public class GDXGameScreen implements Screen {
         inventoryButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                showInventoryDisplay();
+                showInventoryDisplay(false);
             }
         });
 
@@ -1788,24 +1834,23 @@ public class GDXGameScreen implements Screen {
         menuContentTable.add(closeButton).width(buttonWidth).pad(buttonPad).row();
     }
 
-    private void showInventoryDisplay() {
+    private void showInventoryDisplay(boolean showOnlyPlantables) {
         menuContentTable.clear();
-
         Table itemsTable = new Table();
-        updateInventoryGrid(itemsTable);
+        updateInventoryGrid(itemsTable, showOnlyPlantables); // Pass the filter flag
 
-        // Create a new style for the ScrollPane
         ScrollPane.ScrollPaneStyle scrollPaneStyle = new ScrollPane.ScrollPaneStyle();
-        // Set its background to be the same as the main menu
         scrollPaneStyle.background = new TextureRegionDrawable(new TextureRegion(inventoryBackground));
-
-        // Create the ScrollPane with the new style
         ScrollPane scrollPane = new ScrollPane(itemsTable, scrollPaneStyle);
         scrollPane.setFadeScrollBars(false);
-        scrollPane.setScrollingDisabled(true, false); // Enables vertical scrolling
+        scrollPane.setScrollingDisabled(true, false);
 
         menuContentTable.add(scrollPane).expand().fill().pad(20).row();
-        addBackButtonToMenu();
+
+        // In planting mode, don't show the regular back button
+        if (!isPlantingMode) {
+            addBackButtonToMenu();
+        }
     }
 
     private void showSkillsDisplay() {
@@ -1928,12 +1973,19 @@ public class GDXGameScreen implements Screen {
         menuContentTable.add(backButton).pad(10).bottom().left();
     }
 
-    private void updateInventoryGrid(Table table) {
+    // In main/GDXviews/GDXGameScreen.java
+
+    private void updateInventoryGrid(Table table, boolean showOnlyPlantables) {
         table.clear();
         Player currentPlayer = game.getCurrentPlayer();
         if (currentPlayer == null) return;
 
         ArrayList<Item> items = currentPlayer.getInventory().getItems();
+        if (showOnlyPlantables) {
+            items = items.stream()
+                .filter(item -> item instanceof Seed)
+                .collect(Collectors.toCollection(ArrayList::new));
+        }
         int column = 0;
         final int ITEMS_PER_ROW = 4;
 
@@ -1945,16 +1997,36 @@ public class GDXGameScreen implements Screen {
             itemSlot.setBackground("default-round");
 
             if (texture != null) {
-                itemSlot.add(new Image(texture)).size(48, 48);
+                // --- CHANGE: Reduced the size of the image to make the slot smaller ---
+                itemSlot.add(new Image(texture)).size(40, 40);
             } else {
-                itemSlot.add(new Label("?", skin)).size(48, 48);
+                itemSlot.add(new Label("?", skin)).size(40, 40);
                 Gdx.app.log("Inventory", "Missing texture for item: '" + item.getName() + "' (tried key: '" + key + "')");
             }
 
             itemSlot.row();
             itemSlot.add(new Label(String.valueOf(item.getNumber()), skin));
 
-            table.add(itemSlot).pad(4);
+            if (showOnlyPlantables) {
+                itemSlot.addListener(new ClickListener() {
+                    @Override
+                    public void clicked(InputEvent event, float x, float y) {
+                        if (getTapCount() >= 2) { // Check for double-click
+                            Result result = controller.plantItem(item, plantingTargetTile);
+
+                            // Close inventory and exit planting mode
+                            isPlantingMode = false;
+                            plantingTargetTile = null;
+                            isInventoryOpen = false;
+                            plantingPromptLabel.setVisible(false);
+                            Gdx.input.setInputProcessor(multiplexer);
+                        }
+                    }
+                });
+            }
+
+            table.add(itemSlot).pad(8);
+
             column++;
             if (column >= ITEMS_PER_ROW) {
                 table.row();

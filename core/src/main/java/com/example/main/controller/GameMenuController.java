@@ -36,21 +36,7 @@ import com.example.main.enums.items.TreeType;
 import com.example.main.enums.player.Skills;
 import com.example.main.enums.regex.GameMenuCommands;
 import com.example.main.enums.regex.NPCDialogs;
-import com.example.main.models.App;
-import com.example.main.models.Date;
-import com.example.main.models.Friendship;
-import com.example.main.models.Game;
-import com.example.main.models.GameMap;
-import com.example.main.models.Gift;
-import com.example.main.models.Inventory;
-import com.example.main.models.NPC;
-import com.example.main.models.Player;
-import com.example.main.models.Quest;
-import com.example.main.models.Result;
-import com.example.main.models.Talk;
-import com.example.main.models.Tile;
-import com.example.main.models.Time;
-import com.example.main.models.User;
+import com.example.main.models.*;
 import com.example.main.models.building.House;
 import com.example.main.models.building.Housing;
 import com.example.main.models.item.CookingRecipe;
@@ -2696,5 +2682,35 @@ public class GameMenuController {
             return new Result(false, "Invalid target tile.");
         }
         return player.handleToolUse(targetTile);
+    }
+
+    // In main/controller/GameMenuController.java
+
+    public Result plantItem(Item itemToPlant, Tile targetTile) {
+        Player player = game.getCurrentPlayer();
+        if (!(itemToPlant instanceof Seed)) {
+            return new Result(false, "You can only plant seeds!");
+        }
+
+        if (targetTile.getType() != TileType.Shoveled || targetTile.getPlant() != null || targetTile.getSeed() != null) {
+            return new Result(false, "Cannot plant here.");
+        }
+
+        Seed seed = (Seed) itemToPlant;
+        ItemType plantable = seed.getForagingSeedType().getPlantType();
+
+        if (plantable instanceof CropType) {
+            targetTile.setPlant(new Crop(plantable, 1));
+            targetTile.setType(TileType.Planted);
+        } else if (plantable instanceof TreeType) {
+            targetTile.setPlant(new Fruit(((TreeType) plantable).getProduct(), 1));
+            targetTile.setTree(new Tree((TreeType) plantable));
+            targetTile.setType(TileType.Tree);
+        } else {
+            return new Result(false, "This seed cannot be planted.");
+        }
+
+        player.getInventory().removeItem(Seed.class, 1);
+        return new Result(true, itemToPlant.getName() + " planted.");
     }
 }
