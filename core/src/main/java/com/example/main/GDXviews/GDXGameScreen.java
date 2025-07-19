@@ -31,6 +31,7 @@ import com.example.main.models.Date;
 import com.example.main.models.Game;
 import com.example.main.models.GameMap;
 import com.example.main.models.NPC;
+import com.example.main.models.NPCFriendship;
 import com.example.main.models.Player;
 import com.example.main.models.Tile;
 import com.example.main.models.Time;
@@ -182,6 +183,21 @@ public class GDXGameScreen implements Screen {
     private String currentDialogMessage = "";
     private boolean showDialog = false;
     private ArrayList<NPC> clickedNPCs = new ArrayList<>(); // Track which NPCs have been clicked
+    
+    // NPC menu state
+    private boolean showNPCMenu = false;
+    private NPC selectedNPC = null;
+    private Table npcMenuTable;
+    
+    // NPC menu state management
+    private enum NPCMenuState {
+        MAIN_MENU,
+        FRIENDSHIP,
+        QUESTS,
+        GIFT
+    }
+    
+    private NPCMenuState currentNPCMenuState = NPCMenuState.MAIN_MENU;
 
     private int[][] baseGroundMap;
     private int[][] grassVariantMap;
@@ -577,6 +593,19 @@ public class GDXGameScreen implements Screen {
         if (showTradeMenu) {
             return;
         }
+        // If NPC menu is open, only allow NPC menu UI
+        if (showNPCMenu) {
+            // Allow ESC key to close NPC menu
+            if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
+                showNPCMenu = false;
+                selectedNPC = null;
+                if (npcMenuTable != null) {
+                    npcMenuTable.remove();
+                    npcMenuTable = null;
+                }
+            }
+            return;
+        }
         handleTradeMenuToggle();
         // Only handle game input if trade menu and shop menu are not showing
         handleMinimapToggle();
@@ -592,6 +621,10 @@ public class GDXGameScreen implements Screen {
             // Only handle NPC clicks if no dialog is showing
             if (Gdx.input.isButtonJustPressed(Input.Buttons.LEFT)) {
                 handleNPCClick(Gdx.input.getX(), Gdx.input.getY());
+            }
+            // Handle right-click for NPC menu
+            if (Gdx.input.isButtonJustPressed(Input.Buttons.RIGHT)) {
+                handleNPCRightClick(Gdx.input.getX(), Gdx.input.getY());
             }
         }
     }
@@ -1176,6 +1209,254 @@ public class GDXGameScreen implements Screen {
             currentDialogNPC = null;
             currentDialogMessage = "";
         }
+    }
+
+    private void handleNPCRightClick(int screenX, int screenY) {
+        // Convert screen coordinates to world coordinates
+        Vector3 worldCoords = camera.unproject(new Vector3(screenX, screenY, 0));
+        
+        ArrayList<NPC> npcs = game.getNPCs();
+        if (npcs == null) return;
+
+        for (NPC npc : npcs) {
+            if (npc == null) continue;
+
+            int npcX = npc.getX();
+            int npcY = npc.getY();
+
+            float worldX = npcX * TILE_SIZE;
+            float worldY = (MAP_HEIGHT - 1 - npcY) * TILE_SIZE;
+
+            // Check if right-click is on the NPC
+            if (worldCoords.x >= worldX && worldCoords.x <= worldX + TILE_SIZE &&
+                worldCoords.y >= worldY && worldCoords.y <= worldY + TILE_SIZE) {
+                
+                selectedNPC = npc;
+                showNPCMenu = true;
+                createNPCMenuUI();
+                break;
+            }
+        }
+    }
+
+    private void createNPCMenuUI() {
+        if (npcMenuTable != null) {
+            npcMenuTable.remove();
+        }
+
+        npcMenuTable = new Table();
+        npcMenuTable.setBackground(new TextureRegionDrawable(menuBackgroundTexture));
+        // Make the background 75% of screen size (same as trade menu)
+        npcMenuTable.setSize(Gdx.graphics.getWidth() * 0.75f, Gdx.graphics.getHeight() * 0.75f);
+        npcMenuTable.setPosition(
+            (Gdx.graphics.getWidth() - npcMenuTable.getWidth()) / 2f,
+            (Gdx.graphics.getHeight() - npcMenuTable.getHeight()) / 2f
+        );
+
+        stage.addActor(npcMenuTable);
+
+        switch (currentNPCMenuState) {
+            case MAIN_MENU:
+                createMainNPCMenu();
+                break;
+            case FRIENDSHIP:
+                createFriendshipMenu();
+                break;
+            case QUESTS:
+                createQuestsMenu();
+                break;
+            case GIFT:
+                createGiftMenu();
+                break;
+        }
+    }
+
+    private void createMainNPCMenu() {
+        npcMenuTable.clear();
+
+        // NPC name label
+        Label npcNameLabel = new Label(selectedNPC.getType().name(), skin);
+        npcNameLabel.setFontScale(1.2f);
+        npcMenuTable.add(npcNameLabel).colspan(2).pad(10).row();
+
+        // Buttons
+        TextButton friendshipButton = new TextButton("Friendship", skin);
+        TextButton questsButton = new TextButton("Quests", skin);
+        TextButton giftButton = new TextButton("Gift", skin);
+        TextButton closeButton = new TextButton("Close", skin);
+
+        // Add button listeners
+        friendshipButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                currentNPCMenuState = NPCMenuState.FRIENDSHIP;
+                createNPCMenuUI();
+            }
+        });
+
+        questsButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                currentNPCMenuState = NPCMenuState.QUESTS;
+                createNPCMenuUI();
+            }
+        });
+
+        giftButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                currentNPCMenuState = NPCMenuState.GIFT;
+                createNPCMenuUI();
+            }
+        });
+
+        closeButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                showNPCMenu = false;
+                selectedNPC = null;
+                currentNPCMenuState = NPCMenuState.MAIN_MENU;
+                if (npcMenuTable != null) {
+                    npcMenuTable.remove();
+                    npcMenuTable = null;
+                }
+            }
+        });
+
+        // Add buttons to table with larger sizes for the bigger menu
+        npcMenuTable.add(friendshipButton).size(200, 50).pad(10);
+        npcMenuTable.add(questsButton).size(200, 50).pad(10).row();
+        npcMenuTable.add(giftButton).size(200, 50).pad(10);
+        npcMenuTable.add(closeButton).size(200, 50).pad(10);
+    }
+
+    private void createFriendshipMenu() {
+        npcMenuTable.clear();
+
+        // Title with NPC name
+        Label titleLabel = new Label(selectedNPC.getType().name() + " friendship status", skin);
+        titleLabel.setFontScale(1.5f);
+        npcMenuTable.add(titleLabel).colspan(2).pad(20).row();
+
+        // Get friendship information
+        NPCFriendship friendship = selectedNPC.getFriendShipWith(game.getCurrentPlayer());
+        if (friendship != null) {
+            Label friendshipLabel = new Label(friendship.toString(), skin);
+            friendshipLabel.setFontScale(1.0f);
+            npcMenuTable.add(friendshipLabel).colspan(2).pad(20).row();
+        } else {
+            Label noFriendshipLabel = new Label("No friendship data available", skin);
+            noFriendshipLabel.setFontScale(1.0f);
+            npcMenuTable.add(noFriendshipLabel).colspan(2).pad(20).row();
+        }
+
+        // Back and Close buttons
+        TextButton backButton = new TextButton("Back", skin);
+        TextButton closeButton = new TextButton("Close", skin);
+
+        backButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                currentNPCMenuState = NPCMenuState.MAIN_MENU;
+                createNPCMenuUI();
+            }
+        });
+
+        closeButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                showNPCMenu = false;
+                selectedNPC = null;
+                currentNPCMenuState = NPCMenuState.MAIN_MENU;
+                if (npcMenuTable != null) {
+                    npcMenuTable.remove();
+                    npcMenuTable = null;
+                }
+            }
+        });
+
+        npcMenuTable.add(backButton).size(200, 50).pad(10);
+        npcMenuTable.add(closeButton).size(200, 50).pad(10);
+    }
+
+    private void createQuestsMenu() {
+        npcMenuTable.clear();
+
+        Label titleLabel = new Label(selectedNPC.getType().name() + " Quests", skin);
+        titleLabel.setFontScale(1.5f);
+        npcMenuTable.add(titleLabel).colspan(2).pad(20).row();
+
+        Label placeholderLabel = new Label("Quests functionality coming soon...", skin);
+        placeholderLabel.setFontScale(1.0f);
+        npcMenuTable.add(placeholderLabel).colspan(2).pad(20).row();
+
+        // Back and Close buttons
+        TextButton backButton = new TextButton("Back", skin);
+        TextButton closeButton = new TextButton("Close", skin);
+
+        backButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                currentNPCMenuState = NPCMenuState.MAIN_MENU;
+                createNPCMenuUI();
+            }
+        });
+
+        closeButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                showNPCMenu = false;
+                selectedNPC = null;
+                currentNPCMenuState = NPCMenuState.MAIN_MENU;
+                if (npcMenuTable != null) {
+                    npcMenuTable.remove();
+                    npcMenuTable = null;
+                }
+            }
+        });
+
+        npcMenuTable.add(backButton).size(200, 50).pad(10);
+        npcMenuTable.add(closeButton).size(200, 50).pad(10);
+    }
+
+    private void createGiftMenu() {
+        npcMenuTable.clear();
+
+        Label titleLabel = new Label(selectedNPC.getType().name() + " Gift", skin);
+        titleLabel.setFontScale(1.5f);
+        npcMenuTable.add(titleLabel).colspan(2).pad(20).row();
+
+        Label placeholderLabel = new Label("Gift functionality coming soon...", skin);
+        placeholderLabel.setFontScale(1.0f);
+        npcMenuTable.add(placeholderLabel).colspan(2).pad(20).row();
+
+        // Back and Close buttons
+        TextButton backButton = new TextButton("Back", skin);
+        TextButton closeButton = new TextButton("Close", skin);
+
+        backButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                currentNPCMenuState = NPCMenuState.MAIN_MENU;
+                createNPCMenuUI();
+            }
+        });
+
+        closeButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                showNPCMenu = false;
+                selectedNPC = null;
+                currentNPCMenuState = NPCMenuState.MAIN_MENU;
+                if (npcMenuTable != null) {
+                    npcMenuTable.remove();
+                    npcMenuTable = null;
+                }
+            }
+        });
+
+        npcMenuTable.add(backButton).size(200, 50).pad(10);
+        npcMenuTable.add(closeButton).size(200, 50).pad(10);
     }
 
     private void renderBaseGround(int x, int y, float worldX, float worldY, Tile tile) {
