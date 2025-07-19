@@ -482,7 +482,7 @@ public class GameMenuController {
 
         Random rand = new Random();
         npc.getFriendShipWith(game.getCurrentPlayer()).addFriendshipPoints(20);
-        return new Result(true, npc.getType().toString() + " says: " + dialogs.get(rand.nextInt(dialogs.size())).getDialog());
+        return new Result(true, npc.getType().toString() + " says: \n" + dialogs.get(rand.nextInt(dialogs.size())).getDialog());
     }
 
     public Result giftNPC(String NPCName, String itemName) {

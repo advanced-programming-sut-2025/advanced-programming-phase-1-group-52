@@ -1,8 +1,9 @@
 package com.example.main.models;
 
-import com.example.main.enums.design.NPCType;
 import java.util.ArrayList;
 import java.util.HashMap;
+
+import com.example.main.enums.design.NPCType;
 
 public class NPC {
     private int x;
@@ -19,7 +20,7 @@ public class NPC {
         }
         
         this.x = type.getHouseCornerX() + 1;
-        this.y = type.getHouseCornerY() + 1;
+        this.y = type.getHouseCornerY() + 7;
 
         friendships.add(new NPCFriendship(this, players.get(0)));
         friendships.add(new NPCFriendship(this, players.get(1)));

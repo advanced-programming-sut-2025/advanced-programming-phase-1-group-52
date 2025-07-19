@@ -23,12 +23,14 @@ import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.example.main.controller.GameMenuController;
 import com.example.main.controller.TradeMenuController;
 import com.example.main.controller.StoreMenuController;
+import com.example.main.enums.design.NPCType;
 import com.example.main.enums.design.ShopType;
 import com.example.main.enums.design.TileType;
 import com.example.main.models.App;
 import com.example.main.models.Date;
 import com.example.main.models.Game;
 import com.example.main.models.GameMap;
+import com.example.main.models.NPC;
 import com.example.main.models.Player;
 import com.example.main.models.Tile;
 import com.example.main.models.Time;
@@ -163,6 +165,23 @@ public class GDXGameScreen implements Screen {
     private Texture femaleUp1Texture, femaleUp2Texture;
     private Texture femaleLeft1Texture, femaleLeft2Texture;
     private Texture femaleRight1Texture, femaleRight2Texture;
+
+    // NPC textures
+    private Texture sebastianTexture;
+    private Texture abigailTexture;
+    private Texture harveyTexture;
+    private Texture liaTexture;
+    private Texture robinTexture;
+
+    // NPC interaction textures
+    private Texture dialogBoxTexture;
+
+    // NPC interaction state
+    private ArrayList<NPC> nearbyNPCs = new ArrayList<>();
+    private NPC currentDialogNPC = null;
+    private String currentDialogMessage = "";
+    private boolean showDialog = false;
+    private ArrayList<NPC> clickedNPCs = new ArrayList<>(); // Track which NPCs have been clicked
 
     private int[][] baseGroundMap;
     private int[][] grassVariantMap;
@@ -508,6 +527,16 @@ public class GDXGameScreen implements Screen {
         femaleLeft2Texture = new Texture("content/Cut/player/female_left2.png");
         femaleRight1Texture = new Texture("content/Cut/player/female_right1.png");
         femaleRight2Texture = new Texture("content/Cut/player/female_right2.png");
+
+        // Load NPC textures
+        sebastianTexture = new Texture("content/Cut/NPC/sebastian.png");
+        abigailTexture = new Texture("content/Cut/NPC/abigail.png");
+        harveyTexture = new Texture("content/Cut/NPC/harvey.png");
+        liaTexture = new Texture("content/Cut/NPC/lia.png");
+        robinTexture = new Texture("content/Cut/NPC/robin.png");
+
+        // Load NPC interaction textures
+        dialogBoxTexture = new Texture("content/Cut/map_elements/dialog_box.png");
     }
 
     private void generateRandomMaps() {
@@ -555,6 +584,16 @@ public class GDXGameScreen implements Screen {
         handlePlayerMovement(delta);
         handleCameraMovement(delta);
         handleShopInteraction();
+        
+        // Handle NPC interactions
+        if (showDialog) {
+            handleDialogDismiss();
+        } else {
+            // Only handle NPC clicks if no dialog is showing
+            if (Gdx.input.isButtonJustPressed(Input.Buttons.LEFT)) {
+                handleNPCClick(Gdx.input.getX(), Gdx.input.getY());
+            }
+        }
     }
     
     private void handleTradeMenuToggle() {
@@ -822,6 +861,12 @@ public class GDXGameScreen implements Screen {
         }
 
         renderPlayer();
+        renderNPCs();
+        
+        // Update nearby NPCs and render interaction elements
+        updateNearbyNPCs();
+        renderMeetButtons();
+        renderDialogBox();
     }
 
     private void renderPlayer() {
@@ -914,6 +959,222 @@ public class GDXGameScreen implements Screen {
 
             default:
                 return isMale ? maleIdleTexture : femaleIdleTexture;
+        }
+    }
+
+    private void renderNPCs() {
+        ArrayList<NPC> npcs = game.getNPCs();
+        if (npcs == null) {
+            return;
+        }
+
+        for (NPC npc : npcs) {
+            if (npc == null) {
+                continue;
+            }
+
+            int npcX = npc.getX();
+            int npcY = npc.getY();
+
+            // Check if NPC is within map bounds
+            if (npcX < 0 || npcX >= MAP_WIDTH || npcY < 0 || npcY >= MAP_HEIGHT) {
+                continue;
+            }
+
+            float worldX = npcX * TILE_SIZE;
+            float worldY = (MAP_HEIGHT - 1 - npcY) * TILE_SIZE;
+
+            Texture npcTexture = getNPCTexture(npc);
+            if (npcTexture == null) {
+                continue;
+            }
+
+            float npcWidth = npcTexture.getWidth() * 2;
+            float npcHeight = npcTexture.getHeight() * 2;
+            float renderX = worldX + (TILE_SIZE - npcWidth) / 2f;
+            float renderY = worldY;
+
+            spriteBatch.draw(npcTexture, renderX, renderY, npcWidth, npcHeight);
+        }
+    }
+
+    private Texture getNPCTexture(NPC npc) {
+        NPCType npcType = npc.getType();
+        switch (npcType) {
+            case Sebastian:
+                return sebastianTexture;
+            case Abigail:
+                return abigailTexture;
+            case Harvey:
+                return harveyTexture;
+            case Lia:
+                return liaTexture;
+            case Robin:
+                return robinTexture;
+            default:
+                return null;
+        }
+    }
+
+    private void updateNearbyNPCs() {
+        nearbyNPCs.clear();
+        Player currentPlayer = game.getCurrentPlayer();
+        if (currentPlayer == null) return;
+
+        int playerX = currentPlayer.currentX();
+        int playerY = currentPlayer.currentY();
+
+        ArrayList<NPC> npcs = game.getNPCs();
+        if (npcs == null) return;
+
+        // Create a list of NPCs to remove from clickedNPCs
+        ArrayList<NPC> npcsToRemove = new ArrayList<>();
+
+        for (NPC npc : npcs) {
+            if (npc == null) continue;
+
+            int npcX = npc.getX();
+            int npcY = npc.getY();
+
+            // Check if NPC is within 8 tiles (3x3 area around player)
+            int distanceX = Math.abs(playerX - npcX);
+            int distanceY = Math.abs(playerY - npcY);
+
+            if (distanceX <= 1 && distanceY <= 1) {
+                // Only add if this NPC hasn't been clicked recently
+                if (!clickedNPCs.contains(npc)) {
+                    nearbyNPCs.add(npc);
+                }
+            } else {
+                // If NPC is no longer nearby, remove it from clickedNPCs
+                if (clickedNPCs.contains(npc)) {
+                    npcsToRemove.add(npc);
+                }
+            }
+        }
+
+        // Remove NPCs that are no longer nearby from clickedNPCs
+        clickedNPCs.removeAll(npcsToRemove);
+    }
+
+    private void renderMeetButtons() {
+        for (NPC npc : nearbyNPCs) {
+            if (npc == null) continue;
+
+            int npcX = npc.getX();
+            int npcY = npc.getY();
+
+            float worldX = npcX * TILE_SIZE;
+            float worldY = (MAP_HEIGHT - 1 - npcY) * TILE_SIZE;
+
+            // Position the "meet" button to the right of the NPC's head
+            float buttonWidth = 60f;
+            float buttonHeight = 24f;
+            float buttonX = worldX + TILE_SIZE + 8f; // 8 pixels to the right of NPC
+            float buttonY = worldY + TILE_SIZE + 8f; // 8 pixels above the NPC
+
+            // Draw a visible button background (similar to trade menu buttons)
+            spriteBatch.setColor(0.8f, 0.8f, 0.8f, 1f); // Light gray background
+            spriteBatch.draw(ground1Texture, buttonX, buttonY, buttonWidth, buttonHeight);
+            spriteBatch.setColor(1f, 1f, 1f, 1f); // Reset color
+            
+            // Draw button border
+            spriteBatch.setColor(0.2f, 0.2f, 0.2f, 1f); // Dark border
+            // Draw border lines
+            float borderThickness = 2f;
+            spriteBatch.draw(ground1Texture, buttonX, buttonY, buttonWidth, borderThickness); // Bottom
+            spriteBatch.draw(ground1Texture, buttonX, buttonY + buttonHeight - borderThickness, buttonWidth, borderThickness); // Top
+            spriteBatch.draw(ground1Texture, buttonX, buttonY, borderThickness, buttonHeight); // Left
+            spriteBatch.draw(ground1Texture, buttonX + buttonWidth - borderThickness, buttonY, borderThickness, buttonHeight); // Right
+            spriteBatch.setColor(1f, 1f, 1f, 1f); // Reset color
+            
+            // Draw "meet" text
+            if (hudFont != null) {
+                hudFont.setColor(Color.BLACK);
+                hudFont.getData().setScale(0.8f);
+                hudFont.draw(spriteBatch, "meet", buttonX + 15, buttonY + 15);
+                hudFont.getData().setScale(1.0f);
+                hudFont.setColor(Color.WHITE);
+            }
+        }
+    }
+
+    private void renderDialogBox() {
+        if (!showDialog || currentDialogNPC == null) return;
+
+        int npcX = currentDialogNPC.getX();
+        int npcY = currentDialogNPC.getY();
+
+        float worldX = npcX * TILE_SIZE;
+        float worldY = (MAP_HEIGHT - 1 - npcY) * TILE_SIZE;
+
+        // Position dialog box above the NPC's head
+        float dialogWidth = 200f;
+        float dialogHeight = 80f;
+        float dialogX = worldX + TILE_SIZE + 10f; // 10 pixels to the right of NPC
+        float dialogY = worldY + TILE_SIZE + 20f; // 20 pixels above the NPC
+
+        // Draw dialog box background
+        spriteBatch.draw(dialogBoxTexture, dialogX, dialogY, dialogWidth, dialogHeight);
+
+        // Draw dialog text with smaller font
+        if (hudFont != null && currentDialogMessage != null && !currentDialogMessage.isEmpty()) {
+            hudFont.setColor(Color.BLACK);
+            // Scale down the font size (twice the previous size)
+            hudFont.getData().setScale(1.0f);
+            hudFont.draw(spriteBatch, currentDialogMessage, dialogX + 10, dialogY + dialogHeight - 10);
+            // Reset font scale
+            hudFont.getData().setScale(1.0f);
+            hudFont.setColor(Color.WHITE);
+        }
+    }
+
+    private void handleNPCClick(int screenX, int screenY) {
+        if (nearbyNPCs.isEmpty()) return;
+
+        // Convert screen coordinates to world coordinates
+        Vector3 worldCoords = camera.unproject(new Vector3(screenX, screenY, 0));
+
+        for (NPC npc : nearbyNPCs) {
+            if (npc == null) continue;
+
+            int npcX = npc.getX();
+            int npcY = npc.getY();
+
+            float worldX = npcX * TILE_SIZE;
+            float worldY = (MAP_HEIGHT - 1 - npcY) * TILE_SIZE;
+
+            // Check if click is on the "meet" button area (to the right of NPC's head)
+            float buttonWidth = 60f;
+            float buttonHeight = 24f;
+            float buttonX = worldX + TILE_SIZE + 8f;
+            float buttonY = worldY + TILE_SIZE + 8f;
+
+            if (worldCoords.x >= buttonX && worldCoords.x <= buttonX + buttonWidth &&
+                worldCoords.y >= buttonY && worldCoords.y <= buttonY + buttonHeight) {
+                
+                // Call meetNPC method
+                Result result = controller.meetNPC(npc.getType().name());
+                
+                // Show dialog with result
+                currentDialogNPC = npc;
+                currentDialogMessage = result.Message();
+                showDialog = true;
+                
+                // Add NPC to clicked list to hide + button
+                clickedNPCs.add(npc);
+                nearbyNPCs.remove(npc);
+                
+                break;
+            }
+        }
+    }
+
+    private void handleDialogDismiss() {
+        if (showDialog && Gdx.input.isButtonJustPressed(Input.Buttons.LEFT)) {
+            showDialog = false;
+            currentDialogNPC = null;
+            currentDialogMessage = "";
         }
     }
 
@@ -1370,6 +1631,16 @@ public class GDXGameScreen implements Screen {
         femaleLeft2Texture.dispose();
         femaleRight1Texture.dispose();
         femaleRight2Texture.dispose();
+
+        // Dispose NPC textures
+        sebastianTexture.dispose();
+        abigailTexture.dispose();
+        harveyTexture.dispose();
+        liaTexture.dispose();
+        robinTexture.dispose();
+
+        // Dispose NPC interaction textures
+        dialogBoxTexture.dispose();
         
         if (menuBackgroundTexture != null) {
             menuBackgroundTexture.dispose();
