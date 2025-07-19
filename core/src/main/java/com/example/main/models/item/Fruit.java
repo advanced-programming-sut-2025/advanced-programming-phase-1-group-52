@@ -16,6 +16,7 @@ public class Fruit extends Item implements Growable {
     private boolean needsWaterToday = false;
     private boolean isReadyToHarvest = false;
     private boolean isNotWateredForTwoDays = true;
+    private int unwateredDays = 0;
 
     public Fruit(FruitType fruitType, int number) {
         super(fruitType, number);
@@ -136,5 +137,17 @@ public class Fruit extends Item implements Growable {
 
     public void setTreeType(TreeType treeType) {
         this.treeType = treeType;
+    }
+
+    public int getUnwateredDays() {
+        return unwateredDays;
+    }
+
+    public void setUnwateredDays(int unwateredDays) {
+        this.unwateredDays = unwateredDays;
+    }
+
+    public void incrementUnwateredDays() {
+        this.unwateredDays++;
     }
 }

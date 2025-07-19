@@ -23,16 +23,16 @@ public enum NPCType {
         favorites.add(FoodType.Pumpkin_Pie);
         favorites.add(FoodType.Pizza);
 
-        quests.add(new Quest(this, MaterialType.Iron, 50, MaterialType.Diamond, 2));
+        quests.add(new Quest(this, MineralType.Iron, 50, MineralType.Diamond, 2));
         quests.add(new Quest(this, FoodType.Pumpkin_Pie, 1, MaterialType.Gold_Coin, 5000));
         quests.add(new Quest(this, MaterialType.Stone, 150, MineralType.Quartz, 50));
     }},
     Abigail(52, 40) {{
         favorites.add(MaterialType.Stone);
-        favorites.add(MaterialType.Iron_Ore);
+        favorites.add(MineralType.Iron_Ore);
         favorites.add(MaterialType.Coffee);
 
-        quests.add(new Quest(this, MaterialType.Gold_Bar, 1, MaterialType.Gold_Coin, 0));
+        quests.add(new Quest(this, MineralType.Gold_Bar, 1, MaterialType.Gold_Coin, 0));
         quests.add(new Quest(this, MaterialType.Pumpkin, 1, MaterialType.Gold_Coin, 500));
         quests.add(new Quest(this, MaterialType.Wheat, 50, ToolType.Iridium_Watering_Can, 1));
     }},
@@ -59,10 +59,10 @@ public enum NPCType {
     Robin(52, 50) {{
         favorites.add(FoodType.Spaghetti);
         favorites.add(MaterialType.Wood);
-        favorites.add(MaterialType.Iron_Bar);
+        favorites.add(MineralType.Iron_Bar);
 
         quests.add(new Quest(this, MaterialType.Wood, 80, MaterialType.Gold_Coin, 1000));
-        quests.add(new Quest(this, MaterialType.Iron_Bar, 10, CraftingMachineType.BEE_HOUSE, 3));
+        quests.add(new Quest(this, MineralType  .Iron_Bar, 10, CraftingMachineType.BEE_HOUSE, 3));
         quests.add(new Quest(this, MaterialType.Wood, 1000, MaterialType.Gold_Coin, 25000));
     }};
 

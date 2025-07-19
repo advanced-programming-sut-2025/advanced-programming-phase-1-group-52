@@ -18,7 +18,15 @@ public enum MineralType implements ItemType {
     Iron("iron ore", "A fairly common ore that can be smelted into bars.", 10),
     Gold("gold ore", "A precious ore that can be smelted into bars.", 25),
     Iridium("iridium ore", "An exotic ore with many curious properties. Can be smelted into bars.", 100),
-    Coal("coal", "A combustible rock that is useful for crafting and smelting.", 15);
+    Coal("coal", "A combustible rock that is useful for crafting and smelting.", 15),
+    Copper_Ore("Copper ore", ".", 20),
+    Iron_Ore("Iron ore", ".", 20),
+    Gold_Ore("Gold ore", ".", 20),
+    Iridium_Ore("Iridium ore", ".", 20),
+    Copper_Bar("Copper bar", ".", 20),
+    Iron_Bar("Iron bar", ".", 20),
+    Gold_Bar("Gold bar", ".", 20),
+    Iridium_Bar("Iridium bar", ".", 20);
 
     private final String name;
     public final String description;
@@ -44,6 +52,7 @@ public enum MineralType implements ItemType {
         return this.sellPrice;
     }
 
+    @Override
     public String getEnumName() {
         return name();
     }
