@@ -30,8 +30,13 @@ import com.example.main.Main;
 import com.example.main.controller.GameMenuController;
 import com.example.main.enums.design.TileType;
 import com.example.main.enums.design.Weather;
+import com.example.main.enums.items.FruitType;
+import com.example.main.enums.items.ItemType;
+import com.example.main.enums.items.TreeType;
 import com.example.main.enums.player.Skills;
 import com.example.main.models.*;
+import com.example.main.models.item.Crop;
+import com.example.main.models.item.Fruit;
 import com.example.main.models.item.Item;
 import com.example.main.models.item.Tool;
 
@@ -101,7 +106,7 @@ public class GDXGameScreen implements Screen {
 
     private Label generalMessageLabel;
     private float generalMessageTimer = 0f;
-    private static final float GENERAL_MESSAGE_DURATION = 2.0f;
+    private static final float GENERAL_MESSAGE_DURATION = 3.0f;
 
     private Texture ground1Texture;
     private Texture ground2Texture;
@@ -251,15 +256,14 @@ public class GDXGameScreen implements Screen {
         camera.position.set(worldWidth / 2f, worldHeight / 2f, 0);
         camera.update();
 
+        generalMessageLabel = new Label("", skin);
+        generalMessageLabel.setVisible(false);
+
         Table messageTable = new Table();
-        messageTable.top().padTop(50);
+        messageTable.top().padTop(20);
         messageTable.setFillParent(true);
         messageTable.add(generalMessageLabel);
         stage.addActor(messageTable);
-
-        generalMessageLabel = new Label("", skin);
-        generalMessageLabel.setColor(Color.WHITE);
-        generalMessageLabel.setVisible(false);
 
         random = new Random();
         baseGroundMap = new int[MAP_WIDTH][MAP_HEIGHT];
@@ -323,6 +327,15 @@ public class GDXGameScreen implements Screen {
         }
 
         Player currentPlayer = game.getCurrentPlayer();
+        if (currentPlayer != null && !currentPlayer.getNotifications().isEmpty()) {
+            Notification notif = currentPlayer.getNotifications().get(0);
+            generalMessageLabel.setText(notif.getMessage());
+            generalMessageLabel.setColor(Color.CYAN); // Use a distinct color for notifications
+            generalMessageLabel.setVisible(true);
+            generalMessageTimer = GENERAL_MESSAGE_DURATION;
+            currentPlayer.resetNotifs(); // Clear notifications after displaying
+        }
+
         if (currentPlayer != null && currentPlayer.getCurrentTool() != null) {
             // Get mouse position in screen coordinates
             float mouseX = Gdx.input.getX();
@@ -600,14 +613,33 @@ public class GDXGameScreen implements Screen {
                 String message;
                 if (game.getCurrentPlayer().getCurrentTool() == null) {
                     message = "No tool equipped!";
-                    generalMessageLabel.setColor(Color.YELLOW); // Use a warning color
+                    generalMessageLabel.setColor(Color.YELLOW);
                 } else {
-                    String direction = getDirectionFromAngle(toolRotation);
-                    Result result = controller.useTool(direction);
+                    // --- NEW TARGETING LOGIC ---
+                    // 1. Get mouse position in screen coordinates
+                    float mouseX = Gdx.input.getX();
+                    float mouseY = Gdx.input.getY();
+
+                    // 2. Convert mouse position to world coordinates
+                    com.badlogic.gdx.math.Vector3 mouseInWorld = camera.unproject(new com.badlogic.gdx.math.Vector3(mouseX, mouseY, 0));
+
+                    // 3. Convert world coordinates to tile indices
+                    int targetTileX = (int) (mouseInWorld.x / TILE_SIZE);
+                    int targetTileY = MAP_HEIGHT - 1 - (int) (mouseInWorld.y / TILE_SIZE);
+
+                    Result result;
+                    // 4. Check if the tile is valid before using the tool
+                    if (targetTileX >= 0 && targetTileX < MAP_WIDTH && targetTileY >= 0 && targetTileY < MAP_HEIGHT) {
+                        Tile targetTile = gameMap.getTiles()[targetTileX][targetTileY];
+                        result = controller.useTool(targetTile); // Call the controller with the direct tile
+                    } else {
+                        result = new Result(false, "Target is outside the map.");
+                    }
+
                     message = result.Message();
-                    // Reset color to white for normal messages
                     generalMessageLabel.setColor(Color.WHITE);
                 }
+                // Display the result on screen
                 generalMessageLabel.setText(message);
                 generalMessageLabel.setVisible(true);
                 generalMessageTimer = GENERAL_MESSAGE_DURATION;
@@ -1110,24 +1142,84 @@ public class GDXGameScreen implements Screen {
             default:
                 break;
         }
+
+        if (tile.getPlant() != null && tile.getPlant() instanceof Crop) {
+            Crop crop = (Crop) tile.getPlant();
+            ItemType cropType = crop.getCropType();
+
+            // Construct texture name based on growth stage
+            String textureKey = cropType.getEnumName() + "_Stage_" + crop.getCurrentStage();
+            Texture cropTexture = textureManager.getTexture(textureKey);
+
+            if (cropTexture != null) {
+                spriteBatch.draw(cropTexture, worldX, worldY, TILE_SIZE, TILE_SIZE);
+            }
+        } else if (tile.getSeed() != null) {
+            String textureKey = tile.getSeed().getForagingSeedType().getEnumName();
+            Texture seedTexture = textureManager.getTexture(textureKey);
+
+            if (seedTexture != null) {
+                spriteBatch.draw(seedTexture, worldX, worldY, TILE_SIZE, TILE_SIZE);
+            }
+        }
     }
 
+    // In main/GDXviews/GDXGameScreen.java
+
     private void renderTreeSprite(int tileX, int tileY, float worldX, float worldY) {
-        Texture treeTexture;
-        switch (treeVariantMap[tileX][tileY]) {
-            case 0: treeTexture = tree1Texture; break;
-            case 1: treeTexture = tree2Texture; break;
-            case 2: treeTexture = tree3Texture; break;
-            default: treeTexture = tree1Texture; break;
+        Tile tile = gameMap.getTiles()[tileX][tileY];
+
+        // Determine if it's a fruit tree or a wild tree
+        if (tile.getPlant() instanceof Fruit) {
+            Fruit fruitTree = (Fruit) tile.getPlant();
+            TreeType treeType = fruitTree.getTreeType();
+
+            if (treeType == null) return; // Safety check
+
+            // If the tree is not fully grown, draw its sapling
+            if (fruitTree.getCurrentStage() < treeType.getStages().size()) {
+                String saplingKey = treeType.getSource().getEnumName();
+                Texture saplingTexture = textureManager.getTexture(saplingKey);
+                if (saplingTexture != null) {
+                    spriteBatch.draw(saplingTexture, worldX, worldY, TILE_SIZE, TILE_SIZE);
+                }
+            } else {
+                // --- It's a mature fruit tree ---
+                // Draw the base generic tree texture
+                Texture baseTreeTexture;
+                switch (treeVariantMap[tileX][tileY]) {
+                    case 0: baseTreeTexture = tree1Texture; break;
+                    case 1: baseTreeTexture = tree2Texture; break;
+                    case 2: baseTreeTexture = tree3Texture; break;
+                    default: baseTreeTexture = tree1Texture; break;
+                }
+                spriteBatch.draw(baseTreeTexture, worldX, worldY, TILE_SIZE * 1.5f, TILE_SIZE * 1.5f);
+
+                // If it's ready to harvest, draw the fruit on top
+                if (fruitTree.isReadyToHarvest()) {
+                    String fruitKey = fruitTree.getFruitType().getEnumName();
+                    Texture fruitTexture = textureManager.getTexture(fruitKey);
+                    if (fruitTexture != null) {
+                        Random rand = new Random((long)tileX * tileY); // Seeded for consistency
+                        for(int i = 0; i < 3; i++) {
+                            float fruitX = worldX + (rand.nextFloat() * (TILE_SIZE - 8));
+                            float fruitY = worldY + (TILE_SIZE / 2f) + (rand.nextFloat() * (TILE_SIZE / 2f));
+                            spriteBatch.draw(fruitTexture, fruitX, fruitY, TILE_SIZE / 2f, TILE_SIZE / 2f);
+                        }
+                    }
+                }
+            }
+        } else {
+            // --- It's a non-fruiting, wild tree ---
+            Texture treeTexture;
+            switch (treeVariantMap[tileX][tileY]) {
+                case 0: treeTexture = tree1Texture; break;
+                case 1: treeTexture = tree2Texture; break;
+                case 2: treeTexture = tree3Texture; break;
+                default: treeTexture = tree1Texture; break;
+            }
+            spriteBatch.draw(treeTexture, worldX, worldY, TILE_SIZE * 1.5f, TILE_SIZE * 1.5f);
         }
-
-        float treeWidth = treeTexture.getWidth();
-        float treeHeight = treeTexture.getHeight();
-
-        float treeX = worldX + (TILE_SIZE - treeWidth) / 2f;
-        float treeY = worldY;
-
-        spriteBatch.draw(treeTexture, treeX, treeY, treeWidth, treeHeight);
     }
 
     private void renderHouseSprite(int tileX, int tileY, float worldX, float worldY) {

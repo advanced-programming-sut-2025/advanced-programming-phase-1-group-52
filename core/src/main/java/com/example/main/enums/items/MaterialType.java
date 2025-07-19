@@ -47,22 +47,13 @@ public enum MaterialType implements ItemType {
     Omelet("Omelet mat"),
 
     // Handicrafts Type
-    Copper_Ore("Copper ore"),
-    Iron_Ore("Iron ore"),
-    Gold_Ore("Gold ore"),
-    Iridium_Ore("Iridium ore"),
-    Copper_Bar("Copper bar"),
-    Iron_Bar("Iron bar"),
-    Gold_Bar("Gold bar"),
-    Iridium_Bar("Iridium bar"),
+
     Wood("Wood"),
     Stone("Stone"),
     Coal("Coal"),
     Fiber("Fiber"),
-    Iron("Iron"),
     Hardwood("Hard wood"),
     Gold_Coin("Gold coin"),
-    Diamond("Diamond"),
 
     // pierre's remainings
     Bouquet("Bouquet"),

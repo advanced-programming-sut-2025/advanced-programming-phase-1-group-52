@@ -8,7 +8,10 @@ import com.example.main.enums.design.NPCType;
 import com.example.main.enums.design.TileType;
 import com.example.main.enums.design.Weather;
 import com.example.main.enums.items.CropType;
+import com.example.main.enums.items.Growable;
+import com.example.main.enums.items.TreeType;
 import com.example.main.models.item.Crop;
+import com.example.main.models.item.Fruit;
 import com.example.main.models.item.Good;
 import com.example.main.models.item.Item;
 
@@ -71,7 +74,6 @@ public class Game {
     /**
      * Contains all the logic that should be executed when a day passes.
      */
-    // From private void advanceDay()
     public void advanceDay() {
         this.daysPassed++;
         this.date.addDays(1);
@@ -82,9 +84,9 @@ public class Game {
         if (map != null) {
             map.generateRandomForagingSeeds();
             map.generatePlantsFromSeeds();
+            map.regenerateQuarries();
         }
-        eraseCrops();
-        updateCrops();
+        updateTreesAndPlants();
         checkForLightning();
         crowsAttack();
         handleFardaei();
@@ -389,51 +391,79 @@ public class Game {
         this.currentUser = currentUser;
     }
 
-    public void eraseCrops(){
-        if(map == null) return;
-        for(int i = 0; i < 90; i++) {
+
+    public void updateTreesAndPlants() {
+        if (map == null) return;
+
+        for (int i = 0; i < 90; i++) {
             for (int j = 0; j < 60; j++) {
                 Tile tile = map.getTile(i, j);
-                if(tile.getPlant() != null && tile.getPlant().isNotWateredForTwoDays()){
-                    tile.setPlant(null);
-                }
-                if(tile.getPlant() != null && !tile.getPlant().isFertilizedToday()){
-                    tile.setPlant(null);
-                }
-            }
-        }
-    }
+                if (tile.getPlant() != null) {
+                    Growable plant = tile.getPlant();
+                    boolean wasWatered = plant.isWateredToday();
 
-    public void updateCrops(){
-        if(map == null) return;
-        for(int i = 0; i < 90; i++){
-            for(int j = 0; j < 60; j++){
-                Tile tile = map.getTile(i, j);
-                if(tile.getType().equals(TileType.Planted)){
-                    if(tile.getPlant() == null){
-                        System.out.println("error in crops");
+                    // --- Logic for removing dead plants ---
+                    if (!wasWatered) {
+                        // Use public methods to handle the unwatered state
+                        if (plant instanceof Fruit fruit) {
+                            fruit.incrementUnwateredDays();
+                            if (fruit.getUnwateredDays() >= 2) {
+                                tile.setPlant(null); // Tree dies
+                                continue; // Skip to next tile
+                            }
+                        } else if (plant instanceof Crop crop) {
+                            // A simple boolean check is enough for crops as per original logic
+                            if (crop.isNotWateredForTwoDays()) {
+                                tile.setPlant(null);
+                                tile.setType(TileType.Shoveled);
+                                continue; // Skip to next tile
+                            } else {
+                                crop.setNotWateredForTwoDays(true);
+                            }
+                        }
+                    } else {
+                        // Reset unwatered status if it was watered
+                        if (plant instanceof Fruit fruit) {
+                            fruit.setUnwateredDays(0);
+                        }
+                        if (plant instanceof Crop crop) {
+                            crop.setNotWateredForTwoDays(false);
+                        }
                     }
-                    else{
-                        if(tile.getPlant() instanceof Crop plant){
-                            if(plant.getCropType() instanceof CropType type){
-                                if(plant.getDayPassed() >= type.getTotalHarvestTime()){
-                                    plant.setReadyToHarvest(true);
-                                    if(type.isOneTimeHarvest()){
-                                        plant.setCanBeHarvestAgain(false);
+
+                    // --- Growth Logic ---
+                    if (!plant.isReadyToHarvest()) {
+                        plant.setDayPassed(plant.getDayPassed() + 1);
+                        plant.setDayRemaining(plant.getDayRemaining() - 1);
+
+                        // For Trees (Fruit objects)
+                        if (plant instanceof Fruit fruit) {
+                            TreeType treeType = fruit.getTreeType();
+                            if (treeType != null) {
+                                int daysPassed = fruit.getDayPassed();
+                                int totalDaysForNextStage = 0;
+                                for (int stage = 0; stage < treeType.getStages().size(); stage++) {
+                                    totalDaysForNextStage += treeType.getStages().get(stage);
+                                    if (daysPassed >= totalDaysForNextStage) {
+                                        fruit.setCurrentStage(stage + 1);
                                     }
                                 }
-                                else{
-                                    plant.setDayPassed(plant.getDayPassed() + 1);
-                                    plant.setWateredToday(false);
+                                if (daysPassed >= treeType.getTotalHarvestTime()) {
+                                    fruit.setReadyToHarvest(true);
                                 }
                             }
                         }
+                        // For Crops
+                        else if (plant instanceof Crop crop) {
+                            CropType cropType = (CropType) crop.getCropType();
+                            if (crop.getDayPassed() >= cropType.getTotalHarvestTime()) {
+                                crop.setReadyToHarvest(true);
+                            }
+                        }
                     }
-                }
-                else if(tile.getType().equals(TileType.Tree)){
-                    if(tile.getPlant() == null){
-                        System.out.println("error in tree");
-                    }
+
+                    // Reset water status for the new day
+                    plant.setWateredToday(false);
                 }
             }
         }

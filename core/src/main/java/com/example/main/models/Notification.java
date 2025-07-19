@@ -1,3 +1,5 @@
+// In main/models/Notification.java
+
 package com.example.main.models;
 
 public record Notification(Player sender, String message) {
@@ -7,6 +9,10 @@ public record Notification(Player sender, String message) {
 
     @Override
     public String toString() {
-        return sender + ": " + message + "\n-------------------\n";
+        // Handle system notifications where the sender is null
+        if (sender == null) {
+            return "System: " + message + "\n-------------------\n";
+        }
+        return sender.getUsername() + ": " + message + "\n-------------------\n";
     }
 }

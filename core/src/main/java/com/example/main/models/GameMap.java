@@ -13,16 +13,14 @@ import com.example.main.enums.design.NPCType;
 import com.example.main.enums.design.ShopType;
 import com.example.main.enums.design.TileType;
 import com.example.main.enums.design.Weather;
-import com.example.main.enums.items.ForagingCropType;
-import com.example.main.enums.items.ForagingSeedType;
-import com.example.main.enums.items.FruitType;
-import com.example.main.enums.items.TreeType;
+import com.example.main.enums.items.*;
 import com.example.main.models.building.GreenHouse;
 import com.example.main.models.building.House;
 import com.example.main.models.building.NPCHouse;
 import com.example.main.models.building.Shop;
 import com.example.main.models.item.Crop;
 import com.example.main.models.item.Fruit;
+import com.example.main.models.item.Mineral;
 import com.example.main.models.item.Seed;
 
 public class GameMap {
@@ -32,6 +30,8 @@ public class GameMap {
     private final ArrayList<House> houses;
     private final ArrayList<NPCHouse> npcHouses;
     private final ArrayList<GreenHouse> greenHouses;
+    private final ArrayList<Player> players;
+    private final ArrayList<FarmThemes> themes;
 
     public GameMap(ArrayList<User> users, ArrayList<FarmThemes> themes) {
         this.tiles = new Tile[90][60];
@@ -40,9 +40,10 @@ public class GameMap {
         this.houses = new ArrayList<>();
         this.npcHouses = new ArrayList<>();
         this.greenHouses = new ArrayList<>();
-        ArrayList<Player> players = new ArrayList<>();
+        this.themes = themes;
+        this.players = new ArrayList<>();
         for (User user : users) {
-            players.add(user.getPlayer());
+            this.players.add(user.getPlayer());
         }
 
         generateBuilding(players, 0, TileType.House, 1, 8, 1, 8);
@@ -66,252 +67,25 @@ public class GameMap {
         this.greenHouses.add(new GreenHouse(players.get(3), 61, 32));
 
         generateFarm(players, themes);
-
-        // Generate bush borders around player areas
         generateBushBorders(players);
+
+        placeRandomForageables(players.get(0), 1, 1, 29, 29);
+        placeRandomForageables(players.get(1), 61, 1, 89, 29);
+        placeRandomForageables(players.get(2), 1, 31, 29, 59);
+        placeRandomForageables(players.get(3), 61, 31, 89, 59);
 
         for (NPCType npc : NPCType.values()) {
             generateBuilding(
-                    null,
-                    4,
-                    TileType.NPCHouse,
-                    npc.getHouseCornerX(),
-                    npc.getHouseCornerX() + 4,
-                    npc.getHouseCornerY(),
-                    npc.getHouseCornerY() + 6
+                null,
+                4,
+                TileType.NPCHouse,
+                npc.getHouseCornerX(),
+                npc.getHouseCornerX() + 4,
+                npc.getHouseCornerY(),
+                npc.getHouseCornerY() + 6
             );
 
             this.npcHouses.add(new NPCHouse(npc));
-        }
-
-        Random rand = new Random();
-        int grassAmount = rand.nextInt(3);
-
-        for (int i = 0; i < grassAmount + 2; i++) {
-            int grassX = rand.nextInt(20) + 4;
-            int grassY = rand.nextInt(12) + 8;
-            int grassHeight = rand.nextInt(4) + 1;
-            
-            for (int j = grassY - grassHeight / 2; j < grassY + grassHeight / 2; j++) {
-                for (int k = grassX - rand.nextInt(2) - 1; k < grassX + rand.nextInt(2); k++) {
-                    tiles[k][j] = new Tile(k, j, TileType.Grass, players.get(0));
-                } 
-            }
-        }
-
-        grassAmount = rand.nextInt(3);
-        for (int i = 0; i < grassAmount + 2; i++) {
-            int grassX = rand.nextInt(20) + 64;
-            int grassY = rand.nextInt(12) + 8;
-            int grassHeight = rand.nextInt(4) + 1;
-
-            for (int j = grassY - grassHeight / 2; j < grassY + grassHeight / 2; j++) {
-                for (int k = grassX - rand.nextInt(2) - 1; k < grassX + rand.nextInt(2); k++) {
-                    tiles[k][j] = new Tile(k, j, TileType.Grass, players.get(1));
-                }
-            }
-        }
-
-        grassAmount = rand.nextInt(3);
-        for (int i = 0; i < grassAmount + 2; i++) {
-            int grassX = rand.nextInt(20) + 4;
-            int grassY = rand.nextInt(12) + 38;
-            int grassHeight = rand.nextInt(4) + 1;
-
-            for (int j = grassY - grassHeight / 2; j < grassY + grassHeight / 2; j++) {
-                for (int k = grassX - rand.nextInt(2) - 1; k < grassX + rand.nextInt(2); k++) {
-                    tiles[k][j] = new Tile(k, j, TileType.Grass, players.get(2));
-                }
-            }
-        }
-
-        grassAmount = rand.nextInt(3);
-        for (int i = 0; i < grassAmount + 2; i++) {
-            int grassX = rand.nextInt(20) + 64;
-            int grassY = rand.nextInt(12) + 38;
-            int grassHeight = rand.nextInt(4) + 1;
-
-            for (int j = grassY - grassHeight / 2; j < grassY + grassHeight / 2; j++) {
-                for (int k = grassX - rand.nextInt(2) - 1; k < grassX + rand.nextInt(2); k++) {
-                    tiles[k][j] = new Tile(k, j, TileType.Grass, players.get(3));
-                }
-            }
-        }
-
-        for (int i = 1; i < 29; i++) {
-            for (int j = 1; j < 29; j++) {
-                if (tiles[i][j] == null) {
-                    int tileProb = rand.nextInt(20);
-                    if (tileProb < 12) {
-                        tiles[i][j] = new Tile(i, j, TileType.Earth, players.get(0));
-                    }
-                    else if (tileProb < 13) {
-                        tiles[i][j] = new Tile(i, j, TileType.Stone, players.get(0));
-                    }
-                    else if (tileProb < 15 && j > 10 && j < 20) {
-                        TreeType treeType = Arrays.asList(TreeType.values()).get(rand.nextInt(TreeType.values().length));
-                        FruitType fruitType = Arrays.asList(FruitType.values()).get(rand.nextInt(FruitType.values().length));
-
-                        tiles[i][j] = new Tile(i, j, TileType.Tree, players.get(0));
-                        Tree tree = new Tree(treeType);
-                        tiles[i][j].setTree(tree);
-
-                        Fruit fruit = new Fruit(fruitType, 1);
-                        tiles[i][j].setPlant(fruit);
-                    }
-                    else if (tileProb < 18 && j > 10 && j < 20) {
-                        List<ForagingCropType> crops = Arrays.asList(ForagingCropType.values());
-                        ForagingCropType cropType = crops.get(rand.nextInt(crops.size()));
-
-                        tiles[i][j] = new Tile(i, j, TileType.Planted, players.get(0));
-                        tiles[i][j].setPlant(new Crop(cropType, 1));
-                    }
-                    else if (j > 10 && j < 20) {
-                        List<ForagingSeedType> seeds = Arrays.stream(ForagingSeedType.values())
-                                .filter(ForagingSeedType::isForaging)
-                                .collect(Collectors.toList());
-                        ForagingSeedType seedType = seeds.get(rand.nextInt(seeds.size()));
-
-                        tiles[i][j] = new Tile(i, j, TileType.Shoveled, players.get(0));
-                        tiles[i][j].setSeed(new Seed(seedType, 1));
-                    }
-                    else {
-                        tiles[i][j] = new Tile(i, j, TileType.Earth, players.get(0));
-                    }
-                }
-            }
-        }
-        
-        for (int i = 61; i < 89; i++) {
-            for (int j = 1; j < 29; j++) {
-                if (tiles[i][j] == null) {
-                    int tileProb = rand.nextInt(20);
-                    if (tileProb < 12) {
-                        tiles[i][j] = new Tile(i, j, TileType.Earth, players.get(1));
-                    }
-                    else if (tileProb < 13) {
-                        tiles[i][j] = new Tile(i, j, TileType.Stone, players.get(1));
-                    }
-                    else if (tileProb < 15 && j > 10 && j < 20) {
-                        TreeType treeType = Arrays.asList(TreeType.values()).get(rand.nextInt(TreeType.values().length));
-                        FruitType fruitType = Arrays.asList(FruitType.values()).get(rand.nextInt(FruitType.values().length));
-
-                        tiles[i][j] = new Tile(i, j, TileType.Tree, players.get(1));
-                        Tree tree = new Tree(treeType);
-                        tiles[i][j].setTree(tree);
-
-                        Fruit fruit = new Fruit(fruitType, 1);
-                        tiles[i][j].setPlant(fruit);
-                    }
-                    else if (tileProb < 18 && j > 10 && j < 20) {
-                        List<ForagingCropType> crops = Arrays.asList(ForagingCropType.values());
-                        ForagingCropType cropType = crops.get(rand.nextInt(crops.size()));
-
-                        tiles[i][j] = new Tile(i, j, TileType.Planted, players.get(1));
-                        tiles[i][j].setPlant(new Crop(cropType, 1));
-                    }
-                    else if (j > 10 && j < 20) {
-                        List<ForagingSeedType> seeds = Arrays.stream(ForagingSeedType.values())
-                                .filter(ForagingSeedType::isForaging)
-                                .collect(Collectors.toList());
-                        ForagingSeedType seedType = seeds.get(rand.nextInt(seeds.size()));
-
-                        tiles[i][j] = new Tile(i, j, TileType.Shoveled, players.get(1));
-                        tiles[i][j].setSeed(new Seed(seedType, 1));
-                    }
-                    else {
-                        tiles[i][j] = new Tile(i, j, TileType.Earth, players.get(1));
-                    }
-                }
-            }
-        }
-
-        for (int i = 1; i < 29; i++) {
-            for (int j = 31; j < 59; j++) {
-                if (tiles[i][j] == null) {
-                    int tileProb = rand.nextInt(20);
-                    if (tileProb < 12) {
-                        tiles[i][j] = new Tile(i, j, TileType.Earth, players.get(2));
-                    }
-                    else if (tileProb < 13) {
-                        tiles[i][j] = new Tile(i, j, TileType.Stone, players.get(2));
-                    }
-                    else if (tileProb < 15 && j > 40 && j < 50) {
-                        TreeType treeType = Arrays.asList(TreeType.values()).get(rand.nextInt(TreeType.values().length));
-                        FruitType fruitType = Arrays.asList(FruitType.values()).get(rand.nextInt(FruitType.values().length));
-
-                        tiles[i][j] = new Tile(i, j, TileType.Tree, players.get(2));
-                        Tree tree = new Tree(treeType);
-                        tiles[i][j].setTree(tree);
-
-                        Fruit fruit = new Fruit(fruitType, 1);
-                        tiles[i][j].setPlant(fruit);
-                    }
-                    else if (tileProb < 18 && j > 40 && j < 50) {
-                        List<ForagingCropType> crops = Arrays.asList(ForagingCropType.values());
-                        ForagingCropType cropType = crops.get(rand.nextInt(crops.size()));
-
-                        tiles[i][j] = new Tile(i, j, TileType.Planted, players.get(2));
-                        tiles[i][j].setPlant(new Crop(cropType, 1));
-                    }
-                    else if (j > 40 && j < 50) {
-                        List<ForagingSeedType> seeds = Arrays.stream(ForagingSeedType.values())
-                                .filter(ForagingSeedType::isForaging)
-                                .collect(Collectors.toList());
-                        ForagingSeedType seedType = seeds.get(rand.nextInt(seeds.size()));
-
-                        tiles[i][j] = new Tile(i, j, TileType.Shoveled, players.get(2));
-                        tiles[i][j].setSeed(new Seed(seedType, 1));
-                    }
-                    else {
-                        tiles[i][j] = new Tile(i, j, TileType.Earth, players.get(2));
-                    }
-                }
-            }
-        }
-
-        for (int i = 61; i < 89; i++) {
-            for (int j = 31; j < 59; j++) {
-                if (tiles[i][j] == null) {
-                    int tileProb = rand.nextInt(20);
-                    if (tileProb < 12) {
-                        tiles[i][j] = new Tile(i, j, TileType.Earth, players.get(3));
-                    }
-                    else if (tileProb < 13) {
-                        tiles[i][j] = new Tile(i, j, TileType.Stone, players.get(3));
-                    }
-                    else if (tileProb < 15 && j > 40 && j < 50) {
-                        TreeType treeType = Arrays.asList(TreeType.values()).get(rand.nextInt(TreeType.values().length));
-                        FruitType fruitType = Arrays.asList(FruitType.values()).get(rand.nextInt(FruitType.values().length));
-
-                        tiles[i][j] = new Tile(i, j, TileType.Tree, players.get(3));
-                        Tree tree = new Tree(treeType);
-                        tiles[i][j].setTree(tree);
-
-                        Fruit fruit = new Fruit(fruitType, 1);
-                        tiles[i][j].setPlant(fruit);
-                    }
-                    else if (tileProb < 18 && j > 40 && j < 50) {
-                        List<ForagingCropType> crops = Arrays.asList(ForagingCropType.values());
-                        ForagingCropType cropType = crops.get(rand.nextInt(crops.size()));
-
-                        tiles[i][j] = new Tile(i, j, TileType.Planted, players.get(3));
-                        tiles[i][j].setPlant(new Crop(cropType, 1));
-                    }
-                    else if (j > 40 && j < 50) {
-                        List<ForagingSeedType> seeds = Arrays.stream(ForagingSeedType.values())
-                                .filter(ForagingSeedType::isForaging)
-                                .collect(Collectors.toList());
-                        ForagingSeedType seedType = seeds.get(rand.nextInt(seeds.size()));
-
-                        tiles[i][j] = new Tile(i, j, TileType.Shoveled, players.get(3));
-                        tiles[i][j].setSeed(new Seed(seedType, 1));
-                    }
-                    else {
-                        tiles[i][j] = new Tile(i, j, TileType.Earth, players.get(3));
-                    }
-                }
-            }
         }
 
         for (int i = 0; i < 90; i++) {
@@ -336,16 +110,15 @@ public class GameMap {
             }
         }
 
-        // Generate shops AFTER all terrain generation to prevent overwriting
         for (ShopType shopType : ShopType.values()) {
             generateBuilding(
-                    null,
-                    4,
-                    TileType.Shop,
-                    shopType.getCornerX(),
-                    shopType.getCornerX() + 7,
-                    shopType.getCornerY(),
-                    shopType.getCornerY() + 7
+                null,
+                4,
+                TileType.Shop,
+                shopType.getCornerX(),
+                shopType.getCornerX() + 7,
+                shopType.getCornerY(),
+                shopType.getCornerY() + 7
             );
 
             Shop shop = new Shop(shopType);
@@ -356,6 +129,59 @@ public class GameMap {
                     tiles[i][j].setShop(shop);
                 }
             }
+        }
+    }
+
+    private void placeRandomForageables(Player owner, int xStart, int yStart, int xEnd, int yEnd) {
+        Random rand = new Random();
+        int forageableCount = 10 + rand.nextInt(6); // 10 to 15 items
+
+        // Get all possible spawn locations
+        ArrayList<Tile> validTiles = new ArrayList<>();
+        for (int i = xStart; i < xEnd; i++) {
+            for (int j = yStart; j < yEnd; j++) {
+                if (tiles[i][j] == null || tiles[i][j].getType() == TileType.Earth) {
+                    validTiles.add(new Tile(i, j, TileType.Earth, owner));
+                }
+            }
+        }
+
+        java.util.Collections.shuffle(validTiles);
+
+        for (int i = 0; i < forageableCount && !validTiles.isEmpty(); i++) {
+            Tile targetTile = validTiles.remove(0);
+            int x = targetTile.getX();
+            int y = targetTile.getY();
+
+            double choice = rand.nextDouble();
+
+            if (choice < 0.20) { // 20% chance for a tree
+                List<TreeType> wildTrees = Arrays.asList(TreeType.OAK_TREE, TreeType.MAPLE_TREE, TreeType.PINE_TREE, TreeType.MAHOGANY_TREE);
+                TreeType treeType = wildTrees.get(rand.nextInt(wildTrees.size()));
+
+                targetTile.setType(TileType.Tree);
+                targetTile.setTree(new Tree(treeType));
+                targetTile.setPlant(new Fruit(treeType.getProduct(), 1)); // Fruit object tracks growth
+
+            } else if (choice < 0.60) { // 40% chance for a foraging crop
+                List<ForagingCropType> crops = Arrays.asList(ForagingCropType.values());
+                ForagingCropType cropType = crops.get(rand.nextInt(crops.size()));
+
+                targetTile.setType(TileType.Planted);
+                Crop crop = new Crop(cropType, 1);
+                crop.setReadyToHarvest(true); // Foraging crops are found fully grown
+                targetTile.setPlant(crop);
+
+            } else { // 40% chance for a foraging seed
+                List<ForagingSeedType> seeds = Arrays.stream(ForagingSeedType.values())
+                    .filter(ForagingSeedType::isForaging)
+                    .collect(Collectors.toList());
+                ForagingSeedType seedType = seeds.get(rand.nextInt(seeds.size()));
+
+                targetTile.setType(TileType.Shoveled);
+                targetTile.setSeed(new Seed(seedType, 1));
+            }
+            this.tiles[x][y] = targetTile;
         }
     }
 
@@ -441,6 +267,37 @@ public class GameMap {
         }
     }
 
+    public void regenerateQuarries() {
+        if (this.players == null || this.themes == null || this.players.isEmpty() || this.themes.isEmpty()) {
+            return;
+        }
+
+        if (themes.size() > 0) {
+            switch (themes.get(0)) {
+                case Neutral -> generateBuilding(this.players, 0, TileType.Quarry, 1, 9, 24, 28);
+                case Miner -> generateBuilding(this.players, 0, TileType.Quarry, 1, 19, 24, 28);
+            }
+        }
+        if (themes.size() > 1) {
+            switch (themes.get(1)) {
+                case Neutral -> generateBuilding(this.players, 1, TileType.Quarry, 61, 69, 24, 28);
+                case Miner -> generateBuilding(this.players, 1, TileType.Quarry, 61, 79, 24, 28);
+            }
+        }
+        if (themes.size() > 2) {
+            switch (themes.get(2)) {
+                case Neutral -> generateBuilding(this.players, 2, TileType.Quarry, 1, 9, 54, 58);
+                case Miner -> generateBuilding(this.players, 2, TileType.Quarry, 1, 19, 54, 58);
+            }
+        }
+        if (themes.size() > 3) {
+            switch (themes.get(3)) {
+                case Neutral -> generateBuilding(this.players, 3, TileType.Quarry, 61, 69, 54, 58);
+                case Miner -> generateBuilding(this.players, 3, TileType.Quarry, 61, 79, 54, 58);
+            }
+        }
+    }
+
     public void generateBuilding(
             ArrayList<Player> players, int playerIndex, TileType buildingType,
             int xStart, int xEnd, int yStart, int yEnd
@@ -455,24 +312,44 @@ public class GameMap {
 
         if (buildingType == TileType.Quarry) {
             Random rand = new Random();
+            // List of possible minerals and ores to spawn in the quarry
+            List<MineralType> mineableItems = Arrays.asList(
+                MineralType.Copper_Ore, MineralType.Iron_Ore, MineralType.Gold_Ore, MineralType.Iridium_Ore,
+                MineralType.Quartz, MineralType.Earth_Crystal, MineralType.Frozen_Tear, MineralType.Fire_Quartz,
+                MineralType.Amethyst, MineralType.Topaz
+            );
+
             for (int i = xStart + 1; i < xEnd; i++) {
                 for (int j = yStart + 1; j < yEnd; j++) {
-                    int stoneProb = rand.nextInt(20);
-                    if (stoneProb < 7) {
-                        tiles[i][j] = new Tile(i, j, TileType.CopperStone, owner);
+                    // Choose a random mineral for the tile
+                    MineralType chosenMineral = mineableItems.get(rand.nextInt(mineableItems.size()));
+                    TileType stoneType;
+
+                    // Set the visual tile type based on the mineral
+                    switch (chosenMineral) {
+                        case Copper_Ore:
+                            stoneType = TileType.CopperStone;
+                            break;
+                        case Iron_Ore:
+                            stoneType = TileType.IronStone;
+                            break;
+                        case Gold_Ore:
+                            stoneType = TileType.GoldStone;
+                            break;
+                        case Iridium_Ore:
+                            stoneType = TileType.IridiumStone;
+                            break;
+                        case Quartz, Earth_Crystal, Frozen_Tear, Fire_Quartz, Amethyst, Topaz:
+                            stoneType = TileType.JewelStone;
+                            break;
+                        default:
+                            stoneType = TileType.Stone;
+                            break;
                     }
-                    else if (stoneProb < 12) {
-                        tiles[i][j] = new Tile(i, j, TileType.IronStone, owner);
-                    }
-                    else if (stoneProb < 16) {
-                        tiles[i][j] = new Tile(i, j, TileType.GoldStone, owner);
-                    }
-                    else if (stoneProb < 18) {
-                        tiles[i][j] = new Tile(i, j, TileType.IridiumStone, owner);
-                    }
-                    else {
-                        tiles[i][j] = new Tile(i, j, TileType.JewelStone, owner);
-                    }
+
+                    tiles[i][j] = new Tile(i, j, stoneType, owner);
+                    // Pre-place the mineral item onto the tile
+                    tiles[i][j].setItem(new Mineral(chosenMineral, 1));
                 }
             }
         }
@@ -553,23 +430,23 @@ public class GameMap {
 
     private void generateBushBorders(ArrayList<Player> players) {
         // Generate bush borders around each player area, leaving gaps for movement
-        
+
         // Player 0 area: (0,0) to (29,29)
         generateBushBorderForArea(players.get(0), 0, 29, 0, 29);
-        
+
         // Player 1 area: (60,0) to (89,29)
         generateBushBorderForArea(players.get(1), 60, 89, 0, 29);
-        
+
         // Player 2 area: (0,30) to (29,59)
         generateBushBorderForArea(players.get(2), 0, 29, 30, 59);
-        
+
         // Player 3 area: (60,30) to (89,59)
         generateBushBorderForArea(players.get(3), 60, 89, 30, 59);
     }
 
     private void generateBushBorderForArea(Player owner, int xStart, int xEnd, int yStart, int yEnd) {
         // Create bush borders around the area, leaving gaps for movement
-        
+
         // Top border (leave gaps at positions 13-16 for a 4-tile opening)
         for (int x = xStart; x <= xEnd; x++) {
             if (x < xStart + 13 || x > xStart + 16) {
@@ -578,7 +455,7 @@ public class GameMap {
                 }
             }
         }
-        
+
         // Bottom border (leave gaps at positions 13-16 for a 4-tile opening)
         for (int x = xStart; x <= xEnd; x++) {
             if (x < xStart + 13 || x > xStart + 16) {
@@ -587,7 +464,7 @@ public class GameMap {
                 }
             }
         }
-        
+
         // Left border (leave gaps at positions 13-16 for a 4-tile opening)
         for (int y = yStart; y <= yEnd; y++) {
             if (y < yStart + 13 || y > yStart + 16) {
@@ -596,7 +473,7 @@ public class GameMap {
                 }
             }
         }
-        
+
         // Right border (leave gaps at positions 13-16 for a 4-tile opening)
         for (int y = yStart; y <= yEnd; y++) {
             if (y < yStart + 13 || y > yStart + 16) {
@@ -622,7 +499,7 @@ public class GameMap {
 
         queue.add(tiles[startX][startY]);
         visited[startX][startY] = true;
-        
+
         int[] nearByX = {-1, -1, -1, 0, 0, 1, 1, 1};
         int[] nearByY = {-1, 0, 1, -1, 1, -1, 0, 1};
 
@@ -694,7 +571,7 @@ public class GameMap {
                 mapString.append('\n');
             }
         }
-        
+
         return mapString.toString();
     }
 

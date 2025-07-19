@@ -6,6 +6,7 @@ import com.example.main.enums.items.Backpacks;
 import com.example.main.enums.items.ItemType;
 import com.example.main.enums.items.MaterialType;
 import com.example.main.models.item.Item;
+import com.example.main.models.item.Mineral;
 import com.example.main.models.item.Tool;
 
 public class Inventory {
@@ -22,7 +23,7 @@ public class Inventory {
             if (item.getName().equals(name)) {
                 return item;
             }
-        }   
+        }
         return null;
     }
 
@@ -135,7 +136,7 @@ public class Inventory {
         return item == null ? 0 : item.getNumber();
     }
 
-    public boolean remove(MaterialType type, int quantity) {
+    public boolean remove(Mineral type, int quantity) {
         for (Item item : items) {
             if (item.getItemType() == type) {
                 boolean success = item.remove(quantity);

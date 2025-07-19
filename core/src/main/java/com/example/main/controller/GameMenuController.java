@@ -2689,4 +2689,12 @@ public class GameMenuController {
     public Result showBalance() {
         return new Result(true, "Your balance is " + game.getCurrentPlayer().getBankAccount().getBalance());
     }
+
+    public Result useTool(Tile targetTile) {
+        Player player = game.getCurrentPlayer();
+        if (targetTile == null) {
+            return new Result(false, "Invalid target tile.");
+        }
+        return player.handleToolUse(targetTile);
+    }
 }
