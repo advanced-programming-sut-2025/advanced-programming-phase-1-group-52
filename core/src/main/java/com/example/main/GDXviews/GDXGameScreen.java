@@ -316,6 +316,7 @@ public class GDXGameScreen implements Screen {
         multiplexer.addProcessor(inventoryStage);
         multiplexer.addProcessor(toolMenuStage);
         multiplexer.addProcessor(cheatMenuStage);
+        plantableItems = new ArrayList<>();
         Gdx.input.setInputProcessor(multiplexer);
     }
 
