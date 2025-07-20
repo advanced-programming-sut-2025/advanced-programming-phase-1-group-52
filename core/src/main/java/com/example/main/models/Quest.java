@@ -61,8 +61,6 @@ public class Quest {
             demandText = this.demandingItem.toString() + " x" + this.demandingAmount;
         }
         
-        return this.questGiver.name() + "\'s quest: " + demandText +
-        " for " + rewardText +
-        "\nId: " + this.id + "\n---------------------------\n";
+        return "Id: " + this.id + "\nDemands: " + demandText + "\nReward: " + rewardText;
     }
 }

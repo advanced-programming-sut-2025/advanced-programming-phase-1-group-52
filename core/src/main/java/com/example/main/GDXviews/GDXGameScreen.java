@@ -1,7 +1,9 @@
 package com.example.main.GDXviews;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 
 import com.badlogic.gdx.Gdx;
@@ -33,6 +35,7 @@ import com.example.main.models.GameMap;
 import com.example.main.models.NPC;
 import com.example.main.models.NPCFriendship;
 import com.example.main.models.Player;
+import com.example.main.models.Quest;
 import com.example.main.models.Tile;
 import com.example.main.models.Time;
 import com.example.main.models.User;
@@ -198,6 +201,10 @@ public class GDXGameScreen implements Screen {
     }
     
     private NPCMenuState currentNPCMenuState = NPCMenuState.MAIN_MENU;
+    
+    // Quest result message storage
+    private String questResultMessage = "";
+    private boolean questResultSuccess = false;
 
     private int[][] baseGroundMap;
     private int[][] grassVariantMap;
@@ -1298,6 +1305,8 @@ public class GDXGameScreen implements Screen {
             @Override
             public void clicked(InputEvent event, float x, float y) {
                 currentNPCMenuState = NPCMenuState.QUESTS;
+                questResultMessage = "";
+                questResultSuccess = false;
                 createNPCMenuUI();
             }
         });
@@ -1382,13 +1391,84 @@ public class GDXGameScreen implements Screen {
     private void createQuestsMenu() {
         npcMenuTable.clear();
 
+        // Title
         Label titleLabel = new Label(selectedNPC.getType().name() + " Quests", skin);
         titleLabel.setFontScale(1.5f);
         npcMenuTable.add(titleLabel).colspan(2).pad(20).row();
 
-        Label placeholderLabel = new Label("Quests functionality coming soon...", skin);
-        placeholderLabel.setFontScale(1.0f);
-        npcMenuTable.add(placeholderLabel).colspan(2).pad(20).row();
+        // Result message area
+        Label resultMessageLabel = new Label(questResultMessage, skin);
+        resultMessageLabel.setFontScale(1.2f);
+        resultMessageLabel.setColor(questResultSuccess ? Color.GREEN : Color.RED);
+        // Make sure the result message is visible and properly positioned
+        npcMenuTable.add(resultMessageLabel).colspan(2).pad(10).fillX().center().row();
+
+        // Create quest list table
+        Table questListTable = new Table();
+        questListTable.setBackground(new TextureRegionDrawable(menuBackgroundTexture));
+        
+        // Get quests from NPC
+        HashMap<Quest, Boolean> quests = selectedNPC.getQuests();
+        if (quests != null && !quests.isEmpty()) {
+            int questIndex = 0;
+            for (Map.Entry<Quest, Boolean> entry : quests.entrySet()) {
+                Quest quest = entry.getKey();
+                Boolean isCompleted = entry.getValue();
+                
+                // Create quest entry
+                Table questEntry = new Table();
+                questEntry.setBackground(new TextureRegionDrawable(menuBackgroundTexture));
+                
+                // Quest information
+                Label questInfoLabel = new Label(quest.toString(), skin);
+                questInfoLabel.setColor(Color.BLACK);
+                questInfoLabel.setFontScale(1.2f);
+                questEntry.add(questInfoLabel).pad(5).row();
+                
+                // Status
+                String statusText = (isCompleted != null && isCompleted) ? "Status: COMPLETED" : "Status: AVAILABLE";
+                Color statusColor = (isCompleted != null && isCompleted) ? Color.GRAY : Color.GREEN;
+                Label statusLabel = new Label(statusText, skin);
+                statusLabel.setColor(statusColor);
+                statusLabel.setFontScale(0.9f);
+                questEntry.add(statusLabel).pad(5).row();
+                
+                // Complete button (only for available quests)
+                if (isCompleted == null || !isCompleted) {
+                    TextButton completeButton = new TextButton("Complete Quest", skin);
+                    final int finalQuestIndex = questIndex;
+                                            completeButton.addListener(new ClickListener() {
+                            @Override
+                            public void clicked(InputEvent event, float x, float y) {
+                                // Call finishQuest method
+                                Result result = controller.finishQuest(String.valueOf(quest.getId()));
+                                
+                                // Store result message
+                                questResultMessage = result.Message();
+                                questResultSuccess = result.isSuccessful();
+                                
+                                // Refresh the quest menu to show updated status
+                                createQuestsMenu();
+                            }
+                        });
+                    questEntry.add(completeButton).size(150, 40).pad(5).row();
+                }
+                
+                questListTable.add(questEntry).fillX().pad(10).row();
+                questIndex++;
+            }
+        } else {
+            Label noQuestsLabel = new Label("No quests available for this NPC", skin);
+            noQuestsLabel.setFontScale(1.0f);
+            questListTable.add(noQuestsLabel).pad(20).row();
+        }
+        
+        // Create scroll pane for quest list
+        ScrollPane scrollPane = new ScrollPane(questListTable, skin);
+        scrollPane.setScrollBarPositions(false, true);
+        scrollPane.setFadeScrollBars(false);
+        
+        npcMenuTable.add(scrollPane).colspan(2).fill().expand().pad(10).row();
 
         // Back and Close buttons
         TextButton backButton = new TextButton("Back", skin);
@@ -1398,6 +1478,8 @@ public class GDXGameScreen implements Screen {
             @Override
             public void clicked(InputEvent event, float x, float y) {
                 currentNPCMenuState = NPCMenuState.MAIN_MENU;
+                questResultMessage = "";
+                questResultSuccess = false;
                 createNPCMenuUI();
             }
         });
@@ -1405,6 +1487,8 @@ public class GDXGameScreen implements Screen {
         closeButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
+                questResultMessage = "";
+                questResultSuccess = false;
                 showNPCMenu = false;
                 selectedNPC = null;
                 currentNPCMenuState = NPCMenuState.MAIN_MENU;
