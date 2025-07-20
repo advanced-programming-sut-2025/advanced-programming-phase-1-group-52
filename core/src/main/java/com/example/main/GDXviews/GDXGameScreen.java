@@ -639,6 +639,33 @@ public class GDXGameScreen implements Screen {
         handleTurnSwitching();
         handlePlayerMovement(delta);
         handleCameraMovement(delta);
+
+        if (Gdx.input.isKeyJustPressed(Input.Keys.NUM_1)) {
+            if (controller != null) {
+                controller.changeTime("1");
+            }
+        }
+
+        if (Gdx.input.isKeyJustPressed(Input.Keys.NUM_2)) {
+            if (controller != null) {
+                controller.changeDate(1);
+            }
+        }
+
+        if (Gdx.input.isKeyJustPressed(Input.Keys.L)) {
+            if (controller != null && game != null) {
+                Player currentPlayer = game.getCurrentPlayer();
+                String x = String.valueOf(currentPlayer.currentX());
+                String y = String.valueOf(currentPlayer.currentY());
+                System.out.println(controller.cheatLightning(x, y).Message());
+                cheatLightningActive = true;
+                lightningDuration = 0.15f;
+            }
+        }
+
+        if(Gdx.input.isKeyJustPressed(Input.Keys.F1)){
+            controller.cheatSetEnergy(200);
+        }
     }
 
 

@@ -184,8 +184,6 @@ public class Player {
         addSkillExperience(Skills.Fishing, 5);
     }
 
-    // In main/models/Player.java
-
     public Result handleToolUse(Tile tile) {
         if (currentTool == null) {
             return new Result(false, "No tool equipped!");
