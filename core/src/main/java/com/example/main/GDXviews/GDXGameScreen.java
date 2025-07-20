@@ -15,17 +15,25 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
-import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.Rectangle;
-import com.badlogic.gdx.scenes.scene2d.Stage;
-import com.badlogic.gdx.scenes.scene2d.ui.Skin;
+import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
-import com.badlogic.gdx.scenes.scene2d.ui.*;
+import com.badlogic.gdx.scenes.scene2d.ui.HorizontalGroup;
+import com.badlogic.gdx.scenes.scene2d.ui.Image;
+import com.badlogic.gdx.scenes.scene2d.ui.Label;
+import com.badlogic.gdx.scenes.scene2d.ui.ProgressBar;
+import com.badlogic.gdx.scenes.scene2d.ui.ScrollPane;
+import com.badlogic.gdx.scenes.scene2d.ui.Skin;
+import com.badlogic.gdx.scenes.scene2d.ui.Stack;
+import com.badlogic.gdx.scenes.scene2d.ui.Table;
+import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
+import com.badlogic.gdx.scenes.scene2d.ui.TextField;
+import com.badlogic.gdx.scenes.scene2d.ui.Tooltip;
+import com.badlogic.gdx.scenes.scene2d.ui.TooltipManager;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
@@ -34,38 +42,33 @@ import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.example.main.GDXmodels.TextureManager;
 import com.example.main.Main;
 import com.example.main.controller.GameMenuController;
-import com.example.main.controller.TradeMenuController;
 import com.example.main.controller.StoreMenuController;
 import com.example.main.enums.design.NPCType;
 import com.example.main.enums.design.ShopType;
 import com.example.main.enums.design.TileType;
+import com.example.main.enums.design.Weather;
+import com.example.main.enums.items.CropType;
+import com.example.main.enums.items.ItemType;
+import com.example.main.enums.items.TreeType;
+import com.example.main.enums.player.Skills;
 import com.example.main.models.App;
 import com.example.main.models.Date;
 import com.example.main.models.Game;
 import com.example.main.models.GameMap;
 import com.example.main.models.NPC;
 import com.example.main.models.NPCFriendship;
+import com.example.main.models.Notification;
 import com.example.main.models.Player;
 import com.example.main.models.Quest;
+import com.example.main.models.Result;
 import com.example.main.models.Tile;
 import com.example.main.models.Time;
 import com.example.main.models.User;
-import com.badlogic.gdx.scenes.scene2d.ui.Label;
-import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
-import com.badlogic.gdx.scenes.scene2d.ui.TextField;
-import com.badlogic.gdx.scenes.scene2d.ui.ScrollPane;
-import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
-import com.badlogic.gdx.scenes.scene2d.InputEvent;
-import com.example.main.models.Result;
-import com.example.main.enums.design.TileType;
-import com.example.main.enums.design.Weather;
-import com.example.main.enums.items.CropType;
-import com.example.main.enums.items.FruitType;
-import com.example.main.enums.items.ItemType;
-import com.example.main.enums.items.TreeType;
-import com.example.main.enums.player.Skills;
-import com.example.main.models.*;
-import com.example.main.models.item.*;
+import com.example.main.models.item.Crop;
+import com.example.main.models.item.Fruit;
+import com.example.main.models.item.Item;
+import com.example.main.models.item.Seed;
+import com.example.main.models.item.Tool;
 
 public class GDXGameScreen implements Screen {
     private Stage stage;
@@ -253,6 +256,7 @@ public class GDXGameScreen implements Screen {
 
     // NPC interaction textures
     private Texture dialogBoxTexture;
+    private Texture menuBackgroundTexture;
 
     // NPC interaction state
     private ArrayList<NPC> nearbyNPCs = new ArrayList<>();
@@ -618,6 +622,7 @@ public class GDXGameScreen implements Screen {
 
         // Load NPC interaction textures
         dialogBoxTexture = new Texture("content/Cut/map_elements/dialog_box.png");
+        menuBackgroundTexture = new Texture("content/Cut/menu_background.png");
     }
 
     private void loadWeatherAssets() {
@@ -699,7 +704,7 @@ public class GDXGameScreen implements Screen {
             }
             return;
         }
-        handleTradeMenuToggle();
+        //handleTradeMenuToggle();
         // Only handle game input if trade menu and shop menu are not showing
         com.badlogic.gdx.math.Vector3 mouseInWorld = camera.unproject(new com.badlogic.gdx.math.Vector3(Gdx.input.getX(), Gdx.input.getY(), 0));
         int targetTileX = (int) (mouseInWorld.x / TILE_SIZE);
@@ -3118,6 +3123,10 @@ public class GDXGameScreen implements Screen {
         femaleLeft2Texture.dispose();
         femaleRight1Texture.dispose();
         femaleRight2Texture.dispose();
+
+        // Dispose NPC interaction textures
+        dialogBoxTexture.dispose();
+        menuBackgroundTexture.dispose();
 
         textureManager.dispose();
     }
