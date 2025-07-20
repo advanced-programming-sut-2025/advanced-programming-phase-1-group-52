@@ -1,6 +1,7 @@
 package com.example.main.models;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
@@ -87,6 +88,7 @@ public class Game {
             map.regenerateQuarries();
         }
         updateTreesAndPlants();
+        resetHarvestFlags();
         checkForLightning();
         crowsAttack();
         handleFardaei();
@@ -391,6 +393,17 @@ public class Game {
         this.currentUser = currentUser;
     }
 
+    public void resetHarvestFlags() {
+        if (map == null) return;
+        for (int i = 0; i < 90; i++) {
+            for (int j = 0; j < 60; j++) {
+                Tile tile = map.getTile(i, j);
+                if (tile.getPlant() != null && tile.getPlant() instanceof Fruit) {
+                    ((Fruit) tile.getPlant()).setHasBeenHarvestedToday(false);
+                }
+            }
+        }
+    }
 
     public void updateTreesAndPlants() {
         if (map == null) return;
@@ -404,25 +417,22 @@ public class Game {
 
                     // --- Logic for removing dead plants ---
                     if (!wasWatered) {
-                        // Use public methods to handle the unwatered state
                         if (plant instanceof Fruit fruit) {
                             fruit.incrementUnwateredDays();
                             if (fruit.getUnwateredDays() >= 2) {
-                                tile.setPlant(null); // Tree dies
-                                continue; // Skip to next tile
+                                tile.setPlant(null);
+                                continue;
                             }
                         } else if (plant instanceof Crop crop) {
-                            // A simple boolean check is enough for crops as per original logic
                             if (crop.isNotWateredForTwoDays()) {
                                 tile.setPlant(null);
                                 tile.setType(TileType.Shoveled);
-                                continue; // Skip to next tile
+                                continue;
                             } else {
                                 crop.setNotWateredForTwoDays(true);
                             }
                         }
                     } else {
-                        // Reset unwatered status if it was watered
                         if (plant instanceof Fruit fruit) {
                             fruit.setUnwateredDays(0);
                         }
@@ -433,41 +443,53 @@ public class Game {
 
                     // --- Growth Logic ---
                     if (!plant.isReadyToHarvest()) {
-                        plant.setDayPassed(plant.getDayPassed() + 1);
-                        plant.setDayRemaining(plant.getDayRemaining() - 1);
+                        // Only increment days passed if watered (or if it's a wild tree that doesn't need water)
+                        if (wasWatered || (plant instanceof Fruit && ((Fruit)plant).getTreeType().isForaging())) {
+                            plant.setDayPassed(plant.getDayPassed() + 1);
+                        }
 
-                        // For Trees (Fruit objects)
+                        int daysPassed = plant.getDayPassed();
+                        int newStage = 1; // Start at stage 1
+                        int daysRequiredForNextStage = 0;
+
+                        List<Integer> stages = new ArrayList<>();
                         if (plant instanceof Fruit fruit) {
-                            TreeType treeType = fruit.getTreeType();
-                            if (treeType != null) {
-                                int daysPassed = fruit.getDayPassed();
-                                int totalDaysForNextStage = 0;
-                                for (int stage = 0; stage < treeType.getStages().size(); stage++) {
-                                    totalDaysForNextStage += treeType.getStages().get(stage);
-                                    if (daysPassed >= totalDaysForNextStage) {
-                                        fruit.setCurrentStage(stage + 1);
-                                    }
-                                }
-                                if (daysPassed >= treeType.getTotalHarvestTime()) {
-                                    fruit.setReadyToHarvest(true);
-                                }
+                            stages = fruit.getTreeType().getStages();
+                        } else if (plant instanceof Crop crop && crop.getCropType() instanceof CropType) {
+                            stages = ((CropType) crop.getCropType()).getStages();
+                        }
+
+                        // Calculate the current stage based on days passed
+                        for (Integer stageDuration : stages) {
+                            daysRequiredForNextStage += stageDuration;
+                            if (daysPassed >= daysRequiredForNextStage) {
+                                newStage++;
+                            } else {
+                                break; // Stop when we find the current stage
                             }
                         }
-                        // For Crops
-                        else if (plant instanceof Crop crop) {
-                            CropType cropType = (CropType) crop.getCropType();
-                            if (crop.getDayPassed() >= cropType.getTotalHarvestTime()) {
-                                crop.setReadyToHarvest(true);
-                            }
+                        plant.setCurrentStage(newStage);
+                    }
+
+                    // Check for maturity
+                    if (plant instanceof Fruit fruit) {
+                        if (fruit.getDayPassed() >= fruit.getTreeType().getTotalHarvestTime() && fruit.getTreeType().getSeasons().contains(date.getCurrentSeason())) {
+                            fruit.setReadyToHarvest(true);
+                        } else {
+                            fruit.setReadyToHarvest(false);
+                        }
+                    } else if (plant instanceof Crop crop && crop.getCropType() instanceof CropType) {
+                        if (crop.getDayPassed() >= ((CropType) crop.getCropType()).getTotalHarvestTime()) {
+                            crop.setReadyToHarvest(true);
                         }
                     }
 
-                    // Reset water status for the new day
                     plant.setWateredToday(false);
                 }
             }
         }
     }
+
 
     private void updateArtisanProduct(){
         for(Item item : this.currentPlayer.getInventory().getItems()){

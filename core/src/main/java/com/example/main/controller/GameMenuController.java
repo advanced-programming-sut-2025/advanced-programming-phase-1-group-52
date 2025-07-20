@@ -1214,10 +1214,9 @@ public class GameMenuController {
         StringBuilder info = new StringBuilder();
         info.append("Name: " + cropType.name()).append("\nSource: " + cropType.getSeed()).append("\nStages: ");
 
-        info.append(cropType.getGrowthStages1());
-        info.append(cropType.getGrowthStages2());
-        info.append(cropType.getGrowthStages3());
-        info.append(cropType.getGrowthStages4());
+        for (Integer stage : cropType.getStages()){
+            info.append(stage);
+        }
 
         info.deleteCharAt(info.length() - 1);
         info.append("\nTotal Harvest Time: " + cropType.getTotalHarvestTime()).
@@ -2713,4 +2712,30 @@ public class GameMenuController {
         player.getInventory().removeItem(Seed.class, 1);
         return new Result(true, itemToPlant.getName() + " planted.");
     }
+
+    public Result harvestFruit(Tile targetTile) {
+        Player currentPlayer = game.getCurrentPlayer();
+        if (targetTile == null || targetTile.getType() != TileType.Tree) {
+            return new Result(false, "Nothing to harvest here.");
+        }
+
+        if (targetTile.getPlant() instanceof Fruit fruit && fruit.isReadyToHarvest()) {
+            if (fruit.hasBeenHarvestedToday()) {
+                return new Result(false, "You already harvested this today.");
+            }
+            if (currentPlayer.getInventory().isFull()) {
+                return new Result(false, "Your inventory is full.");
+            }
+
+            int harvestAmount = fruit.getTreeType().getHarvestCycle();
+            Fruit harvestedFruit = new Fruit(fruit.getFruitType(), harvestAmount);
+            currentPlayer.getInventory().addItem(harvestedFruit);
+
+            fruit.setHasBeenHarvestedToday(true);
+            return new Result(true, "You harvested " + harvestAmount + " " + harvestedFruit.getName() + ".");
+        }
+
+        return new Result(false, "The fruit isn't ripe yet.");
+    }
+
 }

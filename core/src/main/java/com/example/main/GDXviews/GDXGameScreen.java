@@ -31,6 +31,7 @@ import com.example.main.Main;
 import com.example.main.controller.GameMenuController;
 import com.example.main.enums.design.TileType;
 import com.example.main.enums.design.Weather;
+import com.example.main.enums.items.CropType;
 import com.example.main.enums.items.FruitType;
 import com.example.main.enums.items.ItemType;
 import com.example.main.enums.items.TreeType;
@@ -58,7 +59,7 @@ public class GDXGameScreen implements Screen {
 
     // Time-related variables
     private float timeAccumulator = 0f;
-    private static final float SECONDS_PER_10_IN_GAME_MINUTES = 0.7f;
+    private static final float SECONDS_PER_10_IN_GAME_MINUTES = 5f;
 
     private TextureManager textureManager;
 
@@ -237,33 +238,6 @@ public class GDXGameScreen implements Screen {
     public GDXGameScreen() {
         controller = new GameMenuController();
         stage = new Stage(new ScreenViewport());
-        stage.addListener(new ClickListener(Input.Buttons.LEFT) {
-            @Override
-            public void clicked(InputEvent event, float x, float y) {
-                if (getTapCount() >= 2) { // Double-click detected
-                    // Don't trigger if a menu is already open
-                    if (isInventoryOpen || isToolMenuOpen || isCheatMenuOpen || isPlantingMode) {
-                        return;
-                    }
-                    com.badlogic.gdx.math.Vector3 worldCoords = camera.unproject(new com.badlogic.gdx.math.Vector3(event.getStageX(), event.getStageY(), 0));
-                    int targetTileX = (int) (worldCoords.x / TILE_SIZE);
-                    int targetTileY = MAP_HEIGHT - 1 - (int) (worldCoords.y / TILE_SIZE);
-
-                    if (targetTileX >= 0 && targetTileX < MAP_WIDTH && targetTileY >= 0 && targetTileY < MAP_HEIGHT) {
-                        Tile clickedTile = gameMap.getTiles()[targetTileX][targetTileY];
-                        // Check if the tile is a valid planting spot
-                        if (clickedTile.getType() == TileType.Shoveled && clickedTile.getPlant() == null && clickedTile.getSeed() == null) {
-                            isPlantingMode = true;
-                            plantingTargetTile = clickedTile;
-                            isInventoryOpen = true;
-                            plantingPromptLabel.setVisible(true);
-                            showInventoryDisplay(true); // Show filtered inventory
-                            Gdx.input.setInputProcessor(inventoryStage);
-                        }
-                    }
-                }
-            }
-        });
         Gdx.input.setInputProcessor(stage);
         skin = new Skin(Gdx.files.internal("uiskin.json"));
 
@@ -631,9 +605,24 @@ public class GDXGameScreen implements Screen {
             return;
         }
 
-        // The hover-to-plant logic has been removed from here and replaced by the double-click listener.
+        // --- NEW: Planting Logic on SPACE press ---
+        if (Gdx.input.isKeyJustPressed(Input.Keys.SPACE)) {
+            if (targetTileX >= 0 && targetTileX < MAP_WIDTH && targetTileY >= 0 && targetTileY < MAP_HEIGHT) {
+                Tile hoveredTile = gameMap.getTiles()[targetTileX][targetTileY];
+                // Check if the tile is a valid planting spot
+                if (hoveredTile.getType() == TileType.Shoveled && hoveredTile.getPlant() == null && hoveredTile.getSeed() == null) {
+                    isPlantingMode = true;
+                    plantingTargetTile = hoveredTile;
+                    isInventoryOpen = true;
+                    plantingPromptLabel.setVisible(true);
+                    showInventoryDisplay(true); // Show filtered inventory
+                    Gdx.input.setInputProcessor(inventoryStage);
+                    return; // Stop further input processing this frame
+                }
+            }
+        }
 
-        // --- Tool Use Logic (Now correctly accesses targetTileX/Y) ---
+        // --- Tool Use Logic ---
         if (Gdx.input.isKeyJustPressed(Input.Keys.ENTER)) {
             if (controller != null && game.getCurrentPlayer() != null) {
                 String message;
@@ -654,6 +643,22 @@ public class GDXGameScreen implements Screen {
                 generalMessageLabel.setText(message);
                 generalMessageLabel.setVisible(true);
                 generalMessageTimer = GENERAL_MESSAGE_DURATION;
+            }
+        }
+
+        if (Gdx.input.isKeyJustPressed(Input.Keys.J)) {
+            if (controller != null) {
+                // Use the mouse's target tile for harvesting
+                if (targetTileX >= 0 && targetTileX < MAP_WIDTH && targetTileY >= 0 && targetTileY < MAP_HEIGHT) {
+                    Tile targetTile = gameMap.getTiles()[targetTileX][targetTileY];
+                    Result result = controller.harvestFruit(targetTile);
+
+                    // Display the result on screen
+                    generalMessageLabel.setText(result.Message());
+                    generalMessageLabel.setColor(result.isSuccessful() ? Color.WHITE : Color.YELLOW);
+                    generalMessageLabel.setVisible(true);
+                    generalMessageTimer = GENERAL_MESSAGE_DURATION;
+                }
             }
         }
 
@@ -691,7 +696,6 @@ public class GDXGameScreen implements Screen {
             }
         }
     }
-
 
     private void handlePlayerMovement(float delta) {
         Player currentPlayer = game.getCurrentPlayer();
@@ -1191,14 +1195,17 @@ public class GDXGameScreen implements Screen {
 
         if (tile.getPlant() != null && tile.getPlant() instanceof Crop) {
             Crop crop = (Crop) tile.getPlant();
-            ItemType cropType = crop.getCropType();
+            ItemType itemType = crop.getCropType();
 
-            // Construct texture name based on growth stage
-            String textureKey = cropType.getEnumName() + "_Stage_" + crop.getCurrentStage();
-            Texture cropTexture = textureManager.getTexture(textureKey);
+            if (itemType instanceof CropType) {
+                CropType cropType = (CropType) itemType;
+                // Construct texture name based on growth stage
+                String textureKey = cropType.getEnumName() + "_Stage_" + crop.getCurrentStage();
+                Texture cropTexture = textureManager.getTexture(textureKey);
 
-            if (cropTexture != null) {
-                spriteBatch.draw(cropTexture, worldX, worldY, TILE_SIZE, TILE_SIZE);
+                if (cropTexture != null) {
+                    spriteBatch.draw(cropTexture, worldX, worldY, TILE_SIZE, TILE_SIZE);
+                }
             }
         } else if (tile.getSeed() != null) {
             String textureKey = tile.getSeed().getForagingSeedType().getEnumName();
@@ -1210,53 +1217,49 @@ public class GDXGameScreen implements Screen {
         }
     }
 
-    // In main/GDXviews/GDXGameScreen.java
-
     private void renderTreeSprite(int tileX, int tileY, float worldX, float worldY) {
         Tile tile = gameMap.getTiles()[tileX][tileY];
 
-        // Determine if it's a fruit tree or a wild tree
         if (tile.getPlant() instanceof Fruit) {
             Fruit fruitTree = (Fruit) tile.getPlant();
             TreeType treeType = fruitTree.getTreeType();
 
-            if (treeType == null) return; // Safety check
+            if (treeType == null) return;
 
-            // If the tree is not fully grown, draw its sapling
-            if (fruitTree.getCurrentStage() < treeType.getStages().size()) {
-                String saplingKey = treeType.getSource().getEnumName();
-                Texture saplingTexture = textureManager.getTexture(saplingKey);
-                if (saplingTexture != null) {
-                    spriteBatch.draw(saplingTexture, worldX, worldY, TILE_SIZE, TILE_SIZE);
-                }
+            // --- NEW RENDERING LOGIC ---
+            // Determine the texture key based on the current growth stage
+            String textureKey;
+            if (fruitTree.isReadyToHarvest()) {
+                // If it's ready to harvest, show the final stage with fruit
+                textureKey = treeType.getEnumName() + "_Stage_5_Fruit";
             } else {
-                // --- It's a mature fruit tree ---
-                // Draw the base generic tree texture
-                Texture baseTreeTexture;
-                switch (treeVariantMap[tileX][tileY]) {
-                    case 0: baseTreeTexture = tree1Texture; break;
-                    case 1: baseTreeTexture = tree2Texture; break;
-                    case 2: baseTreeTexture = tree3Texture; break;
-                    default: baseTreeTexture = tree1Texture; break;
-                }
-                spriteBatch.draw(baseTreeTexture, worldX, worldY, TILE_SIZE * 1.5f, TILE_SIZE * 1.5f);
+                // Otherwise, show the current growth stage
+                textureKey = treeType.getEnumName() + "_Stage_" + fruitTree.getCurrentStage();
+            }
 
-                // If it's ready to harvest, draw the fruit on top
-                if (fruitTree.isReadyToHarvest()) {
-                    String fruitKey = fruitTree.getFruitType().getEnumName();
-                    Texture fruitTexture = textureManager.getTexture(fruitKey);
-                    if (fruitTexture != null) {
-                        Random rand = new Random((long)tileX * tileY); // Seeded for consistency
-                        for(int i = 0; i < 3; i++) {
-                            float fruitX = worldX + (rand.nextFloat() * (TILE_SIZE - 8));
-                            float fruitY = worldY + (TILE_SIZE / 2f) + (rand.nextFloat() * (TILE_SIZE / 2f));
-                            spriteBatch.draw(fruitTexture, fruitX, fruitY, TILE_SIZE / 2f, TILE_SIZE / 2f);
-                        }
+            Texture treeTexture = textureManager.getTexture(textureKey);
+            if (treeTexture == null) {
+                // Fallback to a generic tree if a specific stage is missing
+                treeTexture = tree1Texture;
+            }
+
+            spriteBatch.draw(treeTexture, worldX, worldY, TILE_SIZE * 1.5f, TILE_SIZE * 1.5f);
+
+            // If it's ready to harvest, draw the fruit on top of the mature tree
+            if (fruitTree.isReadyToHarvest()) {
+                String fruitKey = fruitTree.getFruitType().getEnumName();
+                Texture fruitTexture = textureManager.getTexture(fruitKey);
+                if (fruitTexture != null) {
+                    Random rand = new Random((long)tileX * tileY);
+                    for(int i = 0; i < 3; i++) {
+                        float fruitX = worldX + (rand.nextFloat() * (TILE_SIZE - 8));
+                        float fruitY = worldY + (TILE_SIZE / 2f) + (rand.nextFloat() * (TILE_SIZE / 2f));
+                        spriteBatch.draw(fruitTexture, fruitX, fruitY, TILE_SIZE / 2f, TILE_SIZE / 2f);
                     }
                 }
             }
-        } else {
-            // --- It's a non-fruiting, wild tree ---
+        } else if (tile.getTree() != null) {
+            // Fallback for generic, non-fruiting trees
             Texture treeTexture;
             switch (treeVariantMap[tileX][tileY]) {
                 case 0: treeTexture = tree1Texture; break;
@@ -1703,7 +1706,8 @@ public class GDXGameScreen implements Screen {
         // The darkening effect starts at 6 PM (hour 18) and ends at 2 AM (hour 26)
         float startHour = 18f;
         float endHour = 26f;
-        float maxOpacity = 0.85f; // End with a dark, but not pitch-black, screen
+        // --- THIS VALUE HAS BEEN CHANGED ---
+        float maxOpacity = 0.4f; // Was 0.85f, now it's less dense
 
         float currentHour = hour + (minute / 60f);
         float opacity = 0f;
@@ -2011,19 +2015,16 @@ public class GDXGameScreen implements Screen {
                 itemSlot.addListener(new ClickListener() {
                     @Override
                     public void clicked(InputEvent event, float x, float y) {
-                        if (getTapCount() >= 2) { // Check for double-click
-                            Result result = controller.plantItem(item, plantingTargetTile);
-
-                            // Close inventory and exit planting mode
-                            isPlantingMode = false;
-                            plantingTargetTile = null;
-                            isInventoryOpen = false;
-                            plantingPromptLabel.setVisible(false);
-                            Gdx.input.setInputProcessor(multiplexer);
-                        }
+                        Result result = controller.plantItem(item, plantingTargetTile);
+                        isPlantingMode = false;
+                        plantingTargetTile = null;
+                        isInventoryOpen = false;
+                        plantingPromptLabel.setVisible(false);
+                        Gdx.input.setInputProcessor(multiplexer);
                     }
                 });
             }
+
 
             table.add(itemSlot).pad(8);
 

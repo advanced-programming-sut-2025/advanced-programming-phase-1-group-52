@@ -1,32 +1,29 @@
-// In main/enums/items/TreeType.java
-
 package com.example.main.enums.items;
 
 import java.util.List;
-
 import com.example.main.enums.design.Season;
 
-public enum TreeType implements ItemType{
-    // Fruit trees
-    APRICOT_TREE("apricot tree", "Apricot_Sapling", List.of(7, 7, 7, 7), 28, FruitType.Apricot, 1, 59, true, 38, List.of(Season.Spring), false),
-    CHERRY_TREE("cherry tree", "Cherry_Sapling", List.of(7, 7, 7, 7), 28, FruitType.Cherry, 1, 80, true, 38, List.of(Season.Spring), false),
-    BANANA_TREE("banana tree", "Banana_Sapling", List.of(7, 7, 7, 7), 28, FruitType.Banana, 1, 150, true, 75, List.of(Season.Summer), false),
-    MANGO_TREE("mango tree", "Mango_Sapling", List.of(7, 7, 7, 7), 28, FruitType.Mango, 1, 130, true, 100, List.of(Season.Summer), false),
-    ORANGE_TREE("orange tree", "Orange_Sapling", List.of(7, 7, 7, 7), 28, FruitType.Orange, 1, 100, true, 38, List.of(Season.Summer), false),
-    PEACH_TREE("peach tree", "Peach_Sapling", List.of(7, 7, 7, 7), 28, FruitType.Peach, 1, 140, true, 38, List.of(Season.Summer), false),
-    APPLE_TREE("apple tree", "Apple_Sapling", List.of(7, 7, 7, 7), 28, FruitType.Apple, 1, 100, true, 38, List.of(Season.Fall), false),
-    POMEGRANATE_TREE("pomegranate tree", "Pomegranate_Sapling", List.of(7, 7, 7, 7), 28, FruitType.Pomegranate, 1, 140, true, 38, List.of(Season.Fall), false),
+public enum TreeType implements ItemType {
+    // Fruit trees - 5 growth stages
+    Apple("apple tree", "Apple_Sapling", List.of(5, 5, 6, 6), 22, FruitType.Apple, 1, 100, true, 38, List.of(Season.Fall), false),
+    Apricot("apricot tree", "Apricot_Sapling", List.of(5, 5, 6, 6), 22, FruitType.Apricot, 1, 59, true, 38, List.of(Season.Spring), false),
+    Banana("banana tree", "Banana_Sapling", List.of(5, 5, 6, 6), 22, FruitType.Banana, 1, 150, true, 75, List.of(Season.Summer), false),
+    Cherry("cherry tree", "Cherry_Sapling", List.of(5, 5, 6, 6), 22, FruitType.Cherry, 1, 80, true, 38, List.of(Season.Spring), false),
+    Mango("mango tree", "Mango_Sapling", List.of(5, 5, 6, 6), 22, FruitType.Mango, 1, 130, true, 100, List.of(Season.Summer), false),
+    Orange("orange tree", "Orange_Sapling", List.of(5, 5, 6, 6), 22, FruitType.Orange, 1, 100, true, 38, List.of(Season.Summer), false),
+    Peach("peach tree", "Peach_Sapling", List.of(5, 5, 6, 6), 22, FruitType.Peach, 1, 140, true, 38, List.of(Season.Summer), false),
+    Pomegranate("pomegranate tree", "Pomegranate_Sapling", List.of(5, 5, 6, 6), 22, FruitType.Pomegranate, 1, 140, true, 38, List.of(Season.Fall), false),
 
-    // Special trees
-    OAK_TREE("oak tree", "Acorn", List.of(7, 7, 7, 7), 28, FruitType.OakResin, 7, 150, false, -1, List.of(Season.Spring, Season.Summer, Season.Fall, Season.Winter), true),
-    MAPLE_TREE("maple tree", "Maple_Seed", List.of(7, 7, 7, 7), 28, FruitType.MapleSyrup, 9, 200, false, -1, List.of(Season.Spring, Season.Summer, Season.Fall, Season.Winter), true),
-    PINE_TREE("pine tree", "Pine_Cone", List.of(7, 7, 7, 7), 28, FruitType.PineTar, 5, 100, false, -1, List.of(Season.Spring, Season.Summer, Season.Fall, Season.Winter), true),
-    MAHOGANY_TREE("mahogany tree", "Mahogany_Seed", List.of(7, 7, 7, 7), 28, FruitType.Sap, 1, 2, true, -2, List.of(Season.Spring, Season.Summer, Season.Fall, Season.Winter), true),
-    MUSHROOM_TREE("mushroom tree", "Mushroom_Tree_Seed", List.of(7, 7, 7, 7), 28, FruitType.CommonMushroom, 1, 40, true, 38, List.of(Season.Spring, Season.Summer, Season.Fall, Season.Winter), true),
-    MYSTIC_TREE("mystic tree", "Mystic_Tree_Seed", List.of(7, 7, 7, 7), 28, FruitType.MysticSyrup, 7, 1000, true, 500, List.of(Season.Spring, Season.Summer, Season.Fall, Season.Winter), false);
+    // Special/Foraging trees - Now with 5 growth stages
+    Oak("oak tree", "Acorn", List.of(1, 1, 1, 1), 4, FruitType.Oak_Resin, 7, 150, false, -1, List.of(Season.Spring, Season.Summer, Season.Fall, Season.Winter), true),
+    Maple("maple tree", "Maple_Seed", List.of(1, 1, 1, 1), 4, FruitType.Maple_Syrup, 9, 200, false, -1, List.of(Season.Spring, Season.Summer, Season.Fall, Season.Winter), true),
+    Pine("pine tree", "Pine_Cone", List.of(1, 1, 1, 1), 4, FruitType.Pine_Tar, 5, 100, false, -1, List.of(Season.Spring, Season.Summer, Season.Fall, Season.Winter), true),
+    Mahogany("mahogany tree", "Mahogany_Seed", List.of(1, 1, 1, 1), 4, FruitType.Sap, 1, 2, true, -2, List.of(Season.Spring, Season.Summer, Season.Fall, Season.Winter), true),
+    Mushroom("mushroom tree", "Mushroom_Tree_Seed", List.of(1, 1, 1, 1), 4, FruitType.Common_Mushroom, 1, 40, true, 38, List.of(Season.Spring, Season.Summer, Season.Fall, Season.Winter), true),
+    Mystic("mystic tree", "Mystic_Tree_Seed", List.of(1, 1, 1, 1), 4, FruitType.Mystic_Syrup, 7, 1000, true, 500, List.of(Season.Spring, Season.Summer, Season.Fall, Season.Winter), false);
 
     private final String name;
-    private final String sourceSeedName; // Changed from ForagingSeedType to String
+    private final String sourceSeedName;
     private final List<Integer> stages;
     private final int totalHarvestTime;
     private final FruitType product;
@@ -54,54 +51,27 @@ public enum TreeType implements ItemType{
     }
 
     public ForagingSeedType getSource() {
-        // Look up the enum by name at runtime to avoid circular dependency
         return ForagingSeedType.valueOf(this.sourceSeedName);
     }
 
-    public List<Season> getSeasons() {
-        return seasons;
+    public boolean isForaging() {
+        return isForaging;
     }
 
-    public int getEnergy() {
-        return energy;
-    }
-
-    public boolean isEdible() {
-        return isEdible;
-    }
-
-    public int getBaseSellPrice() {
-        return baseSellPrice;
-    }
-
-    public int getHarvestCycle() {
-        return harvestCycle;
-    }
-
-    public FruitType getProduct() {
-        return product;
-    }
-
-    public int getTotalHarvestTime() {
-        return totalHarvestTime;
-    }
-
-    public List<Integer> getStages() {
-        return stages;
-    }
+    public List<Season> getSeasons() { return seasons; }
+    public int getEnergy() { return energy; }
+    public boolean isEdible() { return isEdible; }
+    public int getBaseSellPrice() { return baseSellPrice; }
+    public int getHarvestCycle() { return harvestCycle; }
+    public FruitType getProduct() { return product; }
+    public int getTotalHarvestTime() { return totalHarvestTime; }
+    public List<Integer> getStages() { return stages; }
 
     @Override
-    public boolean isTool() {
-        return false;
-    }
+    public boolean isTool() { return false; }
 
     @Override
-    public String getName() {
-        return this.name;
-    }
+    public String getName() { return this.name; }
 
-    @Override
-    public String getEnumName() {
-        return name();
-    }
+    public String getEnumName() { return name(); }
 }

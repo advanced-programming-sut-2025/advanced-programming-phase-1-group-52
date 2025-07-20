@@ -8852,6 +8852,7 @@ content/Trees/Mahogany_Stage_2.png
 content/Trees/Mahogany_Stage_3.png
 content/Trees/Mahogany_Stage_4.png
 content/Trees/Mahogany_Stage_5.png
+content/Trees/Mahogany_Stage_5_Fruit.png
 content/Trees/Mahogany_stump_Fall.png
 content/Trees/Mahogany_stump_Spring.png
 content/Trees/Mahogany_stump_Winter.png
@@ -8871,6 +8872,7 @@ content/Trees/Maple_Stage_2.png
 content/Trees/Maple_Stage_3.png
 content/Trees/Maple_Stage_4.png
 content/Trees/Maple_Stage_5.png
+content/Trees/Maple_Stage_5_Fruit.png
 content/Trees/Maple_Syrup.png
 content/Trees/Maple_stump_Fall.png
 content/Trees/Maple_stump_Spring.png
@@ -8882,6 +8884,7 @@ content/Trees/MushroomTree_Stage_2.png
 content/Trees/MushroomTree_Stage_3.png
 content/Trees/MushroomTree_Stage_4.png
 content/Trees/MushroomTree_Stage_5.png
+content/Trees/MushroomTree_Stage_5_Fruit.png
 content/Trees/Mushroom_Tree_Seed.png
 content/Trees/Mushroom_stump.png
 content/Trees/Mussel.png
@@ -8892,6 +8895,7 @@ content/Trees/Mystic_Tree_Stage_2.png
 content/Trees/Mystic_Tree_Stage_3.png
 content/Trees/Mystic_Tree_Stage_4.png
 content/Trees/Mystic_Tree_Stage_5.png
+content/Trees/Mystic_Tree_Stage_5_Fruit.png
 content/Trees/Mystic_Tree_Stump.png
 content/Trees/Oak_Resin.png
 content/Trees/Oak_Stage_1.png
@@ -8899,6 +8903,7 @@ content/Trees/Oak_Stage_2.png
 content/Trees/Oak_Stage_3.png
 content/Trees/Oak_Stage_4.png
 content/Trees/Oak_Stage_5.png
+content/Trees/Oak_Stage_5_Fruit.png
 content/Trees/Oak_stump_Spring.png
 content/Trees/Oak_stump_Winter.png
 content/Trees/Orange.png
@@ -8930,6 +8935,7 @@ content/Trees/Pine_Stage_2.png
 content/Trees/Pine_Stage_3.png
 content/Trees/Pine_Stage_4.png
 content/Trees/Pine_Stage_5.png
+content/Trees/Pine_Stage_5_Fruit.png
 content/Trees/Pine_Tar.png
 content/Trees/Pine_stump_Fall.png
 content/Trees/Pine_stump_Spring.png
