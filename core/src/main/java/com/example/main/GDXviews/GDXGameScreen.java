@@ -312,7 +312,7 @@ public class GDXGameScreen implements Screen {
         setupPlantingUI();
 
         multiplexer = new InputMultiplexer();
-        multiplexer.addProcessor(stage); // Add the main game stage first
+        multiplexer.addProcessor(stage);
         multiplexer.addProcessor(inventoryStage);
         multiplexer.addProcessor(toolMenuStage);
         multiplexer.addProcessor(cheatMenuStage);
