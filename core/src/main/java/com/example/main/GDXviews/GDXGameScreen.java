@@ -795,7 +795,7 @@ public class GDXGameScreen implements Screen {
             if (Gdx.input.isButtonJustPressed(Input.Buttons.RIGHT)) {
                 handleNPCRightClick(Gdx.input.getX(), Gdx.input.getY());
             }
-
+        }
         if (Gdx.input.isKeyJustPressed(Input.Keys.NUM_1)) {
             if (controller != null) {
                 controller.changeTime("1");
