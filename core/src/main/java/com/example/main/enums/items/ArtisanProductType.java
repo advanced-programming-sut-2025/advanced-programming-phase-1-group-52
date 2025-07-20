@@ -25,7 +25,7 @@ public enum ArtisanProductType implements ItemType {
 
     BLUE_JAZZ_JUICE(CraftingMachineType.KEG, "blue jazz juice",
             "A floral-infused beverage.", -1, 96,
-            Map.of(CropType.BlueJazz, 1), 112),
+            Map.of(CropType.Blue_Jazz, 1), 112),
 
     CAULIFLOWER_JUICE(CraftingMachineType.KEG, "cauliflower juice",
             "A hearty vegetable drink.", -1, 96,
@@ -57,7 +57,7 @@ public enum ArtisanProductType implements ItemType {
 
     BOK_CHOY_JUICE(CraftingMachineType.KEG, "bok choy juice",
             "A light, Asian-inspired vegetable drink.", -1, 96,
-            Map.of(CropType.BokChoy, 1), 180),
+            Map.of(CropType.Bok_Choy, 1), 180),
 
     PUMPKIN_JUICE(CraftingMachineType.KEG, "pumpkin juice",
             "A seasonal fall favorite.", -1, 96,
@@ -70,11 +70,11 @@ public enum ArtisanProductType implements ItemType {
     // Special cases
     ANCIENT_FRUIT_JUICE(CraftingMachineType.KEG, "ancient fruit juice",
             "A mysterious, energizing elixir.", -1, 96,
-            Map.of(CropType.AncientFruit, 1), 1237),
+            Map.of(CropType.Ancient_Fruit, 1), 1237),
 
     SWEET_GEM_BERRY_JUICE(CraftingMachineType.KEG, "sweet gem berry juice",
             "An incredibly rare and valuable drink.", -1, 96,
-            Map.of(CropType.SweetGemBerry, 1), 6750),
+            Map.of(CropType.Sweet_Gem_Berry, 1), 6750),
     MEAD(CraftingMachineType.KEG,"Mead", "A fermented beverage made from honey. Drink in moderation.", 100, 10, Map.of(ArtisanProductType.HONEY, 1), 300),
     PALE_ALE(CraftingMachineType.KEG,"Pale Ale", "Drink in moderation.", 50, 72, Map.of(CropType.Hops,1), 300),
     GRAPE_WINE(CraftingMachineType.KEG,"grape wine", "Drink in moderation.", -1, 168, Map.of(CropType.Grape, 1), 240), // Uses multiplier

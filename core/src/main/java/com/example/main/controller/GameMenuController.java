@@ -2683,8 +2683,6 @@ public class GameMenuController {
         return player.handleToolUse(targetTile);
     }
 
-    // In main/controller/GameMenuController.java
-
     public Result plantItem(Item itemToPlant, Tile targetTile) {
         Player player = game.getCurrentPlayer();
         if (!(itemToPlant instanceof Seed)) {
@@ -2696,20 +2694,25 @@ public class GameMenuController {
         }
 
         Seed seed = (Seed) itemToPlant;
-        ItemType plantable = seed.getForagingSeedType().getPlantType();
+        // This now correctly handles any seed type, not just foraging seeds
+        ItemType plantable = ((ForagingSeedType) seed.getItemType()).getPlantType();
 
         if (plantable instanceof CropType) {
-            targetTile.setPlant(new Crop(plantable, 1));
+            Crop newCrop = new Crop(plantable, 1);
+            newCrop.setCurrentStage(1); // Set initial stage
+            targetTile.setPlant(newCrop);
             targetTile.setType(TileType.Planted);
         } else if (plantable instanceof TreeType) {
-            targetTile.setPlant(new Fruit(((TreeType) plantable).getProduct(), 1));
+            Fruit newFruit = new Fruit(((TreeType) plantable).getProduct(), 1);
+            newFruit.setCurrentStage(1); // Set initial stage
+            targetTile.setPlant(newFruit);
             targetTile.setTree(new Tree((TreeType) plantable));
             targetTile.setType(TileType.Tree);
         } else {
             return new Result(false, "This seed cannot be planted.");
         }
 
-        player.getInventory().removeItem(Seed.class, 1);
+        player.getInventory().remove2(itemToPlant.getName(), 1);
         return new Result(true, itemToPlant.getName() + " planted.");
     }
 

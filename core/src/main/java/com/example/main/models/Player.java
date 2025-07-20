@@ -184,6 +184,8 @@ public class Player {
         addSkillExperience(Skills.Fishing, 5);
     }
 
+    // In main/models/Player.java
+
     public Result handleToolUse(Tile tile) {
         if (currentTool == null) {
             return new Result(false, "No tool equipped!");
@@ -211,7 +213,6 @@ public class Player {
                 if (inventory.isFull()) {
                     return new Result(false, "Your inventory is full.");
                 }
-                // Now that we know there's space, proceed with the action
                 if (tile.getItem() instanceof Mineral) {
                     Mineral mineral = (Mineral) tile.getItem();
                     inventory.addItem(mineral);
@@ -279,35 +280,60 @@ public class Player {
             if (inventory.isFull()) {
                 return new Result(false, "Your inventory is full.");
             }
-            if (tile.getType() == TileType.Tree && tile.getPlant() instanceof Fruit) {
-                Fruit fruitTree = (Fruit) tile.getPlant();
-                if (fruitTree.isReadyToHarvest()) {
+
+            // --- UNIFIED HARVESTING LOGIC ---
+            if (tile.getPlant() != null && tile.getPlant().isReadyToHarvest()) {
+                if (tile.getPlant() instanceof Crop) {
+                    Crop crop = (Crop) tile.getPlant();
+                    if (crop.getCropType() instanceof CropType) {
+                        CropType cropType = (CropType) crop.getCropType();
+
+                        inventory.addItem(new Crop(cropType, 1));
+                        addSkillExperience(Skills.Farming, 10);
+
+                        if (cropType.isOneTimeHarvest()) {
+                            tile.setPlant(null);
+                            tile.setType(TileType.Shoveled);
+                        } else {
+                            int totalTime = cropType.getTotalHarvestTime();
+                            int regrowthTime = cropType.getRegrowthTime() != null ? cropType.getRegrowthTime() : 0;
+                            crop.setDayPassed(totalTime - regrowthTime);
+                            crop.setReadyToHarvest(false);
+                        }
+
+                        reduceEnergy(energyConsumption);
+                        return new Result(true, "Harvested a " + cropType.getName() + "!");
+                    }
+                } else if (tile.getPlant() instanceof Fruit) {
+                    Fruit fruitTree = (Fruit) tile.getPlant();
                     int harvestAmount = fruitTree.getTreeType().getHarvestCycle();
                     Fruit harvestedFruit = new Fruit(fruitTree.getFruitType(), harvestAmount);
                     inventory.addItem(harvestedFruit);
-                    fruitTree.setHasBeenHarvestedToday(true);
+                    fruitTree.setHasBeenHarvestedToday(true); // Prevents re-harvesting with 'J' key
+
+                    // Reset the tree's growth to allow it to produce fruit again
+                    fruitTree.setReadyToHarvest(false);
+                    fruitTree.setDayPassed(0);
+                    fruitTree.setCurrentStage(1);
+
                     reduceEnergy(energyConsumption);
                     return new Result(true, "You harvested " + harvestAmount + " " + harvestedFruit.getName() + ".");
                 }
             }
+
             if (tile.getType() == TileType.Grass) {
                 inventory.addItem(new Material(MaterialType.Fiber, 1));
                 tile.setType(TileType.Earth);
                 reduceEnergy(energyConsumption);
                 return new Result(true, "Cleared some grass.");
             }
-            if (tile.getPlant() != null && tile.getPlant().isReadyToHarvest() && tile.getPlant() instanceof Crop) {
-                inventory.addItem(new Material(MaterialType.Wheat, 1)); // Placeholder
-                tile.setPlant(null);
-                tile.setType(TileType.Shoveled);
-                reduceEnergy(energyConsumption);
-                return new Result(true, "Harvested the plant!");
-            }
+
             return new Result(false, "Nothing to harvest here.");
         }
 
         return new Result(false, "This tool can't be used here.");
     }
+
 
     public void backpackHandler(){}
 
