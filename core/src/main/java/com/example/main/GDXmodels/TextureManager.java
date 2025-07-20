@@ -26,7 +26,7 @@ public class TextureManager {
             "Crafting", "Crops", "Fence", "Fertilizer", "Fish", "Foraging",
             "Gem", "Ingredient", "Mineral", "Recipe", "Resource", "Rock",
             "Tools", "Portraits", "Fishing_Pole", "Skill",
-            "Tools/Axe", "Tools/Hoe", "Tools/Pickaxe", "Tools/Trash_can", "Tools/Watering_Can"
+            "Tools/Axe", "Tools/Hoe", "Tools/Pickaxe", "Tools/Trash_can", "Tools/Watering_Can", "Trees"
         };
 
         for (String dir : assetDirs) {

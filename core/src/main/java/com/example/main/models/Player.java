@@ -209,34 +209,26 @@ public class Player {
 
         // --- Tool Specific Logic ---
         if (type.name().contains("Pickaxe")) {
-            // Check if the tile contains a mineable mineral
-            if (tile.getItem() instanceof Mineral) {
-                Mineral mineral = (Mineral) tile.getItem();
-
-                // Add the mineral to inventory
-                inventory.addItem(mineral);
-                addSkillExperience(Skills.Mining, 15);
-
-                // Clear the tile
-                tile.setItem(null);
-                tile.setType(TileType.Earth);
-
-                reduceEnergy(energyConsumption);
-                return new Result(true, "You found " + mineral.getName() + "!");
-            }
-            // Generic rock breaking
-            if (tile.getType() == TileType.Stone) {
-                tile.setType(TileType.Earth);
-                inventory.addItem(new Material(MaterialType.Stone, 5));
-                addSkillExperience(Skills.Mining, 10);
-                reduceEnergy(energyConsumption);
-                return new Result(true, "Broke a stone.");
-            }
-            if (tile.getItem() != null) {
-                inventory.addItem(tile.getItem());
-                tile.setItem(null);
-                reduceEnergy(energyConsumption);
-                return new Result(true, "Picked up an item.");
+            if (tile.getItem() instanceof Mineral || tile.getType() == TileType.Stone) {
+                if (inventory.isFull()) {
+                    return new Result(false, "Your inventory is full.");
+                }
+                if (tile.getItem() instanceof Mineral) {
+                    Mineral mineral = (Mineral) tile.getItem();
+                    inventory.addItem(mineral);
+                    addSkillExperience(Skills.Mining, 15);
+                    tile.setItem(null);
+                    tile.setType(TileType.Earth);
+                    reduceEnergy(energyConsumption);
+                    return new Result(true, "You found " + mineral.getName() + "!");
+                }
+                if (tile.getType() == TileType.Stone) {
+                    inventory.addItem(new Material(MaterialType.Stone, 5));
+                    addSkillExperience(Skills.Mining, 10);
+                    tile.setType(TileType.Earth);
+                    reduceEnergy(energyConsumption);
+                    return new Result(true, "Broke a stone.");
+                }
             }
             return new Result(false, "Nothing to break here.");
         }
@@ -250,9 +242,11 @@ public class Player {
             return new Result(false, "Can only till dirt.");
         }
 
-
         if (type.name().contains("Axe")) {
             if (tile.getType() == TileType.Tree) {
+                if (inventory.isFull()) {
+                    return new Result(false, "Your inventory is full.");
+                }
                 tile.setType(TileType.Earth);
                 tile.setPlant(null);
                 tile.setTree(null);
@@ -283,26 +277,63 @@ public class Player {
         }
 
         if (type == ToolType.Scythe) {
+            if (inventory.isFull()) {
+                return new Result(false, "Your inventory is full.");
+            }
+
+            // --- UNIFIED HARVESTING LOGIC ---
+            if (tile.getPlant() != null && tile.getPlant().isReadyToHarvest()) {
+                if (tile.getPlant() instanceof Crop) {
+                    Crop crop = (Crop) tile.getPlant();
+                    if (crop.getCropType() instanceof CropType) {
+                        CropType cropType = (CropType) crop.getCropType();
+
+                        inventory.addItem(new Crop(cropType, 1));
+                        addSkillExperience(Skills.Farming, 10);
+
+                        if (cropType.isOneTimeHarvest()) {
+                            tile.setPlant(null);
+                            tile.setType(TileType.Shoveled);
+                        } else {
+                            int totalTime = cropType.getTotalHarvestTime();
+                            int regrowthTime = cropType.getRegrowthTime() != null ? cropType.getRegrowthTime() : 0;
+                            crop.setDayPassed(totalTime - regrowthTime);
+                            crop.setReadyToHarvest(false);
+                        }
+
+                        reduceEnergy(energyConsumption);
+                        return new Result(true, "Harvested a " + cropType.getName() + "!");
+                    }
+                } else if (tile.getPlant() instanceof Fruit) {
+                    Fruit fruitTree = (Fruit) tile.getPlant();
+                    int harvestAmount = fruitTree.getTreeType().getHarvestCycle();
+                    Fruit harvestedFruit = new Fruit(fruitTree.getFruitType(), harvestAmount);
+                    inventory.addItem(harvestedFruit);
+                    fruitTree.setHasBeenHarvestedToday(true); // Prevents re-harvesting with 'J' key
+
+                    // Reset the tree's growth to allow it to produce fruit again
+                    fruitTree.setReadyToHarvest(false);
+                    fruitTree.setDayPassed(0);
+                    fruitTree.setCurrentStage(1);
+
+                    reduceEnergy(energyConsumption);
+                    return new Result(true, "You harvested " + harvestAmount + " " + harvestedFruit.getName() + ".");
+                }
+            }
+
             if (tile.getType() == TileType.Grass) {
-                tile.setType(TileType.Earth);
                 inventory.addItem(new Material(MaterialType.Fiber, 1));
+                tile.setType(TileType.Earth);
                 reduceEnergy(energyConsumption);
                 return new Result(true, "Cleared some grass.");
             }
-            if (tile.getPlant() != null && tile.getPlant().isReadyToHarvest()) {
-                // Logic for harvesting (assuming it gives an item)
-                // This part needs to be expanded based on what crops/fruits give
-                inventory.addItem(new Material(MaterialType.Wheat, 1)); // Placeholder
-                tile.setPlant(null);
-                tile.setType(TileType.Shoveled);
-                reduceEnergy(energyConsumption);
-                return new Result(true, "Harvested the plant!");
-            }
-            return new Result(false, "Nothing to harvest.");
+
+            return new Result(false, "Nothing to harvest here.");
         }
 
         return new Result(false, "This tool can't be used here.");
     }
+
 
     public void backpackHandler(){}
 

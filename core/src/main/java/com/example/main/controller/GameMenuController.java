@@ -36,21 +36,7 @@ import com.example.main.enums.items.TreeType;
 import com.example.main.enums.player.Skills;
 import com.example.main.enums.regex.GameMenuCommands;
 import com.example.main.enums.regex.NPCDialogs;
-import com.example.main.models.App;
-import com.example.main.models.Date;
-import com.example.main.models.Friendship;
-import com.example.main.models.Game;
-import com.example.main.models.GameMap;
-import com.example.main.models.Gift;
-import com.example.main.models.Inventory;
-import com.example.main.models.NPC;
-import com.example.main.models.Player;
-import com.example.main.models.Quest;
-import com.example.main.models.Result;
-import com.example.main.models.Talk;
-import com.example.main.models.Tile;
-import com.example.main.models.Time;
-import com.example.main.models.User;
+import com.example.main.models.*;
 import com.example.main.models.building.House;
 import com.example.main.models.building.Housing;
 import com.example.main.models.item.CookingRecipe;
@@ -1228,10 +1214,9 @@ public class GameMenuController {
         StringBuilder info = new StringBuilder();
         info.append("Name: " + cropType.name()).append("\nSource: " + cropType.getSeed()).append("\nStages: ");
 
-        info.append(cropType.getGrowthStages1());
-        info.append(cropType.getGrowthStages2());
-        info.append(cropType.getGrowthStages3());
-        info.append(cropType.getGrowthStages4());
+        for (Integer stage : cropType.getStages()){
+            info.append(stage);
+        }
 
         info.deleteCharAt(info.length() - 1);
         info.append("\nTotal Harvest Time: " + cropType.getTotalHarvestTime()).
@@ -2697,4 +2682,63 @@ public class GameMenuController {
         }
         return player.handleToolUse(targetTile);
     }
+
+    public Result plantItem(Item itemToPlant, Tile targetTile) {
+        Player player = game.getCurrentPlayer();
+        if (!(itemToPlant instanceof Seed)) {
+            return new Result(false, "You can only plant seeds!");
+        }
+
+        if (targetTile.getType() != TileType.Shoveled || targetTile.getPlant() != null || targetTile.getSeed() != null) {
+            return new Result(false, "Cannot plant here.");
+        }
+
+        Seed seed = (Seed) itemToPlant;
+        // This now correctly handles any seed type, not just foraging seeds
+        ItemType plantable = ((ForagingSeedType) seed.getItemType()).getPlantType();
+
+        if (plantable instanceof CropType) {
+            Crop newCrop = new Crop(plantable, 1);
+            newCrop.setCurrentStage(1); // Set initial stage
+            targetTile.setPlant(newCrop);
+            targetTile.setType(TileType.Planted);
+        } else if (plantable instanceof TreeType) {
+            Fruit newFruit = new Fruit(((TreeType) plantable).getProduct(), 1);
+            newFruit.setCurrentStage(1); // Set initial stage
+            targetTile.setPlant(newFruit);
+            targetTile.setTree(new Tree((TreeType) plantable));
+            targetTile.setType(TileType.Tree);
+        } else {
+            return new Result(false, "This seed cannot be planted.");
+        }
+
+        player.getInventory().remove2(itemToPlant.getName(), 1);
+        return new Result(true, itemToPlant.getName() + " planted.");
+    }
+
+    public Result harvestFruit(Tile targetTile) {
+        Player currentPlayer = game.getCurrentPlayer();
+        if (targetTile == null || targetTile.getType() != TileType.Tree) {
+            return new Result(false, "Nothing to harvest here.");
+        }
+
+        if (targetTile.getPlant() instanceof Fruit fruit && fruit.isReadyToHarvest()) {
+            if (fruit.hasBeenHarvestedToday()) {
+                return new Result(false, "You already harvested this today.");
+            }
+            if (currentPlayer.getInventory().isFull()) {
+                return new Result(false, "Your inventory is full.");
+            }
+
+            int harvestAmount = fruit.getTreeType().getHarvestCycle();
+            Fruit harvestedFruit = new Fruit(fruit.getFruitType(), harvestAmount);
+            currentPlayer.getInventory().addItem(harvestedFruit);
+
+            fruit.setHasBeenHarvestedToday(true);
+            return new Result(true, "You harvested " + harvestAmount + " " + harvestedFruit.getName() + ".");
+        }
+
+        return new Result(false, "The fruit isn't ripe yet.");
+    }
+
 }
