@@ -19,22 +19,22 @@ import com.example.main.models.Quest;
 
 public enum NPCType {
     Sebastian(42, 40) {{
-        favorites.add(AnimalProductType.SheepWool);
-        favorites.add(FoodType.PumpkinPie);
+        favorites.add(AnimalProductType.Wool);
+        favorites.add(FoodType.Pumpkin_Pie);
         favorites.add(FoodType.Pizza);
 
-        quests.add(new Quest(this, MaterialType.Iron, 50, MaterialType.Diamond, 2));
-        quests.add(new Quest(this, FoodType.PumpkinPie, 1, MaterialType.GoldCoin, 5000));
-        quests.add(new Quest(this, MaterialType.Stone, 150, MineralType.QUARTZ, 50));
+        quests.add(new Quest(this, MineralType.Iron, 50, MineralType.Diamond, 2));
+        quests.add(new Quest(this, FoodType.Pumpkin_Pie, 1, MaterialType.Gold_Coin, 5000));
+        quests.add(new Quest(this, MaterialType.Stone, 150, MineralType.Quartz, 50));
     }},
     Abigail(52, 40) {{
         favorites.add(MaterialType.Stone);
-        favorites.add(MaterialType.IronOre);
+        favorites.add(MineralType.Iron_Ore);
         favorites.add(MaterialType.Coffee);
 
-        quests.add(new Quest(this, MaterialType.GoldBar, 1, MaterialType.GoldCoin, 0));
-        quests.add(new Quest(this, MaterialType.Pumpkin, 1, MaterialType.GoldCoin, 500));
-        quests.add(new Quest(this, MaterialType.Wheat, 50, ToolType.IridiumWateringCan, 1));
+        quests.add(new Quest(this, MineralType.Gold_Bar, 1, MaterialType.Gold_Coin, 0));
+        quests.add(new Quest(this, MaterialType.Pumpkin, 1, MaterialType.Gold_Coin, 500));
+        quests.add(new Quest(this, MaterialType.Wheat, 50, ToolType.Iridium_Watering_Can, 1));
     }},
     Harvey(32, 50) {{
         favorites.add(MaterialType.Coffee);
@@ -43,8 +43,8 @@ public enum NPCType {
 
         Random rand = new Random();
         CropType cropType = CropType.values()[rand.nextInt(CropType.values().length)];
-        quests.add(new Quest(this, cropType, 12, MaterialType.GoldCoin, 750));
-        quests.add(new Quest(this, FishType.Salmon, 1, MaterialType.GoldCoin, 0));
+        quests.add(new Quest(this, cropType, 12, MaterialType.Gold_Coin, 750));
+        quests.add(new Quest(this, FishType.Salmon, 1, MaterialType.Gold_Coin, 0));
         quests.add(new Quest(this, ArtisanProductType.GRAPE_WINE, 1, FoodType.Salad, 5));
     }},
     Lia(42, 50) {{
@@ -52,18 +52,18 @@ public enum NPCType {
         favorites.add(CropType.Grape);
         favorites.add(ArtisanProductType.GRAPE_WINE);
 
-        quests.add(new Quest(this, MaterialType.HardWood, 10, MaterialType.GoldCoin, 500));
+        quests.add(new Quest(this, MaterialType.Hardwood, 10, MaterialType.Gold_Coin, 500));
         quests.add(new Quest(this, FishType.Salmon, 1, CookingRecipeType.SalmonDinner, 1));
         quests.add(new Quest(this, MaterialType.Wood, 200, CraftingMachineType.DELUXE_SCARECROW, 3));
     }},
     Robin(52, 50) {{
         favorites.add(FoodType.Spaghetti);
         favorites.add(MaterialType.Wood);
-        favorites.add(MaterialType.IronBar);
+        favorites.add(MineralType.Iron_Bar);
 
-        quests.add(new Quest(this, MaterialType.Wood, 80, MaterialType.GoldCoin, 1000));
-        quests.add(new Quest(this, MaterialType.IronBar, 10, CraftingMachineType.BEE_HOUSE, 3));
-        quests.add(new Quest(this, MaterialType.Wood, 1000, MaterialType.GoldCoin, 25000));
+        quests.add(new Quest(this, MaterialType.Wood, 80, MaterialType.Gold_Coin, 1000));
+        quests.add(new Quest(this, MineralType  .Iron_Bar, 10, CraftingMachineType.BEE_HOUSE, 3));
+        quests.add(new Quest(this, MaterialType.Wood, 1000, MaterialType.Gold_Coin, 25000));
     }};
 
     public final List<ItemType> favorites = new ArrayList<>();

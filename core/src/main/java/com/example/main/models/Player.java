@@ -96,6 +96,14 @@ public class Player {
         else this.energy += amount;
     }
 
+    public void reduceEnergy(int amount) {
+        this.energy -= amount;
+        if (this.energy < 0) {
+            this.energy = 0;
+            this.isFainted = true;
+        }
+    }
+
     public BankAccount getBankAccount() {
         return this.bankAccount;
     }
@@ -157,7 +165,7 @@ public class Player {
     public void addSkillExperience(Skills skill, int amount) {
         SkillData data = skills.get(skill);
         data.addExperience(amount);
-        checkLevelUp(data);
+        checkLevelUp(skill, data);
     }
 
     public void harvestCrop() {
@@ -165,7 +173,7 @@ public class Player {
     }
 
     public void extract() {
-        addSkillExperience(Skills.Extraction, 10);
+        addSkillExperience(Skills.Mining, 10);
     }
 
     public void foraging() {
@@ -178,226 +186,152 @@ public class Player {
 
     public Result handleToolUse(Tile tile) {
         if (currentTool == null) {
-            return new Result(false, "No tool selected");
+            return new Result(false, "No tool equipped!");
+        }
+        if (tile == null) {
+            return new Result(false, "Cannot use tool on an invalid tile.");
         }
 
-        String typeName = currentTool.getToolType().name();
+        ToolType type = currentTool.getToolType();
+        int energyConsumption = type.getEnergyConsumption();
 
-        if (typeName.endsWith("Hoe")) {
-            return hoeHandler(tile);
-        } else if (typeName.endsWith("Pickaxe")) {
-            return pickaxeHandler(tile);
-        } else if (typeName.endsWith("Axe")) {
-            return axeHandler(tile);
-        } else if (typeName.endsWith("WateringCan")) {
-            return wateringCanHandler(tile);
-        } else if (typeName.equals("Scythe")) {
-            return scytheHandler(tile);
-        // } else if (typeName.equals("MilkPail")) {
-        //     return milkPaleHandler();
-        // } else if (typeName.equals("Shear")) {
-        //     return shearHandler();
-        } else {
-            return new Result(false, "Unknown tool type");
-        }
-    }
+        // Apply skill-based energy reduction
+        if (type.name().contains("Hoe") && getSkillLevel(Skills.Farming) >= 4) energyConsumption--;
+        if (type.name().contains("Pickaxe") && getSkillLevel(Skills.Mining) >= 4) energyConsumption--;
+        if (type.name().contains("Axe") && getSkillLevel(Skills.Foraging) >= 4) energyConsumption--;
+        if (type.name().contains("Watering_Can") && getSkillLevel(Skills.Farming) >= 4) energyConsumption--;
 
-    public Result hoeHandler(Tile tile) {
-        SkillData farmingData = skills.get(Skills.Farming);
-        int energyConsumption = currentTool.getToolType().getEnergyConsumption();
-        if(farmingData.getLevel() >= 4){
-            energyConsumption -= 1;
-        }
-        if(this.energy <= energyConsumption){
-            return new Result(false, "You don't have enough energy to farm");
-        }
-        this.energy -= energyConsumption;
-        if(!tile.getType().equals(TileType.Earth)){
-            return new Result(false, "you can not shovel this tile!");
-        }
-        else{
-            tile.setType(TileType.Shoveled);
-        }
-        return new Result(true, "Tile with X: " + tile.getX() + " Y: " + tile.getY() + " has been shoveled");
-    }
-
-    public Result shearHandler(){
-        return new Result(true, "You are sheared");
-    }
-
-    public Result pickaxeHandler(Tile tile) {
-        SkillData extractionData = skills.get(Skills.Extraction);
-        int energyConsumption = currentTool.getToolType().getEnergyConsumption();
-        if(extractionData.getLevel() >= 4){
-            energyConsumption -= 1;
-        }
-        if(this.energy <= energyConsumption){
-            return new Result(false, "You don't have enough energy to mine!(extract)");
-        }
-        int add = 0;
-        if(getSkillLevel(Skills.Extraction) >= 2){
-            add = 2;
-        }
-        this.energy -= energyConsumption;
-        Material newMaterial = null;
-        Mineral newMineral = null;
-        TileType type = tile.getType();
-        if (type.equals(TileType.Stone)) {
-            foraging();
-            newMaterial = new Material(MaterialType.Stone, 10 + add);
-            this.inventory.addItem(newMaterial);
-            tile.setType(TileType.Earth);
-        } else if (type.equals(TileType.CopperStone)) {
-            newMineral = new Mineral(MineralType.COPPER, 10 + add);
-            tile.setType(TileType.Earth);
-        } else if (type.equals(TileType.GoldStone)) {
-            newMineral = new Mineral(MineralType.GOLD, 10 + add);
-            tile.setType(TileType.Earth);
-        } else if (type.equals(TileType.IridiumStone)) {
-            newMineral = new Mineral(MineralType.IRIDIUM, 10 + add);
-            tile.setType(TileType.Earth);
-        } else if (type.equals(TileType.JewelStone)) {
-            Random rand = new Random();
-            int prob = rand.nextInt(10);
-            if (prob < 5) {
-                newMineral = new Mineral(MineralType.QUARTZ, 10 + add);
-            }
-            else if (prob < 8) {
-                newMineral = new Mineral(MineralType.EMERALD, 10 + add);
-            }
-            else {
-                newMineral = new Mineral(MineralType.DIAMOND, 10 + add);
-            }
-        } else if (type.equals(TileType.IronStone)) {
-            newMineral = new Mineral(MineralType.IRON, 10 + add);
-        } else if (type.equals(TileType.Shoveled)) {
-            tile.setType(TileType.Earth);
-        } else if (type.equals(TileType.Earth)) {
-            if (tile.getItem() != null) {
-                this.getInventory().addItem(tile.getItem());
-            }
-        }
-        this.inventory.addNumOfItems(1);
-        if (newMineral != null) {
-            this.inventory.addItem(newMineral);
-        }
-        else if (newMaterial != null) {
-            this.inventory.addItem(newMaterial);
-        }
-        extract();
-        return new Result(true, "Tile with X: " + tile.getX() + " Y: " + tile.getY() + " has been mined!");
-    }
-
-    public Result axeHandler(Tile tile) {
-        SkillData foragingData = skills.get(Skills.Foraging);
-        int energyConsumption = currentTool.getToolType().getEnergyConsumption();
-        if(foragingData.getLevel() >= 4){
-            energyConsumption -= 1;
-        }
-        if(this.energy <= energyConsumption){
-            return new Result(false, "You don't have enough energy to mine!(extract)");
-        }
-        this.energy -= energyConsumption;
-        if(tile.getType().equals(TileType.Branch)){
-            this.inventory.addItem(new Material(MaterialType.Wood, 50));
-            foraging();
-            tile.setType(TileType.Earth);
-            return new Result(true, "Branches on Tile with X: " + tile.getX() + ", Y: " + tile.getY() + " has been removed!");
-        }
-        else if(tile.getType().equals(TileType.Tree)){
-            tile.setType(TileType.Earth);
-            // wood sizes be checked!
-            foraging();
-            Material wood = new Material(MaterialType.Wood,20);
-            if(this.inventory.addNumOfItems(1)){
-                this.inventory.addItem(wood);
-                return new Result(true, "Tree has been removed and you claimed 20 woods");
-            }
-            else{
-                return new Result(false, "Tree has been removed, but you can not claim any woods, your inventory is full!");
-            }
-        }
-        return new Result(false, "you can not use axe on this tile!");
-    }
-
-    public Result wateringCanHandler(Tile tile){
-        SkillData farmingData = skills.get(Skills.Farming);
-        int energyConsumption = currentTool.getToolType().getEnergyConsumption();
-        if(farmingData.getLevel() >= 4){
-            energyConsumption -= 1;
-        }
-        if(this.energy <= energyConsumption){
-            return new Result(false, "You don't have enough energy to use watering can!");
-        }
-        this.energy -= energyConsumption;
-        WateringCan wateringCan = (WateringCan) this.currentTool;
-        if(tile.getType().equals(TileType.Water)){
-            wateringCan.fill();
-            return new Result(true, "Water can is full now!");
-        }
-        else if(tile.getType().equals(TileType.Tree) || tile.getType().equals(TileType.Planted)){
-            tile.getPlant().setWateredToday(true);
-            wateringCan.useCan();
-            return new Result(true, "Tile with X: " + tile.getX() + " Y: " + tile.getY() + " has been watered!");
-        }
-        return new Result(false, "You can not use watering on this tile!");
-    }
-
-    public Result scytheHandler(Tile tile){
-        int energyConsumption = currentTool.getToolType().getEnergyConsumption();
-        if(this.energy <= energyConsumption){
-            return new Result(false, "You don't have enough energy to use scythe!");
-        }
-        this.energy -= energyConsumption;
-
-        if (tile.getType().equals(TileType.Grass)) {
-            tile.setType(TileType.Earth);
-            return new Result(true, "tile with X: " + tile.getX() + " Y: " + tile.getY() + " has been changed to soil!");
+        if (this.energy < energyConsumption) {
+            return new Result(false, "Not enough energy!");
         }
 
-        if (tile.getType().equals(TileType.Tree)) {
-            if (tile.getPlant().isReadyToHarvest()) {
-                if (tile.getPlant() instanceof Fruit fruit) {
-                    Fruit newFruit = new Fruit(fruit.getFruitType(), 1);
-                    if (this.inventory.addNumOfItems(1)) {
-                        this.inventory.addItem(newFruit);
-                        harvestCrop();
-                        return new Result(true, "Fruit has been added to the inventory!");
-                    } else {
-                        return new Result(false, "Fruit has not been added to the inventory!, your inventory is full!");
-                    }
-                } else {
-                    return new Result(false, "some problem in harvesting (type casting) come to scytheHandler");
+        // --- Tool Specific Logic ---
+        if (type.name().contains("Pickaxe")) {
+            if (tile.getItem() instanceof Mineral || tile.getType() == TileType.Stone) {
+                if (inventory.isFull()) {
+                    return new Result(false, "Your inventory is full.");
                 }
-            } else {
-                return new Result(false, "This tree is not ready to harvest!");
-            }
-        }
-
-        if (tile.getType().equals(TileType.Planted)) {
-            if (tile.getPlant().isReadyToHarvest()) {
-                if (tile.getPlant() instanceof Crop crop) {
-                    Crop newCrop = new Crop(crop.getCropType(), 1);
-                    if (this.inventory.addNumOfItems(1)) {
-                        this.inventory.addItem(newCrop);
-                        harvestCrop();
-                        return new Result(true, "Crop has been added to the inventory!");
-                    } else {
-                        return new Result(false, "Crop has not been added to the inventory!, your inventory is full!");
-                    }
-                } else {
-                    return new Result(false, "some problem in harvesting (type casting) come to scytheHandler");
+                if (tile.getItem() instanceof Mineral) {
+                    Mineral mineral = (Mineral) tile.getItem();
+                    inventory.addItem(mineral);
+                    addSkillExperience(Skills.Mining, 15);
+                    tile.setItem(null);
+                    tile.setType(TileType.Earth);
+                    reduceEnergy(energyConsumption);
+                    return new Result(true, "You found " + mineral.getName() + "!");
                 }
-            } else {
-                return new Result(false, "This seed is not ready to harvest!");
+                if (tile.getType() == TileType.Stone) {
+                    inventory.addItem(new Material(MaterialType.Stone, 5));
+                    addSkillExperience(Skills.Mining, 10);
+                    tile.setType(TileType.Earth);
+                    reduceEnergy(energyConsumption);
+                    return new Result(true, "Broke a stone.");
+                }
             }
+            return new Result(false, "Nothing to break here.");
         }
-        return new Result(false, "you can not use scythe on this tile!");
+
+        if (type.name().contains("Hoe")) {
+            if (tile.getType() == TileType.Earth) {
+                tile.setType(TileType.Shoveled);
+                reduceEnergy(energyConsumption);
+                return new Result(true, "Tilled the soil.");
+            }
+            return new Result(false, "Can only till dirt.");
+        }
+
+        if (type.name().contains("Axe")) {
+            if (tile.getType() == TileType.Tree) {
+                if (inventory.isFull()) {
+                    return new Result(false, "Your inventory is full.");
+                }
+                tile.setType(TileType.Earth);
+                tile.setPlant(null);
+                tile.setTree(null);
+                inventory.addItem(new Material(MaterialType.Wood, 10));
+                addSkillExperience(Skills.Foraging, 12);
+                reduceEnergy(energyConsumption);
+                return new Result(true, "Chopped down a tree.");
+            }
+            return new Result(false, "Can't use the axe on that.");
+        }
+
+        if (type.name().contains("Watering_Can")) {
+            WateringCan can = (WateringCan) currentTool;
+            if (tile.getType() == TileType.Water) {
+                can.fill();
+                return new Result(true, "Watering can refilled.");
+            }
+            if (can.getFilledCapacity() <= 0) {
+                return new Result(false, "Watering can is empty.");
+            }
+            if (tile.getPlant() != null && !tile.getPlant().isWateredToday()) {
+                tile.getPlant().setWateredToday(true);
+                can.useCan();
+                reduceEnergy(energyConsumption);
+                return new Result(true, "Watered the plant.");
+            }
+            return new Result(false, "Nothing to water here.");
+        }
+
+        if (type == ToolType.Scythe) {
+            if (inventory.isFull()) {
+                return new Result(false, "Your inventory is full.");
+            }
+
+            // --- UNIFIED HARVESTING LOGIC ---
+            if (tile.getPlant() != null && tile.getPlant().isReadyToHarvest()) {
+                if (tile.getPlant() instanceof Crop) {
+                    Crop crop = (Crop) tile.getPlant();
+                    if (crop.getCropType() instanceof CropType) {
+                        CropType cropType = (CropType) crop.getCropType();
+
+                        inventory.addItem(new Crop(cropType, 1));
+                        addSkillExperience(Skills.Farming, 10);
+
+                        if (cropType.isOneTimeHarvest()) {
+                            tile.setPlant(null);
+                            tile.setType(TileType.Shoveled);
+                        } else {
+                            int totalTime = cropType.getTotalHarvestTime();
+                            int regrowthTime = cropType.getRegrowthTime() != null ? cropType.getRegrowthTime() : 0;
+                            crop.setDayPassed(totalTime - regrowthTime);
+                            crop.setReadyToHarvest(false);
+                        }
+
+                        reduceEnergy(energyConsumption);
+                        return new Result(true, "Harvested a " + cropType.getName() + "!");
+                    }
+                } else if (tile.getPlant() instanceof Fruit) {
+                    Fruit fruitTree = (Fruit) tile.getPlant();
+                    int harvestAmount = fruitTree.getTreeType().getHarvestCycle();
+                    Fruit harvestedFruit = new Fruit(fruitTree.getFruitType(), harvestAmount);
+                    inventory.addItem(harvestedFruit);
+                    fruitTree.setHasBeenHarvestedToday(true); // Prevents re-harvesting with 'J' key
+
+                    // Reset the tree's growth to allow it to produce fruit again
+                    fruitTree.setReadyToHarvest(false);
+                    fruitTree.setDayPassed(0);
+                    fruitTree.setCurrentStage(1);
+
+                    reduceEnergy(energyConsumption);
+                    return new Result(true, "You harvested " + harvestAmount + " " + harvestedFruit.getName() + ".");
+                }
+            }
+
+            if (tile.getType() == TileType.Grass) {
+                inventory.addItem(new Material(MaterialType.Fiber, 1));
+                tile.setType(TileType.Earth);
+                reduceEnergy(energyConsumption);
+                return new Result(true, "Cleared some grass.");
+            }
+
+            return new Result(false, "Nothing to harvest here.");
+        }
+
+        return new Result(false, "This tool can't be used here.");
     }
 
-    public Result milkPaleHandler(){
-        return new Result(true, "You are milk pale!");
-    }
 
     public void backpackHandler(){}
 
@@ -491,18 +425,30 @@ public class Player {
         this.currentTool = currentTool;
     }
 
-    private void checkLevelUp(SkillData data) {
+    private void checkLevelUp(Skills skill, SkillData data) {
         int expNeeded = getExpForNextLevel(data.getLevel());
 
         if (data.getExperience() >= expNeeded) {
             data.deductExperience(expNeeded);
             data.levelUp();
-            data.deductExperience(expNeeded);
+
+            // Create and add the notification message
+            String message = skill.name() + " skill increased to level " + data.getLevel() + "!";
+            addSystemNotification(message);
+
             addForagingRecipes();
             addFarmingRecipes();
             addMiningRecipes();
             addFishingRecipes();
         }
+    }
+
+    // Add this new method to create system messages (without a sender)
+    public void addSystemNotification(String message) {
+        if (this.notifications == null) {
+            this.notifications = new ArrayList<>();
+        }
+        this.notifications.add(new Notification(null, message));
     }
 
     private int getExpForNextLevel(int currentLevel) {
@@ -537,12 +483,13 @@ public class Player {
     }
 
     private void addMiningRecipes() {
-        SkillData skillData = findSkillData(Skills.Extraction);
+        SkillData skillData = findSkillData(Skills.Mining);
         int level = skillData.getLevel();
 
         if (level >= 1) {
             if (!hasRecipe(CraftingRecipes.CherryBombRecipe)) {
-                craftingRecipes.add(new CraftingRecipe(CraftingRecipes.CherryBombRecipe, 1));
+                craftingRecipes.add(new CraftingRecipe(CraftingRecipes.
+                    CherryBombRecipe, 1));
             }
             if(!this.cookingRecipes.contains(CookingRecipeType.MinersTreat)){
                 this.cookingRecipes.add(new CookingRecipe(CookingRecipeType.MinersTreat));
@@ -677,18 +624,18 @@ public class Player {
             if (h.getId() == housingId) {
                 if (h.addAnimal(purchasedAnimal)) {
                     return new Result(true,
-                            purchasedAnimal.getType().getName() +
-                                    " named \"" + purchasedAnimal.getName() +
-                                    "\" was successfully added to " +
-                                    h.getType().getName() +
-                                    " number " + housingId + "."
+                        purchasedAnimal.getType().getName() +
+                            " named \"" + purchasedAnimal.getName() +
+                            "\" was successfully added to " +
+                            h.getType().getName() +
+                            " number " + housingId + "."
                     );
                 } else {
                     return new Result(false,
-                            "The capacity of " +
-                                    h.getType().getName() +
-                                    " number " + housingId +
-                                    " is full."
+                        "The capacity of " +
+                            h.getType().getName() +
+                            " number " + housingId +
+                            " is full."
                     );
                 }
             }
@@ -701,7 +648,7 @@ public class Player {
     }
 
     private void addTrashCan(){
-        inventory.getItems().add(new TrashCan(TrashCanType.PrimitiveTrashCan,1));
+        inventory.getItems().add(new TrashCan(TrashCanType.Trash_Can,1));
     }
 
     public HouseRefrigerator getHouseRefrigerator() {
@@ -714,5 +661,23 @@ public class Player {
 
     public int getGiftId() {
         return giftId;
+    }
+
+    public ArrayList<Tool> getTools() {
+        ArrayList<Tool> tools = new ArrayList<>();
+        for (Item item : this.inventory.getItems()) {
+            if (item instanceof Tool) {
+                tools.add((Tool) item);
+            }
+        }
+        return tools;
+    }
+
+    public ArrayList<Notification> getNotifications() {
+        return notifications;
+    }
+
+    public void setNotifications(ArrayList<Notification> notifications) {
+        this.notifications = notifications;
     }
 }

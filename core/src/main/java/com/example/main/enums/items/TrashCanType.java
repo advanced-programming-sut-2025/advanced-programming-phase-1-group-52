@@ -1,11 +1,12 @@
 package com.example.main.enums.items;
 
 public enum TrashCanType implements ItemType {
-    PrimitiveTrashCan("primitive trash can",0),
-    CopperTrashCan("copper trash can",15),
-    IronicTrashCan("ironic trash can",30),
-    GoldenTrashCan("golden trash can",45),
-    IridiumTrashCan("iridium trash can",60);
+    Trash_Can("primitive trash can",0),
+    Copper_Trash_Can("copper trash can",15),
+    Steel_Trash_Can("iron trash can",30),
+    Gold_Trash_Can("gold trash can",45),
+    Iridium_Trash_Can("iridium trash can",60);
+
 
     private final String name;
     private int percentage;
@@ -22,6 +23,11 @@ public enum TrashCanType implements ItemType {
 
     @Override
     public String getName() {
-        return this.name;
+        return name();
+    }
+
+    @Override
+    public String getEnumName() {
+        return name();
     }
 }

@@ -1,17 +1,17 @@
 package com.example.main.enums.player;
 
 public enum Skills {
-    Farming("Farming"),
-    Extraction("Extraction"),
-    Foraging("Foraging"),
-    Fishing("Fishing");
+    Farming("Farming skill"),
+    Mining("Mining skill"),
+    Foraging("Foraging skill"),
+    Fishing("Fishing skill");
 
-    private String skillName;
+    private String skillDescription;
     private int level;
     private int experience;
 
     Skills(String skillName){
-        this.skillName = skillName;
+        this.skillDescription = skillName;
         this.level = 0;
         this.experience = 0;
     }
@@ -36,12 +36,12 @@ public enum Skills {
         this.level = level;
     }
 
-    public String getSkillName() {
-        return skillName;
+    public String getSkillDescription() {
+        return skillDescription;
     }
 
-    public void setSkillName(String skillName) {
-        this.skillName = skillName;
+    public void setSkillDescription(String skillDescription) {
+        this.skillDescription = skillDescription;
     }
 
     private void checkLevelUp(){
@@ -52,7 +52,7 @@ public enum Skills {
         }
     }
 
-    private int getExpForNextLevel() {
+    public int getExpForNextLevel() {
         return (100*(level+1) + 50);
     }
 

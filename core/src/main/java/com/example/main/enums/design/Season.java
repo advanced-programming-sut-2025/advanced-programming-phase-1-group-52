@@ -12,7 +12,7 @@ public enum Season {
                 put(Weather.Rainy, 0.4);
                 put(Weather.Stormy, 0.1);
             }},
-            Arrays.asList(CropType.Cauliflower, CropType.Parsnip, CropType.Potato, CropType.BlueJazz, CropType.Tulip)
+            Arrays.asList(CropType.Cauliflower, CropType.Parsnip, CropType.Potato, CropType.Blue_Jazz, CropType.Tulip)
     ),
 
     Summer("Summer",
@@ -21,7 +21,7 @@ public enum Season {
                 put(Weather.Rainy, 0.2);
                 put(Weather.Stormy, 0.1);
             }},
-            Arrays.asList(CropType.Corn, CropType.HotPepper, CropType.Radish, CropType.WHEAT, CropType.Poppy, CropType.Sunflower, CropType.SummerSpangle)
+            Arrays.asList(CropType.Corn, CropType.Hot_Pepper, CropType.Radish, CropType.WHEAT, CropType.Poppy, CropType.Sunflower, CropType.Summer_Spangle)
     ),
 
     Fall("Fall",
@@ -30,7 +30,7 @@ public enum Season {
                 put(Weather.Rainy, 0.4);
                 put(Weather.Stormy, 0.2);
             }},
-            Arrays.asList(CropType.Artichoke, CropType.Corn, CropType.Eggplant, CropType.Pumpkin, CropType.Sunflower, CropType.FairyRose)
+            Arrays.asList(CropType.Artichoke, CropType.Corn, CropType.Eggplant, CropType.Pumpkin, CropType.Sunflower, CropType.Fairy_Rose)
     ),
 
     Winter("Winter",

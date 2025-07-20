@@ -9,12 +9,12 @@ public enum FruitType implements ItemType{
     Peach("Peach"),
     Apple("Apple"),
     Pomegranate("Pomegranate"),
-    OakResin("Oak resin"),
-    MapleSyrup("Maple syrup"),
-    PineTar("Pine tar"),
+    Oak_Resin("Oak resin"),
+    Maple_Syrup("Maple syrup"),
+    Pine_Tar("Pine tar"),
     Sap("Sap"),
-    CommonMushroom("Common mushroom"),
-    MysticSyrup("Mystic syrup");
+    Common_Mushroom("Common mushroom"),
+    Mystic_Syrup("Mystic syrup");
 
     private final String fruitName;
 
@@ -30,5 +30,9 @@ public enum FruitType implements ItemType{
     @Override
     public boolean isTool() {
         return false;
+    }
+
+    public String getEnumName() {
+        return name();
     }
 }

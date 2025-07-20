@@ -11,16 +11,38 @@ public class Fruit extends Item implements Growable {
     private int currentStage = 0;
     private int dayPassed = 0;
     private int dayRemaining = 0;
-    private boolean isWateredToday = true;
+    private boolean isWateredToday = false;
     private boolean isFertilizedToday = true;
     private boolean needsWaterToday = false;
     private boolean isReadyToHarvest = false;
-    private boolean isNotWateredForTwoDays = true;
+    private int unwateredDays = 0;
+    private boolean hasBeenHarvestedToday = false; // Add this flag
 
     public Fruit(FruitType fruitType, int number) {
         super(fruitType, number);
         this.fruitType = fruitType;
         this.treeType = findTreeType();
+    }
+
+    // Add getter and setter for the new flag
+    public boolean hasBeenHarvestedToday() {
+        return hasBeenHarvestedToday;
+    }
+
+    public void setHasBeenHarvestedToday(boolean hasBeenHarvestedToday) {
+        this.hasBeenHarvestedToday = hasBeenHarvestedToday;
+    }
+
+    public int getUnwateredDays() {
+        return unwateredDays;
+    }
+
+    public void setUnwateredDays(int unwateredDays) {
+        this.unwateredDays = unwateredDays;
+    }
+
+    public void incrementUnwateredDays() {
+        this.unwateredDays++;
     }
 
     @Override
@@ -35,12 +57,13 @@ public class Fruit extends Item implements Growable {
 
     @Override
     public boolean isNotWateredForTwoDays() {
-        return this.isNotWateredForTwoDays;
+        return this.unwateredDays >= 2;
     }
 
     @Override
     public void setNotWateredForTwoDays(boolean notWateredForTwoDays) {
-        this.isNotWateredForTwoDays = notWateredForTwoDays;
+        // This method is less relevant now with the unwateredDays counter,
+        // but we keep it to satisfy the Growable interface.
     }
 
     private TreeType findTreeType() {

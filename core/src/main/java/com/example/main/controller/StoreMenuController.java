@@ -14,16 +14,7 @@ import com.example.main.enums.design.Shop.ShopEntry;
 import com.example.main.enums.design.Shop.TheStardropSaloon;
 import com.example.main.enums.design.ShopType;
 import com.example.main.enums.design.TileType;
-import com.example.main.enums.items.AnimalType;
-import com.example.main.enums.items.Backpacks;
-import com.example.main.enums.items.CageType;
-import com.example.main.enums.items.CookingRecipeType;
-import com.example.main.enums.items.CraftingMachineType;
-import com.example.main.enums.items.CraftingRecipes;
-import com.example.main.enums.items.FoodType;
-import com.example.main.enums.items.ForagingSeedType;
-import com.example.main.enums.items.MaterialType;
-import com.example.main.enums.items.ToolType;
+import com.example.main.enums.items.*;
 import com.example.main.models.App;
 import com.example.main.models.BankAccount;
 import com.example.main.models.Game;
@@ -35,15 +26,7 @@ import com.example.main.models.Tile;
 import com.example.main.models.User;
 import com.example.main.models.building.Housing;
 import com.example.main.models.building.Shop;
-import com.example.main.models.item.CookingRecipe;
-import com.example.main.models.item.CraftingMachine;
-import com.example.main.models.item.CraftingRecipe;
-import com.example.main.models.item.Food;
-import com.example.main.models.item.Item;
-import com.example.main.models.item.Material;
-import com.example.main.models.item.PurchasedAnimal;
-import com.example.main.models.item.Seed;
-import com.example.main.models.item.Tool;
+import com.example.main.models.item.*;
 
 public class StoreMenuController {
     public Result showAllProducts() {
@@ -168,9 +151,9 @@ public class StoreMenuController {
 
         if (shop.purchase(name, amount)) {
             switch (item.getItemType()) {
-                case MaterialType materialType -> {
-                    Material material = new Material(materialType, amount);
-                    game.getCurrentPlayer().getInventory().addItem(material);
+                case MineralType mineralType -> {
+                    Mineral mineral = new Mineral(mineralType, amount);
+                    game.getCurrentPlayer().getInventory().addItem(mineral);
                 }
                 case CraftingRecipes craftingRecipes -> {
                     CraftingRecipe craftingRecipe = new CraftingRecipe(craftingRecipes, 1);
@@ -339,7 +322,7 @@ public class StoreMenuController {
         if (player.getBankAccount().getBalance() < carpEnum.getPrice()) {
             return new Result(false, "You don't have enough money!");
         }
-        
+
         CageType cageType;
         if (carpEnum.getDisplayName().contains("Coop")) {
             if (carpEnum.getDisplayName().contains("Big")) {
@@ -351,7 +334,7 @@ public class StoreMenuController {
             else {
                 cageType = CageType.NormalCage;
             }
-            
+
             if (map.isPlantThere(x, x + 6, y, y + 3)) {
                 return new Result(false, "You can't place your coop there!");
             }
@@ -362,7 +345,7 @@ public class StoreMenuController {
             }
 
             map.generateBuilding(players, players.indexOf(game.getCurrentPlayer()), TileType.Housing, x, x + 6, y, y + 3);
-        } 
+        }
         else {
             if (carpEnum.getDisplayName().contains("Big")) {
                 cageType = CageType.BigBarn;
@@ -385,9 +368,9 @@ public class StoreMenuController {
 
             map.generateBuilding(players, players.indexOf(game.getCurrentPlayer()), TileType.Housing, x, x + 7, y, y + 4);
         }
-        
-        req1.forEach((mat, amt) -> inv.remove(mat, amt));
-        req2.forEach((mat, amt) -> inv.remove(mat, amt));
+
+        req1.forEach((mat, amt) -> inv.remove2(mat.getName(), amt));
+        req2.forEach((mat, amt) -> inv.remove2(mat.getName(), amt));
         player.getBankAccount().withdraw(carpEnum.getPrice());
         player.addHousing(cageType, x, y);
         return new Result(true,
@@ -428,21 +411,21 @@ public class StoreMenuController {
                     return new Result(false, "You don't have enough Copper bars!");
                 }
 
-                game.getCurrentPlayer().getInventory().remove(MaterialType.CopperBar, 5);
+                game.getCurrentPlayer().getInventory().remove2(MineralType.Copper_Bar.getName(), 5);
                 game.getCurrentPlayer().getBankAccount().withdraw(2000);
                 tool.setLevel(1);
 
                 if (tool.getItemType().getName().contains("hoe")) {
-                    tool.setItemType(ToolType.CopperHoe);
+                    tool.setItemType(ToolType.Copper_Hoe);
                 }
                 else if (tool.getItemType().getName().contains("pickaxe")) {
-                    tool.setItemType(ToolType.CopperPickaxe);
+                    tool.setItemType(ToolType.Copper_Pickaxe);
                 }
                 else if (tool.getItemType().getName().contains("axe")) {
-                    tool.setItemType(ToolType.CopperAxe);
+                    tool.setItemType(ToolType.Copper_Axe);
                 }
                 else if (tool.getItemType().getName().contains("can")) {
-                    tool.setItemType(ToolType.CopperWateringCan);
+                    tool.setItemType(ToolType.Copper_Watering_Can);
                 }
 
                 return new Result(true, "Tool upgraded!");
@@ -460,21 +443,21 @@ public class StoreMenuController {
                     return new Result(false, "You don't have enough Iron bars!");
                 }
 
-                game.getCurrentPlayer().getInventory().remove(MaterialType.IronBar, 5);
+                game.getCurrentPlayer().getInventory().remove2(MineralType.Iron_Bar.getName(), 5);
                 game.getCurrentPlayer().getBankAccount().withdraw(5000);
                 tool.setLevel(2);
 
                 if (tool.getItemType().getName().contains("hoe")) {
-                    tool.setItemType(ToolType.IronicHoe);
+                    tool.setItemType(ToolType.Steel_Hoe);
                 }
                 else if (tool.getItemType().getName().contains("pickaxe")) {
-                    tool.setItemType(ToolType.IronicPickaxe);
+                    tool.setItemType(ToolType.Steel_Pickaxe);
                 }
                 else if (tool.getItemType().getName().contains("axe")) {
-                    tool.setItemType(ToolType.IronicAxe);
+                    tool.setItemType(ToolType.Steel_Axe);
                 }
                 else if (tool.getItemType().getName().contains("can")) {
-                    tool.setItemType(ToolType.IronicWateringCan);
+                    tool.setItemType(ToolType.Steel_Watering_Can);
                 }
 
                 return new Result(true, "Tool upgraded!");
@@ -492,21 +475,21 @@ public class StoreMenuController {
                     return new Result(false, "You don't have enough Gold bars!");
                 }
 
-                game.getCurrentPlayer().getInventory().remove(MaterialType.GoldBar, 5);
+                game.getCurrentPlayer().getInventory().remove2(MineralType.Gold_Bar.getName(), 5);
                 game.getCurrentPlayer().getBankAccount().withdraw(10000);
                 tool.setLevel(3);
 
                 if (tool.getItemType().getName().contains("hoe")) {
-                    tool.setItemType(ToolType.GoldenHoe);
+                    tool.setItemType(ToolType.Gold_Hoe);
                 }
                 else if (tool.getItemType().getName().contains("pickaxe")) {
-                    tool.setItemType(ToolType.GoldenPickaxe);
+                    tool.setItemType(ToolType.Gold_Pickaxe);
                 }
                 else if (tool.getItemType().getName().contains("axe")) {
-                    tool.setItemType(ToolType.GoldenAxe);
+                    tool.setItemType(ToolType.Gold_Axe);
                 }
                 else if (tool.getItemType().getName().contains("can")) {
-                    tool.setItemType(ToolType.GoldenWateringCan);
+                    tool.setItemType(ToolType.Gold_Watering_Can);
                 }
 
                 return new Result(true, "Tool upgraded!");
@@ -524,21 +507,21 @@ public class StoreMenuController {
                     return new Result(false, "You don't have enough Iridium bars!");
                 }
 
-                game.getCurrentPlayer().getInventory().remove(MaterialType.IridiumBar, 5);
+                game.getCurrentPlayer().getInventory().remove2(MineralType.Iridium_Bar.getName(), 5);
                 game.getCurrentPlayer().getBankAccount().withdraw(25000);
                 tool.setLevel(4);
 
                 if (tool.getItemType().getName().contains("hoe")) {
-                    tool.setItemType(ToolType.IridiumHoe);
+                    tool.setItemType(ToolType.Iridium_Hoe);
                 }
                 else if (tool.getItemType().getName().contains("pickaxe")) {
-                    tool.setItemType(ToolType.IridiumPickaxe);
+                    tool.setItemType(ToolType.Iridium_Pickaxe);
                 }
                 else if (tool.getItemType().getName().contains("axe")) {
-                    tool.setItemType(ToolType.IridiumAxe);
+                    tool.setItemType(ToolType.Iridium_Axe);
                 }
                 else if (tool.getItemType().getName().contains("can")) {
-                    tool.setItemType(ToolType.IridiumWateringCan);
+                    tool.setItemType(ToolType.Iridium_Watering_Can);
                 }
 
                 return new Result(true, "Tool upgraded!");

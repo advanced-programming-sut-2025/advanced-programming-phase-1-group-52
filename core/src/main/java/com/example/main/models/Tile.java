@@ -24,9 +24,6 @@ public class Tile {
         this.y = y;
         this.type = tileType;
         this.owner = owner;
-        if(tileType.equals(TileType.Tree)) {
-            this.tree = new Tree(TreeType.APPLE_TREE);
-        }
     }
 
     public int getX() {
