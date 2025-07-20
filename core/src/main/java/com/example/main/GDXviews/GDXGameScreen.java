@@ -1,6 +1,9 @@
 package com.example.main.GDXviews;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.stream.Collectors;
 
@@ -16,6 +19,7 @@ import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
@@ -30,6 +34,29 @@ import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.example.main.GDXmodels.TextureManager;
 import com.example.main.Main;
 import com.example.main.controller.GameMenuController;
+import com.example.main.controller.TradeMenuController;
+import com.example.main.controller.StoreMenuController;
+import com.example.main.enums.design.NPCType;
+import com.example.main.enums.design.ShopType;
+import com.example.main.enums.design.TileType;
+import com.example.main.models.App;
+import com.example.main.models.Date;
+import com.example.main.models.Game;
+import com.example.main.models.GameMap;
+import com.example.main.models.NPC;
+import com.example.main.models.NPCFriendship;
+import com.example.main.models.Player;
+import com.example.main.models.Quest;
+import com.example.main.models.Tile;
+import com.example.main.models.Time;
+import com.example.main.models.User;
+import com.badlogic.gdx.scenes.scene2d.ui.Label;
+import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
+import com.badlogic.gdx.scenes.scene2d.ui.TextField;
+import com.badlogic.gdx.scenes.scene2d.ui.ScrollPane;
+import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
+import com.badlogic.gdx.scenes.scene2d.InputEvent;
+import com.example.main.models.Result;
 import com.example.main.enums.design.TileType;
 import com.example.main.enums.design.Weather;
 import com.example.main.enums.items.CropType;
@@ -57,6 +84,54 @@ public class GDXGameScreen implements Screen {
 
     private boolean showMinimap = false;
     private boolean mKeyPressed = false;
+    
+    // Trade menu variables
+    private boolean showTradeMenu = false;
+    private boolean tKeyPressed = false;
+    private Table tradeMenuTable;
+    
+    // Trade menu state management
+    private enum TradeMenuState {
+        NEW_TRADE_NOTIFICATIONS,
+        MAIN_MENU,
+        PLAYER_SELECTION,
+        TRADE_TYPE_SELECTION,
+        TRADE_DETAILS,
+        ACTIVE_TRADES,
+        TRADE_HISTORY
+    }
+    
+    private TradeMenuState currentTradeMenuState = TradeMenuState.MAIN_MENU;
+    private List<String> newTradeNotifications = new ArrayList<>();
+    
+    // Trade form data
+    private String selectedPlayerForTrade = null;
+    private String selectedTradeType = null;
+    private String itemName = "";
+    private int itemAmount = 1;
+    private int itemPrice = 1;
+    private String givingItemName = "";
+    private int givingItemAmount = 1;
+    private String receivingItemName = "";
+    private int receivingItemAmount = 1;
+    private String tradeErrorMessage = "";
+    
+    // Shop menu variables
+    private boolean showShopMenu = false;
+    private Table shopMenuTable;
+    private ShopType currentShopType = null;
+    private StoreMenuController shopController;
+    
+    // Shop menu state management
+    private enum ShopMenuState {
+        MAIN_MENU,
+        ALL_PRODUCTS,
+        AVAILABLE_PRODUCTS
+    }
+    
+    private ShopMenuState currentShopMenuState = ShopMenuState.MAIN_MENU;
+    private String shopResultMessage = "";
+    private boolean shopResultSuccess = false;
 
     // Time-related variables
     private float timeAccumulator = 0f;
@@ -169,6 +244,42 @@ public class GDXGameScreen implements Screen {
     private Texture femaleLeft1Texture, femaleLeft2Texture;
     private Texture femaleRight1Texture, femaleRight2Texture;
 
+    // NPC textures
+    private Texture sebastianTexture;
+    private Texture abigailTexture;
+    private Texture harveyTexture;
+    private Texture liaTexture;
+    private Texture robinTexture;
+
+    // NPC interaction textures
+    private Texture dialogBoxTexture;
+
+    // NPC interaction state
+    private ArrayList<NPC> nearbyNPCs = new ArrayList<>();
+    private NPC currentDialogNPC = null;
+    private String currentDialogMessage = "";
+    private boolean showDialog = false;
+    private ArrayList<NPC> clickedNPCs = new ArrayList<>(); // Track which NPCs have been clicked
+    
+    // NPC menu state
+    private boolean showNPCMenu = false;
+    private NPC selectedNPC = null;
+    private Table npcMenuTable;
+    
+    // NPC menu state management
+    private enum NPCMenuState {
+        MAIN_MENU,
+        FRIENDSHIP,
+        QUESTS,
+        GIFT
+    }
+    
+    private NPCMenuState currentNPCMenuState = NPCMenuState.MAIN_MENU;
+    
+    // Quest result message storage
+    private String questResultMessage = "";
+    private boolean questResultSuccess = false;
+
     private int[][] baseGroundMap;
     private int[][] grassVariantMap;
     private int[][] treeVariantMap;
@@ -246,6 +357,7 @@ public class GDXGameScreen implements Screen {
 
     public GDXGameScreen() {
         controller = new GameMenuController();
+        shopController = new StoreMenuController();
         stage = new Stage(new ScreenViewport());
         Gdx.input.setInputProcessor(stage);
         skin = new Skin(Gdx.files.internal("uiskin.json"));
@@ -400,15 +512,10 @@ public class GDXGameScreen implements Screen {
         renderToolMenu(delta);
         renderInventoryOverlay(delta);
 
-        if (generalMessageTimer > 0) {
-            generalMessageTimer -= delta;
-            if (generalMessageTimer <= 0) {
-                generalMessageLabel.setVisible(false);
-            }
-        }
-
         stage.act(delta);
         stage.draw();
+        
+        // Shop menu is handled by the stage, no need to recreate it every frame
     }
 
     private void initializePlayerPosition() {
@@ -501,6 +608,16 @@ public class GDXGameScreen implements Screen {
         femaleLeft2Texture = new Texture("content/Cut/player/female_left2.png");
         femaleRight1Texture = new Texture("content/Cut/player/female_right1.png");
         femaleRight2Texture = new Texture("content/Cut/player/female_right2.png");
+
+        // Load NPC textures
+        sebastianTexture = new Texture("content/Cut/NPC/sebastian.png");
+        abigailTexture = new Texture("content/Cut/NPC/abigail.png");
+        harveyTexture = new Texture("content/Cut/NPC/harvey.png");
+        liaTexture = new Texture("content/Cut/NPC/lia.png");
+        robinTexture = new Texture("content/Cut/NPC/robin.png");
+
+        // Load NPC interaction textures
+        dialogBoxTexture = new Texture("content/Cut/map_elements/dialog_box.png");
     }
 
     private void loadWeatherAssets() {
@@ -560,6 +677,30 @@ public class GDXGameScreen implements Screen {
     }
 
     private void handleInput(float delta) {
+        // If shop menu is open, only allow shop menu UI to handle input
+        if (showShopMenu) {
+            // Allow UI events (handled by scene2d stage) but block game input
+            return;
+        }
+        // If trade menu is open, only allow trade menu UI
+        if (showTradeMenu) {
+            return;
+        }
+        // If NPC menu is open, only allow NPC menu UI
+        if (showNPCMenu) {
+            // Allow ESC key to close NPC menu
+            if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
+                showNPCMenu = false;
+                selectedNPC = null;
+                if (npcMenuTable != null) {
+                    npcMenuTable.remove();
+                    npcMenuTable = null;
+                }
+            }
+            return;
+        }
+        handleTradeMenuToggle();
+        // Only handle game input if trade menu and shop menu are not showing
         com.badlogic.gdx.math.Vector3 mouseInWorld = camera.unproject(new com.badlogic.gdx.math.Vector3(Gdx.input.getX(), Gdx.input.getY(), 0));
         int targetTileX = (int) (mouseInWorld.x / TILE_SIZE);
         int targetTileY = MAP_HEIGHT - 1 - (int) (mouseInWorld.y / TILE_SIZE);
@@ -640,6 +781,20 @@ public class GDXGameScreen implements Screen {
         handleTurnSwitching();
         handlePlayerMovement(delta);
         handleCameraMovement(delta);
+        handleShopInteraction();
+        
+        // Handle NPC interactions
+        if (showDialog) {
+            handleDialogDismiss();
+        } else {
+            // Only handle NPC clicks if no dialog is showing
+            if (Gdx.input.isButtonJustPressed(Input.Buttons.LEFT)) {
+                handleNPCClick(Gdx.input.getX(), Gdx.input.getY());
+            }
+            // Handle right-click for NPC menu
+            if (Gdx.input.isButtonJustPressed(Input.Buttons.RIGHT)) {
+                handleNPCRightClick(Gdx.input.getX(), Gdx.input.getY());
+            }
 
         if (Gdx.input.isKeyJustPressed(Input.Keys.NUM_1)) {
             if (controller != null) {
@@ -801,6 +956,47 @@ public class GDXGameScreen implements Screen {
 
         nKeyPressed = nKeyCurrentlyPressed;
     }
+    
+    private void handleShopInteraction() {
+        // Check for mouse click
+        if (Gdx.input.isButtonJustPressed(Input.Buttons.LEFT)) {
+            // Get mouse position in screen coordinates
+            int mouseX = Gdx.input.getX();
+            int mouseY = Gdx.input.getY();
+            
+            // Convert screen coordinates to world coordinates
+            Vector3 worldCoords = camera.unproject(new Vector3(mouseX, mouseY, 0));
+            
+            // Convert world coordinates to tile coordinates
+            int tileX = (int) (worldCoords.x / TILE_SIZE);
+            int tileY = (int) ((MAP_HEIGHT * TILE_SIZE - worldCoords.y) / TILE_SIZE);
+            
+            // Check if the clicked tile is within a shop area
+            int shopIndex = getShopIndex(tileX, tileY);
+            if (shopIndex != -1) {
+                // Get the shop type based on the index
+                ShopType[] shopTypes = ShopType.values();
+                if (shopIndex < shopTypes.length) {
+                    currentShopType = shopTypes[shopIndex];
+                    
+                    // Move player to the shop location for the shop controller to work
+                    Player currentPlayer = game.getCurrentPlayer();
+                    if (currentPlayer != null) {
+                        // Set player position to the shop corner + 1 to be inside the shop area
+                        // (the corner is a wall, so we need to be inside)
+                        currentPlayer.setCurrentX(currentShopType.getCornerX() + 1);
+                        currentPlayer.setCurrentY(currentShopType.getCornerY() + 1);
+                        
+                        // Update camera to follow player
+                        updateCameraToFollowPlayer(currentPlayer);
+                    }
+                    
+                    showShopMenu = true;
+                    createShopMenuUI();
+                }
+            }
+        }
+    }
 
     private void handleCameraMovement(float delta) {
         Player currentPlayer = game.getCurrentPlayer();
@@ -953,6 +1149,12 @@ public class GDXGameScreen implements Screen {
         }
 
         renderPlayer();
+        renderNPCs();
+        
+        // Update nearby NPCs and render interaction elements
+        updateNearbyNPCs();
+        renderMeetButtons();
+        renderDialogBox();
     }
 
 // In main/GDXviews/GDXGameScreen.java
@@ -1083,6 +1285,547 @@ public class GDXGameScreen implements Screen {
             default:
                 return isMale ? maleIdleTexture : femaleIdleTexture;
         }
+    }
+
+    private void renderNPCs() {
+        ArrayList<NPC> npcs = game.getNPCs();
+        if (npcs == null) {
+            return;
+        }
+
+        for (NPC npc : npcs) {
+            if (npc == null) {
+                continue;
+            }
+
+            int npcX = npc.getX();
+            int npcY = npc.getY();
+
+            // Check if NPC is within map bounds
+            if (npcX < 0 || npcX >= MAP_WIDTH || npcY < 0 || npcY >= MAP_HEIGHT) {
+                continue;
+            }
+
+            float worldX = npcX * TILE_SIZE;
+            float worldY = (MAP_HEIGHT - 1 - npcY) * TILE_SIZE;
+
+            Texture npcTexture = getNPCTexture(npc);
+            if (npcTexture == null) {
+                continue;
+            }
+
+            float npcWidth = npcTexture.getWidth() * 2;
+            float npcHeight = npcTexture.getHeight() * 2;
+            float renderX = worldX + (TILE_SIZE - npcWidth) / 2f;
+            float renderY = worldY;
+
+            spriteBatch.draw(npcTexture, renderX, renderY, npcWidth, npcHeight);
+        }
+    }
+
+    private Texture getNPCTexture(NPC npc) {
+        NPCType npcType = npc.getType();
+        switch (npcType) {
+            case Sebastian:
+                return sebastianTexture;
+            case Abigail:
+                return abigailTexture;
+            case Harvey:
+                return harveyTexture;
+            case Lia:
+                return liaTexture;
+            case Robin:
+                return robinTexture;
+            default:
+                return null;
+        }
+    }
+
+    private void updateNearbyNPCs() {
+        nearbyNPCs.clear();
+        Player currentPlayer = game.getCurrentPlayer();
+        if (currentPlayer == null) return;
+
+        int playerX = currentPlayer.currentX();
+        int playerY = currentPlayer.currentY();
+
+        ArrayList<NPC> npcs = game.getNPCs();
+        if (npcs == null) return;
+
+        // Create a list of NPCs to remove from clickedNPCs
+        ArrayList<NPC> npcsToRemove = new ArrayList<>();
+
+        for (NPC npc : npcs) {
+            if (npc == null) continue;
+
+            int npcX = npc.getX();
+            int npcY = npc.getY();
+
+            // Check if NPC is within 8 tiles (3x3 area around player)
+            int distanceX = Math.abs(playerX - npcX);
+            int distanceY = Math.abs(playerY - npcY);
+
+            if (distanceX <= 1 && distanceY <= 1) {
+                // Only add if this NPC hasn't been clicked recently
+                if (!clickedNPCs.contains(npc)) {
+                    nearbyNPCs.add(npc);
+                }
+            } else {
+                // If NPC is no longer nearby, remove it from clickedNPCs
+                if (clickedNPCs.contains(npc)) {
+                    npcsToRemove.add(npc);
+                }
+            }
+        }
+
+        // Remove NPCs that are no longer nearby from clickedNPCs
+        clickedNPCs.removeAll(npcsToRemove);
+    }
+
+    private void renderMeetButtons() {
+        for (NPC npc : nearbyNPCs) {
+            if (npc == null) continue;
+
+            int npcX = npc.getX();
+            int npcY = npc.getY();
+
+            float worldX = npcX * TILE_SIZE;
+            float worldY = (MAP_HEIGHT - 1 - npcY) * TILE_SIZE;
+
+            // Position the "meet" button to the right of the NPC's head
+            float buttonWidth = 60f;
+            float buttonHeight = 24f;
+            float buttonX = worldX + TILE_SIZE + 8f; // 8 pixels to the right of NPC
+            float buttonY = worldY + TILE_SIZE + 8f; // 8 pixels above the NPC
+
+            // Draw a visible button background (similar to trade menu buttons)
+            spriteBatch.setColor(0.8f, 0.8f, 0.8f, 1f); // Light gray background
+            spriteBatch.draw(ground1Texture, buttonX, buttonY, buttonWidth, buttonHeight);
+            spriteBatch.setColor(1f, 1f, 1f, 1f); // Reset color
+            
+            // Draw button border
+            spriteBatch.setColor(0.2f, 0.2f, 0.2f, 1f); // Dark border
+            // Draw border lines
+            float borderThickness = 2f;
+            spriteBatch.draw(ground1Texture, buttonX, buttonY, buttonWidth, borderThickness); // Bottom
+            spriteBatch.draw(ground1Texture, buttonX, buttonY + buttonHeight - borderThickness, buttonWidth, borderThickness); // Top
+            spriteBatch.draw(ground1Texture, buttonX, buttonY, borderThickness, buttonHeight); // Left
+            spriteBatch.draw(ground1Texture, buttonX + buttonWidth - borderThickness, buttonY, borderThickness, buttonHeight); // Right
+            spriteBatch.setColor(1f, 1f, 1f, 1f); // Reset color
+            
+            // Draw "meet" text
+            if (hudFont != null) {
+                hudFont.setColor(Color.BLACK);
+                hudFont.getData().setScale(0.8f);
+                hudFont.draw(spriteBatch, "meet", buttonX + 15, buttonY + 15);
+                hudFont.getData().setScale(1.0f);
+                hudFont.setColor(Color.WHITE);
+            }
+        }
+    }
+
+    private void renderDialogBox() {
+        if (!showDialog || currentDialogNPC == null) return;
+
+        int npcX = currentDialogNPC.getX();
+        int npcY = currentDialogNPC.getY();
+
+        float worldX = npcX * TILE_SIZE;
+        float worldY = (MAP_HEIGHT - 1 - npcY) * TILE_SIZE;
+
+        // Position dialog box above the NPC's head
+        float dialogWidth = 200f;
+        float dialogHeight = 80f;
+        float dialogX = worldX + TILE_SIZE + 10f; // 10 pixels to the right of NPC
+        float dialogY = worldY + TILE_SIZE + 20f; // 20 pixels above the NPC
+
+        // Draw dialog box background
+        spriteBatch.draw(dialogBoxTexture, dialogX, dialogY, dialogWidth, dialogHeight);
+
+        // Draw dialog text with smaller font
+        if (hudFont != null && currentDialogMessage != null && !currentDialogMessage.isEmpty()) {
+            hudFont.setColor(Color.BLACK);
+            // Scale down the font size (twice the previous size)
+            hudFont.getData().setScale(1.0f);
+            hudFont.draw(spriteBatch, currentDialogMessage, dialogX + 10, dialogY + dialogHeight - 10);
+            // Reset font scale
+            hudFont.getData().setScale(1.0f);
+            hudFont.setColor(Color.WHITE);
+        }
+    }
+
+    private void handleNPCClick(int screenX, int screenY) {
+        if (nearbyNPCs.isEmpty()) return;
+
+        // Convert screen coordinates to world coordinates
+        Vector3 worldCoords = camera.unproject(new Vector3(screenX, screenY, 0));
+
+        for (NPC npc : nearbyNPCs) {
+            if (npc == null) continue;
+
+            int npcX = npc.getX();
+            int npcY = npc.getY();
+
+            float worldX = npcX * TILE_SIZE;
+            float worldY = (MAP_HEIGHT - 1 - npcY) * TILE_SIZE;
+
+            // Check if click is on the "meet" button area (to the right of NPC's head)
+            float buttonWidth = 60f;
+            float buttonHeight = 24f;
+            float buttonX = worldX + TILE_SIZE + 8f;
+            float buttonY = worldY + TILE_SIZE + 8f;
+
+            if (worldCoords.x >= buttonX && worldCoords.x <= buttonX + buttonWidth &&
+                worldCoords.y >= buttonY && worldCoords.y <= buttonY + buttonHeight) {
+                
+                // Call meetNPC method
+                Result result = controller.meetNPC(npc.getType().name());
+                
+                // Show dialog with result
+                currentDialogNPC = npc;
+                currentDialogMessage = result.Message();
+                showDialog = true;
+                
+                // Add NPC to clicked list to hide + button
+                clickedNPCs.add(npc);
+                nearbyNPCs.remove(npc);
+                
+                break;
+            }
+        }
+    }
+
+    private void handleDialogDismiss() {
+        if (showDialog && Gdx.input.isButtonJustPressed(Input.Buttons.LEFT)) {
+            showDialog = false;
+            currentDialogNPC = null;
+            currentDialogMessage = "";
+        }
+    }
+
+    private void handleNPCRightClick(int screenX, int screenY) {
+        // Convert screen coordinates to world coordinates
+        Vector3 worldCoords = camera.unproject(new Vector3(screenX, screenY, 0));
+        
+        ArrayList<NPC> npcs = game.getNPCs();
+        if (npcs == null) return;
+
+        for (NPC npc : npcs) {
+            if (npc == null) continue;
+
+            int npcX = npc.getX();
+            int npcY = npc.getY();
+
+            float worldX = npcX * TILE_SIZE;
+            float worldY = (MAP_HEIGHT - 1 - npcY) * TILE_SIZE;
+
+            // Check if right-click is on the NPC
+            if (worldCoords.x >= worldX && worldCoords.x <= worldX + TILE_SIZE &&
+                worldCoords.y >= worldY && worldCoords.y <= worldY + TILE_SIZE) {
+                
+                selectedNPC = npc;
+                showNPCMenu = true;
+                createNPCMenuUI();
+                break;
+            }
+        }
+    }
+
+    private void createNPCMenuUI() {
+        if (npcMenuTable != null) {
+            npcMenuTable.remove();
+        }
+
+        npcMenuTable = new Table();
+        npcMenuTable.setBackground(new TextureRegionDrawable(menuBackgroundTexture));
+        // Make the background 75% of screen size (same as trade menu)
+        npcMenuTable.setSize(Gdx.graphics.getWidth() * 0.75f, Gdx.graphics.getHeight() * 0.75f);
+        npcMenuTable.setPosition(
+            (Gdx.graphics.getWidth() - npcMenuTable.getWidth()) / 2f,
+            (Gdx.graphics.getHeight() - npcMenuTable.getHeight()) / 2f
+        );
+
+        stage.addActor(npcMenuTable);
+
+        switch (currentNPCMenuState) {
+            case MAIN_MENU:
+                createMainNPCMenu();
+                break;
+            case FRIENDSHIP:
+                createFriendshipMenu();
+                break;
+            case QUESTS:
+                createQuestsMenu();
+                break;
+            case GIFT:
+                createGiftMenu();
+                break;
+        }
+    }
+
+    private void createMainNPCMenu() {
+        npcMenuTable.clear();
+
+        // NPC name label
+        Label npcNameLabel = new Label(selectedNPC.getType().name(), skin);
+        npcNameLabel.setFontScale(1.2f);
+        npcMenuTable.add(npcNameLabel).colspan(2).pad(10).row();
+
+        // Buttons
+        TextButton friendshipButton = new TextButton("Friendship", skin);
+        TextButton questsButton = new TextButton("Quests", skin);
+        TextButton giftButton = new TextButton("Gift", skin);
+        TextButton closeButton = new TextButton("Close", skin);
+
+        // Add button listeners
+        friendshipButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                currentNPCMenuState = NPCMenuState.FRIENDSHIP;
+                createNPCMenuUI();
+            }
+        });
+
+        questsButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                currentNPCMenuState = NPCMenuState.QUESTS;
+                questResultMessage = "";
+                questResultSuccess = false;
+                createNPCMenuUI();
+            }
+        });
+
+        giftButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                currentNPCMenuState = NPCMenuState.GIFT;
+                createNPCMenuUI();
+            }
+        });
+
+        closeButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                showNPCMenu = false;
+                selectedNPC = null;
+                currentNPCMenuState = NPCMenuState.MAIN_MENU;
+                if (npcMenuTable != null) {
+                    npcMenuTable.remove();
+                    npcMenuTable = null;
+                }
+            }
+        });
+
+        // Add buttons to table with larger sizes for the bigger menu
+        npcMenuTable.add(friendshipButton).size(200, 50).pad(10);
+        npcMenuTable.add(questsButton).size(200, 50).pad(10).row();
+        npcMenuTable.add(giftButton).size(200, 50).pad(10);
+        npcMenuTable.add(closeButton).size(200, 50).pad(10);
+    }
+
+    private void createFriendshipMenu() {
+        npcMenuTable.clear();
+
+        // Title with NPC name
+        Label titleLabel = new Label(selectedNPC.getType().name() + " friendship status", skin);
+        titleLabel.setFontScale(1.5f);
+        npcMenuTable.add(titleLabel).colspan(2).pad(20).row();
+
+        // Get friendship information
+        NPCFriendship friendship = selectedNPC.getFriendShipWith(game.getCurrentPlayer());
+        if (friendship != null) {
+            Label friendshipLabel = new Label(friendship.toString(), skin);
+            friendshipLabel.setFontScale(1.0f);
+            npcMenuTable.add(friendshipLabel).colspan(2).pad(20).row();
+        } else {
+            Label noFriendshipLabel = new Label("No friendship data available", skin);
+            noFriendshipLabel.setFontScale(1.0f);
+            npcMenuTable.add(noFriendshipLabel).colspan(2).pad(20).row();
+        }
+
+        // Back and Close buttons
+        TextButton backButton = new TextButton("Back", skin);
+        TextButton closeButton = new TextButton("Close", skin);
+
+        backButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                currentNPCMenuState = NPCMenuState.MAIN_MENU;
+                createNPCMenuUI();
+            }
+        });
+
+        closeButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                showNPCMenu = false;
+                selectedNPC = null;
+                currentNPCMenuState = NPCMenuState.MAIN_MENU;
+                if (npcMenuTable != null) {
+                    npcMenuTable.remove();
+                    npcMenuTable = null;
+                }
+            }
+        });
+
+        npcMenuTable.add(backButton).size(200, 50).pad(10);
+        npcMenuTable.add(closeButton).size(200, 50).pad(10);
+    }
+
+    private void createQuestsMenu() {
+        npcMenuTable.clear();
+
+        // Title
+        Label titleLabel = new Label(selectedNPC.getType().name() + " Quests", skin);
+        titleLabel.setFontScale(1.5f);
+        npcMenuTable.add(titleLabel).colspan(2).pad(20).row();
+
+        // Result message area
+        Label resultMessageLabel = new Label(questResultMessage, skin);
+        resultMessageLabel.setFontScale(1.2f);
+        resultMessageLabel.setColor(questResultSuccess ? Color.GREEN : Color.RED);
+        // Make sure the result message is visible and properly positioned
+        npcMenuTable.add(resultMessageLabel).colspan(2).pad(10).fillX().center().row();
+
+        // Create quest list table
+        Table questListTable = new Table();
+        questListTable.setBackground(new TextureRegionDrawable(menuBackgroundTexture));
+        
+        // Get quests from NPC
+        HashMap<Quest, Boolean> quests = selectedNPC.getQuests();
+        if (quests != null && !quests.isEmpty()) {
+            int questIndex = 0;
+            for (Map.Entry<Quest, Boolean> entry : quests.entrySet()) {
+                Quest quest = entry.getKey();
+                Boolean isCompleted = entry.getValue();
+                
+                // Create quest entry
+                Table questEntry = new Table();
+                questEntry.setBackground(new TextureRegionDrawable(menuBackgroundTexture));
+                
+                // Quest information
+                Label questInfoLabel = new Label(quest.toString(), skin);
+                questInfoLabel.setColor(Color.BLACK);
+                questInfoLabel.setFontScale(1.2f);
+                questEntry.add(questInfoLabel).pad(5).row();
+                
+                // Status
+                String statusText = (isCompleted != null && isCompleted) ? "Status: COMPLETED" : "Status: AVAILABLE";
+                Color statusColor = (isCompleted != null && isCompleted) ? Color.GRAY : Color.GREEN;
+                Label statusLabel = new Label(statusText, skin);
+                statusLabel.setColor(statusColor);
+                statusLabel.setFontScale(0.9f);
+                questEntry.add(statusLabel).pad(5).row();
+                
+                // Complete button (only for available quests)
+                if (isCompleted == null || !isCompleted) {
+                    TextButton completeButton = new TextButton("Complete Quest", skin);
+                    final int finalQuestIndex = questIndex;
+                                            completeButton.addListener(new ClickListener() {
+                            @Override
+                            public void clicked(InputEvent event, float x, float y) {
+                                // Call finishQuest method
+                                Result result = controller.finishQuest(String.valueOf(quest.getId()));
+                                
+                                // Store result message
+                                questResultMessage = result.Message();
+                                questResultSuccess = result.isSuccessful();
+                                
+                                // Refresh the quest menu to show updated status
+                                createQuestsMenu();
+                            }
+                        });
+                    questEntry.add(completeButton).size(150, 40).pad(5).row();
+                }
+                
+                questListTable.add(questEntry).fillX().pad(10).row();
+                questIndex++;
+            }
+        } else {
+            Label noQuestsLabel = new Label("No quests available for this NPC", skin);
+            noQuestsLabel.setFontScale(1.0f);
+            questListTable.add(noQuestsLabel).pad(20).row();
+        }
+        
+        // Create scroll pane for quest list
+        ScrollPane scrollPane = new ScrollPane(questListTable, skin);
+        scrollPane.setScrollBarPositions(false, true);
+        scrollPane.setFadeScrollBars(false);
+        
+        npcMenuTable.add(scrollPane).colspan(2).fill().expand().pad(10).row();
+
+        // Back and Close buttons
+        TextButton backButton = new TextButton("Back", skin);
+        TextButton closeButton = new TextButton("Close", skin);
+
+        backButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                currentNPCMenuState = NPCMenuState.MAIN_MENU;
+                questResultMessage = "";
+                questResultSuccess = false;
+                createNPCMenuUI();
+            }
+        });
+
+        closeButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                questResultMessage = "";
+                questResultSuccess = false;
+                showNPCMenu = false;
+                selectedNPC = null;
+                currentNPCMenuState = NPCMenuState.MAIN_MENU;
+                if (npcMenuTable != null) {
+                    npcMenuTable.remove();
+                    npcMenuTable = null;
+                }
+            }
+        });
+
+        npcMenuTable.add(backButton).size(200, 50).pad(10);
+        npcMenuTable.add(closeButton).size(200, 50).pad(10);
+    }
+
+    private void createGiftMenu() {
+        npcMenuTable.clear();
+
+        Label titleLabel = new Label(selectedNPC.getType().name() + " Gift", skin);
+        titleLabel.setFontScale(1.5f);
+        npcMenuTable.add(titleLabel).colspan(2).pad(20).row();
+
+        Label placeholderLabel = new Label("Gift functionality coming soon...", skin);
+        placeholderLabel.setFontScale(1.0f);
+        npcMenuTable.add(placeholderLabel).colspan(2).pad(20).row();
+
+        // Back and Close buttons
+        TextButton backButton = new TextButton("Back", skin);
+        TextButton closeButton = new TextButton("Close", skin);
+
+        backButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                currentNPCMenuState = NPCMenuState.MAIN_MENU;
+                createNPCMenuUI();
+            }
+        });
+
+        closeButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                showNPCMenu = false;
+                selectedNPC = null;
+                currentNPCMenuState = NPCMenuState.MAIN_MENU;
+                if (npcMenuTable != null) {
+                    npcMenuTable.remove();
+                    npcMenuTable = null;
+                }
+            }
+        });
+
+        npcMenuTable.add(backButton).size(200, 50).pad(10);
+        npcMenuTable.add(closeButton).size(200, 50).pad(10);
     }
 
     private void renderBaseGround(int x, int y, float worldX, float worldY, Tile tile) {
@@ -1437,6 +2180,78 @@ public class GDXGameScreen implements Screen {
         camera.update();
         spriteBatch.setProjectionMatrix(camera.combined);
     }
+      
+    private void renderHud() {
+        // --- Draw UI Backgrounds ---
+        Gdx.gl.glEnable(GL20.GL_BLEND);
+        Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
+        shapeRenderer.setProjectionMatrix(hudCamera.combined);
+        shapeRenderer.begin(com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType.Filled);
+
+        shapeRenderer.setColor(0.0f, 0.0f, 0.5f, 0.5f);
+
+        float infoBgX = 10;
+        float infoBgY = Gdx.graphics.getHeight() - 70;
+        float infoBgWidth = 220; // Adjust width as needed
+        float infoBgHeight = 60;
+        shapeRenderer.rect(infoBgX, infoBgY, infoBgWidth, infoBgHeight);
+
+        shapeRenderer.end();
+        Gdx.gl.glDisable(GL20.GL_BLEND);
+
+        spriteBatch.setProjectionMatrix(hudCamera.combined);
+        spriteBatch.begin();
+
+        float screenWidth = Gdx.graphics.getWidth();
+        float clockWidth = clockTexture.getWidth() * 1f;
+        float clockHeight = clockTexture.getHeight() * 1f;
+        float clockX = screenWidth - clockWidth - 20;
+        float clockY = Gdx.graphics.getHeight() - clockHeight - 20;
+        spriteBatch.draw(clockTexture, clockX, clockY, clockWidth, clockHeight);
+
+        hudFont.setColor(Color.BLACK);
+        Date date = game.getDate();
+        String dateString = date.getCurrentWeekday().name().substring(0, 3) + ". " + date.getCurrentDay();
+        hudFont.draw(spriteBatch, dateString, clockX + 160, clockY + 210);
+
+        Time time = game.getTime();
+        int hour = time.getHour();
+        String ampm = hour < 12 || hour >= 24 ? "am" : "pm";
+        if (hour == 0) {
+            hour = 12;
+        } else if (hour > 12) {
+            if (hour < 24) {
+                hour -= 12;
+            } else {
+                hour -= 24;
+                if (hour == 0) hour = 12;
+            }
+        }
+        String timeString = String.format("%d:%02d %s", hour, time.getMinute(), ampm);
+        hudFont.draw(spriteBatch, timeString, clockX + 148, clockY + 120);
+
+        // --- NEW: Draw the player's balance ---
+        Player player = game.getCurrentPlayer();
+        if (player != null) {
+            String balanceString = String.valueOf(player.getBankAccount().getBalance());
+            balanceString += " | ";
+            String energyString = String.valueOf(player.getEnergy());
+            hudFont.draw(spriteBatch, balanceString, clockX + 110, clockY + 40);
+            hudFont.draw(spriteBatch, energyString,clockX + 170, clockY + 40);
+        }
+        // --- END NEW ---
+
+        // Revert font color to white for the dark background
+        hudFont.setColor(Color.WHITE);
+        String seasonString = "Season: " + controller.showSeason();
+        hudFont.draw(spriteBatch, seasonString, 20, Gdx.graphics.getHeight() - 20);
+
+        String weatherString = "Weather: " + game.getTodayWeather().name();
+        hudFont.draw(spriteBatch, weatherString, 20, Gdx.graphics.getHeight() - 50);
+
+        spriteBatch.end();
+    }
+
 
     private void renderMinimapContent() {
         Tile[][] tiles = gameMap.getTiles();
@@ -1515,77 +2330,6 @@ public class GDXGameScreen implements Screen {
         shapeRenderer.setColor(1, 1, 1, 1);
         shapeRenderer.rect(x, y, width, height);
         shapeRenderer.end();
-    }
-
-    private void renderHud() {
-        // --- Draw UI Backgrounds ---
-        Gdx.gl.glEnable(GL20.GL_BLEND);
-        Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
-        shapeRenderer.setProjectionMatrix(hudCamera.combined);
-        shapeRenderer.begin(com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType.Filled);
-
-        shapeRenderer.setColor(0.0f, 0.0f, 0.5f, 0.5f);
-
-        float infoBgX = 10;
-        float infoBgY = Gdx.graphics.getHeight() - 70;
-        float infoBgWidth = 220; // Adjust width as needed
-        float infoBgHeight = 60;
-        shapeRenderer.rect(infoBgX, infoBgY, infoBgWidth, infoBgHeight);
-
-        shapeRenderer.end();
-        Gdx.gl.glDisable(GL20.GL_BLEND);
-
-        spriteBatch.setProjectionMatrix(hudCamera.combined);
-        spriteBatch.begin();
-
-        float screenWidth = Gdx.graphics.getWidth();
-        float clockWidth = clockTexture.getWidth() * 1f;
-        float clockHeight = clockTexture.getHeight() * 1f;
-        float clockX = screenWidth - clockWidth - 20;
-        float clockY = Gdx.graphics.getHeight() - clockHeight - 20;
-        spriteBatch.draw(clockTexture, clockX, clockY, clockWidth, clockHeight);
-
-        hudFont.setColor(Color.BLACK);
-        Date date = game.getDate();
-        String dateString = date.getCurrentWeekday().name().substring(0, 3) + ". " + date.getCurrentDay();
-        hudFont.draw(spriteBatch, dateString, clockX + 160, clockY + 210);
-
-        Time time = game.getTime();
-        int hour = time.getHour();
-        String ampm = hour < 12 || hour >= 24 ? "am" : "pm";
-        if (hour == 0) {
-            hour = 12;
-        } else if (hour > 12) {
-            if (hour < 24) {
-                hour -= 12;
-            } else {
-                hour -= 24;
-                if (hour == 0) hour = 12;
-            }
-        }
-        String timeString = String.format("%d:%02d %s", hour, time.getMinute(), ampm);
-        hudFont.draw(spriteBatch, timeString, clockX + 148, clockY + 120);
-
-        // --- NEW: Draw the player's balance ---
-        Player player = game.getCurrentPlayer();
-        if (player != null) {
-            String balanceString = String.valueOf(player.getBankAccount().getBalance());
-            balanceString += " | ";
-            String energyString = String.valueOf(player.getEnergy());
-            hudFont.draw(spriteBatch, balanceString, clockX + 110, clockY + 40);
-            hudFont.draw(spriteBatch, energyString,clockX + 170, clockY + 40);
-        }
-        // --- END NEW ---
-
-        // Revert font color to white for the dark background
-        hudFont.setColor(Color.WHITE);
-        String seasonString = "Season: " + controller.showSeason();
-        hudFont.draw(spriteBatch, seasonString, 20, Gdx.graphics.getHeight() - 20);
-
-        String weatherString = "Weather: " + game.getTodayWeather().name();
-        hudFont.draw(spriteBatch, weatherString, 20, Gdx.graphics.getHeight() - 50);
-
-        spriteBatch.end();
     }
 
     private void renderWeather(float delta) {
@@ -2377,4 +3121,305 @@ public class GDXGameScreen implements Screen {
 
         textureManager.dispose();
     }
+    
+    private void createShopMenuUI() {
+        if (shopMenuTable != null) {
+            shopMenuTable.remove();
+        }
+
+        shopMenuTable = new Table();
+        // Make the background 75% of screen size
+        shopMenuTable.setSize(Gdx.graphics.getWidth() * 0.75f, Gdx.graphics.getHeight() * 0.75f);
+        shopMenuTable.setPosition(
+            (Gdx.graphics.getWidth() - shopMenuTable.getWidth()) / 2f,
+            (Gdx.graphics.getHeight() - shopMenuTable.getHeight()) / 2f
+        );
+        
+        // Create a background drawable from the menu background texture
+        TextureRegionDrawable backgroundDrawable = new TextureRegionDrawable(menuBackgroundTexture);
+        shopMenuTable.setBackground(backgroundDrawable);
+        
+        stage.addActor(shopMenuTable);
+        
+        // Create the appropriate menu based on state
+        switch (currentShopMenuState) {
+            case MAIN_MENU:
+                createMainShopMenu();
+                break;
+            case ALL_PRODUCTS:
+                createAllProductsMenu();
+                break;
+            case AVAILABLE_PRODUCTS:
+                createAvailableProductsMenu();
+                break;
+        }
+    }
+    
+    private void createMainShopMenu() {
+        shopMenuTable.clear();
+        
+        // Add shop name at the top with blue color
+        Label titleLabel = new Label(currentShopType.getName(), skin);
+        titleLabel.setFontScale(1.5f);
+        titleLabel.setColor(Color.BLUE);
+        shopMenuTable.add(titleLabel).padBottom(20).row();
+        
+        // Available Products button
+        TextButton availableProductsButton = new TextButton("Available Products", skin);
+        availableProductsButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                currentShopMenuState = ShopMenuState.AVAILABLE_PRODUCTS;
+                shopResultMessage = "";
+                createShopMenuUI();
+            }
+        });
+        shopMenuTable.add(availableProductsButton).width(200).pad(10).row();
+        
+        // All Products button
+        TextButton allProductsButton = new TextButton("All Products", skin);
+        allProductsButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                currentShopMenuState = ShopMenuState.ALL_PRODUCTS;
+                shopResultMessage = "";
+                createShopMenuUI();
+            }
+        });
+        shopMenuTable.add(allProductsButton).width(200).pad(10).row();
+        
+        // Close button
+        TextButton closeButton = new TextButton("Close", skin);
+        closeButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                showShopMenu = false;
+                if (shopMenuTable != null) {
+                    shopMenuTable.remove();
+                    shopMenuTable = null;
+                }
+            }
+        });
+        shopMenuTable.add(closeButton).width(200).pad(10).row();
+    }
+    
+    private void createAllProductsMenu() {
+        shopMenuTable.clear();
+        // Add shop name at the top with blue color
+        Label titleLabel = new Label(currentShopType.getName() + " - All Products", skin);
+        titleLabel.setFontScale(1.5f);
+        titleLabel.setColor(Color.BLUE);
+        shopMenuTable.add(titleLabel).padBottom(20).row();
+        // Show result message if exists
+        if (!shopResultMessage.isEmpty()) {
+            Label resultLabel = new Label(shopResultMessage, skin);
+            resultLabel.setColor(shopResultSuccess ? Color.GREEN : Color.RED);
+            resultLabel.setFontScale(1.1f);
+            shopMenuTable.add(resultLabel).padBottom(15).row();
+        }
+        // Get all products from the shop controller
+        Result result = shopController.showAllProducts();
+        String productsText = result.isSuccessful() ? result.Message() : "Failed to load products";
+        // Create a table to hold all product cards
+        Table productsTable = new Table();
+        if (result.isSuccessful() && !productsText.trim().isEmpty()) {
+            String[] products = productsText.split("\n");
+            for (String product : products) {
+                if (product.trim().isEmpty()) continue;
+                
+                // Create beautiful product card similar to trade menu
+                Table productCard = new Table();
+                productCard.setBackground(skin.getDrawable("default-round"));
+                productCard.pad(15);
+                
+                // Product name and price
+                Label productLabel = new Label(product.trim(), skin);
+                productLabel.setColor(Color.WHITE);
+                productLabel.setFontScale(1.2f);
+                productCard.add(productLabel).colspan(2).padBottom(10).row();
+                
+                productsTable.add(productCard).width(500).pad(15).row();
+            }
+        } else {
+            Label noProductsLabel = new Label("No products available", skin);
+            noProductsLabel.setFontScale(1.2f);
+            noProductsLabel.setColor(Color.GRAY);
+            productsTable.add(noProductsLabel).pad(30).row();
+        }
+        // Create scroll pane for the products with proper configuration
+        ScrollPane scrollPane = new ScrollPane(productsTable, skin);
+        scrollPane.setFadeScrollBars(false);
+        scrollPane.setScrollbarsOnTop(true);
+        scrollPane.setScrollBarPositions(false, true);
+        scrollPane.setScrollingDisabled(false, false);
+        // Add scroll pane to main table with fixed height
+        shopMenuTable.add(scrollPane).width(550).height(400).pad(10).row();
+        // Back and Close buttons (always show both)
+        Table buttonTable = new Table();
+        TextButton backButton = new TextButton("Back", skin);
+        backButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                currentShopMenuState = ShopMenuState.MAIN_MENU;
+                shopResultMessage = "";
+                createShopMenuUI();
+            }
+        });
+        buttonTable.add(backButton).width(200).pad(20);
+        TextButton closeButton = new TextButton("Close", skin);
+        closeButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                showShopMenu = false;
+                if (shopMenuTable != null) {
+                    shopMenuTable.remove();
+                    shopMenuTable = null;
+                }
+            }
+        });
+        buttonTable.add(closeButton).width(200).pad(20);
+        shopMenuTable.add(buttonTable).row();
+    }
+    
+    private void createAvailableProductsMenu() {
+        shopMenuTable.clear();
+        // Add shop name at the top with blue color
+        Label titleLabel = new Label(currentShopType.getName() + " - Available Products", skin);
+        titleLabel.setFontScale(1.5f);
+        titleLabel.setColor(Color.BLUE);
+        shopMenuTable.add(titleLabel).padBottom(20).row();
+        // Show result message if exists
+        if (!shopResultMessage.isEmpty()) {
+            Label resultLabel = new Label(shopResultMessage, skin);
+            resultLabel.setColor(shopResultSuccess ? Color.GREEN : Color.RED);
+            resultLabel.setFontScale(1.1f);
+            shopMenuTable.add(resultLabel).padBottom(15).row();
+        }
+        // Get available products from the shop controller
+        Result result = shopController.showAvailableProducts();
+        String productsText = result.isSuccessful() ? result.Message() : "Failed to load products";
+        // Create a table to hold all product cards
+        Table productsTable = new Table();
+        if (result.isSuccessful() && !productsText.trim().isEmpty()) {
+            String[] products = productsText.split("\n");
+            for (int i = 0; i < products.length; i += 2) { // Each product and its stock info
+                if (i >= products.length) break;
+                String product = products[i];
+                String stockInfo = (i + 1 < products.length) ? products[i + 1] : "";
+                if (product.trim().isEmpty()) continue;
+                
+                // Extract product name for purchase
+                String productName = extractProductName(product);
+                
+                // Create display text with stock info
+                String displayText = product.trim();
+                if (!stockInfo.isEmpty()) {
+                    displayText += " | " + stockInfo;
+                }
+                Table productCard = new Table();
+                productCard.setBackground(skin.getDrawable("default-round"));
+                productCard.pad(15);
+                
+                // Product name and price with stock info
+                Label productLabel = new Label(displayText, skin);
+                productLabel.setColor(Color.WHITE);
+                productLabel.setFontScale(1.2f);
+                productCard.add(productLabel).colspan(4).padBottom(10).row();
+                // Purchase controls
+                Label amountLabel = new Label("Amount:", skin);
+                amountLabel.setColor(Color.WHITE);
+                productCard.add(amountLabel).padRight(5);
+                TextField amountField = new TextField("1", skin);
+                amountField.setWidth(80);
+                amountField.setMaxLength(3);
+                amountField.setTextFieldFilter(new TextField.TextFieldFilter.DigitsOnlyFilter());
+                productCard.add(amountField).padRight(5);
+                TextButton plusButton = new TextButton("+", skin);
+                plusButton.setWidth(30);
+                plusButton.addListener(new ClickListener() {
+                    @Override
+                    public void clicked(InputEvent event, float x, float y) {
+                        try {
+                            int currentAmount = Integer.parseInt(amountField.getText());
+                            amountField.setText(String.valueOf(currentAmount + 1));
+                        } catch (NumberFormatException e) {
+                            amountField.setText("1");
+                        }
+                    }
+                });
+                productCard.add(plusButton).padRight(10);
+                TextButton purchaseButton = new TextButton("Purchase", skin);
+                purchaseButton.setWidth(100);
+                purchaseButton.addListener(new ClickListener() {
+                    @Override
+                    public void clicked(InputEvent event, float x, float y) {
+                        try {
+                            int amount = Integer.parseInt(amountField.getText());
+                            if (amount > 0) {
+                                Result purchaseResult = shopController.purchase(productName, String.valueOf(amount));
+                                shopResultMessage = purchaseResult.Message();
+                                shopResultSuccess = purchaseResult.isSuccessful();
+                                createShopMenuUI(); // Refresh the menu to show result
+                            }
+                        } catch (NumberFormatException e) {
+                            shopResultMessage = "Invalid amount!";
+                            shopResultSuccess = false;
+                            createShopMenuUI();
+                        }
+                    }
+                });
+                productCard.add(purchaseButton).row();
+                productsTable.add(productCard).width(500).pad(15).row();
+            }
+        } else {
+            Label noProductsLabel = new Label("No products available", skin);
+            noProductsLabel.setFontScale(1.2f);
+            noProductsLabel.setColor(Color.GRAY);
+            productsTable.add(noProductsLabel).pad(30).row();
+        }
+        // Create scroll pane for the products with proper configuration
+        ScrollPane scrollPane = new ScrollPane(productsTable, skin);
+        scrollPane.setFadeScrollBars(false);
+        scrollPane.setScrollbarsOnTop(true);
+        scrollPane.setScrollBarPositions(false, true);
+        scrollPane.setScrollingDisabled(false, false);
+        // Add scroll pane to main table with fixed height
+        shopMenuTable.add(scrollPane).width(550).height(400).pad(10).row();
+        // Back and Close buttons (always show both)
+        Table buttonTable = new Table();
+        TextButton backButton = new TextButton("Back", skin);
+        backButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                currentShopMenuState = ShopMenuState.MAIN_MENU;
+                shopResultMessage = "";
+                createShopMenuUI();
+            }
+        });
+        buttonTable.add(backButton).width(200).pad(20);
+        TextButton closeButton = new TextButton("Close", skin);
+        closeButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                showShopMenu = false;
+                if (shopMenuTable != null) {
+                    shopMenuTable.remove();
+                    shopMenuTable = null;
+                }
+            }
+        });
+        buttonTable.add(closeButton).width(200).pad(20);
+        shopMenuTable.add(buttonTable).row();
+    }
+    
+    private String extractProductName(String productText) {
+        // Extract the product name from the product text
+        // The format is usually "Product Name - Price: X"
+        if (productText.contains(" - ")) {
+            return productText.split(" - ")[0].trim();
+        }
+        return productText.trim();
+    }
+    
+
 }

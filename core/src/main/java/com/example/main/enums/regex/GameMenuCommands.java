@@ -93,7 +93,8 @@ public enum GameMenuCommands {
     DebugQuest("debug quest -i (?<id>\\d+)"),
     DebugQuestVisibility("debug quest visibility"),
     DebugTalkHistory("debug talk history"),
-    ShowBalance("show balance");
+    ShowBalance("show balance"),
+    GoToStoreMenu("go to store menu");
 
     private final String pattern;
 

@@ -9,7 +9,7 @@ public enum StoreMenuCommands {
     BuyAnimal("^buy animal -a (?<animal>[\\S\\s]+) -id (?<id>\\d+) -n (?<name>\\S+)$"),
     ShowAllProducts("show all products"),
     ShowAvailableProducts("show all available products"),
-    Purchase("purchase (?<productName>\\S+) -n (?<amount>\\S+)"),
+    Purchase("purchase -n (?<productName>\\S+) -a (?<amount>\\S+)"),
     GoToGameMenu("menu enter GameMenu");
 
     private final String pattern;

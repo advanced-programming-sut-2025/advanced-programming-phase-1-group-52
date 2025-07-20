@@ -3,6 +3,7 @@ package com.example.main.controller;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import com.example.main.enums.design.Season;
 import com.example.main.enums.design.Shop.Blacksmith;
 import com.example.main.enums.design.Shop.CarpentersShop;
 import com.example.main.enums.design.Shop.FishShop;
@@ -36,37 +37,37 @@ public class StoreMenuController {
         switch (currentTile.getShop().getShopType()) {
             case ShopType.Blacksmith -> {
                 for (Blacksmith entry : Blacksmith.values()) {
-                    stringBuilder.append(entry.toString());
+                    stringBuilder.append(entry.toString()).append("\n");
                 }
             }
             case ShopType.JojaMart -> {
                 for (JojaMart entry : JojaMart.values()) {
-                    stringBuilder.append(entry.toString());
+                    stringBuilder.append(entry.toString()).append("\n");
                 }
             }
             case ShopType.CarpentersShop -> {
                 for (CarpentersShop entry : CarpentersShop.values()) {
-                    stringBuilder.append(entry.toString());
+                    stringBuilder.append(entry.toString()).append("\n");
                 }
             }
             case ShopType.FishShop -> {
                 for (FishShop entry : FishShop.values()) {
-                    stringBuilder.append(entry.toString());
+                    stringBuilder.append(entry.toString()).append("\n");
                 }
             }
             case ShopType.MarniesRanch -> {
                 for (MarniesRanch entry : MarniesRanch.values()) {
-                    stringBuilder.append(entry.toString());
+                    stringBuilder.append(entry.toString()).append("\n");
                 }
             }
             case ShopType.PierresGeneralStore -> {
                 for (PierresGeneralStore entry : PierresGeneralStore.values()) {
-                    stringBuilder.append(entry.toString());
+                    stringBuilder.append(entry.toString()).append("\n");
                 }
             }
             case ShopType.TheStardropSaloon -> {
                 for (TheStardropSaloon entry : TheStardropSaloon.values()) {
-                    stringBuilder.append(entry.toString());
+                    stringBuilder.append(entry.toString()).append("\n");
                 }
             }
             default -> {
@@ -90,36 +91,43 @@ public class StoreMenuController {
                 for (Blacksmith entry : Blacksmith.values()) {
                     if (entry.getDisplayName().equals(name)) item = entry;
                 }
+                break;
             }
             case ShopType.JojaMart: {
                 for (JojaMart entry : JojaMart.values()) {
                     if (entry.getDisplayName().equals(name) && (entry.getSeason() == null || entry.getSeason().equals(game.getDate().getCurrentSeason()))) item = entry;
                 }
+                break;
             }
             case ShopType.CarpentersShop: {
                 for (CarpentersShop entry : CarpentersShop.values()) {
                     if (entry.getDisplayName().equals(name)) item = entry;
                 }
+                break;
             }
             case ShopType.FishShop: {
                 for (FishShop entry : FishShop.values()) {
                     if (entry.getDisplayName().equals(name)) item = entry;
                 }
+                break;
             }
             case ShopType.MarniesRanch: {
                 for (MarniesRanch entry : MarniesRanch.values()) {
                     if (entry.getDisplayName().equals(name)) item = entry;
                 }
+                break;
             }
             case ShopType.PierresGeneralStore: {
                 for (PierresGeneralStore entry : PierresGeneralStore.values()) {
                     if (entry.getDisplayName().equals(name) && (entry.getSeason() == null || entry.getSeason().equals(game.getDate().getCurrentSeason()))) item = entry;
                 }
+                break;
             }
             case ShopType.TheStardropSaloon: {
                 for (TheStardropSaloon entry : TheStardropSaloon.values()) {
                     if (entry.getDisplayName().equals(name)) item = entry;
                 }
+                break;
             }
             default: {
                 item = null;
@@ -195,7 +203,8 @@ public class StoreMenuController {
         switch (shop.getShopType()) {
             case JojaMart -> {
                 for (ShopEntry entry : entries) {
-                    if (((JojaMart) entry).getSeason().equals(game.getDate().getCurrentSeason()))  {
+                    Season itemSeason = ((JojaMart) entry).getSeason();
+                    if (itemSeason == null || itemSeason.equals(game.getDate().getCurrentSeason()))  {
                         stringBuilder.append(entry.toString());
                         stringBuilder.append("\nStock: ").append(stock.get(entry.getDisplayName())).append("\n");
                     }
@@ -203,7 +212,8 @@ public class StoreMenuController {
             }
             case PierresGeneralStore -> {
                 for (ShopEntry entry : entries) {
-                    if (((JojaMart) entry).getSeason().equals(game.getDate().getCurrentSeason()))  {
+                    Season itemSeason = ((PierresGeneralStore) entry).getSeason();
+                    if (itemSeason == null || itemSeason.equals(game.getDate().getCurrentSeason()))  {
                         stringBuilder.append(entry.toString());
                         stringBuilder.append("\nStock: ").append(stock.get(entry.getDisplayName())).append("\n");
                     }

@@ -1,9 +1,10 @@
 package com.example.main.views;
 
-import com.example.main.controller.GameMenuController;
-import com.example.main.enums.regex.GameMenuCommands;
 import java.util.Scanner;
 import java.util.regex.Matcher;
+
+import com.example.main.controller.GameMenuController;
+import com.example.main.enums.regex.GameMenuCommands;
 
 public class GameMenu implements AppMenu {
     GameMenuController controller = new GameMenuController();
@@ -269,6 +270,9 @@ public class GameMenu implements AppMenu {
         }
         else if ((matcher = GameMenuCommands.ShowBalance.getMatcher(input)) != null) {
             System.out.println(controller.showBalance().Message());
+        }
+        else if ((matcher = GameMenuCommands.GoToStoreMenu.getMatcher(input)) != null) {
+            System.out.println(controller.goToStoreMenu().Message());
         }
         else {
             System.out.println("Invalid command");
