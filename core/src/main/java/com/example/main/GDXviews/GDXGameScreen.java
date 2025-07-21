@@ -38,6 +38,7 @@ import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 import com.badlogic.gdx.utils.Array;
+import com.badlogic.gdx.utils.Timer;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.example.main.GDXmodels.TextureManager;
 import com.example.main.Main;
@@ -329,7 +330,7 @@ public class GDXGameScreen implements Screen {
 
     private static final int[][] NPC_HOUSE_AREAS = {
         {42, 46, 40, 46},  // Sebastian: (42,40) to (46,46) - 5x7 including walls
-        {52, 56, 40, 46},  // Abigail: (52,40) to (56,46) - 5x7 including walls
+        {52, 56, 40, 46},  // Abigail: (52,40) to (56,46) - 5x7 including walls  
         {32, 36, 50, 56},  // Harvey: (32,50) to (36,56) - 5x7 including walls
         {42, 46, 50, 56},  // Lia: (42,50) to (46,56) - 5x7 including walls
         {52, 56, 50, 56}   // Robin: (52,50) to (56,56) - 5x7 including walls
@@ -358,6 +359,11 @@ public class GDXGameScreen implements Screen {
     private static final int TILE_SIZE = 32;
     private static final int MAP_WIDTH = 90;
     private static final int MAP_HEIGHT = 60;
+
+    // Add state for gift mode and result message
+    private boolean isGiftMode = false;
+    private String giftResultMessage = "";
+    private boolean giftResultSuccess = false;
 
     public GDXGameScreen() {
         controller = new GameMenuController();
@@ -458,7 +464,7 @@ public class GDXGameScreen implements Screen {
         handleInput(delta);
 
         if (!isInventoryOpen) {
-            updateTime(delta);
+        updateTime(delta);
         }
 
         Player currentPlayer = game.getCurrentPlayer();
@@ -926,8 +932,8 @@ public class GDXGameScreen implements Screen {
         Player tileOwner = tile.getOwner();
 
         return tileOwner == null ||
-            tileOwner.equals(currentPlayer) ||
-            (currentPlayer.getSpouse() != null && tileOwner.equals(currentPlayer.getSpouse()));
+               tileOwner.equals(currentPlayer) ||
+               (currentPlayer.getSpouse() != null && tileOwner.equals(currentPlayer.getSpouse()));
     }
 
     private void handleMinimapToggle() {
@@ -1007,9 +1013,9 @@ public class GDXGameScreen implements Screen {
         Player currentPlayer = game.getCurrentPlayer();
 
         boolean manualControl = Gdx.input.isKeyPressed(Input.Keys.I) ||
-            Gdx.input.isKeyPressed(Input.Keys.K) ||
-            Gdx.input.isKeyPressed(Input.Keys.J) ||
-            Gdx.input.isKeyPressed(Input.Keys.L);
+                               Gdx.input.isKeyPressed(Input.Keys.K) ||
+                               Gdx.input.isKeyPressed(Input.Keys.J) ||
+                               Gdx.input.isKeyPressed(Input.Keys.L);
 
         if (manualControl) {
             cameraFollowsPlayer = false;
@@ -1107,12 +1113,12 @@ public class GDXGameScreen implements Screen {
                 if (tiles[x] != null && tiles[x][y] != null) {
                     Tile tile = tiles[x][y];
                     TileType tileType = tile.getType();
-
+                    
                     if (tileType == TileType.House || tileType == TileType.Wall) {
                         float worldX = x * TILE_SIZE;
                         float worldY = (MAP_HEIGHT - 1 - y) * TILE_SIZE;
                         renderHouseSprite(x, y, worldX, worldY);
-
+                        
                         // Also check if this Wall tile belongs to an NPC house area or shop area
                         if (tileType == TileType.Wall) {
                             // Only render NPC house if this wall belongs to an NPC house area
@@ -1120,7 +1126,7 @@ public class GDXGameScreen implements Screen {
                             if (npcIndex != -1) {
                                 renderNPCHouseSprite(x, y, worldX, worldY);
                             }
-
+                            
                             // Only render shop if this wall belongs to a shop area
                             int shopIndex = getShopIndex(x, y);
                             if (shopIndex != -1) {
@@ -1204,10 +1210,10 @@ public class GDXGameScreen implements Screen {
                 spriteBatch.setColor(1f, 1f, 1f, 0.7f);
             }
 
-            spriteBatch.draw(playerTexture, renderX, renderY, playerWidth, playerHeight);
+                spriteBatch.draw(playerTexture, renderX, renderY, playerWidth, playerHeight);
 
             // Reset color to default
-            spriteBatch.setColor(1f, 1f, 1f, 1f);
+                spriteBatch.setColor(1f, 1f, 1f, 1f);
 
             // If fainted, draw the "Z z Z" animation on top of the player
             if (player.isFainted()) {
@@ -1795,40 +1801,99 @@ public class GDXGameScreen implements Screen {
 
     private void createGiftMenu() {
         npcMenuTable.clear();
-
         Label titleLabel = new Label(selectedNPC.getType().name() + " Gift", skin);
         titleLabel.setFontScale(1.5f);
         npcMenuTable.add(titleLabel).colspan(2).pad(20).row();
 
-        Label placeholderLabel = new Label("Gift functionality coming soon...", skin);
-        placeholderLabel.setFontScale(1.0f);
-        npcMenuTable.add(placeholderLabel).colspan(2).pad(20).row();
+        // Show result message if any
+        if (!giftResultMessage.isEmpty()) {
+            Label resultLabel = new Label(giftResultMessage, skin);
+            resultLabel.setFontScale(1.2f);
+            resultLabel.setColor(giftResultSuccess ? Color.GREEN : Color.RED);
+            npcMenuTable.add(resultLabel).colspan(2).pad(10).fillX().center().row();
+            // If successful, close the NPC menu after a short delay
+            if (giftResultSuccess) {
+                Timer.schedule(new Timer.Task() {
+                    @Override
+                    public void run() {
+                        showNPCMenu = false;
+                        selectedNPC = null;
+                        currentNPCMenuState = NPCMenuState.MAIN_MENU;
+                        giftResultMessage = "";
+                        giftResultSuccess = false;
+                        if (npcMenuTable != null) {
+                            npcMenuTable.remove();
+                            npcMenuTable = null;
+                        }
+                    }
+                }, 1.0f); // 1 second delay
+            }
+        }
+
+        // Inventory grid (like main inventory, but items are buttons for gifting)
+        Table itemsTable = new Table();
+        Player player = game.getCurrentPlayer();
+        ArrayList<Item> items = player.getInventory().getItems();
+        int column = 0;
+        final int ITEMS_PER_ROW = 4;
+        for (Item item : items) {
+            String key = generateTextureKey(item);
+            Texture texture = textureManager.getTexture(key);
+            Table itemSlot = new Table(skin);
+            itemSlot.setBackground("default-round");
+            if (texture != null) {
+                itemSlot.add(new Image(texture)).size(40, 40);
+            } else {
+                itemSlot.add(new Label("?", skin)).size(40, 40);
+            }
+            itemSlot.row();
+            itemSlot.add(new Label(String.valueOf(item.getNumber()), skin));
+            // Make the whole slot clickable for gifting
+            itemSlot.addListener(new ClickListener() {
+                @Override
+                public void clicked(InputEvent event, float x, float y) {
+                    Result result = controller.giftNPC(selectedNPC.getType().name(), item.getName());
+                    giftResultMessage = result.Message();
+                    giftResultSuccess = result.isSuccessful();
+                    createGiftMenu();
+                }
+            });
+            itemsTable.add(itemSlot).pad(8);
+            column++;
+            if (column >= ITEMS_PER_ROW) {
+                itemsTable.row();
+                column = 0;
+            }
+        }
+        ScrollPane scrollPane = new ScrollPane(itemsTable, skin);
+        npcMenuTable.add(scrollPane).colspan(2).expand().fill().pad(10).row();
 
         // Back and Close buttons
         TextButton backButton = new TextButton("Back", skin);
         TextButton closeButton = new TextButton("Close", skin);
-
         backButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
                 currentNPCMenuState = NPCMenuState.MAIN_MENU;
+                giftResultMessage = "";
+                giftResultSuccess = false;
                 createNPCMenuUI();
             }
         });
-
         closeButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
                 showNPCMenu = false;
                 selectedNPC = null;
                 currentNPCMenuState = NPCMenuState.MAIN_MENU;
+                giftResultMessage = "";
+                giftResultSuccess = false;
                 if (npcMenuTable != null) {
                     npcMenuTable.remove();
                     npcMenuTable = null;
                 }
             }
         });
-
         npcMenuTable.add(backButton).size(200, 50).pad(10);
         npcMenuTable.add(closeButton).size(200, 50).pad(10);
     }
@@ -1928,7 +1993,10 @@ public class GDXGameScreen implements Screen {
                 Texture cropTexture = textureManager.getTexture(textureKey);
 
                 if (cropTexture != null) {
-                    spriteBatch.draw(cropTexture, worldX, worldY, TILE_SIZE, TILE_SIZE);
+                    // Draw at real PNG size, bottom-aligned to the tile
+                    float px = worldX + (TILE_SIZE - cropTexture.getWidth()) / 2f;
+                    float py = worldY;
+                    spriteBatch.draw(cropTexture, px, py, cropTexture.getWidth(), cropTexture.getHeight());
                 }
             }
         } else if (tile.getSeed() != null) {
@@ -1936,54 +2004,47 @@ public class GDXGameScreen implements Screen {
             Texture seedTexture = textureManager.getTexture(textureKey);
 
             if (seedTexture != null) {
-                spriteBatch.draw(seedTexture, worldX, worldY, TILE_SIZE, TILE_SIZE);
+                // Draw at real PNG size, bottom-aligned to the tile
+                float px = worldX + (TILE_SIZE - seedTexture.getWidth()) / 2f;
+                float py = worldY;
+                spriteBatch.draw(seedTexture, px, py, seedTexture.getWidth(), seedTexture.getHeight());
             }
         }
     }
 
     private void renderTreeSprite(int tileX, int tileY, float worldX, float worldY) {
         Tile tile = gameMap.getTiles()[tileX][tileY];
-
         if (tile.getPlant() instanceof Fruit) {
             Fruit fruitTree = (Fruit) tile.getPlant();
             TreeType treeType = fruitTree.getTreeType();
-
             if (treeType == null) return;
-
-            // --- NEW RENDERING LOGIC ---
-            // Determine the texture key based on the current growth stage
             String textureKey;
             if (fruitTree.isReadyToHarvest()) {
-                // If it's ready to harvest, show the final stage with fruit
                 textureKey = treeType.getEnumName() + "_Stage_5_Fruit";
             } else {
-                // Otherwise, show the current growth stage
                 textureKey = treeType.getEnumName() + "_Stage_" + fruitTree.getCurrentStage();
             }
-
             Texture treeTexture = textureManager.getTexture(textureKey);
             if (treeTexture == null) {
-                // Fallback to a generic tree if a specific stage is missing
                 treeTexture = tree1Texture;
             }
-
-            spriteBatch.draw(treeTexture, worldX, worldY, TILE_SIZE * 1.5f, TILE_SIZE * 1.5f);
-
-            // If it's ready to harvest, draw the fruit on top of the mature tree
+            // Draw at real PNG size, bottom-aligned to the tile
+            float px = worldX + (TILE_SIZE - treeTexture.getWidth()) / 2f;
+            float py = worldY;
+            spriteBatch.draw(treeTexture, px, py, treeTexture.getWidth(), treeTexture.getHeight());
             if (fruitTree.isReadyToHarvest()) {
                 String fruitKey = fruitTree.getFruitType().getEnumName();
                 Texture fruitTexture = textureManager.getTexture(fruitKey);
                 if (fruitTexture != null) {
                     Random rand = new Random((long)tileX * tileY);
                     for(int i = 0; i < 3; i++) {
-                        float fruitX = worldX + (rand.nextFloat() * (TILE_SIZE - 8));
-                        float fruitY = worldY + (TILE_SIZE / 2f) + (rand.nextFloat() * (TILE_SIZE / 2f));
-                        spriteBatch.draw(fruitTexture, fruitX, fruitY, TILE_SIZE / 2f, TILE_SIZE / 2f);
+                        float fruitX = px + (rand.nextFloat() * (treeTexture.getWidth() - 8));
+                        float fruitY = py + (treeTexture.getHeight() / 2f) + (rand.nextFloat() * (treeTexture.getHeight() / 2f));
+                        spriteBatch.draw(fruitTexture, fruitX, fruitY, fruitTexture.getWidth() / 2f, fruitTexture.getHeight() / 2f);
                     }
                 }
             }
         } else if (tile.getTree() != null) {
-            // Fallback for generic, non-fruiting trees
             Texture treeTexture;
             switch (treeVariantMap[tileX][tileY]) {
                 case 0: treeTexture = tree1Texture; break;
@@ -1991,7 +2052,10 @@ public class GDXGameScreen implements Screen {
                 case 2: treeTexture = tree3Texture; break;
                 default: treeTexture = tree1Texture; break;
             }
-            spriteBatch.draw(treeTexture, worldX, worldY, TILE_SIZE * 1.5f, TILE_SIZE * 1.5f);
+            // Draw at real PNG size, bottom-aligned to the tile
+            float px = worldX + (TILE_SIZE - treeTexture.getWidth()) / 2f;
+            float py = worldY;
+            spriteBatch.draw(treeTexture, px, py, treeTexture.getWidth(), treeTexture.getHeight());
         }
     }
 
@@ -2017,13 +2081,13 @@ public class GDXGameScreen implements Screen {
             // Calculate the size to cover the entire 8x8 house area
             float houseWidth = 8 * TILE_SIZE;  // 8 tiles wide
             float houseHeight = 8 * TILE_SIZE; // 8 tiles tall
-
+            
             // Calculate the bottom-left position for the house image
             // The worldY for houseStartY gives us the screen position of the top row
             // We need to move down by (8-1) tiles to get to the bottom of the house area
             float houseX = worldX;
             float houseY = worldY - (7 * TILE_SIZE); // Move down 7 tiles from the top tile
-
+            
             spriteBatch.draw(houseTexture, houseX, houseY, houseWidth, houseHeight);
         }
     }
@@ -2053,7 +2117,7 @@ public class GDXGameScreen implements Screen {
             // Calculate the size to cover the entire 5x7 NPC house area
             float npcHouseWidth = 5 * TILE_SIZE;  // 5 tiles wide
             float npcHouseHeight = 7 * TILE_SIZE; // 7 tiles tall
-
+            
             // Calculate the bottom-left position for the NPC house image
             // The worldY for houseStartY gives us the screen position of the top row
             // We need to move down by (7-1) tiles to get to the bottom of the house area
@@ -2091,7 +2155,7 @@ public class GDXGameScreen implements Screen {
             // Calculate the size to cover the entire 8x8 shop area
             float shopWidth = 8 * TILE_SIZE;  // 8 tiles wide
             float shopHeight = 8 * TILE_SIZE; // 8 tiles tall
-
+            
             // Calculate the bottom-left position for the shop image
             // The worldY for shopStartY gives us the screen position of the top row
             // We need to move down by (8-1) tiles to get to the bottom of the shop area
@@ -2535,7 +2599,7 @@ public class GDXGameScreen implements Screen {
                 showSocialDisplay();
             }
         });
-
+        
         mapButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
@@ -2543,14 +2607,14 @@ public class GDXGameScreen implements Screen {
                 isInventoryOpen = false; // Close menu to see the map
             }
         });
-
+        
         settingsButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
                 showSettingsMenu();
             }
         });
-
+        
         closeButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
@@ -2732,7 +2796,7 @@ public class GDXGameScreen implements Screen {
 
             if (texture != null) {
                 itemSlot.add(new Image(texture)).size(40, 40);
-            } else {
+        } else {
                 itemSlot.add(new Label("?", skin)).size(40, 40);
                 Gdx.app.log("Inventory", "Missing texture for item: '" + item.getName() + "' (tried key: '" + key + "')");
             }
@@ -2742,8 +2806,8 @@ public class GDXGameScreen implements Screen {
 
             if (showOnlyPlantables) {
                 itemSlot.addListener(new ClickListener() {
-                    @Override
-                    public void clicked(InputEvent event, float x, float y) {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
                         // This is the core fix for the planting action
                         Result result = controller.plantItem(item, plantingTargetTile);
 
@@ -2825,7 +2889,7 @@ public class GDXGameScreen implements Screen {
                 }
             }
         });
-
+        
         // Add listener for the unequip button
         unequipButton.addListener(new ClickListener() {
             @Override
@@ -2867,7 +2931,7 @@ public class GDXGameScreen implements Screen {
 
         if (texture != null) {
             currentToolImage.setDrawable(new Image(texture).getDrawable());
-        } else {
+                } else {
             // Fallback if texture is missing
             currentToolImage.setDrawable(skin.getDrawable("default-round"));
         }
@@ -2896,8 +2960,8 @@ public class GDXGameScreen implements Screen {
         Label cheatMessageLabel = new Label("", skin);
 
         addButton.addListener(new ClickListener() {
-            @Override
-            public void clicked(InputEvent event, float x, float y) {
+                        @Override
+                        public void clicked(InputEvent event, float x, float y) {
                 String itemName = cheatItemNameField.getText();
                 String quantityStr = cheatItemQuantityField.getText();
                 Result result = controller.cheatAddItem(itemName, quantityStr);
@@ -2907,8 +2971,8 @@ public class GDXGameScreen implements Screen {
 
         // Add a listener to the close button
         closeButton.addListener(new ClickListener() {
-            @Override
-            public void clicked(InputEvent event, float x, float y) {
+                        @Override
+                        public void clicked(InputEvent event, float x, float y) {
                 isCheatMenuOpen = false;
                 Gdx.input.setInputProcessor(multiplexer); // Return focus to the game
             }
