@@ -1445,10 +1445,6 @@ public class GameMenuController {
                 return new Result(false, "Item '" + itemName + "' doesn't exist");
             }
 
-            if (player.getInventory().isFull()) {
-                return new Result(false, "Your inventory is full");
-            }
-
             player.getInventory().addItem(item);
             player.getInventory().addNumOfItems(1);
 
@@ -2764,5 +2760,125 @@ public class GameMenuController {
         }
 
         return new Result(true, "Successfully crafted 1 " + productType.getName() + ".");
+    }
+
+    public Result cookFood(String recipeName) {
+        Player player = game.getCurrentPlayer();
+        Tile currentTile = map.getTile(player.currentX(), player.currentY());
+
+        if (currentTile.getType() != TileType.House) {
+            return new Result(false, "You can only cook inside your house.");
+        }
+
+        CookingRecipeType recipeType = Arrays.stream(CookingRecipeType.values())
+            .filter(r -> r.getDisplayName().equalsIgnoreCase(recipeName))
+            .findFirst()
+            .orElse(null);
+
+        if (recipeType == null) {
+            return new Result(false, "That recipe doesn't exist.");
+        }
+
+        boolean hasRecipe = player.getCookingRecipe().stream()
+            .anyMatch(playerRecipe -> playerRecipe.getRecipeType() == recipeType);
+
+        if (!hasRecipe) {
+            return new Result(false, "You haven't learned this recipe yet.");
+        }
+
+        // Check for space first
+        boolean inventoryHasSpace = !player.getInventory().isFull();
+        boolean fridgeHasSpace = !player.getHouseRefrigerator().isFull();
+        if (!inventoryHasSpace && !fridgeHasSpace) {
+            return new Result(false, "Your inventory and refrigerator are both full!");
+        }
+
+        // Check for ingredients in both inventory and fridge
+        Map<ItemType, Integer> neededIngredients = new HashMap<>(recipeType.getIngredients());
+        for (Item item : player.getInventory().getItems()) {
+            if (neededIngredients.containsKey(item.getItemType())) {
+                int needed = neededIngredients.get(item.getItemType());
+                int available = item.getNumber();
+                int toRemove = Math.min(needed, available);
+                neededIngredients.put(item.getItemType(), needed - toRemove);
+            }
+        }
+        for (Item item : player.getHouseRefrigerator().getItems()) {
+            if (neededIngredients.containsKey(item.getItemType())) {
+                int needed = neededIngredients.get(item.getItemType());
+                int available = item.getNumber();
+                int toRemove = Math.min(needed, available);
+                neededIngredients.put(item.getItemType(), needed - toRemove);
+            }
+        }
+
+        // Verify all ingredients were found
+        for (Integer remaining : neededIngredients.values()) {
+            if (remaining > 0) {
+                return new Result(false, "You are missing ingredients.");
+            }
+        }
+
+        // All checks passed, now deduct ingredients
+        Map<ItemType, Integer> ingredientsToDeduct = new HashMap<>(recipeType.getIngredients());
+        for (Map.Entry<ItemType, Integer> entry : ingredientsToDeduct.entrySet()) {
+            int amountLeftToDeduct = entry.getValue();
+            Item itemInInventory = player.getInventory().findItemByType(entry.getKey());
+            if (itemInInventory != null) {
+                int amountFromInventory = Math.min(amountLeftToDeduct, itemInInventory.getNumber());
+                player.getInventory().remove2(itemInInventory.getName(), amountFromInventory);
+                amountLeftToDeduct -= amountFromInventory;
+            }
+            if (amountLeftToDeduct > 0) {
+                player.getHouseRefrigerator().remove(entry.getKey(), amountLeftToDeduct);
+            }
+        }
+
+        // Create the food and place it
+        Food cookedFood = new Food(recipeType.getFoodType(), 1);
+        if (inventoryHasSpace) {
+            player.getInventory().addItem(cookedFood);
+            return new Result(true, "You made " + cookedFood.getName() + "! It's in your inventory.");
+        } else {
+            player.getHouseRefrigerator().putItem(cookedFood);
+            return new Result(true, "You made " + cookedFood.getName() + "! Your inventory was full, so it was placed in the refrigerator.");
+        }
+    }
+
+    public Result moveItemToRefrigerator(String itemName) {
+        Player player = game.getCurrentPlayer();
+        Item itemToMove = player.getInventory().getItemByName(itemName);
+
+        if (itemToMove == null) {
+            return new Result(false, "You don't have that item in your inventory.");
+        }
+        if (!(itemToMove instanceof Food)) {
+            return new Result(false, "You can only store food in the refrigerator.");
+        }
+        if (player.getHouseRefrigerator().isFull()) {
+            return new Result(false, "The refrigerator is full.");
+        }
+
+        player.getInventory().remove2(itemName, 1); // Assuming moving one at a time
+        player.getHouseRefrigerator().putItem(itemToMove);
+
+        return new Result(true, "Moved " + itemName + " to the refrigerator.");
+    }
+
+    public Result moveItemFromRefrigerator(String itemName) {
+        Player player = game.getCurrentPlayer();
+        Item itemToMove = player.getHouseRefrigerator().getItemByName(itemName);
+
+        if (itemToMove == null) {
+            return new Result(false, "That item is not in the refrigerator.");
+        }
+        if (player.getInventory().isFull()) {
+            return new Result(false, "Your inventory is full.");
+        }
+
+        player.getHouseRefrigerator().remove(itemToMove.getItemType(), 1); // Assuming moving one at a time
+        player.getInventory().addItem(itemToMove);
+
+        return new Result(true, "Moved " + itemName + " to your inventory.");
     }
 }

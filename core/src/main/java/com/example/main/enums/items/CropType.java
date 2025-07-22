@@ -33,7 +33,7 @@ public enum CropType implements ItemType {
     Summer_Squash("summer squash", 1,1,1,2, 6, false, 3, 45, true, 63, 28, Season.Summer, false),
     Sunflower("sunflower", 1,2,3,2, 8, true, -1, 80, true, 45, 20, Season.Summer, false),
     Tomato("tomato", 2,2,2,2, 11, false, 3, 60, true, 20, 9, Season.Summer, false),
-    WHEAT("wheat", 1,1,1,1, 4, true, 0, 25, false, 0, 0, Season.Summer, false),
+    Wheat("wheat", 1,1,1,1, 4, true, 0, 25, false, 0, 0, Season.Summer, false),
 
     // Fall crops
     Amaranth("amaranth", 1,2,2,2, 7, true, 0, 150, true, 50, 22, Season.Fall, false),

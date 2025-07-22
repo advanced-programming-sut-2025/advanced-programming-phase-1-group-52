@@ -8,10 +8,10 @@ import com.example.main.enums.items.MaterialType;
 public enum CarpentersShop implements ShopEntry{
 
     // Permanent Stock
-    Wood(Type.Permanent, "Wood", "A sturdy, yet flexible plant material with a wide variety of uses.",
+    Wood_Product(Type.Permanent, "Wood", "A sturdy, yet flexible plant material with a wide variety of uses.",
             10, Integer.MAX_VALUE, null, null, null, MaterialType.Wood),
 
-    Stone(Type.Permanent, "Stone", "A common material with many uses in crafting and building.",
+    Stone_Product(Type.Permanent, "Stone", "A common material with many uses in crafting and building.",
             20, Integer.MAX_VALUE, null, null, null, MaterialType.Stone),
 
     // Farm Buildings

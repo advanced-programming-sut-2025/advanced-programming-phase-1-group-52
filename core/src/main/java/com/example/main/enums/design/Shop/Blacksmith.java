@@ -9,15 +9,15 @@ import com.example.main.enums.items.MaterialType;
 
 public enum Blacksmith implements ShopEntry{
     // Stock items
-    CopperOre(Type.STOCK, "Copper Ore", "A common ore that can be smelted into bars.",
+    Copper_Ore_Product(Type.STOCK, "Copper Ore", "A common ore that can be smelted into bars.",
             75, MineralType.Copper_Ore, Integer.MAX_VALUE,0, null),
-    IronOre(Type.STOCK, "Iron Ore", "A fairly common ore that can be smelted into bars.",
+    Iron_Ore_Product(Type.STOCK, "Iron Ore", "A fairly common ore that can be smelted into bars.",
             150, MineralType.Iron_Ore, Integer.MAX_VALUE, 0, null),
     Coal_Product(Type.STOCK, "Coal", "A combustible rock that is useful for crafting and smelting.",
             150, MineralType.Coal, Integer.MAX_VALUE, 0, null),
-    GoldOre(Type.STOCK, "Gold Ore", "A precious ore that can be smelted into bars.",
+    Gold_Ore_Product(Type.STOCK, "Gold Ore", "A precious ore that can be smelted into bars.",
             400, MineralType.Gold_Ore, Integer.MAX_VALUE, 0, null),
-    IridiumOre(Type.STOCK, "Iridium Ore", "A rare and valuable ore used for advanced crafts.",
+    Iridium_Ore_Product(Type.STOCK, "Iridium Ore", "A rare and valuable ore used for advanced crafts.",
             1000, MineralType.Iridium_Ore, Integer.MAX_VALUE, 0, null);
 
     public enum Type {

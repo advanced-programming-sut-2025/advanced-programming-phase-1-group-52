@@ -7737,6 +7737,7 @@ content/Recipe/Cranberry_Sauce.png
 content/Recipe/Crispy_Bass.png
 content/Recipe/Eggplant_Parmesan.png
 content/Recipe/Escargot.png
+content/Recipe/Farmers_Lunch.png
 content/Recipe/Fiddlehead_Risotto.png
 content/Recipe/Fish_Stew.png
 content/Recipe/Fish_Taco.png
@@ -7754,6 +7755,7 @@ content/Recipe/Lucky_Lunch.png
 content/Recipe/Maki_Roll.png
 content/Recipe/Mango_Sticky_Rice.png
 content/Recipe/Maple_Bar.png
+content/Recipe/Miners_Treat.png
 content/Recipe/Moss_Soup.png
 content/Recipe/Omelet.png
 content/Recipe/Pale_Broth.png
@@ -7773,7 +7775,6 @@ content/Recipe/Red_Plate.png
 content/Recipe/Rhubarb_Pie.png
 content/Recipe/Rice_Pudding.png
 content/Recipe/Roasted_Hazelnuts.png
-content/Recipe/Roots_Platter.png
 content/Recipe/Salad.png
 content/Recipe/Salmon_Dinner.png
 content/Recipe/Sashimi.png
@@ -7784,7 +7785,6 @@ content/Recipe/Spicy_Eel.png
 content/Recipe/Squid_Ink_Ravioli.png
 content/Recipe/Stir_Fry.png
 content/Recipe/Strange_Bun.png
-content/Recipe/Stuffing.png
 content/Recipe/Super_Meal.png
 content/Recipe/Survival_Burger.png
 content/Recipe/Tom_Kha_Soup.png

@@ -21,7 +21,7 @@ public enum Season {
                 put(Weather.Rainy, 0.2);
                 put(Weather.Stormy, 0.1);
             }},
-            Arrays.asList(CropType.Corn, CropType.Hot_Pepper, CropType.Radish, CropType.WHEAT, CropType.Poppy, CropType.Sunflower, CropType.Summer_Spangle)
+            Arrays.asList(CropType.Corn, CropType.Hot_Pepper, CropType.Radish, CropType.Wheat, CropType.Poppy, CropType.Sunflower, CropType.Summer_Spangle)
     ),
 
     Fall("Fall",
