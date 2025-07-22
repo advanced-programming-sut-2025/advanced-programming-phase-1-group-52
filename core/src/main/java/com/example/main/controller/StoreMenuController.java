@@ -282,9 +282,21 @@ public class StoreMenuController {
             return Result.failure("No housing found with ID " + housingId + ".");
         }
 
-        String requiredBuilding = ranchEnum.getBuildingRequired();
+        String requiredBuilding = ranchEnum.getBuildingRequired().contains("Barn") ? "barn" : "coop";
         if (!target.getType().getName().toLowerCase().contains(requiredBuilding.toLowerCase())) {
             return Result.failure(animalType.getName() + " must live in a " + requiredBuilding + ".");
+        }
+
+        if (ranchEnum.getBuildingRequired().contains("deluxe")) {
+            if (target.getType().getLevel() < 3) {
+                return Result.failure("You need to upgrade your " + requiredBuilding + " to house " + animalType.getName() + ".");
+            }
+        }
+
+        if (ranchEnum.getBuildingRequired().contains("big")) {
+            if (target.getType().getLevel() < 2) {
+                return Result.failure("You need to upgrade your " + requiredBuilding + " to house " + animalType.getName() + ".");
+            }
         }
 
         PurchasedAnimal newAnimal = new PurchasedAnimal(animalType, givenName, target.getX() + 1, target.getY() + 1);

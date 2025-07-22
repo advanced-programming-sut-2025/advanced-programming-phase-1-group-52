@@ -1,19 +1,21 @@
 package com.example.main.enums.items;
 
 public enum CageType implements ItemType {
-    NormalCage("normal cage", 4),
-    BigCage("big cage", 8),
-    DeluxeCage("deluxe cage", 12),
-    NormalBarn("normal barn", 4),
-    BigBarn("big barn", 8),
-    DeluxeBarn("deluxe barn", 12);
+    NormalCage("normal coop", 4, 1),
+    BigCage("big coop", 8, 2),
+    DeluxeCage("deluxe coop", 12, 3),
+    NormalBarn("normal barn", 4, 1),
+    BigBarn("big barn", 8, 2),
+    DeluxeBarn("deluxe barn", 12, 3);
 
     private final String name;
     private final int capacity;
+    private final int level;
 
-    CageType(String name, int capacity) {
+    CageType(String name, int capacity, int level) {
         this.name = name;
         this.capacity = capacity;
+        this.level = level;
     }
 
     @Override
@@ -27,6 +29,8 @@ public enum CageType implements ItemType {
     }
 
     public int getCapacity() { return this.capacity; }
+    
+    public int getLevel() { return this.level; }
 
     @Override
     public String getEnumName() {

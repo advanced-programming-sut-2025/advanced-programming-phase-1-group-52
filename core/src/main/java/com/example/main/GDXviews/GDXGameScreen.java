@@ -3633,12 +3633,30 @@ public class GDXGameScreen implements Screen {
                                     generalMessageLabel.setColor(Color.CYAN);
                                     generalMessageLabel.setVisible(true);
                                     generalMessageTimer = GENERAL_MESSAGE_DURATION;
+                                } else if (currentShopType == ShopType.MarniesRanch) {
+                                    // Check if this product is an animal (has a required building)
+                                    boolean isAnimal = false;
+                                    for (com.example.main.enums.design.Shop.MarniesRanch entry : com.example.main.enums.design.Shop.MarniesRanch.values()) {
+                                        if (entry.getDisplayName().equals(productName) && entry.getBuildingRequired() != null) {
+                                            isAnimal = true;
+                                            break;
+                                        }
+                                    }
+                                    if (isAnimal) {
+                                        showAnimalPurchasePage(productName);
+                                        return;
+                                    }
+                                    // Otherwise, normal purchase
+                                    Result purchaseResult = shopController.purchase(productName, String.valueOf(amount));
+                                    shopResultMessage = purchaseResult.Message();
+                                    shopResultSuccess = purchaseResult.isSuccessful();
+                                    createShopMenuUI();
                                 } else {
                                     // Handle normal purchase
                                     Result purchaseResult = shopController.purchase(productName, String.valueOf(amount));
                                     shopResultMessage = purchaseResult.Message();
                                     shopResultSuccess = purchaseResult.isSuccessful();
-                                    createShopMenuUI(); // Refresh the menu to show result
+                                    createShopMenuUI();
                                 }
                             }
                         } catch (NumberFormatException e) {
@@ -3701,5 +3719,142 @@ public class GDXGameScreen implements Screen {
         return productText.trim();
     }
     
+    // Show animal purchase page for Marnie's Ranch
+    private void showAnimalPurchasePage(String animalKey) {
+        // Clear previous result message only if not a success
+        if (shopResultSuccess) {
+            // keep the message
+        } else {
+            shopResultMessage = "";
+        }
+        shopResultSuccess = false;
+        shopMenuTable.clear();
+        Label titleLabel = new Label("Buy " + animalKey, skin);
+        titleLabel.setFontScale(1.5f);
+        titleLabel.setColor(Color.BLUE);
+        shopMenuTable.add(titleLabel).padBottom(20).row();
+
+        // Animal name input
+        Label nameLabel = new Label("Animal Name:", skin);
+        nameLabel.setColor(Color.WHITE);
+        final TextField nameField = new TextField("", skin);
+        nameField.setMessageText("Enter animal name");
+        shopMenuTable.add(nameLabel).padRight(10);
+        shopMenuTable.add(nameField).width(200).padBottom(10).row();
+
+        // Housing selection
+        Label housingLabel = new Label("Select Housing:", skin);
+        housingLabel.setColor(Color.WHITE);
+        Player player = game.getCurrentPlayer();
+        java.util.List<Housing> housings = player.getHousings();
+        java.util.List<Housing> validHousings = new java.util.ArrayList<>();
+        // Find required building type for this animal
+        String requiredBuilding = null;
+        int animalCapacity = 1;
+        for (com.example.main.enums.design.Shop.MarniesRanch entry : com.example.main.enums.design.Shop.MarniesRanch.values()) {
+            if (entry.getDisplayName().equals(animalKey)) {
+                requiredBuilding = entry.getBuildingRequired();
+                animalCapacity = 1; // You can adjust this if animals can take more than 1 slot
+                break;
+            }
+        }
+        for (Housing h : housings) {
+            boolean typeOk = false;
+            if (requiredBuilding != null) {
+                String housingTypeName = h.getType().getName().toLowerCase();
+                String requiredBuildingLower = requiredBuilding.toLowerCase();
+                
+                // Check if housing type matches the required building
+                if (requiredBuildingLower.contains("barn")) {
+                    typeOk = housingTypeName.contains("barn");
+                } else if (requiredBuildingLower.contains("coop")) {
+                    typeOk = housingTypeName.contains("coop");
+                }
+            }
+            boolean hasSpace = h.getOccupants().size() < h.getCapacity();
+            if (typeOk && hasSpace) {
+                validHousings.add(h);
+            }
+        }
+        if (validHousings.isEmpty()) {
+            Label noHousingLabel = new Label("No available housing for this animal. Build or free up space in a barn/coop.", skin);
+            noHousingLabel.setColor(Color.RED);
+            shopMenuTable.add(noHousingLabel).colspan(2).padBottom(20).row();
+            TextButton backButton = new TextButton("Back", skin);
+            backButton.addListener(new ClickListener() {
+                @Override
+                public void clicked(InputEvent event, float x, float y) {
+                    createShopMenuUI();
+                }
+            });
+            shopMenuTable.add(backButton).width(120).pad(10).row();
+            if (!shopResultMessage.isEmpty()) {
+                Label resultLabel = new Label(shopResultMessage, skin);
+                resultLabel.setColor(Color.GREEN);
+                resultLabel.setFontScale(1.1f);
+                shopMenuTable.add(resultLabel).colspan(2).padBottom(15).row();
+            }
+            return;
+        }
+        final com.badlogic.gdx.scenes.scene2d.ui.SelectBox<String> housingSelect = new com.badlogic.gdx.scenes.scene2d.ui.SelectBox<>(skin);
+        java.util.List<String> housingOptions = new java.util.ArrayList<>();
+        for (Housing h : validHousings) {
+            housingOptions.add(h.getType().getName() + " (ID: " + h.getId() + ") - " + h.getOccupants().size() + "/" + h.getCapacity());
+        }
+        housingSelect.setItems(housingOptions.toArray(new String[0]));
+        shopMenuTable.add(housingLabel).padRight(10);
+        shopMenuTable.add(housingSelect).width(200).padBottom(10).row();
+
+        // Confirm and Cancel buttons
+        Table buttonTable = new Table();
+        TextButton confirmButton = new TextButton("Confirm", skin);
+        TextButton cancelButton = new TextButton("Cancel", skin);
+        buttonTable.add(confirmButton).width(120).pad(10);
+        buttonTable.add(cancelButton).width(120).pad(10);
+        shopMenuTable.add(buttonTable).colspan(2).row();
+
+        confirmButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                String animalName = nameField.getText().trim();
+                int selectedIndex = housingSelect.getSelectedIndex();
+                if (animalName.isEmpty()) {
+                    shopResultMessage = "Please enter an animal name.";
+                    shopResultSuccess = false;
+                    showAnimalPurchasePage(animalKey);
+                    return;
+                }
+                if (selectedIndex < 0 || selectedIndex >= validHousings.size()) {
+                    shopResultMessage = "Please select a housing.";
+                    shopResultSuccess = false;
+                    showAnimalPurchasePage(animalKey);
+                    return;
+                }
+                String housingId = String.valueOf(validHousings.get(selectedIndex).getId());
+                Result result = shopController.buyAnimal(animalKey, housingId, animalName);
+                shopResultMessage = result.Message();
+                shopResultSuccess = result.isSuccessful();
+                if (shopResultSuccess) {
+                    // Show the animal purchase page again for the same animal, with updated housing list
+                    showAnimalPurchasePage(animalKey);
+                } else {
+                    createShopMenuUI();
+                }
+            }
+        });
+        cancelButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                createShopMenuUI();
+            }
+        });
+        // Show result message if any
+        if (!shopResultMessage.isEmpty()) {
+            Label resultLabel = new Label(shopResultMessage, skin);
+            resultLabel.setColor(shopResultSuccess ? Color.GREEN : Color.RED);
+            resultLabel.setFontScale(1.1f);
+            shopMenuTable.add(resultLabel).colspan(2).padBottom(15).row();
+        }
+    }
 
 }
