@@ -13,7 +13,7 @@ public enum Blacksmith implements ShopEntry{
             75, MineralType.Copper_Ore, Integer.MAX_VALUE,0, null),
     IronOre(Type.STOCK, "Iron Ore", "A fairly common ore that can be smelted into bars.",
             150, MineralType.Iron_Ore, Integer.MAX_VALUE, 0, null),
-    Coal(Type.STOCK, "Coal", "A combustible rock that is useful for crafting and smelting.",
+    Coal_Product(Type.STOCK, "Coal", "A combustible rock that is useful for crafting and smelting.",
             150, MineralType.Coal, Integer.MAX_VALUE, 0, null),
     GoldOre(Type.STOCK, "Gold Ore", "A precious ore that can be smelted into bars.",
             400, MineralType.Gold_Ore, Integer.MAX_VALUE, 0, null),

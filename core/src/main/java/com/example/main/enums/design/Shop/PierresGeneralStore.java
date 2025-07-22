@@ -33,7 +33,7 @@ public enum PierresGeneralStore implements ShopEntry {
     DeluxeRetainingSoil(null, "Deluxe Retaining Soil", "This soil has a 100% chance of staying watered overnight.",
             150, Integer.MAX_VALUE, MaterialType.Deluxe_Retaining_Soil),
     GrassStarter(null, "Grass Starter", "Place this on your farm to start a new patch of grass.",
-            100, Integer.MAX_VALUE, CraftingMachineType.GRASS_STARTER),
+            100, Integer.MAX_VALUE, CraftingMachineType.Grass_Starter),
     SpeedGro(null, "Speed-Gro", "Makes the plants grow 1 day earlier.",
             100, Integer.MAX_VALUE, MaterialType.Speed_Gro),
     AppleSapling(null, "Apple Sapling", "Bears fruit in fall. Needs 28 days to mature.",
