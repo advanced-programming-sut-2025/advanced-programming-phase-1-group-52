@@ -48,6 +48,7 @@ import com.example.main.enums.design.NPCType;
 import com.example.main.enums.design.ShopType;
 import com.example.main.enums.design.TileType;
 import com.example.main.enums.design.Weather;
+import com.example.main.enums.items.CraftingRecipes;
 import com.example.main.enums.items.CropType;
 import com.example.main.enums.items.ItemType;
 import com.example.main.enums.items.TreeType;
@@ -65,11 +66,7 @@ import com.example.main.models.Result;
 import com.example.main.models.Tile;
 import com.example.main.models.Time;
 import com.example.main.models.User;
-import com.example.main.models.item.Crop;
-import com.example.main.models.item.Fruit;
-import com.example.main.models.item.Item;
-import com.example.main.models.item.Seed;
-import com.example.main.models.item.Tool;
+import com.example.main.models.item.*;
 
 public class GDXGameScreen implements Screen {
     private Stage stage;
@@ -205,6 +202,11 @@ public class GDXGameScreen implements Screen {
     private PlayerActionState playerActionState = PlayerActionState.IDLE;
     private float actionTimer = 0f;
     private static final float ACTION_ANIMATION_DURATION = 0.5f; // Duration for animations in seconds
+
+    // Crafting Menu Fields
+    private boolean isCraftingMenuOpen = false;
+    private Stage craftingStage;
+    private Table craftingMenuContentTable;
 
     private Texture ground1Texture;
     private Texture ground2Texture;
@@ -440,6 +442,7 @@ public class GDXGameScreen implements Screen {
         npcHouseVariants = new int[5];
         stoneVariantMap = new int[MAP_WIDTH][MAP_HEIGHT];
         waterVariantMap = new int[MAP_WIDTH][MAP_HEIGHT];
+        craftingStage = new Stage(new ScreenViewport());
 
         textureManager = new TextureManager();
         textureManager.loadAllItemTextures();
@@ -460,6 +463,7 @@ public class GDXGameScreen implements Screen {
         setupToolMenuUI();
         setupCheatMenuUI();
         setupPlantingUI();
+        setupCraftingUI();
 
         crowAnimations = new ArrayList<>();
 
@@ -468,6 +472,7 @@ public class GDXGameScreen implements Screen {
         multiplexer.addProcessor(inventoryStage);
         multiplexer.addProcessor(toolMenuStage);
         multiplexer.addProcessor(cheatMenuStage);
+        multiplexer.addProcessor(craftingStage);
         plantableItems = new ArrayList<>();
         Gdx.input.setInputProcessor(multiplexer);
     }
@@ -558,12 +563,10 @@ public class GDXGameScreen implements Screen {
         renderWeather(delta);
         renderHud();
         renderDayNightOverlay();
-        renderHud();
-        renderDayNightOverlay();
-        renderHud();
         renderToolMenu(delta);
         renderInventoryOverlay(delta);
         renderCrowAnimations(delta);
+        renderCraftingMenu(delta);
 
         stage.act(delta);
         stage.draw();
@@ -825,7 +828,17 @@ public class GDXGameScreen implements Screen {
             }
         }
 
-        if (isInventoryOpen || isToolMenuOpen || isCheatMenuOpen || isPlantingSelectionOpen) {
+        if (Gdx.input.isKeyJustPressed(Input.Keys.B)) {
+            isCraftingMenuOpen = !isCraftingMenuOpen;
+            if (isCraftingMenuOpen) {
+                showCraftingMenu(); // Populate the menu with current data
+                Gdx.input.setInputProcessor(craftingStage);
+            } else {
+                Gdx.input.setInputProcessor(multiplexer);
+            }
+        }
+
+        if (isInventoryOpen || isToolMenuOpen || isCheatMenuOpen || isPlantingSelectionOpen || isCraftingMenuOpen) {
             return;
         }
 
@@ -2651,6 +2664,109 @@ public class GDXGameScreen implements Screen {
         if (!isPlantingSelectionOpen) return;
         plantingStage.act(delta);
         plantingStage.draw();
+    }
+
+    private void setupCraftingUI() {
+        Table mainCraftingContainer = new Table();
+        mainCraftingContainer.setFillParent(true);
+        mainCraftingContainer.center();
+        craftingStage.addActor(mainCraftingContainer);
+
+        // A background for the menu
+        Table background = new Table(skin);
+        background.setBackground(new TextureRegionDrawable(new TextureRegion(inventoryBackground)));
+        mainCraftingContainer.add(background).width(Gdx.graphics.getWidth() * 0.7f).height(Gdx.graphics.getHeight() * 0.8f);
+
+        craftingMenuContentTable = new Table();
+        ScrollPane scrollPane = new ScrollPane(craftingMenuContentTable, skin);
+        scrollPane.setFadeScrollBars(false);
+
+        background.add(scrollPane).expand().fill().pad(20);
+    }
+
+    private void showCraftingMenu() {
+        craftingMenuContentTable.clear();
+        Player currentPlayer = game.getCurrentPlayer();
+        if (currentPlayer == null) return;
+
+        ArrayList<CraftingRecipe> knownRecipes = currentPlayer.getCraftingRecipe();
+
+        // Loop through ALL possible crafting recipes in the game
+        for (CraftingRecipes recipeEnum : CraftingRecipes.values()) {
+            boolean isKnown = false;
+            // Check if the current recipe is in the player's list of known recipes
+            for (CraftingRecipe known : knownRecipes) {
+                if (known.getRecipeType() == recipeEnum) {
+                    isKnown = true;
+                    break;
+                }
+            }
+
+            // Create the UI element for this recipe
+            Table recipeRow = new Table();
+            recipeRow.pad(5);
+
+            ItemType product = recipeEnum.getProduct();
+            Texture productTexture = textureManager.getTexture(product.getEnumName());
+            Image productImage = new Image(productTexture);
+            if (productTexture != null) {
+                productImage = new Image(productTexture);
+            } else {
+                // Use a default placeholder if the texture is not found
+                productImage = new Image(skin.getDrawable("default-round"));
+                Gdx.app.log("CraftingMenu", "Missing texture for product: " + product.getEnumName());
+            }
+
+            Label recipeLabel = new Label(recipeEnum.getName(), skin);
+
+            if (isKnown) {
+                // If known, make it a button and check if it's craftable
+                TextButton craftButton = new TextButton("Craft", skin);
+
+                // Check if player has enough ingredients
+                boolean canCraft = true;
+                for (Map.Entry<ItemType, Integer> entry : recipeEnum.getIngredients().entrySet()) {
+                    Item itemInInventory = currentPlayer.getInventory().findItemByType(entry.getKey());
+                    if (itemInInventory == null || itemInInventory.getNumber() < entry.getValue()) {
+                        canCraft = false;
+                        break;
+                    }
+                }
+                craftButton.setDisabled(!canCraft); // Disable button if ingredients are missing
+
+                craftButton.addListener(new ClickListener() {
+                    @Override
+                    public void clicked(InputEvent event, float x, float y) {
+                        Result result = controller.craftItem(recipeEnum.getName());
+                        // Update the crafting menu to reflect new inventory counts
+                        showCraftingMenu();
+                        // Show a message to the player
+                        generalMessageLabel.setText(result.Message());
+                        generalMessageLabel.setVisible(true);
+                        generalMessageTimer = GENERAL_MESSAGE_DURATION;
+                    }
+                });
+
+                recipeRow.add(productImage).size(32, 32).padRight(10);
+                recipeRow.add(recipeLabel).width(200).left();
+                recipeRow.add(craftButton).width(80);
+
+            } else {
+                // If not known, show it as locked
+                productImage.setColor(Color.BLACK); // Make the image dark
+                recipeLabel.setColor(Color.GRAY);
+                recipeRow.add(productImage).size(32, 32).padRight(10);
+                recipeRow.add(recipeLabel).width(200).left();
+                recipeRow.add(new Label("[LOCKED]", skin)).width(80);
+            }
+            craftingMenuContentTable.add(recipeRow).fillX().row();
+        }
+    }
+
+    private void renderCraftingMenu(float delta) {
+        if (!isCraftingMenuOpen) return;
+        craftingStage.act(delta);
+        craftingStage.draw();
     }
 
     public void triggerCrowAttackAnimation() {

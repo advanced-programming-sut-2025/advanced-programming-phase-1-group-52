@@ -1384,43 +1384,6 @@ public class GameMenuController {
         return new Result(true, recipeString.toString());
     }
 
-    public Result craftItem(String itemName) {
-        Player player = game.getCurrentPlayer();
-        GameMap map = game.getMap();
-        Tile currentTile = map.getTile(player.currentX(), player.currentY());
-
-        if(!currentTile.getType().equals(TileType.House)) {
-            return new Result(false, "You should be at home to craft item");
-        }
-
-        CraftingRecipes recipeType = findCraftingRecipeType(itemName);
-        if(recipeType == null) {
-            return new Result(false, "error");
-        }
-
-        CraftingRecipe recipe;
-
-        if((recipe = findCraftingRecipeInInventory(player.getCraftingRecipe(), recipeType)) == null) {
-            return new Result(false, "The crafting recipe is not in your inventory");
-        }
-
-        if(player.getInventory().isFull()){
-            return new Result(false, "your inventory is full");
-        }
-
-        Result result = isInventoryReadyToCraft(recipeType);
-
-        if(!result.isSuccessful()){
-            return result;
-        }
-
-        CraftingMachine craftingProduct = new CraftingMachine(recipeType.getProduct(),10);
-        player.getInventory().getItems().add(craftingProduct);
-        player.getInventory().addNumOfItems(1);
-        player.addEnergy(-2);
-        return new Result(true,craftingProduct.getName() + " crafted successfully");
-    }
-
     public Result placeItem(String itemName, String directionStr) {
         Player player = game.getCurrentPlayer();
         GameMap map = game.getMap();
@@ -2744,5 +2707,62 @@ public class GameMenuController {
         }
 
         return new Result(false, "The fruit isn't ripe yet.");
+    }
+
+    // main/controller/GameMenuController.java
+
+    public Result craftItem(String recipeName) {
+        Player player = game.getCurrentPlayer();
+
+        // Find the recipe enum by its display name
+        CraftingRecipes recipeType = Arrays.stream(CraftingRecipes.values())
+            .filter(r -> r.getName().equalsIgnoreCase(recipeName))
+            .findFirst()
+            .orElse(null);
+
+        if (recipeType == null) {
+            return new Result(false, "No crafting recipe found with the name: " + recipeName);
+        }
+
+        // 1. Check if the player has learned this recipe
+        boolean hasRecipe = player.getCraftingRecipe().stream()
+            .anyMatch(playerRecipe -> playerRecipe.getRecipeType() == recipeType);
+
+        if (!hasRecipe) {
+            return new Result(false, "You have not learned this recipe yet.");
+        }
+
+        // 2. Check if the player's inventory is full
+        if (player.getInventory().isFull()) {
+            return new Result(false, "Your inventory is full. Make some space first.");
+        }
+
+        // 3. Check if the player has the required ingredients
+        for (Map.Entry<ItemType, Integer> entry : recipeType.getIngredients().entrySet()) {
+            ItemType requiredItemType = entry.getKey();
+            int requiredAmount = entry.getValue();
+            Item playerItem = player.getInventory().findItemByType(requiredItemType);
+
+            if (playerItem == null || playerItem.getNumber() < requiredAmount) {
+                return new Result(false, "You don't have enough " + requiredItemType.getName() + ". Need " + requiredAmount + ".");
+            }
+        }
+
+        // 4. All checks passed: Deduct ingredients
+        for (Map.Entry<ItemType, Integer> entry : recipeType.getIngredients().entrySet()) {
+            player.getInventory().remove2(entry.getKey().getName(), entry.getValue());
+        }
+
+        // 5. Create and add the crafted item using ItemFactory
+        ItemType productType = recipeType.getProduct();
+        try {
+            Item craftedItem = ItemFactory.createItemOrThrow(productType.getName(), 1);
+            player.getInventory().addItem(craftedItem);
+        } catch (Exception e) {
+            // This will catch if ItemFactory doesn't know how to create the item
+            return new Result(false, "Error creating crafted item: " + productType.getName());
+        }
+
+        return new Result(true, "Successfully crafted 1 " + productType.getName() + ".");
     }
 }

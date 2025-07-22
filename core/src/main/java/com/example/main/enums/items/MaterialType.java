@@ -50,7 +50,6 @@ public enum MaterialType implements ItemType {
 
     Wood("Wood"),
     Stone("Stone"),
-    Coal("Coal"),
     Fiber("Fiber"),
     Hardwood("Hard wood"),
     Gold_Coin("Gold coin"),

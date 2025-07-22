@@ -54,7 +54,7 @@ public enum NPCType {
 
         quests.add(new Quest(this, MaterialType.Hardwood, 10, MaterialType.Gold_Coin, 500));
         quests.add(new Quest(this, FishType.Salmon, 1, CookingRecipeType.SalmonDinner, 1));
-        quests.add(new Quest(this, MaterialType.Wood, 200, CraftingMachineType.DELUXE_SCARECROW, 3));
+        quests.add(new Quest(this, MaterialType.Wood, 200, CraftingMachineType.Deluxe_Scarecrow, 3));
     }},
     Robin(52, 50) {{
         favorites.add(FoodType.Spaghetti);
@@ -62,7 +62,7 @@ public enum NPCType {
         favorites.add(MineralType.Iron_Bar);
 
         quests.add(new Quest(this, MaterialType.Wood, 80, MaterialType.Gold_Coin, 1000));
-        quests.add(new Quest(this, MineralType  .Iron_Bar, 10, CraftingMachineType.BEE_HOUSE, 3));
+        quests.add(new Quest(this, MineralType  .Iron_Bar, 10, CraftingMachineType.Bee_House, 3));
         quests.add(new Quest(this, MaterialType.Wood, 1000, MaterialType.Gold_Coin, 25000));
     }};
 
