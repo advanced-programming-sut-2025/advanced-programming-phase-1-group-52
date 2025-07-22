@@ -16,7 +16,6 @@ import com.example.main.enums.design.Weather;
 import com.example.main.enums.items.CropType;
 import com.example.main.enums.items.ForagingCropType;
 import com.example.main.enums.items.ForagingSeedType;
-import com.example.main.enums.items.FruitType;
 import com.example.main.enums.items.ItemType;
 import com.example.main.enums.items.MineralType;
 import com.example.main.enums.items.TreeType;
@@ -75,15 +74,6 @@ public class GameMap {
         generateFarm(this.players, themes);
         generateBushBorders(this.players);
 
-        placeRandomForageables(this.players.get(0), 1, 1, 29, 29);
-        placeRandomWildTrees(this.players.get(0), 1, 1, 29, 29);
-        placeRandomForageables(this.players.get(1), 61, 1, 89, 29);
-        placeRandomWildTrees(this.players.get(1), 61, 1, 89, 29);
-        placeRandomForageables(this.players.get(2), 1, 31, 29, 59);
-        placeRandomWildTrees(this.players.get(2), 1, 31, 29, 59);
-        placeRandomForageables(this.players.get(3), 61, 31, 89, 59);
-        placeRandomWildTrees(this.players.get(3), 61, 31, 89, 59);
-
         for (NPCType npc : NPCType.values()) {
             generateBuilding(
                 null,
@@ -98,20 +88,151 @@ public class GameMap {
             this.npcHouses.add(new NPCHouse(npc));
         }
 
+        Random rand = new Random();
+        int grassAmount = rand.nextInt(3);
+
+        for (int i = 0; i < grassAmount + 2; i++) {
+            int grassX = rand.nextInt(20) + 4;
+            int grassY = rand.nextInt(12) + 8;
+            int grassHeight = rand.nextInt(4) + 1;
+            
+            for (int j = grassY - grassHeight / 2; j < grassY + grassHeight / 2; j++) {
+                for (int k = grassX - rand.nextInt(2) - 1; k < grassX + rand.nextInt(2); k++) {
+                    tiles[k][j] = new Tile(k, j, TileType.Grass, players.get(0));
+                } 
+            }
+        }
+
+        grassAmount = rand.nextInt(3);
+        for (int i = 0; i < grassAmount + 2; i++) {
+            int grassX = rand.nextInt(20) + 64;
+            int grassY = rand.nextInt(12) + 8;
+            int grassHeight = rand.nextInt(4) + 1;
+
+            for (int j = grassY - grassHeight / 2; j < grassY + grassHeight / 2; j++) {
+                for (int k = grassX - rand.nextInt(2) - 1; k < grassX + rand.nextInt(2); k++) {
+                    tiles[k][j] = new Tile(k, j, TileType.Grass, players.get(1));
+                }
+            }
+        }
+
+        grassAmount = rand.nextInt(3);
+        for (int i = 0; i < grassAmount + 2; i++) {
+            int grassX = rand.nextInt(20) + 4;
+            int grassY = rand.nextInt(12) + 38;
+            int grassHeight = rand.nextInt(4) + 1;
+
+            for (int j = grassY - grassHeight / 2; j < grassY + grassHeight / 2; j++) {
+                for (int k = grassX - rand.nextInt(2) - 1; k < grassX + rand.nextInt(2); k++) {
+                    tiles[k][j] = new Tile(k, j, TileType.Grass, players.get(2));
+                }
+            }
+        }
+
+        grassAmount = rand.nextInt(3);
+        for (int i = 0; i < grassAmount + 2; i++) {
+            int grassX = rand.nextInt(20) + 64;
+            int grassY = rand.nextInt(12) + 38;
+            int grassHeight = rand.nextInt(4) + 1;
+
+            for (int j = grassY - grassHeight / 2; j < grassY + grassHeight / 2; j++) {
+                for (int k = grassX - rand.nextInt(2) - 1; k < grassX + rand.nextInt(2); k++) {
+                    tiles[k][j] = new Tile(k, j, TileType.Grass, players.get(3));
+                }
+            }
+        }
+
+        for (int i = 1; i < 29; i++) {
+            for (int j = 1; j < 29; j++) {
+                if (tiles[i][j] == null) {
+                    int tileProb = rand.nextInt(20);
+                    if (tileProb < 12) {
+                        tiles[i][j] = new Tile(i, j, TileType.Earth, players.get(0));
+                    }
+                    else if (tileProb < 13) {
+                        tiles[i][j] = new Tile(i, j, TileType.Stone, players.get(0));
+                    }
+                    else {
+                        tiles[i][j] = new Tile(i, j, TileType.Earth, players.get(0));
+                    }
+                }
+            }
+        }
+        
+        for (int i = 61; i < 89; i++) {
+            for (int j = 1; j < 29; j++) {
+                if (tiles[i][j] == null) {
+                    int tileProb = rand.nextInt(20);
+                    if (tileProb < 12) {
+                        tiles[i][j] = new Tile(i, j, TileType.Earth, players.get(1));
+                    }
+                    else if (tileProb < 13) {
+                        tiles[i][j] = new Tile(i, j, TileType.Stone, players.get(1));
+                    }
+                    else {
+                        tiles[i][j] = new Tile(i, j, TileType.Earth, players.get(1));
+                    }
+                }
+            }
+        }
+
+        for (int i = 1; i < 29; i++) {
+            for (int j = 31; j < 59; j++) {
+                if (tiles[i][j] == null) {
+                    int tileProb = rand.nextInt(20);
+                    if (tileProb < 12) {
+                        tiles[i][j] = new Tile(i, j, TileType.Earth, players.get(2));
+                    }
+                    else if (tileProb < 13) {
+                        tiles[i][j] = new Tile(i, j, TileType.Stone, players.get(2));
+                    }
+                    else {
+                        tiles[i][j] = new Tile(i, j, TileType.Earth, players.get(2));
+                    }
+                }
+            }
+        }
+
+        for (int i = 61; i < 89; i++) {
+            for (int j = 31; j < 59; j++) {
+                if (tiles[i][j] == null) {
+                    int tileProb = rand.nextInt(20);
+                    if (tileProb < 12) {
+                        tiles[i][j] = new Tile(i, j, TileType.Earth, players.get(3));
+                    }
+                    else if (tileProb < 13) {
+                        tiles[i][j] = new Tile(i, j, TileType.Stone, players.get(3));
+                    }
+                    else {
+                        tiles[i][j] = new Tile(i, j, TileType.Earth, players.get(3));
+                    }
+                }
+            }
+        }
+
+        placeRandomForageables(this.players.get(0), 1, 1, 29, 29);
+        placeRandomWildTrees(this.players.get(0), 1, 1, 29, 29);
+        placeRandomForageables(this.players.get(1), 61, 1, 89, 29);
+        placeRandomWildTrees(this.players.get(1), 61, 1, 89, 29);
+        placeRandomForageables(this.players.get(2), 1, 31, 29, 59);
+        placeRandomWildTrees(this.players.get(2), 1, 31, 29, 59);
+        placeRandomForageables(this.players.get(3), 61, 31, 89, 59);
+        placeRandomWildTrees(this.players.get(3), 61, 31, 89, 59);
+
         for (int i = 0; i < 90; i++) {
             for (int j = 0; j < 60; j++) {
                 if (tiles[i][j] == null) {
                     if (i < 30 && j < 30) {
-                        tiles[i][j] = new Tile(i, j, TileType.Earth, this.players.get(0));
+                        tiles[i][j] = new Tile(i, j, TileType.Earth, players.get(0));
                     }
                     else if (i < 30 && j >= 30) {
-                        tiles[i][j] = new Tile(i, j, TileType.Earth, this.players.get(2));
+                        tiles[i][j] = new Tile(i, j, TileType.Earth, players.get(2));
                     }
                     else if (i >= 60 && j < 30) {
-                        tiles[i][j] = new Tile(i, j, TileType.Earth, this.players.get(1));
+                        tiles[i][j] = new Tile(i, j, TileType.Earth, players.get(1));
                     }
                     else if (i >= 60 && j >= 30) {
-                        tiles[i][j] = new Tile(i, j, TileType.Earth, this.players.get(3));
+                        tiles[i][j] = new Tile(i, j, TileType.Earth, players.get(3));
                     }
                     else {
                         tiles[i][j] = new Tile(i, j, TileType.Earth, null);
