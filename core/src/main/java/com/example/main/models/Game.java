@@ -30,6 +30,7 @@ public class Game {
     private final ArrayList<Friendship> friendships = new ArrayList<>();
     private final ArrayList<NPC> NPCs = new ArrayList<>();
     private int switchCounter = 0;
+    private boolean crowAttackHappened = false;
 
     public Game(ArrayList<User> players) {
         this.time = new Time();
@@ -182,7 +183,8 @@ public class Game {
     public void crowsAttack() {
         if (map == null) return;
         Random rand = new Random();
-        if (rand.nextInt() == 0) {
+        if (rand.nextInt(5) == 0) {
+            crowAttackHappened = true;
             int numPlants = 0;
             Tile[][] tiles = this.map.getTiles();
             ArrayList<Tile> targetTiles = new ArrayList<>();
@@ -503,4 +505,13 @@ public class Game {
             }
         }
     }
+
+    public boolean isCrowAttackHappened() {
+        return crowAttackHappened;
+    }
+
+    public void resetCrowAttackFlag() {
+        this.crowAttackHappened = false;
+    }
 }
+
