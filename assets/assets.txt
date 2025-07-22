@@ -5524,6 +5524,8 @@ content/Cut/NPC/harvey.png
 content/Cut/NPC/lia.png
 content/Cut/NPC/robin.png
 content/Cut/NPC/sebastian.png
+content/Cut/map_elements/Barn.png
+content/Cut/map_elements/Coop.png
 content/Cut/map_elements/blacksmith.png
 content/Cut/map_elements/bush.png
 content/Cut/map_elements/carpenters_shop.png
@@ -9052,6 +9054,7 @@ hs_err_pid16649.log
 hs_err_pid16999.log
 hs_err_pid17100.log
 hs_err_pid18094.log
+hs_err_pid18623.log
 hs_err_pid1872.log
 hs_err_pid19448.log
 hs_err_pid19717.log
@@ -9059,12 +9062,15 @@ hs_err_pid20014.log
 hs_err_pid20092.log
 hs_err_pid20206.log
 hs_err_pid2062.log
+hs_err_pid21005.log
 hs_err_pid21237.log
 hs_err_pid21653.log
 hs_err_pid21808.log
+hs_err_pid22041.log
 hs_err_pid22175.log
 hs_err_pid22364.log
 hs_err_pid22879.log
+hs_err_pid23839.log
 hs_err_pid23966.log
 hs_err_pid24030.log
 hs_err_pid24250.log
@@ -9072,12 +9078,14 @@ hs_err_pid24770.log
 hs_err_pid24835.log
 hs_err_pid26519.log
 hs_err_pid2704.log
+hs_err_pid27228.log
 hs_err_pid27316.log
 hs_err_pid27480.log
 hs_err_pid27481.log
 hs_err_pid28334.log
 hs_err_pid28595.log
 hs_err_pid28746.log
+hs_err_pid29045.log
 hs_err_pid29231.log
 hs_err_pid29252.log
 hs_err_pid29582.log
@@ -9086,6 +9094,7 @@ hs_err_pid3001.log
 hs_err_pid31014.log
 hs_err_pid31224.log
 hs_err_pid31321.log
+hs_err_pid31536.log
 hs_err_pid32084.log
 hs_err_pid32769.log
 hs_err_pid32780.log
@@ -9098,6 +9107,7 @@ hs_err_pid38299.log
 hs_err_pid38603.log
 hs_err_pid38716.log
 hs_err_pid38838.log
+hs_err_pid3961.log
 hs_err_pid40257.log
 hs_err_pid41557.log
 hs_err_pid4164.log
@@ -9114,6 +9124,7 @@ hs_err_pid4753.log
 hs_err_pid48027.log
 hs_err_pid49151.log
 hs_err_pid49723.log
+hs_err_pid5338.log
 hs_err_pid5359.log
 hs_err_pid5534.log
 hs_err_pid55758.log
@@ -9153,6 +9164,7 @@ hs_err_pid87526.log
 hs_err_pid88725.log
 hs_err_pid89139.log
 hs_err_pid89825.log
+hs_err_pid9027.log
 hs_err_pid90867.log
 hs_err_pid91515.log
 hs_err_pid91776.log
@@ -9169,6 +9181,14 @@ i18n/bundle.properties
 i18n/bundle_en.properties
 i18n/bundle_pl.properties
 music/theme.ogg
+skin/04B_30__.fnt
+skin/NzSkin.atlas
+skin/NzSkin.json
+skin/NzSkin.png
+skin/impact(1).fnt
+skin/impact(3).fnt
+skin/mac's Extended Minecraft Bold Italic.fnt
+skin/mac's Minecraft(1).fnt
 ui/templates/dialogs/controls.lml
 ui/templates/dialogs/edit.lml
 ui/templates/dialogs/inactive.lml

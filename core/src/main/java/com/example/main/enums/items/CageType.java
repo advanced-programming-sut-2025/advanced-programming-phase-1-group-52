@@ -4,9 +4,9 @@ public enum CageType implements ItemType {
     NormalCage("normal cage", 4),
     BigCage("big cage", 8),
     DeluxeCage("deluxe cage", 12),
-    NormalBarn("normal cage", 4),
-    BigBarn("big cage", 8),
-    DeluxeBarn("deluxe cage", 12);
+    NormalBarn("normal barn", 4),
+    BigBarn("big barn", 8),
+    DeluxeBarn("deluxe barn", 12);
 
     private final String name;
     private final int capacity;

@@ -48,6 +48,7 @@ import com.example.main.enums.design.NPCType;
 import com.example.main.enums.design.ShopType;
 import com.example.main.enums.design.TileType;
 import com.example.main.enums.design.Weather;
+import com.example.main.enums.items.CageType;
 import com.example.main.enums.items.CropType;
 import com.example.main.enums.items.ItemType;
 import com.example.main.enums.items.TreeType;
@@ -65,6 +66,7 @@ import com.example.main.models.Result;
 import com.example.main.models.Tile;
 import com.example.main.models.Time;
 import com.example.main.models.User;
+import com.example.main.models.building.Housing;
 import com.example.main.models.item.Crop;
 import com.example.main.models.item.Fruit;
 import com.example.main.models.item.Item;
@@ -125,6 +127,13 @@ public class GDXGameScreen implements Screen {
     private Table shopMenuTable;
     private ShopType currentShopType = null;
     private StoreMenuController shopController;
+    
+    // Building placement mode variables
+    private boolean isBuildingPlacementMode = false;
+    private String buildingToPlace = null;
+    private Texture buildingPlacementTexture = null;
+    private float buildingPlacementX = 0f;
+    private float buildingPlacementY = 0f;
     
     // Shop menu state management
     private enum ShopMenuState {
@@ -235,6 +244,9 @@ public class GDXGameScreen implements Screen {
     private Texture lake1Texture;
     private Texture lake2Texture;
     private Texture lake3Texture;
+
+    private Texture barnTexture;
+    private Texture coopTexture;
 
     private Texture maleIdleTexture;
     private Texture maleDown1Texture, maleDown2Texture;
@@ -521,6 +533,11 @@ public class GDXGameScreen implements Screen {
         renderHud();
         renderToolMenu(delta);
         renderInventoryOverlay(delta);
+        
+        // Render building placement preview
+        if (isBuildingPlacementMode && buildingPlacementTexture != null) {
+            renderBuildingPlacementPreview();
+        }
 
         stage.act(delta);
         stage.draw();
@@ -598,6 +615,9 @@ public class GDXGameScreen implements Screen {
         lake1Texture = new Texture("content/Cut/map_elements/lake1.png");
         lake2Texture = new Texture("content/Cut/map_elements/lake2.png");
         lake3Texture = new Texture("content/Cut/map_elements/lake3.png");
+
+        barnTexture = new Texture("content/Cut/map_elements/Barn.png");
+        coopTexture = new Texture("content/Cut/map_elements/Coop.png");
 
         maleIdleTexture = new Texture("content/Cut/player/male_idle.png");
         maleDown1Texture = new Texture("content/Cut/player/male_down1.png");
@@ -691,6 +711,14 @@ public class GDXGameScreen implements Screen {
         // If shop menu is open, only allow shop menu UI to handle input
         if (showShopMenu) {
             // Allow UI events (handled by scene2d stage) but block game input
+            return;
+        }
+        
+        // Handle building placement mode
+        if (isBuildingPlacementMode) {
+            handleBuildingPlacement();
+            // Allow camera zoom during placement mode
+            handleCameraMovement(delta);
             return;
         }
         // If trade menu is open, only allow trade menu UI
@@ -968,6 +996,84 @@ public class GDXGameScreen implements Screen {
         nKeyPressed = nKeyCurrentlyPressed;
     }
     
+    private void handleBuildingPlacement() {
+        // Update building placement position to follow cursor
+        float mouseX = Gdx.input.getX();
+        float mouseY = Gdx.input.getY();
+        
+        // Store screen coordinates for rendering
+        // Note: LibGDX Y coordinates are inverted (0 is at top, increases downward)
+        buildingPlacementX = mouseX;
+        buildingPlacementY = Gdx.graphics.getHeight() - mouseY;
+        
+        // Handle left click to place building
+        if (Gdx.input.isButtonJustPressed(Input.Buttons.LEFT)) {
+            // Convert screen coordinates to world coordinates for tile placement
+            Vector3 worldCoords = camera.unproject(new Vector3(mouseX, mouseY, 0));
+            // Convert world coordinates to tile coordinates
+            int tileX = (int) (worldCoords.x / TILE_SIZE);
+            int tileY = (int) ((MAP_HEIGHT * TILE_SIZE - worldCoords.y) / TILE_SIZE);
+            
+            // Call the buildBarnOrCoop method
+            Result result = shopController.buildBarnOrCoop(buildingToPlace, String.valueOf(tileX), String.valueOf(tileY));
+            
+            if (result.isSuccessful()) {
+                // Building placed successfully
+                generalMessageLabel.setText(result.Message());
+                generalMessageLabel.setColor(Color.GREEN);
+                generalMessageLabel.setVisible(true);
+                generalMessageTimer = GENERAL_MESSAGE_DURATION;
+                
+                // Exit building placement mode
+                isBuildingPlacementMode = false;
+                buildingToPlace = null;
+                buildingPlacementTexture = null;
+            } else {
+                // Building placement failed
+                generalMessageLabel.setText(result.Message());
+                generalMessageLabel.setColor(Color.RED);
+                generalMessageLabel.setVisible(true);
+                generalMessageTimer = GENERAL_MESSAGE_DURATION;
+            }
+        }
+        
+        // Handle right click to cancel placement
+        if (Gdx.input.isButtonJustPressed(Input.Buttons.RIGHT)) {
+            isBuildingPlacementMode = false;
+            buildingToPlace = null;
+            buildingPlacementTexture = null;
+            
+            generalMessageLabel.setText("Building placement cancelled");
+            generalMessageLabel.setColor(Color.YELLOW);
+            generalMessageLabel.setVisible(true);
+            generalMessageTimer = GENERAL_MESSAGE_DURATION;
+        }
+    }
+
+    private void renderBuildingPlacementPreview() {
+        if (buildingPlacementTexture == null) return;
+        
+        // Set up sprite batch for UI rendering
+        spriteBatch.setProjectionMatrix(hudCamera.combined);
+        spriteBatch.begin();
+        
+        // Draw the building preview with some transparency
+        spriteBatch.setColor(1f, 1f, 1f, 0.7f);
+        
+        // Draw the building texture directly at screen coordinates
+        float buildingWidth = buildingPlacementTexture.getWidth() * 2f;
+        float buildingHeight = buildingPlacementTexture.getHeight() * 2f;
+        // Position the building slightly offset from the cursor so it doesn't cover it completely
+        spriteBatch.draw(buildingPlacementTexture, buildingPlacementX + 10, buildingPlacementY - buildingHeight + 10, buildingWidth, buildingHeight);
+        
+        // Reset color
+        spriteBatch.setColor(1f, 1f, 1f, 1f);
+        spriteBatch.end();
+        
+        // Reset projection matrix for world rendering
+        spriteBatch.setProjectionMatrix(camera.combined);
+    }
+
     private void handleShopInteraction() {
         // Check for mouse click
         if (Gdx.input.isButtonJustPressed(Input.Buttons.LEFT)) {
@@ -1119,7 +1225,7 @@ public class GDXGameScreen implements Screen {
                         float worldY = (MAP_HEIGHT - 1 - y) * TILE_SIZE;
                         renderHouseSprite(x, y, worldX, worldY);
                         
-                        // Also check if this Wall tile belongs to an NPC house area or shop area
+                        // Also check if this Wall tile belongs to an NPC house area, shop area, or housing area
                         if (tileType == TileType.Wall) {
                             // Only render NPC house if this wall belongs to an NPC house area
                             int npcIndex = getNPCIndexForHouse(x, y);
@@ -1131,6 +1237,12 @@ public class GDXGameScreen implements Screen {
                             int shopIndex = getShopIndex(x, y);
                             if (shopIndex != -1) {
                                 renderShopSprite(x, y, worldX, worldY);
+                            }
+                            
+                            // Only render housing if this wall belongs to a housing area
+                            int housingIndex = getHousingIndex(x, y);
+                            if (housingIndex != -1) {
+                                renderHousingSprite(x, y, worldX, worldY);
                             }
                         }
                     } else if (tileType == TileType.NPCHouse) {
@@ -2178,6 +2290,37 @@ public class GDXGameScreen implements Screen {
         spriteBatch.draw(shopTexture, shopX, shopY, shopWidth, shopHeight);
     }
 
+    private void renderHousingSprite(int tileX, int tileY, float worldX, float worldY) {
+        Player currentPlayer = game.getCurrentPlayer();
+        if (currentPlayer == null) return;
+        
+        for (Housing housing : currentPlayer.getHousings()) {
+            if (housing.getX() == tileX && housing.getY() == tileY) {
+                CageType cageType = housing.getType();
+                String typeName = cageType.getName().toLowerCase();
+                Texture housingTexture;
+                int buildingWidthTiles, buildingHeightTiles;
+                if (typeName.contains("barn")) {
+                    housingTexture = barnTexture;
+                    buildingWidthTiles = 7;
+                    buildingHeightTiles = 8;
+                } else if (typeName.contains("cage")) {
+                    housingTexture = coopTexture;
+                    buildingWidthTiles = 6;
+                    buildingHeightTiles = 8;
+                } else {
+                    housingTexture = barnTexture; // Default fallback
+                    buildingWidthTiles = 7;
+                    buildingHeightTiles = 8;
+                }
+                float buildingWidth = buildingWidthTiles * TILE_SIZE;
+                float buildingHeight = buildingHeightTiles * TILE_SIZE;
+                spriteBatch.draw(housingTexture, worldX, worldY - buildingHeight + TILE_SIZE, buildingWidth, buildingHeight);
+                return;
+            }
+        }
+    }
+
     private int getPlayerIndexForHouse(int x, int y) {
         for (int i = 0; i < HOUSE_AREAS.length; i++) {
             int[] area = HOUSE_AREAS[i];
@@ -2202,6 +2345,38 @@ public class GDXGameScreen implements Screen {
         for (int i = 0; i < SHOP_AREAS.length; i++) {
             int[] area = SHOP_AREAS[i];
             if (x >= area[0] && x <= area[1] && y >= area[2] && y <= area[3]) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    private int getHousingIndex(int x, int y) {
+        Player currentPlayer = game.getCurrentPlayer();
+        if (currentPlayer == null) return -1;
+        
+        List<Housing> housings = currentPlayer.getHousings();
+        for (int i = 0; i < housings.size(); i++) {
+            Housing housing = housings.get(i);
+            CageType cageType = housing.getType();
+            
+            // Determine building dimensions based on cage type
+            int buildingWidth, buildingHeight;
+            if (cageType.getName().toLowerCase().contains("barn")) {
+                // Barns are 7x4 tiles
+                buildingWidth = 7;
+                buildingHeight = 4;
+            } else {
+                // Coops are 6x3 tiles
+                buildingWidth = 6;
+                buildingHeight = 3;
+            }
+            
+            // Check if the given coordinates are within this housing area
+            int housingX = housing.getX();
+            int housingY = housing.getY();
+            if (x >= housingX && x <= housingX + buildingWidth && 
+                y >= housingY && y <= housingY + buildingHeight) {
                 return i;
             }
         }
@@ -3168,6 +3343,9 @@ public class GDXGameScreen implements Screen {
         lake2Texture.dispose();
         lake3Texture.dispose();
 
+        barnTexture.dispose();
+        coopTexture.dispose();
+
         maleIdleTexture.dispose();
         maleDown1Texture.dispose();
         maleDown2Texture.dispose();
@@ -3429,10 +3607,39 @@ public class GDXGameScreen implements Screen {
                         try {
                             int amount = Integer.parseInt(amountField.getText());
                             if (amount > 0) {
-                                Result purchaseResult = shopController.purchase(productName, String.valueOf(amount));
-                                shopResultMessage = purchaseResult.Message();
-                                shopResultSuccess = purchaseResult.isSuccessful();
-                                createShopMenuUI(); // Refresh the menu to show result
+                                // Check if this is a barn or coop purchase
+                                if (currentShopType == ShopType.CarpentersShop && 
+                                    (productName.contains("Barn") || productName.contains("Coop"))) {
+                                    // Handle barn/coop purchase - enter building placement mode
+                                    isBuildingPlacementMode = true;
+                                    buildingToPlace = productName;
+                                    
+                                    // Set the appropriate texture based on the building type
+                                    if (productName.contains("Barn")) {
+                                        buildingPlacementTexture = barnTexture;
+                                    } else if (productName.contains("Coop")) {
+                                        buildingPlacementTexture = coopTexture;
+                                    }
+                                    
+                                    // Close the shop menu
+                                    showShopMenu = false;
+                                    if (shopMenuTable != null) {
+                                        shopMenuTable.remove();
+                                        shopMenuTable = null;
+                                    }
+                                    
+                                    // Show placement instructions
+                                    generalMessageLabel.setText("Click where you want to place the " + productName + ". Right-click to cancel.");
+                                    generalMessageLabel.setColor(Color.CYAN);
+                                    generalMessageLabel.setVisible(true);
+                                    generalMessageTimer = GENERAL_MESSAGE_DURATION;
+                                } else {
+                                    // Handle normal purchase
+                                    Result purchaseResult = shopController.purchase(productName, String.valueOf(amount));
+                                    shopResultMessage = purchaseResult.Message();
+                                    shopResultSuccess = purchaseResult.isSuccessful();
+                                    createShopMenuUI(); // Refresh the menu to show result
+                                }
                             }
                         } catch (NumberFormatException e) {
                             shopResultMessage = "Invalid amount!";
