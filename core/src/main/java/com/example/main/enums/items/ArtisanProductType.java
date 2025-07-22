@@ -18,7 +18,7 @@ public enum ArtisanProductType implements ItemType {
     DINOSAUR_MAYONNAISE(CraftingMachineType.Mayonnaise_Machine,"dinosaur Mayonnaise", "It's thick and creamy, with a vivid green hue. It smells like grass and leather.", 125, 3, Map.of(AnimalProductType.Dinosaur_Egg, 1), 800),
 
     // Beverages
-    BEER(CraftingMachineType.Keg,"Beer", "Drink in moderation.", 50, 24, Map.of(MaterialType.Wheat, 1), 200),
+    BEER(CraftingMachineType.Keg,"Beer", "Drink in moderation.", 50, 24, Map.of(CropType.Wheat, 1), 200),
     VINEGAR(CraftingMachineType.Keg,"Vinegar", "An aged fermented liquid used in many cooking recipes.", 13, 10, Map.of(MaterialType.Rice,1), 100),
     COFFEE(CraftingMachineType.Keg,"Coffee", "It smells delicious. This is sure to give you a boost.", 75, 2, Map.of(ForagingSeedType.Coffee_Bean, 5), 150),
     CARROT_JUICE(CraftingMachineType.Keg,"carrot juice", "A sweet, nutritious beverage.", -1, 96, Map.of(CropType.Carrot, 1), 80), // Uses multiplier

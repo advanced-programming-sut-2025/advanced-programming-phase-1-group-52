@@ -48,10 +48,7 @@ import com.example.main.enums.design.NPCType;
 import com.example.main.enums.design.ShopType;
 import com.example.main.enums.design.TileType;
 import com.example.main.enums.design.Weather;
-import com.example.main.enums.items.CraftingRecipes;
-import com.example.main.enums.items.CropType;
-import com.example.main.enums.items.ItemType;
-import com.example.main.enums.items.TreeType;
+import com.example.main.enums.items.*;
 import com.example.main.enums.player.Skills;
 import com.example.main.models.App;
 import com.example.main.models.Date;
@@ -207,6 +204,12 @@ public class GDXGameScreen implements Screen {
     private boolean isCraftingMenuOpen = false;
     private Stage craftingStage;
     private Table craftingMenuContentTable;
+
+    // Cooking Menu Fields
+    private boolean isCookingMenuOpen = false;
+    private Stage cookingStage;
+    private Table cookingMenuContentTable;
+    private Table fridgeContentTable;
 
     private Texture ground1Texture;
     private Texture ground2Texture;
@@ -443,6 +446,7 @@ public class GDXGameScreen implements Screen {
         stoneVariantMap = new int[MAP_WIDTH][MAP_HEIGHT];
         waterVariantMap = new int[MAP_WIDTH][MAP_HEIGHT];
         craftingStage = new Stage(new ScreenViewport());
+        cookingStage = new Stage(new ScreenViewport());
 
         textureManager = new TextureManager();
         textureManager.loadAllItemTextures();
@@ -464,6 +468,7 @@ public class GDXGameScreen implements Screen {
         setupCheatMenuUI();
         setupPlantingUI();
         setupCraftingUI();
+        setupCookingUI();
 
         crowAnimations = new ArrayList<>();
 
@@ -473,6 +478,7 @@ public class GDXGameScreen implements Screen {
         multiplexer.addProcessor(toolMenuStage);
         multiplexer.addProcessor(cheatMenuStage);
         multiplexer.addProcessor(craftingStage);
+        multiplexer.addProcessor(cookingStage);
         plantableItems = new ArrayList<>();
         Gdx.input.setInputProcessor(multiplexer);
     }
@@ -567,6 +573,7 @@ public class GDXGameScreen implements Screen {
         renderInventoryOverlay(delta);
         renderCrowAnimations(delta);
         renderCraftingMenu(delta);
+        renderCookingMenu(delta);
 
         stage.act(delta);
         stage.draw();
@@ -774,6 +781,7 @@ public class GDXGameScreen implements Screen {
         if (showTradeMenu) {
             return;
         }
+
         // If NPC menu is open, only allow NPC menu UI
         if (showNPCMenu) {
             // Allow ESC key to close NPC menu
@@ -788,7 +796,6 @@ public class GDXGameScreen implements Screen {
             return;
         }
         //handleTradeMenuToggle();
-        // Only handle game input if trade menu and shop menu are not showing
         com.badlogic.gdx.math.Vector3 mouseInWorld = camera.unproject(new com.badlogic.gdx.math.Vector3(Gdx.input.getX(), Gdx.input.getY(), 0));
         int targetTileX = (int) (mouseInWorld.x / TILE_SIZE);
         int targetTileY = MAP_HEIGHT - 1 - (int) (mouseInWorld.y / TILE_SIZE);
@@ -819,7 +826,7 @@ public class GDXGameScreen implements Screen {
             }
         }
 
-        if (Gdx.input.isKeyJustPressed(Input.Keys.C)) {
+        if (Gdx.input.isKeyJustPressed(Input.Keys.F2)) {
             isCheatMenuOpen = !isCheatMenuOpen;
             if(isCheatMenuOpen) {
                 Gdx.input.setInputProcessor(cheatMenuStage);
@@ -838,7 +845,25 @@ public class GDXGameScreen implements Screen {
             }
         }
 
-        if (isInventoryOpen || isToolMenuOpen || isCheatMenuOpen || isPlantingSelectionOpen || isCraftingMenuOpen) {
+        if (Gdx.input.isKeyJustPressed(Input.Keys.C)) {
+            Player currentPlayer = game.getCurrentPlayer();
+            Tile currentTile = gameMap.getTile(currentPlayer.currentX(), currentPlayer.currentY());
+            if (currentTile.getType() == TileType.House) {
+                isCookingMenuOpen = !isCookingMenuOpen;
+                if (isCookingMenuOpen) {
+                    showCookingMenu();
+                    Gdx.input.setInputProcessor(cookingStage);
+                } else {
+                    Gdx.input.setInputProcessor(multiplexer);
+                }
+            } else {
+                generalMessageLabel.setText("You can only cook in your house!");
+                generalMessageLabel.setVisible(true);
+                generalMessageTimer = GENERAL_MESSAGE_DURATION;
+            }
+        }
+
+        if (isInventoryOpen || isToolMenuOpen || isCheatMenuOpen || isPlantingSelectionOpen || isCraftingMenuOpen || isCookingMenuOpen) {
             return;
         }
 
@@ -2767,6 +2792,126 @@ public class GDXGameScreen implements Screen {
         if (!isCraftingMenuOpen) return;
         craftingStage.act(delta);
         craftingStage.draw();
+    }
+
+    // In main/GDXviews/GDXGameScreen.java
+
+    private void setupCookingUI() {
+        Table mainCookingContainer = new Table();
+        mainCookingContainer.setFillParent(true);
+        mainCookingContainer.center();
+        cookingStage.addActor(mainCookingContainer);
+
+        Table background = new Table(skin);
+        background.setBackground(new TextureRegionDrawable(new TextureRegion(inventoryBackground)));
+        mainCookingContainer.add(background).width(Gdx.graphics.getWidth() * 0.8f).height(Gdx.graphics.getHeight() * 0.85f);
+
+        Table contentSplit = new Table();
+        background.add(contentSplit).expand().fill().pad(15);
+
+        Table leftPanel = new Table();
+        leftPanel.top();
+        leftPanel.add(new Label("Recipes", skin)).padBottom(10).row(); // CORRECTED
+        cookingMenuContentTable = new Table();
+        ScrollPane recipeScrollPane = new ScrollPane(cookingMenuContentTable, skin);
+        recipeScrollPane.setFadeScrollBars(false);
+        leftPanel.add(recipeScrollPane).expand().fill();
+
+        Table rightPanel = new Table();
+        rightPanel.top();
+        rightPanel.add(new Label("Refrigerator", skin)).padBottom(10).row(); // CORRECTED
+        fridgeContentTable = new Table();
+        ScrollPane fridgeScrollPane = new ScrollPane(fridgeContentTable, skin);
+        fridgeScrollPane.setFadeScrollBars(false);
+        rightPanel.add(fridgeScrollPane).expand().fill();
+
+        contentSplit.add(leftPanel).expand().fill();
+        Image separator = new Image(skin.newDrawable("white", Color.GRAY));
+        contentSplit.add(separator).width(2).fillY().pad(0, 10, 0, 10);
+        contentSplit.add(rightPanel).width(250);
+    }
+
+    private void showCookingMenu() {
+        Player currentPlayer = game.getCurrentPlayer();
+        if (currentPlayer == null) return;
+
+        // --- Populate Recipe List ---
+        cookingMenuContentTable.clear();
+        cookingMenuContentTable.top();
+        ArrayList<CookingRecipe> knownRecipes = currentPlayer.getCookingRecipe();
+
+        for (CookingRecipeType recipeEnum : CookingRecipeType.values()) {
+            boolean isKnown = knownRecipes.stream().anyMatch(kr -> kr.getRecipeType() == recipeEnum);
+
+            Table recipeRow = new Table();
+            recipeRow.pad(5).left();
+
+            Texture recipeTexture = textureManager.getTexture(recipeEnum.getEnumName());
+            Image recipeImage = recipeTexture != null ? new Image(recipeTexture) : new Image(skin.getDrawable("default-round"));
+            Label recipeLabel = new Label(recipeEnum.getFoodType().getName(), skin);
+
+            if (isKnown) {
+                TextButton cookButton = new TextButton("Cook", skin);
+
+                // Check ingredients from both inventory and fridge
+                boolean canCook = true;
+                Map<ItemType, Integer> totalIngredients = new HashMap<>();
+                currentPlayer.getInventory().getItems().forEach(item -> totalIngredients.merge(item.getItemType(), item.getNumber(), Integer::sum));
+                currentPlayer.getHouseRefrigerator().getItems().forEach(item -> totalIngredients.merge(item.getItemType(), item.getNumber(), Integer::sum));
+
+                for (Map.Entry<ItemType, Integer> entry : recipeEnum.getIngredients().entrySet()) {
+                    if (totalIngredients.getOrDefault(entry.getKey(), 0) < entry.getValue()) {
+                        canCook = false;
+                        break;
+                    }
+                }
+                cookButton.setDisabled(!canCook);
+
+                cookButton.addListener(new ClickListener() {
+                    @Override
+                    public void clicked(InputEvent event, float x, float y) {
+                        Result result = controller.cookFood(recipeEnum.getDisplayName());
+                        showCookingMenu(); // Refresh the whole menu
+                        generalMessageLabel.setText(result.Message());
+                        generalMessageLabel.setVisible(true);
+                        generalMessageTimer = GENERAL_MESSAGE_DURATION;
+                    }
+                });
+
+                recipeRow.add(recipeImage).size(32, 32).padRight(10);
+                recipeRow.add(recipeLabel).width(150).left();
+                recipeRow.add(cookButton).width(80);
+
+            } else {
+                recipeImage.setColor(Color.BLACK);
+                recipeLabel.setColor(Color.GRAY);
+                recipeRow.add(recipeImage).size(32, 32).padRight(10);
+                recipeRow.add(recipeLabel).width(150).left();
+                recipeRow.add(new Label("[Locked]", skin)).width(80);
+            }
+            cookingMenuContentTable.add(recipeRow).fillX().row();
+        }
+
+        // --- Populate Refrigerator List ---
+        fridgeContentTable.clear();
+        fridgeContentTable.top();
+        for (Item item : currentPlayer.getHouseRefrigerator().getItems()) {
+            Table itemRow = new Table();
+            itemRow.left();
+            Texture itemTexture = textureManager.getTexture(item.getItemType().getEnumName());
+            Image itemImage = itemTexture != null ? new Image(itemTexture) : new Image(skin.getDrawable("default-round"));
+            Label itemLabel = new Label(item.getName() + " (" + item.getNumber() + ")", skin);
+
+            itemRow.add(itemImage).size(24, 24).padRight(8);
+            itemRow.add(itemLabel).expandX().left();
+            fridgeContentTable.add(itemRow).pad(4).fillX().row();
+        }
+    }
+
+    private void renderCookingMenu(float delta) {
+        if (!isCookingMenuOpen) return;
+        cookingStage.act(delta);
+        cookingStage.draw();
     }
 
     public void triggerCrowAttackAnimation() {

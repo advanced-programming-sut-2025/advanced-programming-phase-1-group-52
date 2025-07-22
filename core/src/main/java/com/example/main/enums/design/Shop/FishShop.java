@@ -8,17 +8,17 @@ import com.example.main.enums.items.ToolType;
 
 public enum FishShop implements ShopEntry{
 
-    FishSmokerRecipe(CraftingRecipes.FishSmokerRecipe, "Fish Smoker (Recipe)",
+    FishSmokerRecipe_Product(CraftingRecipes.FishSmokerRecipe, "Fish Smoker (Recipe)",
             "A recipe to make Fish Smoker", 10000, -1, 1),
-    TroutSoup(MaterialType.Trout_Soup,  "Trout Soup",
+    Trout_Soup_Product(MaterialType.Trout_Soup,  "Trout Soup",
             "Pretty salty.", 250, -1, 1),
-    BambooPole(ToolType.Bamboo_Pole, "Bamboo Pole",
+    Bamboo_Pole_Product(ToolType.Bamboo_Pole, "Bamboo Pole",
             "Use in the water to catch fish.", 500, -1, 1),
-    TrainingRod(ToolType.Training_Rod, "Training Rod",
+    Training_Rod_Product(ToolType.Training_Rod, "Training Rod",
             "It's a lot easier to use than other rods, but can only catch basic fish.", 25, -1, 1),
-    FiberglassRod(ToolType.Fiberglass_Rod, "Fiberglass Rod",
+    Fiberglass_Rod_Product(ToolType.Fiberglass_Rod, "Fiberglass Rod",
             "Use in the water to catch fish.", 1800, 2, 1),
-    IridiumRod(ToolType.Iridium_Rod, "Iridium Rod",
+    Iridium_Rod_Product(ToolType.Iridium_Rod, "Iridium Rod",
             "Use in the water to catch fish.", 7500, 4, 1);
 
 
