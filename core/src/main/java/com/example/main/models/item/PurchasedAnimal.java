@@ -149,7 +149,7 @@ public class PurchasedAnimal {
     public double sellingPrice () {
         MarniesRanch shopEntry = MarniesRanch.forAnimal(this.type);
         int basePrice = shopEntry.getPrice();
-        return basePrice * ((friendshipPoints/1000.0) + 0/3.0);
+        return basePrice * ((friendshipPoints/1000.0) + 0.3) * getPriceMultiplier();
     }
 
     public AnimalType getType() {
@@ -186,7 +186,8 @@ public class PurchasedAnimal {
 
     @Override
     public String toString() {
-        return this.name + ":\nType: " + this.type + "\nFriendship points: " + this.friendshipPoints + 
+        return this.name + "\n-----------------\nType: " + this.type + 
+        "\nFriendship points: " + this.friendshipPoints + 
         "\nis Full: " + this.isFull + "\nin Housing: " + 
         this.isInCage + "\nCollected: " + this.productCollected + "\n";
     }

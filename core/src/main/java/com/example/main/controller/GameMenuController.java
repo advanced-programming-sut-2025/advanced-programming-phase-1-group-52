@@ -54,6 +54,7 @@ import com.example.main.models.Tree;
 import com.example.main.models.User;
 import com.example.main.models.building.House;
 import com.example.main.models.building.Housing;
+import com.example.main.models.item.AnimalProduct;
 import com.example.main.models.item.CookingRecipe;
 import com.example.main.models.item.CraftingMachine;
 import com.example.main.models.item.CraftingRecipe;
@@ -2344,7 +2345,7 @@ public class GameMenuController {
         }
 
         h.removeAnimal(animal);
-        game.getCurrentPlayer().getBankAccount().deposit((int) (animal.getType().getPrice() * (animal.getFriendshipPoints() / 1000 + 0.3)));
+        game.getCurrentPlayer().getBankAccount().deposit((int) animal.sellingPrice());
         return new Result(true, "Animal sold!");
     }
 
@@ -2759,5 +2760,78 @@ public class GameMenuController {
         }
 
         return new Result(false, "The fruit isn't ripe yet.");
+    }
+
+    public Result collectAnimalProduct(String animalName) {
+        PurchasedAnimal animal = null;
+        for (Housing housing : game.getCurrentPlayer().getHousings()) {
+            for (PurchasedAnimal purchasedAnimal : housing.getOccupants()) {
+                if (purchasedAnimal.getName().equals(animalName)) animal = purchasedAnimal;
+            }
+        }
+
+        if (animal == null) {
+            return new Result(false, "Invalid animal name!");
+        }
+
+        if (!isPlayerNearSomething(animal.getX(), animal.getY())) {
+            return new Result(false, "You are not near the animal!");
+        }
+
+        if (!animal.getWasFull()) {
+            return new Result(false, "The animal was not fed and cannot produce products!");
+        }
+
+        if (animal.getCollected()) {
+            return new Result(false, "You have already collected products from this animal today!");
+        }
+
+        animal.setCollected(true);
+
+        if (animal.getProducedProductType()) {
+            AnimalProductType firstProduct = animal.getType().getProducts().get(0);
+            AnimalProductType secondProduct = animal.getType().getProducts().get(1);
+
+            AnimalProduct firstProductInstance = new AnimalProduct(firstProduct, 1);
+            AnimalProduct secondProductInstance = new AnimalProduct(secondProduct, 1);
+
+            game.getCurrentPlayer().getInventory().addItem(firstProductInstance);
+            game.getCurrentPlayer().getInventory().addItem(secondProductInstance);
+
+            return new Result(true, "You collected " + firstProductInstance.getName() + " and " + secondProductInstance.getName() + " from " + animalName + "!");
+        }
+
+        AnimalProductType firstProduct = animal.getType().getProducts().get(0);
+        AnimalProduct firstProductInstance = new AnimalProduct(firstProduct, 1);
+        game.getCurrentPlayer().getInventory().addItem(firstProductInstance);
+
+        return new Result(true, "You collected " + firstProductInstance.getName() + " from " + animalName + "!");
+    }
+
+    public Result showCollectableProducts(String animalName) {
+        PurchasedAnimal animal = null;
+        for (Housing housing : game.getCurrentPlayer().getHousings()) {
+            for (PurchasedAnimal purchasedAnimal : housing.getOccupants()) {
+                if (purchasedAnimal.getName().equals(animalName)) animal = purchasedAnimal;
+            }
+        }
+
+        if (animal == null) {
+            return new Result(false, "Invalid animal name!");
+        }
+
+        if (!animal.getWasFull()) {
+            return new Result(false, "The animal was not fed and cannot produce products!");
+        }
+
+        if (animal.getCollected()) {
+            return new Result(false, "You have already collected products from this animal today!");
+        }
+
+        if (animal.getProducedProductType()) {
+            return new Result(true, "You can collect\n" + animal.getType().getProducts().get(0).getName() + "\n" + animal.getType().getProducts().get(1).getName() + "\nfrom " + animalName + "!");
+        }
+
+        return new Result(true, "You can collect\n" + animal.getType().getProducts().get(0).getName() + "\nfrom " + animalName + "!");
     }
 }

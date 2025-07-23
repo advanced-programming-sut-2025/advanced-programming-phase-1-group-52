@@ -9026,6 +9026,7 @@ content/weather/snow.png
 content/weather/snow.png-autosave.kra
 hs_err_pid100131.log
 hs_err_pid101187.log
+hs_err_pid101545.log
 hs_err_pid102893.log
 hs_err_pid103945.log
 hs_err_pid104060.log

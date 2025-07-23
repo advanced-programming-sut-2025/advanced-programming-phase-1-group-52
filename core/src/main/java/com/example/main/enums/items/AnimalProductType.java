@@ -8,7 +8,7 @@ public enum AnimalProductType implements ItemType {
     Duck_Egg("DuckEgg",95),
     Duck_Feather("DuckFeather",250),
     Wool("RabbitWool",340),
-    Rabbit_Foot("RabbitLeg",565), // Renamed for clarity
+    Rabbit_Foot("RabbitLeg",565),
     Dinosaur_Egg("DinosaurEgg",350),
     Milk("NormalCowMilk",125),
     Large_Milk("LargeCowMilk",190),

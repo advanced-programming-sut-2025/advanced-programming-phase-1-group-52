@@ -10,11 +10,12 @@ import com.example.main.enums.design.TileType;
 import com.example.main.enums.design.Weather;
 import com.example.main.enums.items.CropType;
 import com.example.main.enums.items.Growable;
-import com.example.main.enums.items.TreeType;
+import com.example.main.models.building.Housing;
 import com.example.main.models.item.Crop;
 import com.example.main.models.item.Fruit;
 import com.example.main.models.item.Good;
 import com.example.main.models.item.Item;
+import com.example.main.models.item.PurchasedAnimal;
 
 public class Game {
     private int daysPassed = 0;
@@ -92,6 +93,7 @@ public class Game {
         checkForLightning();
         crowsAttack();
         handleFardaei();
+        handleAnimalProducts();
     }
 
     public int getDaysPassed() {
@@ -499,6 +501,25 @@ public class Game {
                 }
                 else{
                     good.setTimePassed(good.getTimePassed() + 1);
+                }
+            }
+        }
+    }
+
+    public void handleAnimalProducts() {
+        for (User user : this.players) {
+            Player player = user.getPlayer();
+            for (Housing housing : player.getHousings()) {
+                for (PurchasedAnimal animal : housing.getOccupants()) {
+                    if (animal.isFull()) {
+                        animal.setFull(false);
+                        animal.setWasFull(true);
+                    }
+                    else {
+                        animal.setWasFull(false);
+                    }
+
+                    animal.setCollected(false);
                 }
             }
         }

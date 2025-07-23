@@ -9,21 +9,88 @@ public enum AnimalType implements ItemType{
             products.add(AnimalProductType.Large_Egg);
         }
     },
-    Blue_Chicken("Blue Chicken", 800, true),
-    Brown_Chicken("Brown Chicken", 800, true),
-    Golden_Chicken("Golden Chicken", 100000, true),
-    Void_Chicken("Void Chicken", 8000, true),
-    Duck("Duck", 1200, true),
-    Rabbit("Rabbit", 8000, true),
-    Dinosaur("Dinosaur", 10000, false),
+    Blue_Chicken("Blue Chicken", 800, true) {
+        {
+            products.add(AnimalProductType.Egg);
+            products.add(AnimalProductType.Large_Egg);
+        }
+    },
+    Brown_Chicken("Brown Chicken", 800, true) {
+        {
+            products.add(AnimalProductType.Egg);
+            products.add(AnimalProductType.Large_Egg);
+        }
+    },
+    Golden_Chicken("Golden Chicken", 100000, true) {
+        {
+            products.add(AnimalProductType.Egg);
+            products.add(AnimalProductType.Large_Egg);
+        }
+    },
+    Void_Chicken("Void Chicken", 8000, true) {
+        {
+            products.add(AnimalProductType.Egg);
+            products.add(AnimalProductType.Large_Egg);
+        }
+    },
+    Duck("Duck", 1200, true) {
+        {
+            products.add(AnimalProductType.Duck_Egg);
+            products.add(AnimalProductType.Duck_Feather);
+        }
+    },
+    Rabbit("Rabbit", 8000, true) {
+        {
+            products.add(AnimalProductType.Wool);
+            products.add(AnimalProductType.Rabbit_Foot);
+        }
+    },
+    Dinosaur("Dinosaur", 10000, false) {
+        {
+            products.add(AnimalProductType.Dinosaur_Egg);
+            products.add(AnimalProductType.Golden_Egg);
+        }
+    },
 
-    Cow("Cow",5000, false),
-    Brown_Cow("Brown Cow", 5000, false),
-    White_Cow("White Cow", 5000, false),
-    Goat("Goat",4000, false),
-    Sheep("Sheep",8000, false),
-    Pig("Pig",16000, false),
-    Ostrich("Ostrich", 20000, false);
+    Cow("Cow",5000, false) {
+        {
+            products.add(AnimalProductType.Milk);
+            products.add(AnimalProductType.Large_Milk);
+        }
+    },
+    Brown_Cow("Brown Cow", 5000, false) {
+        {
+            products.add(AnimalProductType.Milk);
+            products.add(AnimalProductType.Large_Milk);
+        }
+    },
+    White_Cow("White Cow", 5000, false) {
+        {
+            products.add(AnimalProductType.Milk);
+            products.add(AnimalProductType.Large_Milk);
+        }
+    },
+    Goat("Goat",4000, false) {
+        {
+            products.add(AnimalProductType.Goat_Milk);
+            products.add(AnimalProductType.Large_Goat_Milk);
+        }
+    },
+    Sheep("Sheep",8000, false) {
+        {
+            products.add(AnimalProductType.Wool);
+        }
+    },
+    Pig("Pig",16000, false) {
+        {
+            products.add(AnimalProductType.Truffle);
+        }
+    },
+    Ostrich("Ostrich", 20000, false) {
+        {
+            products.add(AnimalProductType.Ostrich_Egg);
+        }
+    };
 
 
     protected final ArrayList<AnimalProductType> products = new ArrayList<>();
@@ -39,7 +106,7 @@ public enum AnimalType implements ItemType{
 
 
     public ArrayList<AnimalProductType> getProducts() {
-        return new ArrayList<>(products); // Return defensive copy
+        return new ArrayList<>(products);
     }
 
     public int getPrice() {

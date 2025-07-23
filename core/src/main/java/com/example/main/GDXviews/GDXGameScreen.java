@@ -4708,6 +4708,13 @@ public class GDXGameScreen implements Screen {
             }
         });
 
+        collectBtn.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                showAnimalCollectPage();
+            }
+        });
+
         closeBtn.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
@@ -4746,6 +4753,88 @@ public class GDXGameScreen implements Screen {
         infoLabel.setAlignment(Align.topLeft);
         infoLabel.setWrap(true);
         animalMenuTable.add(infoLabel).expandX().fillX().row();
+
+        Table buttonRow = new Table();
+        TextButton backBtn = new TextButton("Back", skin);
+        TextButton closeBtn = new TextButton("Close", skin);
+        buttonRow.add(backBtn).width(120).padRight(20);
+        buttonRow.add(closeBtn).width(120);
+        animalMenuTable.add(buttonRow).padTop(20).center().row();
+
+        backBtn.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                createAnimalMenuUI();
+            }
+        });
+        closeBtn.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                showAnimalMenu = false;
+                selectedAnimal = null;
+                if (animalMenuTable != null) {
+                    animalMenuTable.remove();
+                    animalMenuTable = null;
+                }
+            }
+        });
+
+        stage.addActor(animalMenuTable);
+        stage.setKeyboardFocus(animalMenuTable);
+        stage.setScrollFocus(animalMenuTable);
+    }
+    
+    private void showAnimalCollectPage() {
+        if (animalMenuTable != null) {
+            animalMenuTable.remove();
+            animalMenuTable = null;
+        }
+        animalMenuTable = new Table();
+        animalMenuTable.setBackground(new TextureRegionDrawable(menuBackgroundTexture));
+        animalMenuTable.setSize(600, 400);
+        animalMenuTable.setPosition(Gdx.graphics.getWidth() / 2f - 300, Gdx.graphics.getHeight() / 2f - 200);
+        animalMenuTable.pad(20);
+        animalMenuTable.defaults().pad(10).width(250);
+
+        Label title = new Label(selectedAnimal != null ? selectedAnimal.getName() + " - Collect" : "Animal Collect", skin);
+        title.setAlignment(Align.center);
+        animalMenuTable.add(title).center().row();
+
+        // Call the controller method to get collectable products
+        String collectResult = "";
+        boolean collectSuccess = false;
+        if (controller != null && selectedAnimal != null) {
+            Result result = controller.showCollectableProducts(selectedAnimal.getName());
+            collectResult = result.Message();
+            collectSuccess = result.isSuccessful();
+        }
+
+        // Display the result message
+        Label resultLabel = new Label(collectResult, skin);
+        resultLabel.setAlignment(Align.topLeft);
+        resultLabel.setWrap(true);
+        animalMenuTable.add(resultLabel).expandX().fillX().row();
+
+        // Add collect button if the result was successful
+        if (collectSuccess) {
+            TextButton collectProductBtn = new TextButton("Collect Product", skin);
+            animalMenuTable.add(collectProductBtn).row();
+            
+            collectProductBtn.addListener(new ClickListener() {
+                @Override
+                public void clicked(InputEvent event, float x, float y) {
+                    if (controller != null && selectedAnimal != null) {
+                        controller.collectAnimalProduct(selectedAnimal.getName());
+                    }
+                    showAnimalMenu = false;
+                    selectedAnimal = null;
+                    if (animalMenuTable != null) {
+                        animalMenuTable.remove();
+                        animalMenuTable = null;
+                    }
+                }
+            });
+        }
 
         Table buttonRow = new Table();
         TextButton backBtn = new TextButton("Back", skin);
