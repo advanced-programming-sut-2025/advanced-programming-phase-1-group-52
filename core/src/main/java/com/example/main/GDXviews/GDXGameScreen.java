@@ -22,18 +22,7 @@ import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
-import com.badlogic.gdx.scenes.scene2d.ui.HorizontalGroup;
-import com.badlogic.gdx.scenes.scene2d.ui.Image;
-import com.badlogic.gdx.scenes.scene2d.ui.Label;
-import com.badlogic.gdx.scenes.scene2d.ui.ProgressBar;
-import com.badlogic.gdx.scenes.scene2d.ui.ScrollPane;
-import com.badlogic.gdx.scenes.scene2d.ui.Skin;
-import com.badlogic.gdx.scenes.scene2d.ui.Stack;
-import com.badlogic.gdx.scenes.scene2d.ui.Table;
-import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
-import com.badlogic.gdx.scenes.scene2d.ui.TextField;
-import com.badlogic.gdx.scenes.scene2d.ui.Tooltip;
-import com.badlogic.gdx.scenes.scene2d.ui.TooltipManager;
+import com.badlogic.gdx.scenes.scene2d.ui.*;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
@@ -210,6 +199,29 @@ public class GDXGameScreen implements Screen {
     private Stage cookingStage;
     private Table cookingMenuContentTable;
     private Table fridgeContentTable;
+
+    // ADD THESE NEW FIELDS
+    private boolean isCraftingCheatMenuOpen = false;
+    private Stage craftingCheatMenuStage;
+    private TextField cheatCraftingRecipeField;
+
+    private boolean isCookingCheatMenuOpen = false;
+    private Stage cookingCheatMenuStage;
+    private TextField cheatCookingRecipeField;
+
+    // Eat Menu Fields
+    private boolean isEatMenuOpen = false;
+    private Stage eatMenuStage;
+    private ArrayList<Food> playerFoodItems;
+    private int selectedFoodIndex = 0;
+    private Image selectedFoodImage;
+    private Label selectedFoodLabel;
+
+    // Eating Animation Fields
+    private Texture eatingTexture;
+    private Image eatingAnimationImage;
+    private float eatingAnimationTimer = 0f;
+    private static final float EATING_ANIMATION_DURATION = 0.75f;
 
     private Texture ground1Texture;
     private Texture ground2Texture;
@@ -447,6 +459,9 @@ public class GDXGameScreen implements Screen {
         waterVariantMap = new int[MAP_WIDTH][MAP_HEIGHT];
         craftingStage = new Stage(new ScreenViewport());
         cookingStage = new Stage(new ScreenViewport());
+        craftingCheatMenuStage = new Stage(new ScreenViewport());
+        cookingCheatMenuStage = new Stage(new ScreenViewport());
+        eatMenuStage = new Stage(new ScreenViewport());
 
         textureManager = new TextureManager();
         textureManager.loadAllItemTextures();
@@ -469,8 +484,12 @@ public class GDXGameScreen implements Screen {
         setupPlantingUI();
         setupCraftingUI();
         setupCookingUI();
+        setupCraftingCheatMenuUI();
+        setupCookingCheatMenuUI();
+        setupEatMenuUI();
 
         crowAnimations = new ArrayList<>();
+        playerFoodItems = new ArrayList<>();
 
         multiplexer = new InputMultiplexer();
         multiplexer.addProcessor(stage);
@@ -479,6 +498,9 @@ public class GDXGameScreen implements Screen {
         multiplexer.addProcessor(cheatMenuStage);
         multiplexer.addProcessor(craftingStage);
         multiplexer.addProcessor(cookingStage);
+        multiplexer.addProcessor(cookingCheatMenuStage);
+        multiplexer.addProcessor(craftingCheatMenuStage);
+        multiplexer.addProcessor(eatMenuStage);
         plantableItems = new ArrayList<>();
         Gdx.input.setInputProcessor(multiplexer);
     }
@@ -502,6 +524,12 @@ public class GDXGameScreen implements Screen {
 
     @Override
     public void render(float delta) {
+        if (eatingAnimationTimer > 0) {
+            eatingAnimationTimer -= delta;
+            if (eatingAnimationTimer <= 0) {
+                eatingAnimationImage.setVisible(false);
+            }
+        }
 
         if (game.isCrowAttackHappened()) {
             triggerCrowAttackAnimation();
@@ -574,11 +602,12 @@ public class GDXGameScreen implements Screen {
         renderCrowAnimations(delta);
         renderCraftingMenu(delta);
         renderCookingMenu(delta);
+        renderCraftingCheatMenu(delta);
+        renderCookingCheatMenu(delta);
+        renderEatMenu(delta);
 
         stage.act(delta);
         stage.draw();
-
-        // Shop menu is handled by the stage, no need to recreate it every frame
     }
 
     private void initializePlayerPosition() {
@@ -630,7 +659,7 @@ public class GDXGameScreen implements Screen {
         iridiumStoneTexture = new Texture("content/Cut/map_elements/iridium_stone.png");
         jewelStoneTexture = new Texture("content/Cut/map_elements/jewel_stone.png");
         crowTexture = textureManager.getTexture("Crow");
-
+        eatingTexture = textureManager.getTexture("eating");
         try {
             blacksmithTexture = new Texture("content/Cut/map_elements/blacksmith.png");
             jojamartTexture = new Texture("content/Cut/map_elements/jojamart.png");
@@ -835,6 +864,24 @@ public class GDXGameScreen implements Screen {
             }
         }
 
+        if (Gdx.input.isKeyJustPressed(Input.Keys.F3)) {
+            isCraftingCheatMenuOpen = !isCraftingCheatMenuOpen;
+            if (isCraftingCheatMenuOpen) {
+                Gdx.input.setInputProcessor(craftingCheatMenuStage);
+            } else {
+                Gdx.input.setInputProcessor(multiplexer);
+            }
+        }
+
+        if (Gdx.input.isKeyJustPressed(Input.Keys.F4)) {
+            isCookingCheatMenuOpen = !isCookingCheatMenuOpen;
+            if (isCookingCheatMenuOpen) {
+                Gdx.input.setInputProcessor(cookingCheatMenuStage);
+            } else {
+                Gdx.input.setInputProcessor(multiplexer);
+            }
+        }
+
         if (Gdx.input.isKeyJustPressed(Input.Keys.B)) {
             isCraftingMenuOpen = !isCraftingMenuOpen;
             if (isCraftingMenuOpen) {
@@ -863,7 +910,18 @@ public class GDXGameScreen implements Screen {
             }
         }
 
-        if (isInventoryOpen || isToolMenuOpen || isCheatMenuOpen || isPlantingSelectionOpen || isCraftingMenuOpen || isCookingMenuOpen) {
+        if (Gdx.input.isKeyJustPressed(Input.Keys.SHIFT_LEFT) || Gdx.input.isKeyJustPressed(Input.Keys.SHIFT_RIGHT)) {
+            isEatMenuOpen = !isEatMenuOpen;
+            if (isEatMenuOpen) {
+                showEatMenu(); // Populate the menu
+                Gdx.input.setInputProcessor(eatMenuStage);
+            } else {
+                Gdx.input.setInputProcessor(multiplexer);
+            }
+        }
+
+        if (isInventoryOpen || isToolMenuOpen || isCheatMenuOpen || isPlantingSelectionOpen
+            || isCraftingMenuOpen || isCookingMenuOpen || isCraftingCheatMenuOpen || isCookingCheatMenuOpen || isEatMenuOpen) {
             return;
         }
 
@@ -1334,13 +1392,16 @@ public class GDXGameScreen implements Screen {
             if (!player.equals(game.getCurrentPlayer())) {
                 spriteBatch.setColor(1f, 1f, 1f, 0.7f);
             }
+            spriteBatch.draw(playerTexture, renderX, renderY, playerWidth, playerHeight);
+            if (player.equals(game.getCurrentPlayer()) && eatingAnimationTimer > 0) {
+                eatingAnimationImage.setVisible(true);
+                // Position the animation over the player's head
+                float animX = worldX + (TILE_SIZE / 2f) - (eatingAnimationImage.getWidth() / 2f);
+                float animY = worldY + TILE_SIZE; // Adjust Y as needed
+                eatingAnimationImage.setPosition(animX, animY);
+            }
+            spriteBatch.setColor(1f, 1f, 1f, 1f);
 
-                spriteBatch.draw(playerTexture, renderX, renderY, playerWidth, playerHeight);
-
-            // Reset color to default
-                spriteBatch.setColor(1f, 1f, 1f, 1f);
-
-            // If fainted, draw the "Z z Z" animation on top of the player
             if (player.isFainted()) {
                 hudFont.setColor(Color.WHITE);
                 float bobOffset = (float) (Math.sin(weatherStateTime * 4) * 5);
@@ -2823,7 +2884,23 @@ public class GDXGameScreen implements Screen {
         fridgeContentTable = new Table();
         ScrollPane fridgeScrollPane = new ScrollPane(fridgeContentTable, skin);
         fridgeScrollPane.setFadeScrollBars(false);
-        rightPanel.add(fridgeScrollPane).expand().fill();
+        rightPanel.add(fridgeScrollPane).expand().fill().row();
+
+        TextButton moveToFridgeButton = new TextButton("Move Food to Fridge", skin);
+        rightPanel.add(moveToFridgeButton).padTop(10).fillX();
+
+        moveToFridgeButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                Result result = controller.moveRandomFoodToRefrigerator();
+                showCookingMenu(); // Refresh the entire menu to show updated lists
+
+                // Show feedback message to the player
+                generalMessageLabel.setText(result.Message());
+                generalMessageLabel.setVisible(true);
+                generalMessageTimer = GENERAL_MESSAGE_DURATION;
+            }
+        });
 
         contentSplit.add(leftPanel).expand().fill();
         Image separator = new Image(skin.newDrawable("white", Color.GRAY));
@@ -2866,15 +2943,22 @@ public class GDXGameScreen implements Screen {
                     }
                 }
                 cookButton.setDisabled(!canCook);
-
                 cookButton.addListener(new ClickListener() {
                     @Override
                     public void clicked(InputEvent event, float x, float y) {
+                        // --- REPLACE THE OLD LOGIC WITH THIS ---
                         Result result = controller.cookFood(recipeEnum.getDisplayName());
-                        showCookingMenu(); // Refresh the whole menu
-                        generalMessageLabel.setText(result.Message());
-                        generalMessageLabel.setVisible(true);
-                        generalMessageTimer = GENERAL_MESSAGE_DURATION;
+                        if (result.isSuccessful()) {
+                            // On success, show the placement dialog
+                            showPlacementDialog(controller.getJustCookedFood());
+                        } else {
+                            // On failure, show the detailed error message
+                            generalMessageLabel.setText(result.Message());
+                            generalMessageLabel.setVisible(true);
+                            generalMessageTimer = GENERAL_MESSAGE_DURATION;
+                        }
+                        // Refresh the menu to show updated ingredient counts after an attempt
+                        showCookingMenu();
                     }
                 });
 
@@ -3496,6 +3580,215 @@ public class GDXGameScreen implements Screen {
         Gdx.input.setInputProcessor(multiplexer);
     }
 
+    private void setupCraftingCheatMenuUI() {
+        craftingCheatMenuStage = new Stage(new ScreenViewport());
+        Table cheatTable = new Table(skin);
+        cheatTable.setBackground(skin.newDrawable("white", new Color(0.1f, 0.1f, 0.2f, 0.8f))); // Blue tint
+        craftingCheatMenuStage.addActor(cheatTable);
+
+        cheatCraftingRecipeField = new TextField("", skin);
+        cheatCraftingRecipeField.setMessageText("Crafting Recipe Name");
+
+        TextButton addButton = new TextButton("Add Recipe", skin);
+        TextButton closeButton = new TextButton("Close", skin);
+        Label messageLabel = new Label("", skin);
+
+        addButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                Result result = controller.cheatAddCraftingRecipe(cheatCraftingRecipeField.getText());
+                messageLabel.setText(result.Message());
+            }
+        });
+
+        closeButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                isCraftingCheatMenuOpen = false;
+                Gdx.input.setInputProcessor(multiplexer);
+            }
+        });
+
+        cheatTable.add(new Label("Cheat: Add Crafting Recipe", skin)).colspan(2).pad(10).row();
+        cheatTable.add(cheatCraftingRecipeField).width(250).pad(5).colspan(2).row();
+        Table buttonTable = new Table();
+        buttonTable.add(addButton).pad(5);
+        buttonTable.add(closeButton).pad(5);
+        cheatTable.add(buttonTable).colspan(2).pad(10).row();
+        cheatTable.add(messageLabel).colspan(2).pad(10);
+        cheatTable.pack();
+        cheatTable.setPosition(Gdx.graphics.getWidth() / 2f - cheatTable.getWidth() / 2f,
+            Gdx.graphics.getHeight() / 2f - cheatTable.getHeight() / 2f);
+    }
+
+    private void setupCookingCheatMenuUI() {
+        cookingCheatMenuStage = new Stage(new ScreenViewport());
+        Table cheatTable = new Table(skin);
+        cheatTable.setBackground(skin.newDrawable("white", new Color(0.2f, 0.1f, 0.1f, 0.8f))); // Red tint
+        cookingCheatMenuStage.addActor(cheatTable);
+
+        cheatCookingRecipeField = new TextField("", skin);
+        cheatCookingRecipeField.setMessageText("Cooking Recipe Name");
+
+        TextButton addButton = new TextButton("Add Recipe", skin);
+        TextButton closeButton = new TextButton("Close", skin);
+        Label messageLabel = new Label("", skin);
+
+        addButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                Result result = controller.cheatAddCookingRecipe(cheatCookingRecipeField.getText());
+                messageLabel.setText(result.Message());
+            }
+        });
+
+        closeButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                isCookingCheatMenuOpen = false;
+                Gdx.input.setInputProcessor(multiplexer);
+            }
+        });
+
+        cheatTable.add(new Label("Cheat: Add Cooking Recipe", skin)).colspan(2).pad(10).row();
+        cheatTable.add(cheatCookingRecipeField).width(250).pad(5).colspan(2).row();
+        Table buttonTable = new Table();
+        buttonTable.add(addButton).pad(5);
+        buttonTable.add(closeButton).pad(5);
+        cheatTable.add(buttonTable).colspan(2).pad(10).row();
+        cheatTable.add(messageLabel).colspan(2).pad(10);
+        cheatTable.pack();
+        cheatTable.setPosition(Gdx.graphics.getWidth() / 2f - cheatTable.getWidth() / 2f,
+            Gdx.graphics.getHeight() / 2f - cheatTable.getHeight() / 2f);
+    }
+
+    private void renderCraftingCheatMenu(float delta) {
+        if (!isCraftingCheatMenuOpen) return;
+        craftingCheatMenuStage.act(delta);
+        craftingCheatMenuStage.draw();
+    }
+
+    private void renderCookingCheatMenu(float delta) {
+        if (!isCookingCheatMenuOpen) return;
+        cookingCheatMenuStage.act(delta);
+        cookingCheatMenuStage.draw();
+    }
+
+    private void setupEatMenuUI() {
+        Table eatMenuTable = new Table(skin);
+        eatMenuTable.setBackground(skin.newDrawable("white", new Color(0, 0, 0, 0.7f)));
+        eatMenuTable.pad(10);
+
+        selectedFoodImage = new Image();
+        selectedFoodLabel = new Label("No food available", skin);
+
+        TextButton leftButton = new TextButton("<", skin);
+        TextButton rightButton = new TextButton(">", skin);
+        TextButton eatButton = new TextButton("Eat", skin);
+        TextButton closeButton = new TextButton("Close", skin);
+
+        leftButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                if (!playerFoodItems.isEmpty()) {
+                    selectedFoodIndex = (selectedFoodIndex - 1 + playerFoodItems.size()) % playerFoodItems.size();
+                    updateEatMenuDisplay();
+                }
+            }
+        });
+
+        rightButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                if (!playerFoodItems.isEmpty()) {
+                    selectedFoodIndex = (selectedFoodIndex + 1) % playerFoodItems.size();
+                    updateEatMenuDisplay();
+                }
+            }
+        });
+
+        eatButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                if (!playerFoodItems.isEmpty()) {
+                    Food foodToEat = playerFoodItems.get(selectedFoodIndex);
+                    Result result = controller.eat(foodToEat.getName());
+
+                    // Start animation and show message
+                    eatingAnimationTimer = EATING_ANIMATION_DURATION;
+                    generalMessageLabel.setText(result.Message());
+                    generalMessageLabel.setVisible(true);
+                    generalMessageTimer = GENERAL_MESSAGE_DURATION;
+
+                    // Close menu
+                    isEatMenuOpen = false;
+                    Gdx.input.setInputProcessor(multiplexer);
+                }
+            }
+        });
+
+        closeButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                isEatMenuOpen = false;
+                Gdx.input.setInputProcessor(multiplexer);
+            }
+        });
+
+        Table selectorTable = new Table();
+        selectorTable.add(leftButton).pad(10);
+        selectorTable.add(selectedFoodImage).size(64, 64).pad(10);
+        selectorTable.add(rightButton).pad(10);
+
+        eatMenuTable.add(selectedFoodLabel).colspan(2).pad(10).row();
+        eatMenuTable.add(selectorTable).colspan(2).row();
+        eatMenuTable.add(eatButton).pad(10);
+        eatMenuTable.add(closeButton).pad(10);
+
+        eatMenuTable.pack();
+        eatMenuTable.setPosition(Gdx.graphics.getWidth() / 2f, Gdx.graphics.getHeight() - eatMenuTable.getHeight() - 20, com.badlogic.gdx.utils.Align.center);
+        eatMenuStage.addActor(eatMenuTable);
+
+        // Setup for the animation image
+        eatingAnimationImage = new Image(eatingTexture);
+        eatingAnimationImage.setVisible(false);
+        stage.addActor(eatingAnimationImage);
+    }
+
+    private void showEatMenu() {
+        playerFoodItems.clear();
+        game.getCurrentPlayer().getInventory().getItems().stream()
+            .filter(item -> item instanceof Food)
+            .forEach(item -> playerFoodItems.add((Food) item));
+
+        selectedFoodIndex = 0;
+        updateEatMenuDisplay();
+    }
+
+    private void updateEatMenuDisplay() {
+        if (playerFoodItems.isEmpty()) {
+            selectedFoodLabel.setText("No food in inventory");
+            selectedFoodImage.setDrawable(null);
+            return;
+        }
+
+        Food selectedFood = playerFoodItems.get(selectedFoodIndex);
+        selectedFoodLabel.setText(selectedFood.getName() + " (+" + selectedFood.getFoodType().getEnergy() + " Energy)");
+
+        Texture foodTexture = textureManager.getTexture(selectedFood.getItemType().getEnumName());
+        if (foodTexture != null) {
+            selectedFoodImage.setDrawable(new TextureRegionDrawable(new TextureRegion(foodTexture)));
+        } else {
+            selectedFoodImage.setDrawable(skin.getDrawable("default-round"));
+        }
+    }
+
+    private void renderEatMenu(float delta) {
+        if (!isEatMenuOpen) return;
+        eatMenuStage.act(delta);
+        eatMenuStage.draw();
+    }
+
     @Override
     public void resize(int width, int height) {
         stage.getViewport().update(width, height, true);
@@ -3926,4 +4219,38 @@ public class GDXGameScreen implements Screen {
         actionTimer = ACTION_ANIMATION_DURATION;
         playerMoving = false; // Stop movement during the animation
     }
+
+    private void showPlacementDialog(Food food) {
+        Player player = game.getCurrentPlayer();
+        Dialog dialog = new Dialog("Choose Destination", skin, "dialog") {
+            protected void result(Object object) {
+                if (object instanceof String) {
+                    Result placementResult = controller.placeCookedFood((String) object);
+                    generalMessageLabel.setText(placementResult.Message());
+                    generalMessageLabel.setVisible(true);
+                    generalMessageTimer = GENERAL_MESSAGE_DURATION;
+                    showCookingMenu(); // Refresh menu to show updated item counts
+                }
+            }
+        };
+
+        dialog.text("Place " + food.getName() + " in:");
+
+        TextButton inventoryButton = new TextButton("Inventory", skin);
+        if (player.getInventory().isFull()) {
+            inventoryButton.setDisabled(true);
+            inventoryButton.setText("Inventory (Full)");
+        }
+        dialog.button(inventoryButton, "inventory");
+
+        TextButton fridgeButton = new TextButton("Refrigerator", skin);
+        if (player.getHouseRefrigerator().isFull()) {
+            fridgeButton.setDisabled(true);
+            fridgeButton.setText("Refrigerator (Full)");
+        }
+        dialog.button(fridgeButton, "refrigerator");
+
+        dialog.show(cookingStage); // Show the dialog on the cooking stage
+    }
+
 }
