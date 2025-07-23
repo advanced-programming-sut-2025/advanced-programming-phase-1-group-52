@@ -9128,6 +9128,7 @@ hs_err_pid35749.log
 hs_err_pid37411.log
 hs_err_pid37884.log
 hs_err_pid38299.log
+hs_err_pid38417.log
 hs_err_pid38603.log
 hs_err_pid38716.log
 hs_err_pid38838.log
@@ -9207,10 +9208,12 @@ hs_err_pid93218.log
 hs_err_pid93994.log
 hs_err_pid9488.log
 hs_err_pid96335.log
+hs_err_pid96671.log
 hs_err_pid96998.log
 hs_err_pid9813.log
 hs_err_pid98224.log
 hs_err_pid9844.log
+hs_err_pid98654.log
 i18n/bundle.properties
 i18n/bundle_en.properties
 i18n/bundle_pl.properties

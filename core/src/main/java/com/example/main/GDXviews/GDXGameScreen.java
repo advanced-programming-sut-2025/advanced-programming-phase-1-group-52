@@ -400,6 +400,34 @@ public class GDXGameScreen implements Screen {
     private boolean showAnimalMenu = false;
     private PurchasedAnimal selectedAnimal = null;
     private Table animalMenuTable = null;
+    
+    // Shepherd mode variables
+    private boolean isShepherdMode = false;
+    private String animalToShepherd = null;
+    
+    // Animation system variables
+    private ArrayList<AnimationEffect> activeAnimations = new ArrayList<>();
+    
+    // Animation effect class
+    private static class AnimationEffect {
+        float x, y;
+        float duration;
+        float elapsed;
+        String type; // "food", "hearts", "bounce"
+        float bounceHeight = 0f;
+        float bounceSpeed = 0f;
+        
+        AnimationEffect(float x, float y, float duration, String type) {
+            this.x = x;
+            this.y = y;
+            this.duration = duration;
+            this.elapsed = 0f;
+            this.type = type;
+            if (type.equals("bounce")) {
+                this.bounceSpeed = 8f;
+            }
+        }
+    }
 
     public GDXGameScreen() {
         controller = new GameMenuController();
@@ -501,6 +529,9 @@ public class GDXGameScreen implements Screen {
         
         // Update animal movement
         updateAnimalMovement(delta);
+        
+        // Update animations
+        updateAnimations(delta);
 
         if (!isInventoryOpen) {
         updateTime(delta);
@@ -543,6 +574,9 @@ public class GDXGameScreen implements Screen {
         renderMap();
         renderAnimals();
         spriteBatch.end();
+        
+        // Render animations (after animals so they appear on top)
+        renderAnimations();
 
         renderWeather(delta);
         renderDayNightOverlay();
@@ -566,6 +600,9 @@ public class GDXGameScreen implements Screen {
         if (isBuildingPlacementMode && buildingPlacementTexture != null) {
             renderBuildingPlacementPreview();
         }
+        
+        // Render shepherd mode UI
+        renderShepherdModeUI();
 
         stage.act(delta);
         stage.draw();
@@ -768,6 +805,12 @@ public class GDXGameScreen implements Screen {
             handleBuildingPlacement();
             // Allow camera zoom during placement mode
             handleCameraMovement(delta);
+            return;
+        }
+        
+        // Handle shepherd mode
+        if (isShepherdMode) {
+            handleShepherdMode();
             return;
         }
         // If trade menu is open, only allow trade menu UI
@@ -1121,6 +1164,84 @@ public class GDXGameScreen implements Screen {
             generalMessageTimer = GENERAL_MESSAGE_DURATION;
         }
     }
+    
+    private void handleShepherdMode() {
+        // Handle camera movement during shepherd mode
+        handleCameraMovement(Gdx.graphics.getDeltaTime());
+        
+        // Handle left click to shepherd animal to target location
+        if (Gdx.input.isButtonJustPressed(Input.Buttons.LEFT)) {
+            // Get mouse position in screen coordinates
+            int mouseX = Gdx.input.getX();
+            int mouseY = Gdx.input.getY();
+            
+            // Convert screen coordinates to world coordinates
+            Vector3 worldCoords = camera.unproject(new Vector3(mouseX, mouseY, 0));
+            
+            // Convert world coordinates to tile coordinates
+            int tileX = (int) (worldCoords.x / TILE_SIZE);
+            int tileY = (int) ((MAP_HEIGHT * TILE_SIZE - worldCoords.y) / TILE_SIZE);
+            
+            if (tileX >= 0 && tileX < MAP_WIDTH && tileY >= 0 && tileY < MAP_HEIGHT) {
+                Player currentPlayer = game.getCurrentPlayer();
+                if (currentPlayer != null && isAnimalWalkable(tileX, tileY, currentPlayer)) {
+                    // Find the animal and set it to move to the target location
+                    if (controller != null && animalToShepherd != null) {
+                        if (currentPlayer != null) {
+                            for (Housing housing : currentPlayer.getHousings()) {
+                                for (PurchasedAnimal animal : housing.getOccupants()) {
+                                    if (animal.getName().equals(animalToShepherd)) {
+                                        // Set the animal's target position for smooth movement
+                                        animal.setTargetX(tileX);
+                                        animal.setTargetY(tileY);
+                                        animal.setMoving(true);
+                                        animal.setMoveProgress(0f);
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    
+                    // Exit shepherd mode
+                    isShepherdMode = false;
+                    animalToShepherd = null;
+                    
+                    generalMessageLabel.setText("Animal is moving to new location");
+                    generalMessageLabel.setColor(Color.GREEN);
+                    generalMessageLabel.setVisible(true);
+                    generalMessageTimer = GENERAL_MESSAGE_DURATION;
+                } else {
+                    generalMessageLabel.setText("Cannot shepherd animal to that location");
+                    generalMessageLabel.setColor(Color.RED);
+                    generalMessageLabel.setVisible(true);
+                    generalMessageTimer = GENERAL_MESSAGE_DURATION;
+                }
+            }
+        }
+        
+        // Handle right click to cancel shepherd mode
+        if (Gdx.input.isButtonJustPressed(Input.Buttons.RIGHT)) {
+            isShepherdMode = false;
+            animalToShepherd = null;
+            
+            generalMessageLabel.setText("Shepherd mode cancelled");
+            generalMessageLabel.setColor(Color.YELLOW);
+            generalMessageLabel.setVisible(true);
+            generalMessageTimer = GENERAL_MESSAGE_DURATION;
+        }
+        
+        // Handle ESC key to cancel shepherd mode
+        if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
+            isShepherdMode = false;
+            animalToShepherd = null;
+            
+            generalMessageLabel.setText("Shepherd mode cancelled");
+            generalMessageLabel.setColor(Color.YELLOW);
+            generalMessageLabel.setVisible(true);
+            generalMessageTimer = GENERAL_MESSAGE_DURATION;
+        }
+    }
 
     private void renderBuildingPlacementPreview() {
         if (buildingPlacementTexture == null) return;
@@ -1144,6 +1265,92 @@ public class GDXGameScreen implements Screen {
         
         // Reset projection matrix for world rendering
         spriteBatch.setProjectionMatrix(camera.combined);
+    }
+    
+    private void renderShepherdModeUI() {
+        if (!isShepherdMode || animalToShepherd == null) return;
+        
+        // Set up sprite batch for UI rendering
+        spriteBatch.setProjectionMatrix(hudCamera.combined);
+        spriteBatch.begin();
+        
+        // Draw shepherd mode indicator
+        hudFont.setColor(Color.YELLOW);
+        String shepherdText = "Shepherd Mode: " + animalToShepherd + " - Click to move animal";
+        hudFont.draw(spriteBatch, shepherdText, 10, Gdx.graphics.getHeight() - 10);
+        
+        spriteBatch.end();
+        
+        // Reset projection matrix for world rendering
+        spriteBatch.setProjectionMatrix(camera.combined);
+    }
+    
+    private void createAnimation(float worldX, float worldY, String type) {
+        activeAnimations.add(new AnimationEffect(worldX, worldY, 2.0f, type));
+    }
+    
+    private void updateAnimations(float delta) {
+        for (int i = activeAnimations.size() - 1; i >= 0; i--) {
+            AnimationEffect effect = activeAnimations.get(i);
+            effect.elapsed += delta;
+            
+            if (effect.type.equals("bounce")) {
+                effect.bounceHeight = (float) Math.sin(effect.elapsed * effect.bounceSpeed) * 10f;
+                if (effect.elapsed > effect.duration) {
+                    effect.bounceHeight = 0f;
+                }
+            }
+            
+            if (effect.elapsed >= effect.duration) {
+                activeAnimations.remove(i);
+            }
+        }
+    }
+    
+    private void renderAnimations() {
+        if (activeAnimations.isEmpty()) return;
+        
+        spriteBatch.setProjectionMatrix(camera.combined);
+        spriteBatch.begin();
+        
+        for (AnimationEffect effect : activeAnimations) {
+            float alpha = 1.0f - (effect.elapsed / effect.duration);
+            alpha = Math.max(0f, alpha);
+            
+            if (effect.type.equals("food")) {
+                // Render food particles
+                spriteBatch.setColor(1f, 1f, 1f, alpha);
+                for (int i = 0; i < 5; i++) {
+                    float offsetX = (float) Math.sin(effect.elapsed * 3f + i) * 20f;
+                    float offsetY = effect.elapsed * 30f + i * 10f;
+                    float particleX = effect.x + offsetX;
+                    float particleY = effect.y + offsetY;
+                    
+                    // Draw a simple food particle (small colored rectangle)
+                    spriteBatch.setColor(0.8f, 0.6f, 0.2f, alpha);
+                    // Use a simple white texture for the food particle
+                    if (grass1Texture != null) {
+                        spriteBatch.draw(grass1Texture, particleX, particleY, 8, 8);
+                    }
+                }
+            } else if (effect.type.equals("hearts")) {
+                // Render hearts
+                spriteBatch.setColor(1f, 0.3f, 0.7f, alpha);
+                for (int i = 0; i < 3; i++) {
+                    float offsetX = (float) Math.sin(effect.elapsed * 2f + i) * 15f;
+                    float offsetY = effect.elapsed * 40f + i * 15f;
+                    float heartX = effect.x + offsetX;
+                    float heartY = effect.y + offsetY;
+                    
+                    // Draw heart shape using text or simple shape
+                    hudFont.setColor(1f, 0.3f, 0.7f, alpha);
+                    hudFont.draw(spriteBatch, "♥", heartX, heartY);
+                }
+            }
+        }
+        
+        spriteBatch.setColor(1f, 1f, 1f, 1f);
+        spriteBatch.end();
     }
 
     private void handleShopInteraction() {
@@ -4163,6 +4370,21 @@ public class GDXGameScreen implements Screen {
                             worldY = startY + (endY - startY) * animal.getMoveProgress();
                         }
                         
+                        // Apply bounce effect if there's a bounce animation for this animal
+                        float bounceOffset = 0f;
+                        for (AnimationEffect effect : activeAnimations) {
+                            if (effect.type.equals("bounce")) {
+                                float animalCenterX = worldX + TILE_SIZE / 2f;
+                                float animalCenterY = worldY + TILE_SIZE / 2f;
+                                if (Math.abs(effect.x - animalCenterX) < TILE_SIZE && 
+                                    Math.abs(effect.y - animalCenterY) < TILE_SIZE) {
+                                    bounceOffset = effect.bounceHeight;
+                                    break;
+                                }
+                            }
+                        }
+                        worldY += bounceOffset;
+                        
                         // Determine if animal is moving left (flip image)
                         boolean movingLeft = animal.isMoving() && animal.getTargetX() < animal.getX();
                         
@@ -4383,6 +4605,7 @@ public class GDXGameScreen implements Screen {
         TextButton feedBtn = new TextButton("Feed", skin);
         TextButton petBtn = new TextButton("Pet", skin);
         TextButton sellBtn = new TextButton("Sell", skin);
+        TextButton shepherdBtn = new TextButton("Shepherd", skin);
         TextButton collectBtn = new TextButton("Collect", skin);
         TextButton closeBtn = new TextButton("Close", skin);
 
@@ -4390,6 +4613,7 @@ public class GDXGameScreen implements Screen {
         animalMenuTable.add(feedBtn).row();
         animalMenuTable.add(petBtn).row();
         animalMenuTable.add(sellBtn).row();
+        animalMenuTable.add(shepherdBtn).row();
         animalMenuTable.add(collectBtn).row();
         animalMenuTable.add(closeBtn).row();
 
@@ -4400,11 +4624,37 @@ public class GDXGameScreen implements Screen {
             }
         });
 
+        feedBtn.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                if (controller != null && selectedAnimal != null) {
+                    controller.feedHay(selectedAnimal.getName());
+                    
+                    // Create food particle animation at animal's position
+                    float animalWorldX = selectedAnimal.getX() * TILE_SIZE + TILE_SIZE / 2f;
+                    float animalWorldY = (MAP_HEIGHT - 1 - selectedAnimal.getY()) * TILE_SIZE + TILE_SIZE / 2f;
+                    createAnimation(animalWorldX, animalWorldY, "food");
+                }
+                showAnimalMenu = false;
+                selectedAnimal = null;
+                if (animalMenuTable != null) {
+                    animalMenuTable.remove();
+                    animalMenuTable = null;
+                }
+            }
+        });
+
         petBtn.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
                 if (controller != null && selectedAnimal != null) {
                     controller.petAnimal(selectedAnimal.getName());
+                    
+                    // Create heart and bounce animations at animal's position
+                    float animalWorldX = selectedAnimal.getX() * TILE_SIZE + TILE_SIZE / 2f;
+                    float animalWorldY = (MAP_HEIGHT - 1 - selectedAnimal.getY()) * TILE_SIZE + TILE_SIZE / 2f;
+                    createAnimation(animalWorldX, animalWorldY, "hearts");
+                    createAnimation(animalWorldX, animalWorldY, "bounce");
                 }
                 showAnimalMenu = false;
                 selectedAnimal = null;
@@ -4438,6 +4688,22 @@ public class GDXGameScreen implements Screen {
                 if (animalMenuTable != null) {
                     animalMenuTable.remove();
                     animalMenuTable = null;
+                }
+            }
+        });
+
+        shepherdBtn.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                if (selectedAnimal != null) {
+                    animalToShepherd = selectedAnimal.getName();
+                    isShepherdMode = true;
+                    showAnimalMenu = false;
+                    selectedAnimal = null;
+                    if (animalMenuTable != null) {
+                        animalMenuTable.remove();
+                        animalMenuTable = null;
+                    }
                 }
             }
         });
