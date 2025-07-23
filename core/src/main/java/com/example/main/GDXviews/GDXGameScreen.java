@@ -209,6 +209,20 @@ public class GDXGameScreen implements Screen {
     private Stage cookingCheatMenuStage;
     private TextField cheatCookingRecipeField;
 
+    // Eat Menu Fields
+    private boolean isEatMenuOpen = false;
+    private Stage eatMenuStage;
+    private ArrayList<Food> playerFoodItems;
+    private int selectedFoodIndex = 0;
+    private Image selectedFoodImage;
+    private Label selectedFoodLabel;
+
+    // Eating Animation Fields
+    private Texture eatingTexture;
+    private Image eatingAnimationImage;
+    private float eatingAnimationTimer = 0f;
+    private static final float EATING_ANIMATION_DURATION = 0.75f;
+
     private Texture ground1Texture;
     private Texture ground2Texture;
     private Texture grass1Texture;
@@ -447,6 +461,7 @@ public class GDXGameScreen implements Screen {
         cookingStage = new Stage(new ScreenViewport());
         craftingCheatMenuStage = new Stage(new ScreenViewport());
         cookingCheatMenuStage = new Stage(new ScreenViewport());
+        eatMenuStage = new Stage(new ScreenViewport());
 
         textureManager = new TextureManager();
         textureManager.loadAllItemTextures();
@@ -471,8 +486,10 @@ public class GDXGameScreen implements Screen {
         setupCookingUI();
         setupCraftingCheatMenuUI();
         setupCookingCheatMenuUI();
+        setupEatMenuUI();
 
         crowAnimations = new ArrayList<>();
+        playerFoodItems = new ArrayList<>();
 
         multiplexer = new InputMultiplexer();
         multiplexer.addProcessor(stage);
@@ -483,6 +500,7 @@ public class GDXGameScreen implements Screen {
         multiplexer.addProcessor(cookingStage);
         multiplexer.addProcessor(cookingCheatMenuStage);
         multiplexer.addProcessor(craftingCheatMenuStage);
+        multiplexer.addProcessor(eatMenuStage);
         plantableItems = new ArrayList<>();
         Gdx.input.setInputProcessor(multiplexer);
     }
@@ -506,6 +524,12 @@ public class GDXGameScreen implements Screen {
 
     @Override
     public void render(float delta) {
+        if (eatingAnimationTimer > 0) {
+            eatingAnimationTimer -= delta;
+            if (eatingAnimationTimer <= 0) {
+                eatingAnimationImage.setVisible(false);
+            }
+        }
 
         if (game.isCrowAttackHappened()) {
             triggerCrowAttackAnimation();
@@ -580,6 +604,8 @@ public class GDXGameScreen implements Screen {
         renderCookingMenu(delta);
         renderCraftingCheatMenu(delta);
         renderCookingCheatMenu(delta);
+        renderEatMenu(delta);
+
         stage.act(delta);
         stage.draw();
     }
@@ -633,7 +659,7 @@ public class GDXGameScreen implements Screen {
         iridiumStoneTexture = new Texture("content/Cut/map_elements/iridium_stone.png");
         jewelStoneTexture = new Texture("content/Cut/map_elements/jewel_stone.png");
         crowTexture = textureManager.getTexture("Crow");
-
+        eatingTexture = textureManager.getTexture("eating");
         try {
             blacksmithTexture = new Texture("content/Cut/map_elements/blacksmith.png");
             jojamartTexture = new Texture("content/Cut/map_elements/jojamart.png");
@@ -884,7 +910,18 @@ public class GDXGameScreen implements Screen {
             }
         }
 
-        if (isInventoryOpen || isToolMenuOpen || isCheatMenuOpen || isPlantingSelectionOpen || isCraftingMenuOpen || isCookingMenuOpen || isCraftingCheatMenuOpen || isCookingCheatMenuOpen) {
+        if (Gdx.input.isKeyJustPressed(Input.Keys.SHIFT_LEFT) || Gdx.input.isKeyJustPressed(Input.Keys.SHIFT_RIGHT)) {
+            isEatMenuOpen = !isEatMenuOpen;
+            if (isEatMenuOpen) {
+                showEatMenu(); // Populate the menu
+                Gdx.input.setInputProcessor(eatMenuStage);
+            } else {
+                Gdx.input.setInputProcessor(multiplexer);
+            }
+        }
+
+        if (isInventoryOpen || isToolMenuOpen || isCheatMenuOpen || isPlantingSelectionOpen
+            || isCraftingMenuOpen || isCookingMenuOpen || isCraftingCheatMenuOpen || isCookingCheatMenuOpen || isEatMenuOpen) {
             return;
         }
 
@@ -1355,13 +1392,16 @@ public class GDXGameScreen implements Screen {
             if (!player.equals(game.getCurrentPlayer())) {
                 spriteBatch.setColor(1f, 1f, 1f, 0.7f);
             }
+            spriteBatch.draw(playerTexture, renderX, renderY, playerWidth, playerHeight);
+            if (player.equals(game.getCurrentPlayer()) && eatingAnimationTimer > 0) {
+                eatingAnimationImage.setVisible(true);
+                // Position the animation over the player's head
+                float animX = worldX + (TILE_SIZE / 2f) - (eatingAnimationImage.getWidth() / 2f);
+                float animY = worldY + TILE_SIZE; // Adjust Y as needed
+                eatingAnimationImage.setPosition(animX, animY);
+            }
+            spriteBatch.setColor(1f, 1f, 1f, 1f);
 
-                spriteBatch.draw(playerTexture, renderX, renderY, playerWidth, playerHeight);
-
-            // Reset color to default
-                spriteBatch.setColor(1f, 1f, 1f, 1f);
-
-            // If fainted, draw the "Z z Z" animation on top of the player
             if (player.isFainted()) {
                 hudFont.setColor(Color.WHITE);
                 float bobOffset = (float) (Math.sin(weatherStateTime * 4) * 5);
@@ -3632,6 +3672,121 @@ public class GDXGameScreen implements Screen {
         if (!isCookingCheatMenuOpen) return;
         cookingCheatMenuStage.act(delta);
         cookingCheatMenuStage.draw();
+    }
+
+    private void setupEatMenuUI() {
+        Table eatMenuTable = new Table(skin);
+        eatMenuTable.setBackground(skin.newDrawable("white", new Color(0, 0, 0, 0.7f)));
+        eatMenuTable.pad(10);
+
+        selectedFoodImage = new Image();
+        selectedFoodLabel = new Label("No food available", skin);
+
+        TextButton leftButton = new TextButton("<", skin);
+        TextButton rightButton = new TextButton(">", skin);
+        TextButton eatButton = new TextButton("Eat", skin);
+        TextButton closeButton = new TextButton("Close", skin);
+
+        leftButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                if (!playerFoodItems.isEmpty()) {
+                    selectedFoodIndex = (selectedFoodIndex - 1 + playerFoodItems.size()) % playerFoodItems.size();
+                    updateEatMenuDisplay();
+                }
+            }
+        });
+
+        rightButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                if (!playerFoodItems.isEmpty()) {
+                    selectedFoodIndex = (selectedFoodIndex + 1) % playerFoodItems.size();
+                    updateEatMenuDisplay();
+                }
+            }
+        });
+
+        eatButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                if (!playerFoodItems.isEmpty()) {
+                    Food foodToEat = playerFoodItems.get(selectedFoodIndex);
+                    Result result = controller.eat(foodToEat.getName());
+
+                    // Start animation and show message
+                    eatingAnimationTimer = EATING_ANIMATION_DURATION;
+                    generalMessageLabel.setText(result.Message());
+                    generalMessageLabel.setVisible(true);
+                    generalMessageTimer = GENERAL_MESSAGE_DURATION;
+
+                    // Close menu
+                    isEatMenuOpen = false;
+                    Gdx.input.setInputProcessor(multiplexer);
+                }
+            }
+        });
+
+        closeButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                isEatMenuOpen = false;
+                Gdx.input.setInputProcessor(multiplexer);
+            }
+        });
+
+        Table selectorTable = new Table();
+        selectorTable.add(leftButton).pad(10);
+        selectorTable.add(selectedFoodImage).size(64, 64).pad(10);
+        selectorTable.add(rightButton).pad(10);
+
+        eatMenuTable.add(selectedFoodLabel).colspan(2).pad(10).row();
+        eatMenuTable.add(selectorTable).colspan(2).row();
+        eatMenuTable.add(eatButton).pad(10);
+        eatMenuTable.add(closeButton).pad(10);
+
+        eatMenuTable.pack();
+        eatMenuTable.setPosition(Gdx.graphics.getWidth() / 2f, Gdx.graphics.getHeight() - eatMenuTable.getHeight() - 20, com.badlogic.gdx.utils.Align.center);
+        eatMenuStage.addActor(eatMenuTable);
+
+        // Setup for the animation image
+        eatingAnimationImage = new Image(eatingTexture);
+        eatingAnimationImage.setVisible(false);
+        stage.addActor(eatingAnimationImage);
+    }
+
+    private void showEatMenu() {
+        playerFoodItems.clear();
+        game.getCurrentPlayer().getInventory().getItems().stream()
+            .filter(item -> item instanceof Food)
+            .forEach(item -> playerFoodItems.add((Food) item));
+
+        selectedFoodIndex = 0;
+        updateEatMenuDisplay();
+    }
+
+    private void updateEatMenuDisplay() {
+        if (playerFoodItems.isEmpty()) {
+            selectedFoodLabel.setText("No food in inventory");
+            selectedFoodImage.setDrawable(null);
+            return;
+        }
+
+        Food selectedFood = playerFoodItems.get(selectedFoodIndex);
+        selectedFoodLabel.setText(selectedFood.getName() + " (+" + selectedFood.getFoodType().getEnergy() + " Energy)");
+
+        Texture foodTexture = textureManager.getTexture(selectedFood.getItemType().getEnumName());
+        if (foodTexture != null) {
+            selectedFoodImage.setDrawable(new TextureRegionDrawable(new TextureRegion(foodTexture)));
+        } else {
+            selectedFoodImage.setDrawable(skin.getDrawable("default-round"));
+        }
+    }
+
+    private void renderEatMenu(float delta) {
+        if (!isEatMenuOpen) return;
+        eatMenuStage.act(delta);
+        eatMenuStage.draw();
     }
 
     @Override

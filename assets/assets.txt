@@ -7793,6 +7793,7 @@ content/Recipe/Triple_Shot_Espresso.png
 content/Recipe/Tropical_Curry.png
 content/Recipe/Trout_Soup.png
 content/Recipe/Vegetable_Medley.png
+content/Recipe/eating.png
 content/Resource/Battery_Pack.png
 content/Resource/Bone_Fragment.png
 content/Resource/Cinder_Shard.png
