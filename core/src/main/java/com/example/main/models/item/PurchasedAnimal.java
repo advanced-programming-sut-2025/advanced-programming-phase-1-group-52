@@ -16,6 +16,14 @@ public class PurchasedAnimal {
     private boolean productCollected = false;
     private int x;
     private int y;
+    
+    private int targetX;
+    private int targetY;
+    private boolean isMoving = false;
+    private float moveProgress = 0f;
+    public static final float MOVE_SPEED = 2.0f; 
+    private long lastMoveTime = 0;
+    public static final long MOVE_INTERVAL = 3000; 
 
     public PurchasedAnimal(AnimalType type, String name, int x, int y) {
         this.type = type;
@@ -54,6 +62,47 @@ public class PurchasedAnimal {
 
     public void setY(int y) {
         this.y = y;
+    }
+    
+    // Movement getters and setters
+    public int getTargetX() {
+        return targetX;
+    }
+    
+    public void setTargetX(int targetX) {
+        this.targetX = targetX;
+    }
+    
+    public int getTargetY() {
+        return targetY;
+    }
+    
+    public void setTargetY(int targetY) {
+        this.targetY = targetY;
+    }
+    
+    public boolean isMoving() {
+        return isMoving;
+    }
+    
+    public void setMoving(boolean moving) {
+        isMoving = moving;
+    }
+    
+    public float getMoveProgress() {
+        return moveProgress;
+    }
+    
+    public void setMoveProgress(float moveProgress) {
+        this.moveProgress = moveProgress;
+    }
+    
+    public long getLastMoveTime() {
+        return lastMoveTime;
+    }
+    
+    public void setLastMoveTime(long lastMoveTime) {
+        this.lastMoveTime = lastMoveTime;
     }
 
     public boolean checkFriendshipPoints () {

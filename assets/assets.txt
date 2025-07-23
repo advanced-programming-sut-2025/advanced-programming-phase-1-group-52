@@ -9047,6 +9047,7 @@ hs_err_pid123909.log
 hs_err_pid12501.log
 hs_err_pid126762.log
 hs_err_pid132168.log
+hs_err_pid13494.log
 hs_err_pid135715.log
 hs_err_pid13770.log
 hs_err_pid138256.log
@@ -9066,6 +9067,7 @@ hs_err_pid15856.log
 hs_err_pid159922.log
 hs_err_pid16410.log
 hs_err_pid16649.log
+hs_err_pid16795.log
 hs_err_pid16999.log
 hs_err_pid17100.log
 hs_err_pid18094.log
@@ -9154,6 +9156,7 @@ hs_err_pid5976.log
 hs_err_pid61294.log
 hs_err_pid61693.log
 hs_err_pid61741.log
+hs_err_pid6410.log
 hs_err_pid6440.log
 hs_err_pid64833.log
 hs_err_pid65942.log

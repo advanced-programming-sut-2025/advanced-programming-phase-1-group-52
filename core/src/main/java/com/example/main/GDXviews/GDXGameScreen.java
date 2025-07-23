@@ -2,9 +2,12 @@ package com.example.main.GDXviews;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.PriorityQueue;
 import java.util.Random;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.badlogic.gdx.Gdx;
@@ -48,6 +51,7 @@ import com.example.main.enums.design.NPCType;
 import com.example.main.enums.design.ShopType;
 import com.example.main.enums.design.TileType;
 import com.example.main.enums.design.Weather;
+import com.example.main.enums.items.AnimalType;
 import com.example.main.enums.items.CageType;
 import com.example.main.enums.items.CropType;
 import com.example.main.enums.items.ItemType;
@@ -70,6 +74,7 @@ import com.example.main.models.building.Housing;
 import com.example.main.models.item.Crop;
 import com.example.main.models.item.Fruit;
 import com.example.main.models.item.Item;
+import com.example.main.models.item.PurchasedAnimal;
 import com.example.main.models.item.Seed;
 import com.example.main.models.item.Tool;
 
@@ -247,6 +252,18 @@ public class GDXGameScreen implements Screen {
 
     private Texture barnTexture;
     private Texture coopTexture;
+    
+    // Animal textures
+    private Map<AnimalType, Texture> animalTextures = new HashMap<>();
+    
+    // Housing management
+    private boolean showHousingMenu = false;
+    private Housing selectedHousing = null;
+    private Table housingMenuTable = null;
+    
+    // Animal movement
+    private float animalMovementTimer = 0f;
+    private static final float ANIMAL_MOVEMENT_UPDATE_INTERVAL = 3.0f; // 3 seconds for faster testing
 
     private Texture maleIdleTexture;
     private Texture maleDown1Texture, maleDown2Texture;
@@ -474,6 +491,9 @@ public class GDXGameScreen implements Screen {
     @Override
     public void render(float delta) {
         handleInput(delta);
+        
+        // Update animal movement
+        updateAnimalMovement(delta);
 
         if (!isInventoryOpen) {
         updateTime(delta);
@@ -514,6 +534,7 @@ public class GDXGameScreen implements Screen {
         spriteBatch.setProjectionMatrix(camera.combined);
         spriteBatch.begin();
         renderMap();
+        renderAnimals();
         spriteBatch.end();
 
         renderWeather(delta);
@@ -649,6 +670,23 @@ public class GDXGameScreen implements Screen {
         // Load NPC interaction textures
         dialogBoxTexture = new Texture("content/Cut/map_elements/dialog_box.png");
         menuBackgroundTexture = new Texture("content/Cut/menu_background.png");
+        
+        // Load animal textures
+        loadAnimalTextures();
+    }
+    
+    private void loadAnimalTextures() {
+        // Load all animal textures from the animals directory
+        for (AnimalType animalType : AnimalType.values()) {
+            String texturePath = "content/Cut/animals/" + animalType.name() + ".png";
+            try {
+                Texture animalTexture = new Texture(texturePath);
+                animalTextures.put(animalType, animalTexture);
+            } catch (Exception e) {
+                // If texture not found, use a default texture or skip
+                System.out.println("Warning: Could not load texture for " + animalType.name() + " at " + texturePath);
+            }
+        }
     }
 
     private void loadWeatherAssets() {
@@ -734,6 +772,20 @@ public class GDXGameScreen implements Screen {
                 if (npcMenuTable != null) {
                     npcMenuTable.remove();
                     npcMenuTable = null;
+                }
+            }
+            return;
+        }
+        
+        // If housing menu is open, only allow housing menu UI
+        if (showHousingMenu) {
+            // Allow ESC key to close housing menu
+            if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
+                showHousingMenu = false;
+                selectedHousing = null;
+                if (housingMenuTable != null) {
+                    housingMenuTable.remove();
+                    housingMenuTable = null;
                 }
             }
             return;
@@ -834,6 +886,11 @@ public class GDXGameScreen implements Screen {
             if (Gdx.input.isButtonJustPressed(Input.Buttons.RIGHT)) {
                 handleNPCRightClick(Gdx.input.getX(), Gdx.input.getY());
             }
+        }
+        
+        // Handle housing interactions
+        if (Gdx.input.isButtonJustPressed(Input.Buttons.LEFT)) {
+            handleHousingClick(Gdx.input.getX(), Gdx.input.getY());
         }
         if (Gdx.input.isKeyJustPressed(Input.Keys.NUM_1)) {
             if (controller != null) {
@@ -2304,7 +2361,7 @@ public class GDXGameScreen implements Screen {
                     housingTexture = barnTexture;
                     buildingWidthTiles = 7;
                     buildingHeightTiles = 8;
-                } else if (typeName.contains("cage")) {
+                } else if (typeName.contains("coop")) {
                     housingTexture = coopTexture;
                     buildingWidthTiles = 6;
                     buildingHeightTiles = 8;
@@ -3854,6 +3911,435 @@ public class GDXGameScreen implements Screen {
             resultLabel.setColor(shopResultSuccess ? Color.GREEN : Color.RED);
             resultLabel.setFontScale(1.1f);
             shopMenuTable.add(resultLabel).colspan(2).padBottom(15).row();
+        }
+    }
+    
+    private void handleHousingClick(int screenX, int screenY) {
+        // Convert screen coordinates to world coordinates
+        Vector3 mouseInWorld = camera.unproject(new Vector3(screenX, screenY, 0));
+        int targetTileX = (int) (mouseInWorld.x / TILE_SIZE);
+        int targetTileY = MAP_HEIGHT - 1 - (int) (mouseInWorld.y / TILE_SIZE);
+        
+        // Check if click is on a housing
+        int housingIndex = getHousingIndex(targetTileX, targetTileY);
+        if (housingIndex != -1) {
+            Player currentPlayer = game.getCurrentPlayer();
+            if (currentPlayer != null && housingIndex < currentPlayer.getHousings().size()) {
+                selectedHousing = currentPlayer.getHousings().get(housingIndex);
+                showHousingMenu = true;
+                createHousingMenuUI();
+            }
+        }
+    }
+    
+    private void createHousingMenuUI() {
+        if (housingMenuTable != null) {
+            housingMenuTable.remove();
+        }
+        
+        housingMenuTable = new Table();
+        housingMenuTable.setBackground(new TextureRegionDrawable(menuBackgroundTexture));
+        housingMenuTable.setSize(600, 400);
+        housingMenuTable.setPosition(Gdx.graphics.getWidth() / 2f - 300, Gdx.graphics.getHeight() / 2f - 200);
+        
+        // Title
+        Label titleLabel = new Label("Housing Management - " + selectedHousing.getType().getName() + " (ID: " + selectedHousing.getId() + ")", skin);
+        titleLabel.setFontScale(1.2f);
+        titleLabel.setColor(Color.WHITE);
+        housingMenuTable.add(titleLabel).colspan(2).padBottom(20).row();
+        
+        // Animal list with scroll pane
+        Table animalListTable = new Table();
+        animalListTable.defaults().pad(5);
+        
+        if (selectedHousing.getOccupants().isEmpty()) {
+            Label noAnimalsLabel = new Label("No animals in this housing.", skin);
+            noAnimalsLabel.setColor(Color.GRAY);
+            animalListTable.add(noAnimalsLabel).row();
+        } else {
+            // Add header
+            Label nameHeader = new Label("Animal Name", skin);
+            Label typeHeader = new Label("Type", skin);
+            Label statusHeader = new Label("Status", skin);
+            Label actionHeader = new Label("Action", skin);
+            
+            nameHeader.setColor(Color.YELLOW);
+            typeHeader.setColor(Color.YELLOW);
+            statusHeader.setColor(Color.YELLOW);
+            actionHeader.setColor(Color.YELLOW);
+            
+            animalListTable.add(nameHeader).width(150);
+            animalListTable.add(typeHeader).width(100);
+            animalListTable.add(statusHeader).width(100);
+            animalListTable.add(actionHeader).width(100).row();
+            
+            // Add each animal
+            for (PurchasedAnimal animal : selectedHousing.getOccupants()) {
+                Label nameLabel = new Label(animal.getName(), skin);
+                Label typeLabel = new Label(animal.getType().getName(), skin);
+                Label statusLabel = new Label(animal.isInCage() ? "Inside" : "Outside", skin);
+                statusLabel.setColor(animal.isInCage() ? Color.GREEN : Color.ORANGE);
+                
+                TextButton actionButton;
+                if (animal.isInCage()) {
+                    actionButton = new TextButton("Bring Out", skin);
+                    actionButton.addListener(new ClickListener() {
+                        @Override
+                        public void clicked(InputEvent event, float x, float y) {
+                            bringAnimalOut(animal);
+                        }
+                    });
+                } else {
+                    actionButton = new TextButton("Bring In", skin);
+                    actionButton.addListener(new ClickListener() {
+                        @Override
+                        public void clicked(InputEvent event, float x, float y) {
+                            bringAnimalIn(animal);
+                        }
+                    });
+                }
+                
+                animalListTable.add(nameLabel).width(150);
+                animalListTable.add(typeLabel).width(100);
+                animalListTable.add(statusLabel).width(100);
+                animalListTable.add(actionButton).width(100).row();
+            }
+        }
+        
+        ScrollPane scrollPane = new ScrollPane(animalListTable, skin);
+        scrollPane.setScrollingDisabled(false, false);
+        scrollPane.setFadeScrollBars(false);
+        scrollPane.setScrollBarPositions(false, true);
+        
+        housingMenuTable.add(scrollPane).width(500).height(250).padBottom(20).row();
+        
+        // Close button
+        TextButton closeButton = new TextButton("Close", skin);
+        closeButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                showHousingMenu = false;
+                selectedHousing = null;
+                if (housingMenuTable != null) {
+                    housingMenuTable.remove();
+                    housingMenuTable = null;
+                }
+            }
+        });
+        housingMenuTable.add(closeButton).width(120).pad(10).row();
+        
+        stage.addActor(housingMenuTable);
+    }
+    
+    private void bringAnimalOut(PurchasedAnimal animal) {
+        // Find a reachable position around the housing
+        int[] position = findReachablePositionAroundHousing(selectedHousing);
+        animal.setX(position[0]);
+        animal.setY(position[1]);
+        animal.setInCage(false);
+        
+        // Initialize movement target to current position
+        animal.setTargetX(position[0]);
+        animal.setTargetY(position[1]);
+        animal.setMoving(false);
+        animal.setMoveProgress(0f);
+        animal.setLastMoveTime(0); // Start moving immediately
+        
+        // Update the housing menu
+        if (housingMenuTable != null) {
+            housingMenuTable.remove();
+            createHousingMenuUI();
+        }
+    }
+    
+    private void bringAnimalIn(PurchasedAnimal animal) {
+        animal.setInCage(true);
+        
+        // Update the housing menu
+        if (housingMenuTable != null) {
+            housingMenuTable.remove();
+            createHousingMenuUI();
+        }
+    }
+    
+    private int[] findReachablePositionAroundHousing(Housing housing) {
+        Player currentPlayer = game.getCurrentPlayer();
+        if (currentPlayer == null) {
+            return new int[]{housing.getX() + 2, housing.getY() + 2}; // Fallback position
+        }
+        
+        // Define potential positions around the housing (all sides)
+        List<int[]> potentialPositions = new ArrayList<>();
+        
+        // Right side positions
+        for (int y = housing.getY() + 2; y <= housing.getY() + 6; y++) {
+            potentialPositions.add(new int[]{housing.getX() + 8, y});
+        }
+        
+        // Left side positions
+        for (int y = housing.getY() + 2; y <= housing.getY() + 6; y++) {
+            potentialPositions.add(new int[]{housing.getX() - 1, y});
+        }
+        
+        // Top side positions
+        for (int x = housing.getX() + 2; x <= housing.getX() + 6; x++) {
+            potentialPositions.add(new int[]{x, housing.getY() + 9});
+        }
+        
+        // Bottom side positions
+        for (int x = housing.getX() + 2; x <= housing.getX() + 6; x++) {
+            potentialPositions.add(new int[]{x, housing.getY() - 1});
+        }
+        
+        // Shuffle the positions to make spawn location random
+        java.util.Collections.shuffle(potentialPositions, random);
+        
+        // Check each position for walkability
+        for (int[] pos : potentialPositions) {
+            if (pos[0] >= 0 && pos[0] < MAP_WIDTH && pos[1] >= 0 && pos[1] < MAP_HEIGHT) {
+                if (isAnimalWalkable(pos[0], pos[1], currentPlayer)) {
+                    return pos;
+                }
+            }
+        }
+        
+        // If no good position found, return a fallback position
+        return new int[]{housing.getX() + 2, housing.getY() + 2};
+    }
+    
+    private boolean isAnimalWalkable(int x, int y, Player currentPlayer) {
+        // Check if the tile is walkable for animals (similar to player walkability but simpler)
+        if (x < 0 || x >= MAP_WIDTH || y < 0 || y >= MAP_HEIGHT) {
+            return false;
+        }
+        
+        Tile tile = gameMap.getTile(x, y);
+        if (tile == null) {
+            return false;
+        }
+        
+        // Animals can walk on grass, earth, and some other walkable tiles
+        TileType tileType = tile.getType();
+        return tileType == TileType.Grass || tileType == TileType.Earth || 
+               tileType == TileType.Shoveled || tileType == TileType.Water;
+    }
+    
+    private void renderAnimals() {
+        Player currentPlayer = game.getCurrentPlayer();
+        if (currentPlayer == null) return;
+        
+        for (Housing housing : currentPlayer.getHousings()) {
+            for (PurchasedAnimal animal : housing.getOccupants()) {
+                if (!animal.isInCage()) {
+                    // Render animal outside
+                    Texture animalTexture = animalTextures.get(animal.getType());
+                    if (animalTexture != null) {
+                        float worldX = animal.getX() * TILE_SIZE;
+                        float worldY = (MAP_HEIGHT - 1 - animal.getY()) * TILE_SIZE;
+                        
+                        // Apply movement interpolation if animal is moving
+                        if (animal.isMoving()) {
+                            float startX = animal.getX() * TILE_SIZE;
+                            float startY = (MAP_HEIGHT - 1 - animal.getY()) * TILE_SIZE;
+                            float endX = animal.getTargetX() * TILE_SIZE;
+                            float endY = (MAP_HEIGHT - 1 - animal.getTargetY()) * TILE_SIZE;
+                            
+                            worldX = startX + (endX - startX) * animal.getMoveProgress();
+                            worldY = startY + (endY - startY) * animal.getMoveProgress();
+                        }
+                        
+                        // Determine if animal is moving left (flip image)
+                        boolean movingLeft = animal.isMoving() && animal.getTargetX() < animal.getX();
+                        
+                        // Render animal with proper flipping, using TILE_SIZE x TILE_SIZE
+                        if (movingLeft) {
+                            // Flip horizontally for left movement
+                            spriteBatch.draw(animalTexture, worldX + TILE_SIZE, worldY, -TILE_SIZE, TILE_SIZE);
+                        } else {
+                            // Normal rendering for right movement or stationary
+                            spriteBatch.draw(animalTexture, worldX, worldY, TILE_SIZE, TILE_SIZE);
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    private void updateAnimalMovement(float delta) {
+        Player currentPlayer = game.getCurrentPlayer();
+        if (currentPlayer == null) return;
+        
+        // Update timer
+        animalMovementTimer += delta;
+        
+        // Check if it's time to update animal movements (every 10 seconds)
+        if (animalMovementTimer >= ANIMAL_MOVEMENT_UPDATE_INTERVAL) {
+            animalMovementTimer = 0f;
+            
+            // Update each animal's movement
+            for (Housing housing : currentPlayer.getHousings()) {
+                for (PurchasedAnimal animal : housing.getOccupants()) {
+                    if (!animal.isInCage()) {
+                        updateAnimalMovement(animal, housing);
+                    }
+                }
+            }
+        }
+        
+        // Update movement progress for moving animals
+        for (Housing housing : currentPlayer.getHousings()) {
+            for (PurchasedAnimal animal : housing.getOccupants()) {
+                if (!animal.isInCage() && animal.isMoving()) {
+                    animal.setMoveProgress(animal.getMoveProgress() + delta * animal.MOVE_SPEED);
+                    
+                    // Check if movement is complete
+                    if (animal.getMoveProgress() >= 1.0f) {
+                        // Movement complete, update position
+                        animal.setX(animal.getTargetX());
+                        animal.setY(animal.getTargetY());
+                        animal.setMoving(false);
+                        animal.setMoveProgress(0f);
+                    }
+                }
+            }
+        }
+    }
+    
+    private void updateAnimalMovement(PurchasedAnimal animal, Housing housing) {
+        // Check if it's time for this animal to move (10 seconds interval)
+        long currentTime = System.currentTimeMillis();
+        if (currentTime - animal.getLastMoveTime() < animal.MOVE_INTERVAL) {
+            return;
+        }
+        
+        // Generate a new random target position within 5 tiles of current position
+        int currentX = animal.getX();
+        int currentY = animal.getY();
+        
+        // Try to find a valid target position
+        for (int attempts = 0; attempts < 20; attempts++) {
+            // Generate random offset within 5 tiles
+            int offsetX = random.nextInt(11) - 5; // -5 to +5
+            int offsetY = random.nextInt(11) - 5; // -5 to +5
+            
+            int targetX = currentX + offsetX;
+            int targetY = currentY + offsetY;
+            
+            // Check bounds
+            if (targetX < 0 || targetX >= MAP_WIDTH || targetY < 0 || targetY >= MAP_HEIGHT) {
+                continue;
+            }
+            
+            // Check if target position is walkable
+            if (isAnimalWalkable(targetX, targetY, game.getCurrentPlayer())) {
+                // Simple movement: just move one step towards the target
+                int stepX = currentX;
+                int stepY = currentY;
+                
+                // Move one step towards target
+                if (targetX > currentX) stepX++;
+                else if (targetX < currentX) stepX--;
+                
+                if (targetY > currentY) stepY++;
+                else if (targetY < currentY) stepY--;
+                
+                // Check if the step position is walkable
+                if (isAnimalWalkable(stepX, stepY, game.getCurrentPlayer())) {
+                    animal.setTargetX(stepX);
+                    animal.setTargetY(stepY);
+                    animal.setMoving(true);
+                    animal.setMoveProgress(0f);
+                    animal.setLastMoveTime(currentTime);
+                    return;
+                }
+            }
+        }
+    }
+    
+    private List<int[]> findPathToTarget(int startX, int startY, int targetX, int targetY) {
+        // Simple A* pathfinding implementation
+        PriorityQueue<PathNode> openSet = new PriorityQueue<>();
+        Set<String> closedSet = new HashSet<>();
+        Map<String, PathNode> allNodes = new HashMap<>();
+        
+        PathNode startNode = new PathNode(startX, startY, 0, calculateHeuristic(startX, startY, targetX, targetY));
+        openSet.add(startNode);
+        allNodes.put(startX + "," + startY, startNode);
+        
+        while (!openSet.isEmpty()) {
+            PathNode current = openSet.poll();
+            
+            if (current.x == targetX && current.y == targetY) {
+                // Found path, reconstruct it
+                return reconstructPath(current);
+            }
+            
+            closedSet.add(current.x + "," + current.y);
+            
+            // Check all 4 directions
+            int[][] directions = {{0, 1}, {1, 0}, {0, -1}, {-1, 0}};
+            for (int[] dir : directions) {
+                int newX = current.x + dir[0];
+                int newY = current.y + dir[1];
+                String key = newX + "," + newY;
+                
+                if (closedSet.contains(key)) continue;
+                
+                if (newX < 0 || newX >= MAP_WIDTH || newY < 0 || newY >= MAP_HEIGHT) continue;
+                
+                if (!isAnimalWalkable(newX, newY, game.getCurrentPlayer())) continue;
+                
+                int newG = current.g + 1;
+                PathNode neighbor = allNodes.get(key);
+                
+                if (neighbor == null) {
+                    neighbor = new PathNode(newX, newY, newG, calculateHeuristic(newX, newY, targetX, targetY));
+                    neighbor.parent = current;
+                    allNodes.put(key, neighbor);
+                    openSet.add(neighbor);
+                } else if (newG < neighbor.g) {
+                    neighbor.g = newG;
+                    neighbor.parent = current;
+                }
+            }
+        }
+        
+        return null; // No path found
+    }
+    
+    private int calculateHeuristic(int x1, int y1, int x2, int y2) {
+        // Manhattan distance
+        return Math.abs(x1 - x2) + Math.abs(y1 - y2);
+    }
+    
+    private List<int[]> reconstructPath(PathNode endNode) {
+        List<int[]> path = new ArrayList<>();
+        PathNode current = endNode;
+        
+        while (current != null) {
+            path.add(0, new int[]{current.x, current.y});
+            current = current.parent;
+        }
+        
+        return path;
+    }
+    
+    private static class PathNode implements Comparable<PathNode> {
+        int x, y, g, h;
+        PathNode parent;
+        
+        PathNode(int x, int y, int g, int h) {
+            this.x = x;
+            this.y = y;
+            this.g = g;
+            this.h = h;
+        }
+        
+        int f() { return g + h; }
+        
+        @Override
+        public int compareTo(PathNode other) {
+            return Integer.compare(this.f(), other.f());
         }
     }
 
