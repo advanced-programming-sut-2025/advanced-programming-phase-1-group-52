@@ -3,6 +3,7 @@ package com.example.main.GDXviews;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.PriorityQueue;
@@ -40,6 +41,7 @@ import com.badlogic.gdx.scenes.scene2d.ui.TooltipManager;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
+import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Timer;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
@@ -393,6 +395,11 @@ public class GDXGameScreen implements Screen {
     private boolean isGiftMode = false;
     private String giftResultMessage = "";
     private boolean giftResultSuccess = false;
+
+    // Animal menu
+    private boolean showAnimalMenu = false;
+    private PurchasedAnimal selectedAnimal = null;
+    private Table animalMenuTable = null;
 
     public GDXGameScreen() {
         controller = new GameMenuController();
@@ -751,6 +758,10 @@ public class GDXGameScreen implements Screen {
             // Allow UI events (handled by scene2d stage) but block game input
             return;
         }
+
+        if (showAnimalMenu) {
+            return;
+        }
         
         // Handle building placement mode
         if (isBuildingPlacementMode) {
@@ -890,6 +901,10 @@ public class GDXGameScreen implements Screen {
         
         // Handle housing interactions
         if (Gdx.input.isButtonJustPressed(Input.Buttons.LEFT)) {
+            // First, check if an animal was clicked
+            if (handleAnimalClick(Gdx.input.getX(), Gdx.input.getY())) {
+                return;
+            }
             handleHousingClick(Gdx.input.getX(), Gdx.input.getY());
         }
         if (Gdx.input.isKeyJustPressed(Input.Keys.NUM_1)) {
@@ -4166,17 +4181,15 @@ public class GDXGameScreen implements Screen {
     }
     
     private void updateAnimalMovement(float delta) {
+        if (showAnimalMenu) return;
         Player currentPlayer = game.getCurrentPlayer();
         if (currentPlayer == null) return;
         
-        // Update timer
         animalMovementTimer += delta;
         
-        // Check if it's time to update animal movements (every 10 seconds)
         if (animalMovementTimer >= ANIMAL_MOVEMENT_UPDATE_INTERVAL) {
             animalMovementTimer = 0f;
             
-            // Update each animal's movement
             for (Housing housing : currentPlayer.getHousings()) {
                 for (PurchasedAnimal animal : housing.getOccupants()) {
                     if (!animal.isInCage()) {
@@ -4186,15 +4199,12 @@ public class GDXGameScreen implements Screen {
             }
         }
         
-        // Update movement progress for moving animals
         for (Housing housing : currentPlayer.getHousings()) {
             for (PurchasedAnimal animal : housing.getOccupants()) {
                 if (!animal.isInCage() && animal.isMoving()) {
                     animal.setMoveProgress(animal.getMoveProgress() + delta * animal.MOVE_SPEED);
                     
-                    // Check if movement is complete
                     if (animal.getMoveProgress() >= 1.0f) {
-                        // Movement complete, update position
                         animal.setX(animal.getTargetX());
                         animal.setY(animal.getTargetY());
                         animal.setMoving(false);
@@ -4206,44 +4216,35 @@ public class GDXGameScreen implements Screen {
     }
     
     private void updateAnimalMovement(PurchasedAnimal animal, Housing housing) {
-        // Check if it's time for this animal to move (10 seconds interval)
         long currentTime = System.currentTimeMillis();
         if (currentTime - animal.getLastMoveTime() < animal.MOVE_INTERVAL) {
             return;
         }
         
-        // Generate a new random target position within 5 tiles of current position
         int currentX = animal.getX();
         int currentY = animal.getY();
         
-        // Try to find a valid target position
         for (int attempts = 0; attempts < 20; attempts++) {
-            // Generate random offset within 5 tiles
-            int offsetX = random.nextInt(11) - 5; // -5 to +5
-            int offsetY = random.nextInt(11) - 5; // -5 to +5
+            int offsetX = random.nextInt(11) - 5;
+            int offsetY = random.nextInt(11) - 5;
             
             int targetX = currentX + offsetX;
             int targetY = currentY + offsetY;
             
-            // Check bounds
             if (targetX < 0 || targetX >= MAP_WIDTH || targetY < 0 || targetY >= MAP_HEIGHT) {
                 continue;
             }
             
-            // Check if target position is walkable
             if (isAnimalWalkable(targetX, targetY, game.getCurrentPlayer())) {
-                // Simple movement: just move one step towards the target
                 int stepX = currentX;
                 int stepY = currentY;
                 
-                // Move one step towards target
                 if (targetX > currentX) stepX++;
                 else if (targetX < currentX) stepX--;
                 
                 if (targetY > currentY) stepY++;
                 else if (targetY < currentY) stepY--;
                 
-                // Check if the step position is walkable
                 if (isAnimalWalkable(stepX, stepY, game.getCurrentPlayer())) {
                     animal.setTargetX(stepX);
                     animal.setTargetY(stepY);
@@ -4257,7 +4258,6 @@ public class GDXGameScreen implements Screen {
     }
     
     private List<int[]> findPathToTarget(int startX, int startY, int targetX, int targetY) {
-        // Simple A* pathfinding implementation
         PriorityQueue<PathNode> openSet = new PriorityQueue<>();
         Set<String> closedSet = new HashSet<>();
         Map<String, PathNode> allNodes = new HashMap<>();
@@ -4270,13 +4270,11 @@ public class GDXGameScreen implements Screen {
             PathNode current = openSet.poll();
             
             if (current.x == targetX && current.y == targetY) {
-                // Found path, reconstruct it
                 return reconstructPath(current);
             }
             
             closedSet.add(current.x + "," + current.y);
             
-            // Check all 4 directions
             int[][] directions = {{0, 1}, {1, 0}, {0, -1}, {-1, 0}};
             for (int[] dir : directions) {
                 int newX = current.x + dir[0];
@@ -4304,11 +4302,10 @@ public class GDXGameScreen implements Screen {
             }
         }
         
-        return null; // No path found
+        return null;
     }
     
     private int calculateHeuristic(int x1, int y1, int x2, int y2) {
-        // Manhattan distance
         return Math.abs(x1 - x2) + Math.abs(y1 - y2);
     }
     
@@ -4341,6 +4338,177 @@ public class GDXGameScreen implements Screen {
         public int compareTo(PathNode other) {
             return Integer.compare(this.f(), other.f());
         }
+    }
+
+    private boolean handleAnimalClick(int screenX, int screenY) {
+        Player currentPlayer = game.getCurrentPlayer();
+        if (currentPlayer == null) return false;
+        com.badlogic.gdx.math.Vector3 mouseInWorld = camera.unproject(new com.badlogic.gdx.math.Vector3(screenX, screenY, 0));
+        float mx = mouseInWorld.x;
+        float my = mouseInWorld.y;
+        for (Housing housing : currentPlayer.getHousings()) {
+            for (PurchasedAnimal animal : housing.getOccupants()) {
+                if (!animal.isInCage()) {
+                    float ax = animal.getX() * TILE_SIZE;
+                    float ay = (MAP_HEIGHT - 1 - animal.getY()) * TILE_SIZE;
+                    if (mx >= ax && mx < ax + TILE_SIZE && my >= ay && my < ay + TILE_SIZE) {
+                        selectedAnimal = animal;
+                        showAnimalMenu = true;
+                        createAnimalMenuUI();
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    private void createAnimalMenuUI() {
+        if (animalMenuTable != null) {
+            animalMenuTable.remove();
+            animalMenuTable = null;
+        }
+        animalMenuTable = new Table();
+        animalMenuTable.setBackground(new TextureRegionDrawable(menuBackgroundTexture));
+        animalMenuTable.setSize(600, 400);
+        animalMenuTable.setPosition(Gdx.graphics.getWidth() / 2f - 300, Gdx.graphics.getHeight() / 2f - 200);
+        animalMenuTable.pad(20);
+        animalMenuTable.defaults().pad(10).width(250);
+
+        Label title = new Label(selectedAnimal != null ? selectedAnimal.getName() : "Animal", skin);
+        title.setAlignment(Align.center);
+        animalMenuTable.add(title).center().row();
+
+        TextButton infoBtn = new TextButton("Info", skin);
+        TextButton feedBtn = new TextButton("Feed", skin);
+        TextButton petBtn = new TextButton("Pet", skin);
+        TextButton sellBtn = new TextButton("Sell", skin);
+        TextButton collectBtn = new TextButton("Collect", skin);
+        TextButton closeBtn = new TextButton("Close", skin);
+
+        animalMenuTable.add(infoBtn).row();
+        animalMenuTable.add(feedBtn).row();
+        animalMenuTable.add(petBtn).row();
+        animalMenuTable.add(sellBtn).row();
+        animalMenuTable.add(collectBtn).row();
+        animalMenuTable.add(closeBtn).row();
+
+        infoBtn.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                showAnimalInfoPage();
+            }
+        });
+
+        petBtn.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                if (controller != null && selectedAnimal != null) {
+                    controller.petAnimal(selectedAnimal.getName());
+                }
+                showAnimalMenu = false;
+                selectedAnimal = null;
+                if (animalMenuTable != null) {
+                    animalMenuTable.remove();
+                    animalMenuTable = null;
+                }
+            }
+        });
+
+        sellBtn.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                if (controller != null && selectedAnimal != null) {
+                    controller.sellAnimal(selectedAnimal.getName());
+                    Player currentPlayer = game.getCurrentPlayer();
+                    if (currentPlayer != null) {
+                        for (Housing housing : currentPlayer.getHousings()) {
+                            for (Iterator<PurchasedAnimal> it = housing.getOccupants().iterator(); it.hasNext(); ) {
+                                PurchasedAnimal a = it.next();
+                                if (a == selectedAnimal) {
+                                    it.remove();
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+                showAnimalMenu = false;
+                selectedAnimal = null;
+                if (animalMenuTable != null) {
+                    animalMenuTable.remove();
+                    animalMenuTable = null;
+                }
+            }
+        });
+
+        closeBtn.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                showAnimalMenu = false;
+                selectedAnimal = null;
+                if (animalMenuTable != null) {
+                    animalMenuTable.remove();
+                    animalMenuTable = null;
+                }
+            }
+        });
+
+        stage.addActor(animalMenuTable);
+        stage.setKeyboardFocus(animalMenuTable);
+        stage.setScrollFocus(animalMenuTable);
+    }
+
+    private void showAnimalInfoPage() {
+        if (animalMenuTable != null) {
+            animalMenuTable.remove();
+            animalMenuTable = null;
+        }
+        animalMenuTable = new Table();
+        animalMenuTable.setBackground(new TextureRegionDrawable(menuBackgroundTexture));
+        animalMenuTable.setSize(600, 400);
+        animalMenuTable.setPosition(Gdx.graphics.getWidth() / 2f - 300, Gdx.graphics.getHeight() / 2f - 200);
+        animalMenuTable.pad(20);
+        animalMenuTable.defaults().pad(10).width(250);
+
+        Label title = new Label(selectedAnimal != null ? selectedAnimal.getName() + " - Info" : "Animal Info", skin);
+        title.setAlignment(Align.center);
+        animalMenuTable.add(title).center().row();
+
+        String info = selectedAnimal != null ? selectedAnimal.toString() : "No animal selected.";
+        Label infoLabel = new Label(info, skin);
+        infoLabel.setAlignment(Align.topLeft);
+        infoLabel.setWrap(true);
+        animalMenuTable.add(infoLabel).expandX().fillX().row();
+
+        Table buttonRow = new Table();
+        TextButton backBtn = new TextButton("Back", skin);
+        TextButton closeBtn = new TextButton("Close", skin);
+        buttonRow.add(backBtn).width(120).padRight(20);
+        buttonRow.add(closeBtn).width(120);
+        animalMenuTable.add(buttonRow).padTop(20).center().row();
+
+        backBtn.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                createAnimalMenuUI();
+            }
+        });
+        closeBtn.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                showAnimalMenu = false;
+                selectedAnimal = null;
+                if (animalMenuTable != null) {
+                    animalMenuTable.remove();
+                    animalMenuTable = null;
+                }
+            }
+        });
+
+        stage.addActor(animalMenuTable);
+        stage.setKeyboardFocus(animalMenuTable);
+        stage.setScrollFocus(animalMenuTable);
     }
 
 }

@@ -64,7 +64,6 @@ public class PurchasedAnimal {
         this.y = y;
     }
     
-    // Movement getters and setters
     public int getTargetX() {
         return targetX;
     }
@@ -187,8 +186,8 @@ public class PurchasedAnimal {
 
     @Override
     public String toString() {
-        return this.name + ":\nFriendship points: " + this.friendshipPoints + 
-        "\nisFull: " + this.isFull + "\nin housing: " + 
-        this.isInCage + "\n---------------------\n";
+        return this.name + ":\nType: " + this.type + "\nFriendship points: " + this.friendshipPoints + 
+        "\nis Full: " + this.isFull + "\nin Housing: " + 
+        this.isInCage + "\nCollected: " + this.productCollected + "\n";
     }
 }
