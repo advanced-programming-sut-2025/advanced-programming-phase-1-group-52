@@ -2855,53 +2855,44 @@ public class GameMenuController {
         return new Result(true, message);
     }
 
-    // In main/controller/GameMenuController.java
-
-    public Result moveItemToRefrigerator(String itemName) {
+    public Result moveRandomFoodToRefrigerator() {
         Player player = game.getCurrentPlayer();
-        Item itemToMove = player.getInventory().getItemByName(itemName);
 
-        if (itemToMove == null) {
-            return new Result(false, "You don't have that item in your inventory.");
-        }
-        if (!(itemToMove instanceof Food)) {
-            return new Result(false, "You can only store food in the refrigerator.");
-        }
-        if (player.getHouseRefrigerator().isFull() && player.getHouseRefrigerator().findItemByType(itemToMove.getItemType()) == null) {
-            return new Result(false, "The refrigerator is full and cannot accept new item types.");
+        // Find all food items in the inventory
+        List<Item> foodInInventory = player.getInventory().getItems().stream()
+            .filter(item -> item instanceof Food)
+            .collect(Collectors.toList());
+
+        if (foodInInventory.isEmpty()) {
+            return new Result(false, "You have no food in your inventory to move.");
         }
 
-        // Create a new food object for the refrigerator
+        if (player.getHouseRefrigerator().isFull()) {
+            // Check if the fridge can at least stack with an existing item
+            boolean canStack = false;
+            for (Item food : foodInInventory) {
+                if (player.getHouseRefrigerator().findItemByType(food.getItemType()) != null) {
+                    canStack = true;
+                    break;
+                }
+            }
+            if (!canStack) {
+                return new Result(false, "The refrigerator is full and cannot accept new items.");
+            }
+        }
+
+        // Select a random food item from the list
+        Random random = new Random();
+        Item itemToMove = foodInInventory.get(random.nextInt(foodInInventory.size()));
+
+        // Create a new food object for the refrigerator to avoid reference issues
         Food foodForFridge = new Food((FoodType) itemToMove.getItemType(), 1);
         player.getHouseRefrigerator().putItem(foodForFridge);
 
         // Remove one from the inventory
-        player.getInventory().remove2(itemName, 1);
+        player.getInventory().remove2(itemToMove.getName(), 1);
 
-        return new Result(true, "Moved " + itemName + " to the refrigerator.");
-    }
-
-    // In main/controller/GameMenuController.java
-
-    public Result moveItemFromRefrigerator(String itemName) {
-        Player player = game.getCurrentPlayer();
-        Item itemToMove = player.getHouseRefrigerator().getItemByName(itemName);
-
-        if (itemToMove == null) {
-            return new Result(false, "That item is not in the refrigerator.");
-        }
-        if (player.getInventory().isFull() && player.getInventory().findItemByType(itemToMove.getItemType()) == null) {
-            return new Result(false, "Your inventory is full and cannot accept new item types.");
-        }
-
-        // Create a new food object for the inventory
-        Food foodForInventory = new Food((FoodType) itemToMove.getItemType(), 1);
-        player.getInventory().addItem(foodForInventory);
-
-        // Remove one from the refrigerator
-        player.getHouseRefrigerator().remove(itemToMove.getItemType(), 1);
-
-        return new Result(true, "Moved " + itemName + " to your inventory.");
+        return new Result(true, "Moved 1 " + itemToMove.getName() + " to the refrigerator.");
     }
 
     public Result cheatAddCraftingRecipe(String recipeName) {

@@ -209,11 +209,6 @@ public class GDXGameScreen implements Screen {
     private Stage cookingCheatMenuStage;
     private TextField cheatCookingRecipeField;
 
-    private boolean isTransferMenuOpen = false;
-    private Stage transferStage;
-    private Table inventoryFoodTable;
-    private Table refrigeratorFoodTable;
-
     private Texture ground1Texture;
     private Texture ground2Texture;
     private Texture grass1Texture;
@@ -452,7 +447,6 @@ public class GDXGameScreen implements Screen {
         cookingStage = new Stage(new ScreenViewport());
         craftingCheatMenuStage = new Stage(new ScreenViewport());
         cookingCheatMenuStage = new Stage(new ScreenViewport());
-        transferStage = new Stage(new ScreenViewport());
 
         textureManager = new TextureManager();
         textureManager.loadAllItemTextures();
@@ -477,7 +471,6 @@ public class GDXGameScreen implements Screen {
         setupCookingUI();
         setupCraftingCheatMenuUI();
         setupCookingCheatMenuUI();
-        setupTransferUI();
 
         crowAnimations = new ArrayList<>();
 
@@ -490,7 +483,6 @@ public class GDXGameScreen implements Screen {
         multiplexer.addProcessor(cookingStage);
         multiplexer.addProcessor(cookingCheatMenuStage);
         multiplexer.addProcessor(craftingCheatMenuStage);
-        multiplexer.addProcessor(transferStage);
         plantableItems = new ArrayList<>();
         Gdx.input.setInputProcessor(multiplexer);
     }
@@ -588,7 +580,6 @@ public class GDXGameScreen implements Screen {
         renderCookingMenu(delta);
         renderCraftingCheatMenu(delta);
         renderCookingCheatMenu(delta);
-        renderTransferMenu(delta);
         stage.act(delta);
         stage.draw();
     }
@@ -893,7 +884,7 @@ public class GDXGameScreen implements Screen {
             }
         }
 
-        if (isInventoryOpen || isToolMenuOpen || isCheatMenuOpen || isPlantingSelectionOpen || isCraftingMenuOpen || isCookingMenuOpen || isCraftingCheatMenuOpen || isCookingCheatMenuOpen || isTransferMenuOpen) {
+        if (isInventoryOpen || isToolMenuOpen || isCheatMenuOpen || isPlantingSelectionOpen || isCraftingMenuOpen || isCookingMenuOpen || isCraftingCheatMenuOpen || isCookingCheatMenuOpen) {
             return;
         }
 
@@ -2855,15 +2846,19 @@ public class GDXGameScreen implements Screen {
         fridgeScrollPane.setFadeScrollBars(false);
         rightPanel.add(fridgeScrollPane).expand().fill().row();
 
-        TextButton transferButton = new TextButton("Transfer Items", skin);
-        rightPanel.add(transferButton).padTop(10).fillX();
+        TextButton moveToFridgeButton = new TextButton("Move Food to Fridge", skin);
+        rightPanel.add(moveToFridgeButton).padTop(10).fillX();
 
-        transferButton.addListener(new ClickListener() {
+        moveToFridgeButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                isTransferMenuOpen = true;
-                showTransferMenu();
-                Gdx.input.setInputProcessor(transferStage);
+                Result result = controller.moveRandomFoodToRefrigerator();
+                showCookingMenu(); // Refresh the entire menu to show updated lists
+
+                // Show feedback message to the player
+                generalMessageLabel.setText(result.Message());
+                generalMessageLabel.setVisible(true);
+                generalMessageTimer = GENERAL_MESSAGE_DURATION;
             }
         });
 
@@ -2961,108 +2956,6 @@ public class GDXGameScreen implements Screen {
         if (!isCookingMenuOpen) return;
         cookingStage.act(delta);
         cookingStage.draw();
-    }
-
-    private void setupTransferUI() {
-        Dialog transferDialog = new Dialog("Transfer Food", skin, "dialog");
-        transferDialog.setModal(true);
-        transferDialog.setMovable(false);
-
-        Table contentTable = transferDialog.getContentTable();
-        contentTable.pad(10);
-
-        // Main layout: Inventory on left, Refrigerator on right
-        Table mainSplit = new Table();
-        contentTable.add(mainSplit).expand().fill();
-
-        // Left Panel: Inventory
-        Table leftPanel = new Table();
-        leftPanel.top();
-        leftPanel.add(new Label("Your Inventory (Food Only)", skin)).padBottom(5).row();
-        inventoryFoodTable = new Table();
-        inventoryFoodTable.top();
-        ScrollPane inventoryScrollPane = new ScrollPane(inventoryFoodTable, skin);
-        leftPanel.add(inventoryScrollPane).expand().fill();
-
-        // Right Panel: Refrigerator
-        Table rightPanel = new Table();
-        rightPanel.top();
-        rightPanel.add(new Label("Refrigerator", skin)).padBottom(5).row();
-        refrigeratorFoodTable = new Table();
-        refrigeratorFoodTable.top();
-        ScrollPane fridgeScrollPane = new ScrollPane(refrigeratorFoodTable, skin);
-        rightPanel.add(fridgeScrollPane).expand().fill();
-
-        mainSplit.add(leftPanel).expand().fill().padRight(5);
-        mainSplit.add(rightPanel).expand().fill().padLeft(5);
-
-        // Close button at the bottom
-        TextButton closeButton = new TextButton("Close", skin);
-        transferDialog.getButtonTable().add(closeButton).width(100);
-        closeButton.addListener(new ClickListener() {
-            @Override
-            public void clicked(InputEvent event, float x, float y) {
-                isTransferMenuOpen = false;
-                showCookingMenu(); // Refresh the main cooking menu
-                Gdx.input.setInputProcessor(cookingStage);
-                transferDialog.hide();
-            }
-        });
-
-        // The dialog is added to the stage, but we only show it when needed
-        transferDialog.pack();
-        transferDialog.setPosition(Gdx.graphics.getWidth() / 2f, Gdx.graphics.getHeight() / 2f, com.badlogic.gdx.utils.Align.center);
-        transferStage.addActor(transferDialog);
-        transferDialog.setVisible(false); // Initially hidden
-    }
-
-    private void showTransferMenu() {
-        Dialog transferDialog = (Dialog) transferStage.getActors().first();
-        transferDialog.setVisible(true);
-
-        Player player = game.getCurrentPlayer();
-        inventoryFoodTable.clear();
-        refrigeratorFoodTable.clear();
-
-        // Populate Inventory List
-        for (Item item : player.getInventory().getItems()) {
-            if (item instanceof Food) {
-                TextButton itemButton = new TextButton(item.getName() + " (" + item.getNumber() + ")", skin);
-                itemButton.getLabel().setAlignment(com.badlogic.gdx.utils.Align.left);
-                inventoryFoodTable.add(itemButton).fillX().pad(2).row();
-
-                itemButton.addListener(new ClickListener() {
-                    @Override
-                    public void clicked(InputEvent event, float x, float y) {
-                        Result result = controller.moveItemToRefrigerator(item.getName());
-                        // Refresh both lists after transfer
-                        showTransferMenu();
-                    }
-                });
-            }
-        }
-
-        // Populate Refrigerator List
-        for (Item item : player.getHouseRefrigerator().getItems()) {
-            TextButton itemButton = new TextButton(item.getName() + " (" + item.getNumber() + ")", skin);
-            itemButton.getLabel().setAlignment(com.badlogic.gdx.utils.Align.left);
-            refrigeratorFoodTable.add(itemButton).fillX().pad(2).row();
-
-            itemButton.addListener(new ClickListener() {
-                @Override
-                public void clicked(InputEvent event, float x, float y) {
-                    Result result = controller.moveItemFromRefrigerator(item.getName());
-                    // Refresh both lists after transfer
-                    showTransferMenu();
-                }
-            });
-        }
-    }
-
-    private void renderTransferMenu(float delta) {
-        if (!isTransferMenuOpen) return;
-        transferStage.act(delta);
-        transferStage.draw();
     }
 
     public void triggerCrowAttackAnimation() {
