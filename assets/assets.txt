@@ -237,6 +237,28 @@ content/Artisan_good/Yellow_Jelly.png
 content/Artisan_good/Yellow_Juice.png
 content/Artisan_good/Yellow_Pickles.png
 content/Artisan_good/Yellow_Wine.png
+content/Buff/Attack_Buff.png
+content/Buff/Burnt.png
+content/Buff/Combat_Skill_Icon.png
+content/Buff/Darkness.png
+content/Buff/Defense_Buff.png
+content/Buff/Farming_Skill_Icon.png
+content/Buff/Fishing_Skill_Icon.png
+content/Buff/Foraging_Skill_Icon.png
+content/Buff/Frozen.png
+content/Buff/Jinxed.png
+content/Buff/Luck_Buff.png
+content/Buff/Magnetism_Buff.png
+content/Buff/Max_Energy_Buff.png
+content/Buff/Mining_Skill_Icon.png
+content/Buff/Monster_Musk_Buff.png
+content/Buff/Nauseated.png
+content/Buff/Oil_of_Garlic_Buff.png
+content/Buff/Slimed.png
+content/Buff/Speed_Buff.png
+content/Buff/Squid_Ink_Ravioli_Buff.png
+content/Buff/Tipsy.png
+content/Buff/Weakness.png
 content/Buildings/Barn.png
 content/Buildings/Beach Cabin.png
 content/Buildings/Beach Cabin_PaintMask.png

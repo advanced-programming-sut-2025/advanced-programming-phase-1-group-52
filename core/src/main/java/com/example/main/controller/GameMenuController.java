@@ -1627,31 +1627,38 @@ public class GameMenuController {
 
     public Result eat(String foodName) {
         Player player = game.getCurrentPlayer();
-        Food food = findFoodInInventory(foodName);
+        Food food = (Food) player.getInventory().findItemByType(
+            Arrays.stream(FoodType.values())
+                .filter(f -> f.getName().equalsIgnoreCase(foodName))
+                .findFirst()
+                .orElse(null)
+        );
+
         if (food == null) {
-            return new Result(false, "you don't have this food to eat");
-        }
-        player.getInventory().remove2(foodName,1);
-        player.addEnergy(food.getFoodType().getEnergy());
-        if(food.getFoodType().isBuffMaxEnergy()){
-            player.setEnergy(300);
-        }
-        if(food.getFoodType().getSkillBuff() != null){
-            if (food.getFoodType().getSkillBuff().equals(Skills.Fishing)){
-                player.catchFish();
-            }
-            if (food.getFoodType().getSkillBuff().equals(Skills.Farming)){
-                player.harvestCrop();
-            }
-            if (food.getFoodType().getSkillBuff().equals(Skills.Foraging)){
-                player.foraging();
-            }
-            if (food.getFoodType().getSkillBuff().equals(Skills.Mining)){
-                player.extract();
-            }
+            return new Result(false, "You don't have this food to eat.");
         }
 
-        return new Result(true,"yummy!");
+        player.getInventory().remove2(foodName, 1);
+        player.addEnergy(food.getFoodType().getEnergy());
+
+        StringBuilder buffMessage = new StringBuilder("Yummy!");
+        FoodType foodType = food.getFoodType();
+
+        // Handle Buffs
+        if (foodType.isBuffMaxEnergy()) {
+            ActiveBuff buff = new ActiveBuff(ActiveBuff.BuffType.MAX_ENERGY, null, foodType.getEffectiveTime());
+            player.getActiveBuffs().add(buff);
+            buffMessage.append("\nMax Energy buff activated for ").append(foodType.getEffectiveTime() * 10).append(" game minutes!");
+        }
+        if (foodType.getSkillBuff() != null) {
+            Skills skillToBuff = foodType.getSkillBuff();
+            player.getSkillData(skillToBuff).applyBuff(4); // Buff to level 4
+            ActiveBuff buff = new ActiveBuff(ActiveBuff.BuffType.SKILL, skillToBuff, foodType.getEffectiveTime());
+            player.getActiveBuffs().add(buff);
+            buffMessage.append("\n").append(skillToBuff.name()).append(" buff activated for ").append(foodType.getEffectiveTime() * 10).append(" game minutes!");
+        }
+
+        return new Result(true, buffMessage.toString());
     }
 
     public Result fishing(String fishingPoleName) {

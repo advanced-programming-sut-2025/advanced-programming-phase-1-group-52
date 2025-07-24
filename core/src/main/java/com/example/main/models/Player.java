@@ -21,6 +21,7 @@ public class Player {
     private final ArrayList<Talk> talks;
     private ArrayList<CraftingRecipe> craftingRecipes;
     private ArrayList<CookingRecipe> cookingRecipes;
+    private final ArrayList<ActiveBuff> activeBuffs = new ArrayList<>();
     private int energy;
     private House house;
     private HouseRefrigerator houseRefrigerator;
@@ -69,6 +70,18 @@ public class Player {
         }
 
         return null;
+    }
+
+    public ArrayList<ActiveBuff> getActiveBuffs() {
+        return activeBuffs;
+    }
+
+    public Map<Skills, SkillData> getSkills() {
+        return this.skills;
+    }
+
+    public SkillData getSkillData(Skills skill) {
+        return this.skills.get(skill);
     }
 
     public int getTrashCanX() {
