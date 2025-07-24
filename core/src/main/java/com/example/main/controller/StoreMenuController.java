@@ -22,6 +22,7 @@ import com.example.main.enums.items.CraftingMachineType;
 import com.example.main.enums.items.CraftingRecipes;
 import com.example.main.enums.items.FoodType;
 import com.example.main.enums.items.ForagingSeedType;
+import com.example.main.enums.items.MaterialType;
 import com.example.main.enums.items.MineralType;
 import com.example.main.enums.items.ToolType;
 import com.example.main.models.App;
@@ -40,6 +41,7 @@ import com.example.main.models.item.CraftingMachine;
 import com.example.main.models.item.CraftingRecipe;
 import com.example.main.models.item.Food;
 import com.example.main.models.item.Item;
+import com.example.main.models.item.Material;
 import com.example.main.models.item.Mineral;
 import com.example.main.models.item.PurchasedAnimal;
 import com.example.main.models.item.Seed;
@@ -104,49 +106,42 @@ public class StoreMenuController {
         Shop shop = currentTile.getShop();
 
         switch (currentTile.getShop().getShopType()) {
-            case ShopType.Blacksmith: {
+            case ShopType.Blacksmith ->  {
                 for (Blacksmith entry : Blacksmith.values()) {
                     if (entry.getDisplayName().equals(name)) item = entry;
                 }
-                break;
             }
-            case ShopType.JojaMart: {
+            case ShopType.JojaMart ->  {
                 for (JojaMart entry : JojaMart.values()) {
                     if (entry.getDisplayName().equals(name) && (entry.getSeason() == null || entry.getSeason().equals(game.getDate().getCurrentSeason()))) item = entry;
                 }
-                break;
             }
-            case ShopType.CarpentersShop: {
+            case ShopType.CarpentersShop ->  {
                 for (CarpentersShop entry : CarpentersShop.values()) {
                     if (entry.getDisplayName().equals(name)) item = entry;
                 }
-                break;
             }
-            case ShopType.FishShop: {
+            case ShopType.FishShop ->  {
                 for (FishShop entry : FishShop.values()) {
                     if (entry.getDisplayName().equals(name)) item = entry;
                 }
-                break;
             }
-            case ShopType.MarniesRanch: {
+            case ShopType.MarniesRanch ->  {
                 for (MarniesRanch entry : MarniesRanch.values()) {
                     if (entry.getDisplayName().equals(name)) item = entry;
                 }
-                break;
             }
-            case ShopType.PierresGeneralStore: {
+            case ShopType.PierresGeneralStore ->  {
                 for (PierresGeneralStore entry : PierresGeneralStore.values()) {
                     if (entry.getDisplayName().equals(name) && (entry.getSeason() == null || entry.getSeason().equals(game.getDate().getCurrentSeason()))) item = entry;
                 }
-                break;
             }
-            case ShopType.TheStardropSaloon: {
+            case ShopType.TheStardropSaloon ->  {
                 for (TheStardropSaloon entry : TheStardropSaloon.values()) {
                     if (entry.getDisplayName().equals(name)) item = entry;
                 }
-                break;
             }
-            default: {
+            default -> {
                 item = null;
             }
         }
@@ -194,6 +189,13 @@ public class StoreMenuController {
                 case FoodType foodType -> {
                     Food food = new Food(foodType, amount);
                     game.getCurrentPlayer().getInventory().addItem(food);
+                }
+                case MaterialType materialType -> {
+                    Material material = new Material(materialType, amount);
+                    game.getCurrentPlayer().getInventory().addItem(material);
+                }
+                case ToolType toolType -> {
+                    this.upgradeTool(toolType.getName());
                 }
                 default -> {
                     return new Result(false, "You can't buy that item right now!");
@@ -249,7 +251,6 @@ public class StoreMenuController {
 
     public Result buyAnimal(String animalKey, String housingIdString, String givenName) {
         Game game = App.getInstance().getCurrentGame();
-        GameMap map = App.getInstance().getCurrentGame().getMap();
         int housingId = Integer.parseInt(housingIdString);
 
         Shop ranch = new Shop(ShopType.MarniesRanch);
@@ -299,20 +300,26 @@ public class StoreMenuController {
             }
         }
 
-        PurchasedAnimal newAnimal = new PurchasedAnimal(animalType, givenName, target.getX() + 1, target.getY() + 1);
-        Result addResult = player.addAnimalToHousing(housingId, newAnimal);
-        if (!addResult.isSuccessful()) {
-            return addResult;
-        }
+        if (ranch.purchase(animalKey, 1)) {
+            PurchasedAnimal newAnimal = new PurchasedAnimal(animalType, givenName, target.getX() + 1, target.getY() + 1);
+            Result addResult = player.addAnimalToHousing(housingId, newAnimal);
+            if (!addResult.isSuccessful()) {
+                return addResult;
+            }
 
-        account.withdraw(price);
-        return Result.success(
-                animalType.getName() +
-                        " named \"" + givenName + "\" purchased for " +
-                        price + "g and assigned to " +
-                        target.getType().getName() +
-                        " #" + housingId + "."
-        );
+            account.withdraw(price);
+            return Result.success(
+                    animalType.getName() +
+                            " named \"" + givenName + "\" purchased for " +
+                            price + "g and assigned to " +
+                            target.getType().getName() +
+                            " #" + housingId + "."
+            );
+        }
+        else {
+            return Result.failure("Out of stock!");
+        }
+  
     }
 
     public Result buildBarnOrCoop(String buildingKey, String xString, String yString) {
@@ -373,7 +380,12 @@ public class StoreMenuController {
                 players.add(user.getPlayer());
             }
 
-            map.generateBuilding(players, players.indexOf(game.getCurrentPlayer()), TileType.Housing, x, x + 5, y, y + 7);
+            if (carpShop.purchase(buildingKey, 1)) {
+                map.generateBuilding(players, players.indexOf(game.getCurrentPlayer()), TileType.Housing, x, x + 5, y, y + 7);
+            }
+            else {
+                return new Result(false, "Out of stock!");
+            }
         }
         else {
             if (carpEnum.getDisplayName().contains("Big")) {
@@ -395,7 +407,12 @@ public class StoreMenuController {
                 players.add(user.getPlayer());
             }
 
-            map.generateBuilding(players, players.indexOf(game.getCurrentPlayer()), TileType.Housing, x, x + 6, y, y + 7);
+            if (carpShop.purchase(buildingKey, 1)) {
+                map.generateBuilding(players, players.indexOf(game.getCurrentPlayer()), TileType.Housing, x, x + 6, y, y + 7);
+            }
+            else {
+                return new Result(false, "Out of stock!");
+            }
         }
 
         req1.forEach((mat, amt) -> inv.remove2(mat.getName(), amt));
@@ -413,13 +430,36 @@ public class StoreMenuController {
         Tile currentTile = map.getTile(game.getCurrentPlayer().currentX(), game.getCurrentPlayer().currentY());
         Shop shop = currentTile.getShop();
 
-        if (!shop.getShopType().equals(ShopType.Blacksmith)) {
-            return new Result(false, "You should be at blacksmith's shop to upgrade tools!");
-        }
-
         Tool tool = game.getCurrentPlayer().getInventory().getToolByName(toolName);
         if (tool == null) {
             return new Result(false, "Invalid tool name!");
+        }
+
+        if (tool.getItemType().getName().contains("rod")) {
+            switch (tool.getLevel()) {
+                case 0 -> {
+                    tool.setLevel(1);
+                    tool.setItemType(ToolType.Bamboo_Rod);
+                    return new Result(true, "Tool upgraded!");
+                }
+                case 1 -> {
+                    tool.setLevel(2);
+                    tool.setItemType(ToolType.Fiberglass_Rod);
+                    return new Result(true, "Tool upgraded!");
+                }
+                case 2 -> {
+                    tool.setLevel(3);
+                    tool.setItemType(ToolType.Iridium_Rod);
+                    return new Result(true, "Tool upgraded!");
+                }
+                default -> {
+                    return new Result(false, "Already max level!");
+                }
+            }
+        }
+
+        if (!shop.getShopType().equals(ShopType.Blacksmith)) {
+            return new Result(false, "You should be at blacksmith's shop to upgrade tools!");
         }
 
         if (tool.isMax()) {

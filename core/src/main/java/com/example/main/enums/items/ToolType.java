@@ -32,7 +32,7 @@ public enum ToolType implements ItemType {
 
     // Fishing poles
     Training_Rod("training fishing rod", 8, true),
-    Bamboo_Pole("bamboo pole", 8, false),
+    Bamboo_Rod("bamboo rod", 8, false),
     Fiberglass_Rod("fiberglass rod", 6, false),
     Iridium_Rod("iridium rod", 4, false),
 
