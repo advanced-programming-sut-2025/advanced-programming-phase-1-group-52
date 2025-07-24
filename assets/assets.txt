@@ -237,6 +237,28 @@ content/Artisan_good/Yellow_Jelly.png
 content/Artisan_good/Yellow_Juice.png
 content/Artisan_good/Yellow_Pickles.png
 content/Artisan_good/Yellow_Wine.png
+content/Buff/Attack_Buff.png
+content/Buff/Burnt.png
+content/Buff/Combat_Skill_Icon.png
+content/Buff/Darkness.png
+content/Buff/Defense_Buff.png
+content/Buff/Farming_Skill_Icon.png
+content/Buff/Fishing_Skill_Icon.png
+content/Buff/Foraging_Skill_Icon.png
+content/Buff/Frozen.png
+content/Buff/Jinxed.png
+content/Buff/Luck_Buff.png
+content/Buff/Magnetism_Buff.png
+content/Buff/Max_Energy_Buff.png
+content/Buff/Mining_Skill_Icon.png
+content/Buff/Monster_Musk_Buff.png
+content/Buff/Nauseated.png
+content/Buff/Oil_of_Garlic_Buff.png
+content/Buff/Slimed.png
+content/Buff/Speed_Buff.png
+content/Buff/Squid_Ink_Ravioli_Buff.png
+content/Buff/Tipsy.png
+content/Buff/Weakness.png
 content/Buildings/Barn.png
 content/Buildings/Beach Cabin.png
 content/Buildings/Beach Cabin_PaintMask.png
@@ -7754,6 +7776,7 @@ content/Recipe/Cranberry_Sauce.png
 content/Recipe/Crispy_Bass.png
 content/Recipe/Eggplant_Parmesan.png
 content/Recipe/Escargot.png
+content/Recipe/Farmers_Lunch.png
 content/Recipe/Fiddlehead_Risotto.png
 content/Recipe/Fish_Stew.png
 content/Recipe/Fish_Taco.png
@@ -7771,6 +7794,7 @@ content/Recipe/Lucky_Lunch.png
 content/Recipe/Maki_Roll.png
 content/Recipe/Mango_Sticky_Rice.png
 content/Recipe/Maple_Bar.png
+content/Recipe/Miners_Treat.png
 content/Recipe/Moss_Soup.png
 content/Recipe/Omelet.png
 content/Recipe/Pale_Broth.png
@@ -7790,7 +7814,6 @@ content/Recipe/Red_Plate.png
 content/Recipe/Rhubarb_Pie.png
 content/Recipe/Rice_Pudding.png
 content/Recipe/Roasted_Hazelnuts.png
-content/Recipe/Roots_Platter.png
 content/Recipe/Salad.png
 content/Recipe/Salmon_Dinner.png
 content/Recipe/Sashimi.png
@@ -7801,7 +7824,6 @@ content/Recipe/Spicy_Eel.png
 content/Recipe/Squid_Ink_Ravioli.png
 content/Recipe/Stir_Fry.png
 content/Recipe/Strange_Bun.png
-content/Recipe/Stuffing.png
 content/Recipe/Super_Meal.png
 content/Recipe/Survival_Burger.png
 content/Recipe/Tom_Kha_Soup.png
@@ -7810,6 +7832,7 @@ content/Recipe/Triple_Shot_Espresso.png
 content/Recipe/Tropical_Curry.png
 content/Recipe/Trout_Soup.png
 content/Recipe/Vegetable_Medley.png
+content/Recipe/eating.png
 content/Resource/Battery_Pack.png
 content/Resource/Bone_Fragment.png
 content/Resource/Cinder_Shard.png
@@ -8802,6 +8825,11 @@ content/Tools/Watering_Can/Iridium_Watering_Can.png
 content/Tools/Watering_Can/Steel_Watering_Can.png
 content/Tools/Watering_Can/Watering_Can.png
 content/Tools/refrigerator.png
+content/Tools_animation/down.png
+content/Tools_animation/left.png
+content/Tools_animation/plant.png
+content/Tools_animation/right.png
+content/Tools_animation/up.png
 content/Trees/Acorn.png
 content/Trees/Apple.png
 content/Trees/AppleTreeLightning.png
@@ -9048,6 +9076,7 @@ hs_err_pid123909.log
 hs_err_pid12501.log
 hs_err_pid126762.log
 hs_err_pid132168.log
+hs_err_pid132840.log
 hs_err_pid13494.log
 hs_err_pid135715.log
 hs_err_pid13770.log
@@ -9160,6 +9189,7 @@ hs_err_pid56862.log
 hs_err_pid59134.log
 hs_err_pid59344.log
 hs_err_pid59597.log
+hs_err_pid5966.log
 hs_err_pid5976.log
 hs_err_pid61294.log
 hs_err_pid61693.log

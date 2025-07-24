@@ -1,27 +1,28 @@
 package com.example.main.enums.items;
 
 public enum CraftingMachineType implements ItemType {
-    CHERRY_BOMB("Cherry Bomb", 50),
-    BOMB("Bomb", 50),
-    MEGA_BOMB("Mega Bomb", 50),
-    SPRINKLER("Sprinkler", null),
-    QUALITY_SPRINKLER("Quality Sprinkler", null),
-    IRIDIUM_SPRINKLER("Iridium Sprinkler", null),
-    CHARCOAL_KILN("Charcoal Kiln", null),
-    FURNACE("Furnace", null),
-    SCARECROW("Scarecrow", null),
-    DELUXE_SCARECROW("Deluxe Scarecrow", null),
-    BEE_HOUSE("Bee House", null),
-    CHEESE_PRESS("Cheese Press", null),
-    KEG("Keg", null),
-    LOOM("Loom", null),
-    MAYONNAISE_MACHINE("Mayonnaise Machine", null),
-    OIL_MAKER("Oil Maker", null),
-    PRESERVES_JAR("Preserves Jar", null),
-    DEHYDRATOR("Dehydrator", null),
-    GRASS_STARTER("Grass Starter", null),
-    FISH_SMOKER("Fish Smoker", null),
-    MYSTIC_TREE_SEED("Mystic Tree Seed", 100);
+    // Corrected names to match PNG files
+    Cherry_Bomb("Cherry Bomb", 50),
+    Bomb("Bomb", 50),
+    Mega_Bomb("Mega Bomb", 50),
+    Sprinkler("Sprinkler", null),
+    Quality_Sprinkler("Quality Sprinkler", null),
+    Iridium_Sprinkler("Iridium Sprinkler", null),
+    Charcoal_Kiln("Charcoal Kiln", null),
+    Furnace("Furnace", null),
+    Scarecrow("Scarecrow", null),
+    Deluxe_Scarecrow("Deluxe Scarecrow", null),
+    Bee_House("Bee House", null),
+    Cheese_Press("Cheese Press", null),
+    Keg("Keg", null),
+    Loom("Loom", null),
+    Mayonnaise_Machine("Mayonnaise Machine", null),
+    Oil_Maker("Oil Maker", null),
+    Preserves_Jar("Preserves Jar", null),
+    Dehydrator("Dehydrator", null),
+    Grass_Starter("Grass Starter", null),
+    Fish_Smoker("Fish Smoker", null),
+    Mystic_Tree_Seed("Mystic Tree Seed", 100);
 
     private final String productName;
     private final Integer price;

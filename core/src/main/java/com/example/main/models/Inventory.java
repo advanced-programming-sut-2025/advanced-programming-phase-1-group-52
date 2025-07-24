@@ -1,6 +1,7 @@
 package com.example.main.models;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 
 import com.example.main.enums.items.Backpacks;
 import com.example.main.enums.items.ItemType;
@@ -167,16 +168,20 @@ public class Inventory {
         }
     }
 
+    // In main/models/Inventory.java
+
     public void remove2(String itemName, int quantity){
-        for(Item item : items){
-            if(item.getName().equals(itemName)){
-                if(item.getNumber() < quantity){
-                    items.remove(item);
+        Iterator<Item> iterator = items.iterator();
+        while (iterator.hasNext()) {
+            Item item = iterator.next();
+            if (item.getName().equalsIgnoreCase(itemName)) {
+                if (item.getNumber() <= quantity) { // If the stack is removed completely
+                    iterator.remove(); // Safely remove the item
                     this.numOfItems -= 1;
-                }
-                else{
+                } else { // If only some are removed from the stack
                     item.setNumber(item.getNumber() - quantity);
                 }
+                break; // Stop after finding and modifying the item
             }
         }
     }
