@@ -1,18 +1,34 @@
 package com.example.main.models;
 
 
-import com.example.main.enums.design.TileType;
-import com.example.main.enums.items.*;
-import com.example.main.enums.player.Gender;
-import com.example.main.enums.player.Skills;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
+
+import com.example.main.enums.design.TileType;
+import com.example.main.enums.items.CageType;
+import com.example.main.enums.items.CookingRecipeType;
+import com.example.main.enums.items.CraftingRecipes;
+import com.example.main.enums.items.CropType;
+import com.example.main.enums.items.MaterialType;
+import com.example.main.enums.items.ToolType;
+import com.example.main.enums.items.TrashCanType;
+import com.example.main.enums.player.Gender;
+import com.example.main.enums.player.Skills;
 import com.example.main.models.building.House;
 import com.example.main.models.building.Housing;
-import com.example.main.models.item.*;
+import com.example.main.models.item.CookingRecipe;
+import com.example.main.models.item.CraftingRecipe;
+import com.example.main.models.item.Crop;
+import com.example.main.models.item.Fruit;
+import com.example.main.models.item.Item;
+import com.example.main.models.item.Material;
+import com.example.main.models.item.Mineral;
+import com.example.main.models.item.PurchasedAnimal;
+import com.example.main.models.item.Tool;
+import com.example.main.models.item.TrashCan;
+import com.example.main.models.item.WateringCan;
 
 public class Player {
     private final String username;
@@ -692,5 +708,9 @@ public class Player {
 
     public void setNotifications(ArrayList<Notification> notifications) {
         this.notifications = notifications;
+    }
+
+    public int getNextHousingId() {
+        return nextHousingId;
     }
 }

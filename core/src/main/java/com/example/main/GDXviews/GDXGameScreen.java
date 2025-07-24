@@ -2,9 +2,13 @@ package com.example.main.GDXviews;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.PriorityQueue;
 import java.util.Random;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.badlogic.gdx.Gdx;
@@ -26,6 +30,7 @@ import com.badlogic.gdx.scenes.scene2d.ui.*;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
+import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Timer;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
@@ -37,11 +42,10 @@ import com.example.main.enums.design.NPCType;
 import com.example.main.enums.design.ShopType;
 import com.example.main.enums.design.TileType;
 import com.example.main.enums.design.Weather;
-import com.example.main.enums.items.*;
 import com.example.main.enums.player.Skills;
+import com.example.main.enums.items.*;
 import com.example.main.models.*;
 import com.example.main.models.item.*;
-
 import static com.example.main.enums.player.Skills.*;
 
 public class GDXGameScreen implements Screen {
@@ -98,7 +102,14 @@ public class GDXGameScreen implements Screen {
     private Table shopMenuTable;
     private ShopType currentShopType = null;
     private StoreMenuController shopController;
-
+    
+    // Building placement mode variables
+    private boolean isBuildingPlacementMode = false;
+    private String buildingToPlace = null;
+    private Texture buildingPlacementTexture = null;
+    private float buildingPlacementX = 0f;
+    private float buildingPlacementY = 0f;
+    
     // Shop menu state management
     private enum ShopMenuState {
         MAIN_MENU,
@@ -248,6 +259,21 @@ public class GDXGameScreen implements Screen {
     private Texture lake1Texture;
     private Texture lake2Texture;
     private Texture lake3Texture;
+
+    private Texture barnTexture;
+    private Texture coopTexture;
+    
+    // Animal textures
+    private Map<AnimalType, Texture> animalTextures = new HashMap<>();
+    
+    // Housing management
+    private boolean showHousingMenu = false;
+    private Housing selectedHousing = null;
+    private Table housingMenuTable = null;
+    
+    // Animal movement
+    private float animalMovementTimer = 0f;
+    private static final float ANIMAL_MOVEMENT_UPDATE_INTERVAL = 3.0f; // 3 seconds for faster testing
 
     private Texture maleIdleTexture;
     private Texture maleDown1Texture, maleDown2Texture;
@@ -405,6 +431,39 @@ public class GDXGameScreen implements Screen {
     private String giftResultMessage = "";
     private boolean giftResultSuccess = false;
 
+    // Animal menu
+    private boolean showAnimalMenu = false;
+    private PurchasedAnimal selectedAnimal = null;
+    private Table animalMenuTable = null;
+    
+    // Shepherd mode variables
+    private boolean isShepherdMode = false;
+    private String animalToShepherd = null;
+    
+    // Animation system variables
+    private ArrayList<AnimationEffect> activeAnimations = new ArrayList<>();
+    
+    // Animation effect class
+    private static class AnimationEffect {
+        float x, y;
+        float duration;
+        float elapsed;
+        String type; // "food", "hearts", "bounce"
+        float bounceHeight = 0f;
+        float bounceSpeed = 0f;
+        
+        AnimationEffect(float x, float y, float duration, String type) {
+            this.x = x;
+            this.y = y;
+            this.duration = duration;
+            this.elapsed = 0f;
+            this.type = type;
+            if (type.equals("bounce")) {
+                this.bounceSpeed = 8f;
+            }
+        }
+    }
+
     public GDXGameScreen() {
         controller = new GameMenuController();
         shopController = new StoreMenuController();
@@ -535,6 +594,12 @@ public class GDXGameScreen implements Screen {
             }
         }
         handleInput(delta);
+        
+        // Update animal movement
+        updateAnimalMovement(delta);
+        
+        // Update animations
+        updateAnimations(delta);
 
         if (!isInventoryOpen) {
         updateTime(delta);
@@ -575,7 +640,11 @@ public class GDXGameScreen implements Screen {
         spriteBatch.setProjectionMatrix(camera.combined);
         spriteBatch.begin();
         renderMap();
+        renderAnimals();
         spriteBatch.end();
+        
+        // Render animations (after animals so they appear on top)
+        renderAnimations();
 
         renderWeather(delta);
         renderDayNightOverlay();
@@ -591,6 +660,14 @@ public class GDXGameScreen implements Screen {
         renderDayNightOverlay();
         renderToolMenu(delta);
         renderInventoryOverlay(delta);
+        
+        // Render building placement preview
+        if (isBuildingPlacementMode && buildingPlacementTexture != null) {
+            renderBuildingPlacementPreview();
+        }
+        
+        // Render shepherd mode UI
+        renderShepherdModeUI();
         renderCrowAnimations(delta);
         renderCraftingMenu(delta);
         renderCookingMenu(delta);
@@ -680,6 +757,9 @@ public class GDXGameScreen implements Screen {
         lake2Texture = new Texture("content/Cut/map_elements/lake2.png");
         lake3Texture = new Texture("content/Cut/map_elements/lake3.png");
 
+        barnTexture = new Texture("content/Cut/map_elements/Barn.png");
+        coopTexture = new Texture("content/Cut/map_elements/Coop.png");
+
         maleIdleTexture = new Texture("content/Cut/player/male_idle.png");
         maleDown1Texture = new Texture("content/Cut/player/male_down1.png");
         maleDown2Texture = new Texture("content/Cut/player/male_down2.png");
@@ -738,6 +818,23 @@ public class GDXGameScreen implements Screen {
         // Load NPC interaction textures
         dialogBoxTexture = new Texture("content/Cut/map_elements/dialog_box.png");
         menuBackgroundTexture = new Texture("content/Cut/menu_background.png");
+        
+        // Load animal textures
+        loadAnimalTextures();
+    }
+    
+    private void loadAnimalTextures() {
+        // Load all animal textures from the animals directory
+        for (AnimalType animalType : AnimalType.values()) {
+            String texturePath = "content/Cut/animals/" + animalType.name() + ".png";
+            try {
+                Texture animalTexture = new Texture(texturePath);
+                animalTextures.put(animalType, animalTexture);
+            } catch (Exception e) {
+                // If texture not found, use a default texture or skip
+                System.out.println("Warning: Could not load texture for " + animalType.name() + " at " + texturePath);
+            }
+        }
     }
 
     private void loadWeatherAssets() {
@@ -804,6 +901,24 @@ public class GDXGameScreen implements Screen {
         if (showShopMenu) {
             return;
         }
+
+        if (showAnimalMenu) {
+            return;
+        }
+        
+        // Handle building placement mode
+        if (isBuildingPlacementMode) {
+            handleBuildingPlacement();
+            // Allow camera zoom during placement mode
+            handleCameraMovement(delta);
+            return;
+        }
+        
+        // Handle shepherd mode
+        if (isShepherdMode) {
+            handleShepherdMode();
+            return;
+        }
         // If trade menu is open, only allow trade menu UI
         if (showTradeMenu) {
             return;
@@ -818,6 +933,20 @@ public class GDXGameScreen implements Screen {
                 if (npcMenuTable != null) {
                     npcMenuTable.remove();
                     npcMenuTable = null;
+                }
+            }
+            return;
+        }
+        
+        // If housing menu is open, only allow housing menu UI
+        if (showHousingMenu) {
+            // Allow ESC key to close housing menu
+            if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
+                showHousingMenu = false;
+                selectedHousing = null;
+                if (housingMenuTable != null) {
+                    housingMenuTable.remove();
+                    housingMenuTable = null;
                 }
             }
             return;
@@ -986,6 +1115,15 @@ public class GDXGameScreen implements Screen {
                 handleNPCRightClick(Gdx.input.getX(), Gdx.input.getY());
             }
         }
+        
+        // Handle housing interactions
+        if (Gdx.input.isButtonJustPressed(Input.Buttons.LEFT)) {
+            // First, check if an animal was clicked
+            if (handleAnimalClick(Gdx.input.getX(), Gdx.input.getY())) {
+                return;
+            }
+            handleHousingClick(Gdx.input.getX(), Gdx.input.getY());
+        }
         if (Gdx.input.isKeyJustPressed(Input.Keys.NUM_1)) {
             if (controller != null) {
                 controller.changeTime("1");
@@ -1150,6 +1288,248 @@ public class GDXGameScreen implements Screen {
 
         nKeyPressed = nKeyCurrentlyPressed;
     }
+    
+    private void handleBuildingPlacement() {
+        // Update building placement position to follow cursor
+        float mouseX = Gdx.input.getX();
+        float mouseY = Gdx.input.getY();
+        
+        // Store screen coordinates for rendering
+        // Note: LibGDX Y coordinates are inverted (0 is at top, increases downward)
+        buildingPlacementX = mouseX;
+        buildingPlacementY = Gdx.graphics.getHeight() - mouseY;
+        
+        // Handle left click to place building
+        if (Gdx.input.isButtonJustPressed(Input.Buttons.LEFT)) {
+            // Convert screen coordinates to world coordinates for tile placement
+            Vector3 worldCoords = camera.unproject(new Vector3(mouseX, mouseY, 0));
+            // Convert world coordinates to tile coordinates
+            int tileX = (int) (worldCoords.x / TILE_SIZE);
+            int tileY = (int) ((MAP_HEIGHT * TILE_SIZE - worldCoords.y) / TILE_SIZE);
+            
+            // Call the buildBarnOrCoop method
+            Result result = shopController.buildBarnOrCoop(buildingToPlace, String.valueOf(tileX), String.valueOf(tileY));
+            
+            if (result.isSuccessful()) {
+                // Building placed successfully
+                generalMessageLabel.setText(result.Message());
+                generalMessageLabel.setColor(Color.GREEN);
+                generalMessageLabel.setVisible(true);
+                generalMessageTimer = GENERAL_MESSAGE_DURATION;
+                
+                // Exit building placement mode
+                isBuildingPlacementMode = false;
+                buildingToPlace = null;
+                buildingPlacementTexture = null;
+            } else {
+                // Building placement failed
+                generalMessageLabel.setText(result.Message());
+                generalMessageLabel.setColor(Color.RED);
+                generalMessageLabel.setVisible(true);
+                generalMessageTimer = GENERAL_MESSAGE_DURATION;
+            }
+        }
+        
+        // Handle right click to cancel placement
+        if (Gdx.input.isButtonJustPressed(Input.Buttons.RIGHT)) {
+            isBuildingPlacementMode = false;
+            buildingToPlace = null;
+            buildingPlacementTexture = null;
+            
+            generalMessageLabel.setText("Building placement cancelled");
+            generalMessageLabel.setColor(Color.YELLOW);
+            generalMessageLabel.setVisible(true);
+            generalMessageTimer = GENERAL_MESSAGE_DURATION;
+        }
+    }
+    
+    private void handleShepherdMode() {
+        // Handle camera movement during shepherd mode
+        handleCameraMovement(Gdx.graphics.getDeltaTime());
+        
+        // Handle left click to shepherd animal to target location
+        if (Gdx.input.isButtonJustPressed(Input.Buttons.LEFT)) {
+            // Get mouse position in screen coordinates
+            int mouseX = Gdx.input.getX();
+            int mouseY = Gdx.input.getY();
+            
+            // Convert screen coordinates to world coordinates
+            Vector3 worldCoords = camera.unproject(new Vector3(mouseX, mouseY, 0));
+            
+            // Convert world coordinates to tile coordinates
+            int tileX = (int) (worldCoords.x / TILE_SIZE);
+            int tileY = (int) ((MAP_HEIGHT * TILE_SIZE - worldCoords.y) / TILE_SIZE);
+            
+            if (tileX >= 0 && tileX < MAP_WIDTH && tileY >= 0 && tileY < MAP_HEIGHT) {
+                Player currentPlayer = game.getCurrentPlayer();
+                if (currentPlayer != null && isAnimalWalkable(tileX, tileY, currentPlayer)) {
+                    // Find the animal and set it to move to the target location
+                    if (controller != null && animalToShepherd != null) {
+                        if (currentPlayer != null) {
+                            for (Housing housing : currentPlayer.getHousings()) {
+                                for (PurchasedAnimal animal : housing.getOccupants()) {
+                                    if (animal.getName().equals(animalToShepherd)) {
+                                        // Set the animal's target position for smooth movement
+                                        animal.setTargetX(tileX);
+                                        animal.setTargetY(tileY);
+                                        animal.setMoving(true);
+                                        animal.setMoveProgress(0f);
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    
+                    // Exit shepherd mode
+                    isShepherdMode = false;
+                    animalToShepherd = null;
+                    
+                    generalMessageLabel.setText("Animal is moving to new location");
+                    generalMessageLabel.setColor(Color.GREEN);
+                    generalMessageLabel.setVisible(true);
+                    generalMessageTimer = GENERAL_MESSAGE_DURATION;
+                } else {
+                    generalMessageLabel.setText("Cannot shepherd animal to that location");
+                    generalMessageLabel.setColor(Color.RED);
+                    generalMessageLabel.setVisible(true);
+                    generalMessageTimer = GENERAL_MESSAGE_DURATION;
+                }
+            }
+        }
+        
+        // Handle right click to cancel shepherd mode
+        if (Gdx.input.isButtonJustPressed(Input.Buttons.RIGHT)) {
+            isShepherdMode = false;
+            animalToShepherd = null;
+            
+            generalMessageLabel.setText("Shepherd mode cancelled");
+            generalMessageLabel.setColor(Color.YELLOW);
+            generalMessageLabel.setVisible(true);
+            generalMessageTimer = GENERAL_MESSAGE_DURATION;
+        }
+        
+        // Handle ESC key to cancel shepherd mode
+        if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
+            isShepherdMode = false;
+            animalToShepherd = null;
+            
+            generalMessageLabel.setText("Shepherd mode cancelled");
+            generalMessageLabel.setColor(Color.YELLOW);
+            generalMessageLabel.setVisible(true);
+            generalMessageTimer = GENERAL_MESSAGE_DURATION;
+        }
+    }
+
+    private void renderBuildingPlacementPreview() {
+        if (buildingPlacementTexture == null) return;
+        
+        // Set up sprite batch for UI rendering
+        spriteBatch.setProjectionMatrix(hudCamera.combined);
+        spriteBatch.begin();
+        
+        // Draw the building preview with some transparency
+        spriteBatch.setColor(1f, 1f, 1f, 0.7f);
+        
+        // Draw the building texture directly at screen coordinates
+        float buildingWidth = buildingPlacementTexture.getWidth() * 2f;
+        float buildingHeight = buildingPlacementTexture.getHeight() * 2f;
+        // Position the building slightly offset from the cursor so it doesn't cover it completely
+        spriteBatch.draw(buildingPlacementTexture, buildingPlacementX + 10, buildingPlacementY - buildingHeight + 10, buildingWidth, buildingHeight);
+        
+        // Reset color
+        spriteBatch.setColor(1f, 1f, 1f, 1f);
+        spriteBatch.end();
+        
+        // Reset projection matrix for world rendering
+        spriteBatch.setProjectionMatrix(camera.combined);
+    }
+    
+    private void renderShepherdModeUI() {
+        if (!isShepherdMode || animalToShepherd == null) return;
+        
+        // Set up sprite batch for UI rendering
+        spriteBatch.setProjectionMatrix(hudCamera.combined);
+        spriteBatch.begin();
+        
+        // Draw shepherd mode indicator
+        hudFont.setColor(Color.YELLOW);
+        String shepherdText = "Shepherd Mode: " + animalToShepherd + " - Click to move animal";
+        hudFont.draw(spriteBatch, shepherdText, 10, Gdx.graphics.getHeight() - 10);
+        
+        spriteBatch.end();
+        
+        // Reset projection matrix for world rendering
+        spriteBatch.setProjectionMatrix(camera.combined);
+    }
+    
+    private void createAnimation(float worldX, float worldY, String type) {
+        activeAnimations.add(new AnimationEffect(worldX, worldY, 2.0f, type));
+    }
+    
+    private void updateAnimations(float delta) {
+        for (int i = activeAnimations.size() - 1; i >= 0; i--) {
+            AnimationEffect effect = activeAnimations.get(i);
+            effect.elapsed += delta;
+            
+            if (effect.type.equals("bounce")) {
+                effect.bounceHeight = (float) Math.sin(effect.elapsed * effect.bounceSpeed) * 10f;
+                if (effect.elapsed > effect.duration) {
+                    effect.bounceHeight = 0f;
+                }
+            }
+            
+            if (effect.elapsed >= effect.duration) {
+                activeAnimations.remove(i);
+            }
+        }
+    }
+    
+    private void renderAnimations() {
+        if (activeAnimations.isEmpty()) return;
+        
+        spriteBatch.setProjectionMatrix(camera.combined);
+        spriteBatch.begin();
+        
+        for (AnimationEffect effect : activeAnimations) {
+            float alpha = 1.0f - (effect.elapsed / effect.duration);
+            alpha = Math.max(0f, alpha);
+            
+            if (effect.type.equals("food")) {
+                // Render food particles
+                spriteBatch.setColor(1f, 1f, 1f, alpha);
+                for (int i = 0; i < 5; i++) {
+                    float offsetX = (float) Math.sin(effect.elapsed * 3f + i) * 20f;
+                    float offsetY = effect.elapsed * 30f + i * 10f;
+                    float particleX = effect.x + offsetX;
+                    float particleY = effect.y + offsetY;
+                    
+                    // Draw a simple food particle (small colored rectangle)
+                    spriteBatch.setColor(0.8f, 0.6f, 0.2f, alpha);
+                    // Use a simple white texture for the food particle
+                    if (grass1Texture != null) {
+                        spriteBatch.draw(grass1Texture, particleX, particleY, 8, 8);
+                    }
+                }
+            } else if (effect.type.equals("hearts")) {
+                // Render hearts
+                spriteBatch.setColor(1f, 0.3f, 0.7f, alpha);
+                for (int i = 0; i < 3; i++) {
+                    float offsetX = (float) Math.sin(effect.elapsed * 2f + i) * 15f;
+                    float offsetY = effect.elapsed * 40f + i * 15f;
+                    float heartX = effect.x + offsetX;
+                    float heartY = effect.y + offsetY;
+                    
+                    // Draw heart shape using text or simple shape
+                    hudFont.setColor(1f, 0.3f, 0.7f, alpha);
+                    hudFont.draw(spriteBatch, "♥", heartX, heartY);
+                }
+            }
+        }
+        
+        spriteBatch.setColor(1f, 1f, 1f, 1f);
+        spriteBatch.end();
+    }
 
     private void handleShopInteraction() {
         // Check for mouse click
@@ -1302,18 +1682,20 @@ public class GDXGameScreen implements Screen {
                         float worldY = (MAP_HEIGHT - 1 - y) * TILE_SIZE;
                         renderHouseSprite(x, y, worldX, worldY);
 
-                        // Also check if this Wall tile belongs to an NPC house area or shop area
                         if (tileType == TileType.Wall) {
-                            // Only render NPC house if this wall belongs to an NPC house area
                             int npcIndex = getNPCIndexForHouse(x, y);
                             if (npcIndex != -1) {
                                 renderNPCHouseSprite(x, y, worldX, worldY);
                             }
 
-                            // Only render shop if this wall belongs to a shop area
                             int shopIndex = getShopIndex(x, y);
                             if (shopIndex != -1) {
                                 renderShopSprite(x, y, worldX, worldY);
+                            }
+                            
+                            int housingIndex = getHousingIndex(x, y);
+                            if (housingIndex != -1) {
+                                renderHousingSprite(x, y, worldX, worldY);
                             }
                         }
                     } else if (tileType == TileType.NPCHouse) {
@@ -1345,7 +1727,6 @@ public class GDXGameScreen implements Screen {
         renderPlayer();
         renderNPCs();
 
-        // Update nearby NPCs and render interaction elements
         updateNearbyNPCs();
         renderMeetButtons();
         renderDialogBox();
@@ -1358,7 +1739,6 @@ public class GDXGameScreen implements Screen {
                 continue;
             }
 
-            // --- Player Position Calculation ---
             float playerX = player.currentX();
             float playerY = player.currentY();
             Player currentPlayer = game.getCurrentPlayer();
@@ -1379,14 +1759,12 @@ public class GDXGameScreen implements Screen {
             float worldX = playerX * TILE_SIZE;
             float worldY = (MAP_HEIGHT - 1 - playerY) * TILE_SIZE;
 
-            // --- Draw Player Sprite (Now handles fainted state correctly) ---
-            Texture playerTexture = getPlayerTexture(player); // Get texture regardless of fainted state
+            Texture playerTexture = getPlayerTexture(player); 
             float playerWidth = playerTexture.getWidth() * 2;
             float playerHeight = playerTexture.getHeight() * 2;
             float renderX = worldX + (TILE_SIZE - playerWidth) / 2f;
             float renderY = worldY;
 
-            // Set transparency for non-current players
             if (!player.equals(game.getCurrentPlayer())) {
                 spriteBatch.setColor(1f, 1f, 1f, 0.7f);
             }
@@ -2368,6 +2746,37 @@ public class GDXGameScreen implements Screen {
         spriteBatch.draw(shopTexture, shopX, shopY, shopWidth, shopHeight);
     }
 
+    private void renderHousingSprite(int tileX, int tileY, float worldX, float worldY) {
+        Player currentPlayer = game.getCurrentPlayer();
+        if (currentPlayer == null) return;
+        
+        for (Housing housing : currentPlayer.getHousings()) {
+            if (housing.getX() == tileX && housing.getY() == tileY) {
+                CageType cageType = housing.getType();
+                String typeName = cageType.getName().toLowerCase();
+                Texture housingTexture;
+                int buildingWidthTiles, buildingHeightTiles;
+                if (typeName.contains("barn")) {
+                    housingTexture = barnTexture;
+                    buildingWidthTiles = 7;
+                    buildingHeightTiles = 8;
+                } else if (typeName.contains("coop")) {
+                    housingTexture = coopTexture;
+                    buildingWidthTiles = 6;
+                    buildingHeightTiles = 8;
+                } else {
+                    housingTexture = barnTexture; // Default fallback
+                    buildingWidthTiles = 7;
+                    buildingHeightTiles = 8;
+                }
+                float buildingWidth = buildingWidthTiles * TILE_SIZE;
+                float buildingHeight = buildingHeightTiles * TILE_SIZE;
+                spriteBatch.draw(housingTexture, worldX, worldY - buildingHeight + TILE_SIZE, buildingWidth, buildingHeight);
+                return;
+            }
+        }
+    }
+
     private int getPlayerIndexForHouse(int x, int y) {
         for (int i = 0; i < HOUSE_AREAS.length; i++) {
             int[] area = HOUSE_AREAS[i];
@@ -2392,6 +2801,38 @@ public class GDXGameScreen implements Screen {
         for (int i = 0; i < SHOP_AREAS.length; i++) {
             int[] area = SHOP_AREAS[i];
             if (x >= area[0] && x <= area[1] && y >= area[2] && y <= area[3]) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    private int getHousingIndex(int x, int y) {
+        Player currentPlayer = game.getCurrentPlayer();
+        if (currentPlayer == null) return -1;
+        
+        List<Housing> housings = currentPlayer.getHousings();
+        for (int i = 0; i < housings.size(); i++) {
+            Housing housing = housings.get(i);
+            CageType cageType = housing.getType();
+            
+            // Determine building dimensions based on cage type
+            int buildingWidth, buildingHeight;
+            if (cageType.getName().toLowerCase().contains("barn")) {
+                // Barns are 7x4 tiles
+                buildingWidth = 7;
+                buildingHeight = 4;
+            } else {
+                // Coops are 6x3 tiles
+                buildingWidth = 6;
+                buildingHeight = 3;
+            }
+            
+            // Check if the given coordinates are within this housing area
+            int housingX = housing.getX();
+            int housingY = housing.getY();
+            if (x >= housingX && x <= housingX + buildingWidth && 
+                y >= housingY && y <= housingY + buildingHeight) {
                 return i;
             }
         }
@@ -3885,6 +4326,9 @@ public class GDXGameScreen implements Screen {
         lake2Texture.dispose();
         lake3Texture.dispose();
 
+        barnTexture.dispose();
+        coopTexture.dispose();
+
         maleIdleTexture.dispose();
         maleDown1Texture.dispose();
         maleDown2Texture.dispose();
@@ -4175,10 +4619,57 @@ public class GDXGameScreen implements Screen {
                         try {
                             int amount = Integer.parseInt(amountField.getText());
                             if (amount > 0) {
-                                Result purchaseResult = shopController.purchase(productName, String.valueOf(amount));
-                                shopResultMessage = purchaseResult.Message();
-                                shopResultSuccess = purchaseResult.isSuccessful();
-                                createShopMenuUI(); // Refresh the menu to show result
+                                // Check if this is a barn or coop purchase
+                                if (currentShopType == ShopType.CarpentersShop && 
+                                    (productName.contains("Barn") || productName.contains("Coop"))) {
+                                    // Handle barn/coop purchase - enter building placement mode
+                                    isBuildingPlacementMode = true;
+                                    buildingToPlace = productName;
+                                    
+                                    // Set the appropriate texture based on the building type
+                                    if (productName.contains("Barn")) {
+                                        buildingPlacementTexture = barnTexture;
+                                    } else if (productName.contains("Coop")) {
+                                        buildingPlacementTexture = coopTexture;
+                                    }
+                                    
+                                    // Close the shop menu
+                                    showShopMenu = false;
+                                    if (shopMenuTable != null) {
+                                        shopMenuTable.remove();
+                                        shopMenuTable = null;
+                                    }
+                                    
+                                    // Show placement instructions
+                                    generalMessageLabel.setText("Click where you want to place the " + productName + ". Right-click to cancel.");
+                                    generalMessageLabel.setColor(Color.CYAN);
+                                    generalMessageLabel.setVisible(true);
+                                    generalMessageTimer = GENERAL_MESSAGE_DURATION;
+                                } else if (currentShopType == ShopType.MarniesRanch) {
+                                    // Check if this product is an animal (has a required building)
+                                    boolean isAnimal = false;
+                                    for (com.example.main.enums.design.Shop.MarniesRanch entry : com.example.main.enums.design.Shop.MarniesRanch.values()) {
+                                        if (entry.getDisplayName().equals(productName) && entry.getBuildingRequired() != null) {
+                                            isAnimal = true;
+                                            break;
+                                        }
+                                    }
+                                    if (isAnimal) {
+                                        showAnimalPurchasePage(productName);
+                                        return;
+                                    }
+                                    // Otherwise, normal purchase
+                                    Result purchaseResult = shopController.purchase(productName, String.valueOf(amount));
+                                    shopResultMessage = purchaseResult.Message();
+                                    shopResultSuccess = purchaseResult.isSuccessful();
+                                    createShopMenuUI();
+                                } else {
+                                    // Handle normal purchase
+                                    Result purchaseResult = shopController.purchase(productName, String.valueOf(amount));
+                                    shopResultMessage = purchaseResult.Message();
+                                    shopResultSuccess = purchaseResult.isSuccessful();
+                                    createShopMenuUI();
+                                }
                             }
                         } catch (NumberFormatException e) {
                             shopResultMessage = "Invalid amount!";
@@ -4239,6 +4730,873 @@ public class GDXGameScreen implements Screen {
         }
         return productText.trim();
     }
+    
+    private void showAnimalPurchasePage(String animalKey) {
+        if (shopResultSuccess) {
+            // keep the message
+        } else {
+            shopResultMessage = "";
+        }
+        shopResultSuccess = false;
+        shopMenuTable.clear();
+        Label titleLabel = new Label("Buy " + animalKey, skin);
+        titleLabel.setFontScale(1.5f);
+        titleLabel.setColor(Color.BLUE);
+        shopMenuTable.add(titleLabel).padBottom(20).row();
+
+        // Animal name input
+        Label nameLabel = new Label("Animal Name:", skin);
+        nameLabel.setColor(Color.WHITE);
+        final TextField nameField = new TextField("", skin);
+        nameField.setMessageText("Enter animal name");
+        shopMenuTable.add(nameLabel).padRight(10);
+        shopMenuTable.add(nameField).width(200).padBottom(10).row();
+
+        // Housing selection
+        Label housingLabel = new Label("Select Housing:", skin);
+        housingLabel.setColor(Color.WHITE);
+        Player player = game.getCurrentPlayer();
+        java.util.List<Housing> housings = player.getHousings();
+        java.util.List<Housing> validHousings = new java.util.ArrayList<>();
+        // Find required building type for this animal
+        String requiredBuilding = null;
+        int animalCapacity = 1;
+        for (com.example.main.enums.design.Shop.MarniesRanch entry : com.example.main.enums.design.Shop.MarniesRanch.values()) {
+            if (entry.getDisplayName().equals(animalKey)) {
+                requiredBuilding = entry.getBuildingRequired();
+                animalCapacity = 1; // You can adjust this if animals can take more than 1 slot
+                break;
+            }
+        }
+        for (Housing h : housings) {
+            boolean typeOk = false;
+            if (requiredBuilding != null) {
+                String housingTypeName = h.getType().getName().toLowerCase();
+                String requiredBuildingLower = requiredBuilding.toLowerCase();
+                
+                // Check if housing type matches the required building
+                if (requiredBuildingLower.contains("barn")) {
+                    typeOk = housingTypeName.contains("barn");
+                } else if (requiredBuildingLower.contains("coop")) {
+                    typeOk = housingTypeName.contains("coop");
+                }
+            }
+            boolean hasSpace = h.getOccupants().size() < h.getCapacity();
+            if (typeOk && hasSpace) {
+                validHousings.add(h);
+            }
+        }
+        if (validHousings.isEmpty()) {
+            Label noHousingLabel = new Label("No available housing for this animal. Build or free up space in a barn/coop.", skin);
+            noHousingLabel.setColor(Color.RED);
+            shopMenuTable.add(noHousingLabel).colspan(2).padBottom(20).row();
+            TextButton backButton = new TextButton("Back", skin);
+            backButton.addListener(new ClickListener() {
+                @Override
+                public void clicked(InputEvent event, float x, float y) {
+                    createShopMenuUI();
+                }
+            });
+            shopMenuTable.add(backButton).width(120).pad(10).row();
+            if (!shopResultMessage.isEmpty()) {
+                Label resultLabel = new Label(shopResultMessage, skin);
+                resultLabel.setColor(Color.GREEN);
+                resultLabel.setFontScale(1.1f);
+                shopMenuTable.add(resultLabel).colspan(2).padBottom(15).row();
+            }
+            return;
+        }
+        final com.badlogic.gdx.scenes.scene2d.ui.SelectBox<String> housingSelect = new com.badlogic.gdx.scenes.scene2d.ui.SelectBox<>(skin);
+        java.util.List<String> housingOptions = new java.util.ArrayList<>();
+        for (Housing h : validHousings) {
+            housingOptions.add(h.getType().getName() + " (ID: " + h.getId() + ") - " + h.getOccupants().size() + "/" + h.getCapacity());
+        }
+        housingSelect.setItems(housingOptions.toArray(new String[0]));
+        shopMenuTable.add(housingLabel).padRight(10);
+        shopMenuTable.add(housingSelect).width(200).padBottom(10).row();
+
+        // Confirm and Cancel buttons
+        Table buttonTable = new Table();
+        TextButton confirmButton = new TextButton("Confirm", skin);
+        TextButton cancelButton = new TextButton("Cancel", skin);
+        buttonTable.add(confirmButton).width(120).pad(10);
+        buttonTable.add(cancelButton).width(120).pad(10);
+        shopMenuTable.add(buttonTable).colspan(2).row();
+
+        confirmButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                String animalName = nameField.getText().trim();
+                int selectedIndex = housingSelect.getSelectedIndex();
+                if (animalName.isEmpty()) {
+                    shopResultMessage = "Please enter an animal name.";
+                    shopResultSuccess = false;
+                    showAnimalPurchasePage(animalKey);
+                    return;
+                }
+                if (selectedIndex < 0 || selectedIndex >= validHousings.size()) {
+                    shopResultMessage = "Please select a housing.";
+                    shopResultSuccess = false;
+                    showAnimalPurchasePage(animalKey);
+                    return;
+                }
+                String housingId = String.valueOf(validHousings.get(selectedIndex).getId());
+                Result result = shopController.buyAnimal(animalKey, housingId, animalName);
+                shopResultMessage = result.Message();
+                shopResultSuccess = result.isSuccessful();
+                if (shopResultSuccess) {
+                    // Show the animal purchase page again for the same animal, with updated housing list
+                    showAnimalPurchasePage(animalKey);
+                } else {
+                    createShopMenuUI();
+                }
+            }
+        });
+        cancelButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                createShopMenuUI();
+            }
+        });
+        // Show result message if any
+        if (!shopResultMessage.isEmpty()) {
+            Label resultLabel = new Label(shopResultMessage, skin);
+            resultLabel.setColor(shopResultSuccess ? Color.GREEN : Color.RED);
+            resultLabel.setFontScale(1.1f);
+            shopMenuTable.add(resultLabel).colspan(2).padBottom(15).row();
+        }
+    }
+    
+    private void handleHousingClick(int screenX, int screenY) {
+        // Convert screen coordinates to world coordinates
+        Vector3 mouseInWorld = camera.unproject(new Vector3(screenX, screenY, 0));
+        int targetTileX = (int) (mouseInWorld.x / TILE_SIZE);
+        int targetTileY = MAP_HEIGHT - 1 - (int) (mouseInWorld.y / TILE_SIZE);
+        
+        // Check if click is on a housing
+        int housingIndex = getHousingIndex(targetTileX, targetTileY);
+        if (housingIndex != -1) {
+            Player currentPlayer = game.getCurrentPlayer();
+            if (currentPlayer != null && housingIndex < currentPlayer.getHousings().size()) {
+                selectedHousing = currentPlayer.getHousings().get(housingIndex);
+                showHousingMenu = true;
+                createHousingMenuUI();
+            }
+        }
+    }
+    
+    private void createHousingMenuUI() {
+        if (housingMenuTable != null) {
+            housingMenuTable.remove();
+        }
+        
+        housingMenuTable = new Table();
+        housingMenuTable.setBackground(new TextureRegionDrawable(menuBackgroundTexture));
+        housingMenuTable.setSize(600, 400);
+        housingMenuTable.setPosition(Gdx.graphics.getWidth() / 2f - 300, Gdx.graphics.getHeight() / 2f - 200);
+        
+        // Title
+        Label titleLabel = new Label("Housing Management - " + selectedHousing.getType().getName() + " (ID: " + selectedHousing.getId() + ")", skin);
+        titleLabel.setFontScale(1.2f);
+        titleLabel.setColor(Color.WHITE);
+        housingMenuTable.add(titleLabel).colspan(2).padBottom(20).row();
+        
+        // Animal list with scroll pane
+        Table animalListTable = new Table();
+        animalListTable.defaults().pad(5);
+        
+        if (selectedHousing.getOccupants().isEmpty()) {
+            Label noAnimalsLabel = new Label("No animals in this housing.", skin);
+            noAnimalsLabel.setColor(Color.GRAY);
+            animalListTable.add(noAnimalsLabel).row();
+        } else {
+            // Add header
+            Label nameHeader = new Label("Animal Name", skin);
+            Label typeHeader = new Label("Type", skin);
+            Label statusHeader = new Label("Status", skin);
+            Label actionHeader = new Label("Action", skin);
+            
+            nameHeader.setColor(Color.YELLOW);
+            typeHeader.setColor(Color.YELLOW);
+            statusHeader.setColor(Color.YELLOW);
+            actionHeader.setColor(Color.YELLOW);
+            
+            animalListTable.add(nameHeader).width(150);
+            animalListTable.add(typeHeader).width(100);
+            animalListTable.add(statusHeader).width(100);
+            animalListTable.add(actionHeader).width(100).row();
+            
+            // Add each animal
+            for (PurchasedAnimal animal : selectedHousing.getOccupants()) {
+                Label nameLabel = new Label(animal.getName(), skin);
+                Label typeLabel = new Label(animal.getType().getName(), skin);
+                Label statusLabel = new Label(animal.isInCage() ? "Inside" : "Outside", skin);
+                statusLabel.setColor(animal.isInCage() ? Color.GREEN : Color.ORANGE);
+                
+                TextButton actionButton;
+                if (animal.isInCage()) {
+                    actionButton = new TextButton("Bring Out", skin);
+                    actionButton.addListener(new ClickListener() {
+                        @Override
+                        public void clicked(InputEvent event, float x, float y) {
+                            bringAnimalOut(animal);
+                        }
+                    });
+                } else {
+                    actionButton = new TextButton("Bring In", skin);
+                    actionButton.addListener(new ClickListener() {
+                        @Override
+                        public void clicked(InputEvent event, float x, float y) {
+                            bringAnimalIn(animal);
+                        }
+                    });
+                }
+                
+                animalListTable.add(nameLabel).width(150);
+                animalListTable.add(typeLabel).width(100);
+                animalListTable.add(statusLabel).width(100);
+                animalListTable.add(actionButton).width(100).row();
+            }
+        }
+        
+        ScrollPane scrollPane = new ScrollPane(animalListTable, skin);
+        scrollPane.setScrollingDisabled(false, false);
+        scrollPane.setFadeScrollBars(false);
+        scrollPane.setScrollBarPositions(false, true);
+        
+        housingMenuTable.add(scrollPane).width(500).height(250).padBottom(20).row();
+        
+        // Close button
+        TextButton closeButton = new TextButton("Close", skin);
+        closeButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                showHousingMenu = false;
+                selectedHousing = null;
+                if (housingMenuTable != null) {
+                    housingMenuTable.remove();
+                    housingMenuTable = null;
+                }
+            }
+        });
+        housingMenuTable.add(closeButton).width(120).pad(10).row();
+        
+        stage.addActor(housingMenuTable);
+    }
+    
+    private void bringAnimalOut(PurchasedAnimal animal) {
+        // Find a reachable position around the housing
+        int[] position = findReachablePositionAroundHousing(selectedHousing);
+        animal.setX(position[0]);
+        animal.setY(position[1]);
+        animal.setInCage(false);
+        
+        // Initialize movement target to current position
+        animal.setTargetX(position[0]);
+        animal.setTargetY(position[1]);
+        animal.setMoving(false);
+        animal.setMoveProgress(0f);
+        animal.setLastMoveTime(0); // Start moving immediately
+        
+        // Update the housing menu
+        if (housingMenuTable != null) {
+            housingMenuTable.remove();
+            createHousingMenuUI();
+        }
+    }
+    
+    private void bringAnimalIn(PurchasedAnimal animal) {
+        animal.setInCage(true);
+        
+        // Update the housing menu
+        if (housingMenuTable != null) {
+            housingMenuTable.remove();
+            createHousingMenuUI();
+        }
+    }
+    
+    private int[] findReachablePositionAroundHousing(Housing housing) {
+        Player currentPlayer = game.getCurrentPlayer();
+        if (currentPlayer == null) {
+            return new int[]{housing.getX() + 2, housing.getY() + 2}; // Fallback position
+        }
+        
+        // Define potential positions around the housing (all sides)
+        List<int[]> potentialPositions = new ArrayList<>();
+        
+        // Right side positions
+        for (int y = housing.getY() + 2; y <= housing.getY() + 6; y++) {
+            potentialPositions.add(new int[]{housing.getX() + 8, y});
+        }
+        
+        // Left side positions
+        for (int y = housing.getY() + 2; y <= housing.getY() + 6; y++) {
+            potentialPositions.add(new int[]{housing.getX() - 1, y});
+        }
+        
+        // Top side positions
+        for (int x = housing.getX() + 2; x <= housing.getX() + 6; x++) {
+            potentialPositions.add(new int[]{x, housing.getY() + 9});
+        }
+        
+        // Bottom side positions
+        for (int x = housing.getX() + 2; x <= housing.getX() + 6; x++) {
+            potentialPositions.add(new int[]{x, housing.getY() - 1});
+        }
+        
+        // Shuffle the positions to make spawn location random
+        java.util.Collections.shuffle(potentialPositions, random);
+        
+        // Check each position for walkability
+        for (int[] pos : potentialPositions) {
+            if (pos[0] >= 0 && pos[0] < MAP_WIDTH && pos[1] >= 0 && pos[1] < MAP_HEIGHT) {
+                if (isAnimalWalkable(pos[0], pos[1], currentPlayer)) {
+                    return pos;
+                }
+            }
+        }
+        
+        // If no good position found, return a fallback position
+        return new int[]{housing.getX() + 2, housing.getY() + 2};
+    }
+    
+    private boolean isAnimalWalkable(int x, int y, Player currentPlayer) {
+        // Check if the tile is walkable for animals (similar to player walkability but simpler)
+        if (x < 0 || x >= MAP_WIDTH || y < 0 || y >= MAP_HEIGHT) {
+            return false;
+        }
+        
+        Tile tile = gameMap.getTile(x, y);
+        if (tile == null) {
+            return false;
+        }
+        
+        // Animals can walk on grass, earth, and some other walkable tiles
+        TileType tileType = tile.getType();
+        return tileType == TileType.Grass || tileType == TileType.Earth || 
+               tileType == TileType.Shoveled || tileType == TileType.Water;
+    }
+    
+    private void renderAnimals() {
+        Player currentPlayer = game.getCurrentPlayer();
+        if (currentPlayer == null) return;
+        
+        for (Housing housing : currentPlayer.getHousings()) {
+            for (PurchasedAnimal animal : housing.getOccupants()) {
+                if (!animal.isInCage()) {
+                    // Render animal outside
+                    Texture animalTexture = animalTextures.get(animal.getType());
+                    if (animalTexture != null) {
+                        float worldX = animal.getX() * TILE_SIZE;
+                        float worldY = (MAP_HEIGHT - 1 - animal.getY()) * TILE_SIZE;
+                        
+                        // Apply movement interpolation if animal is moving
+                        if (animal.isMoving()) {
+                            float startX = animal.getX() * TILE_SIZE;
+                            float startY = (MAP_HEIGHT - 1 - animal.getY()) * TILE_SIZE;
+                            float endX = animal.getTargetX() * TILE_SIZE;
+                            float endY = (MAP_HEIGHT - 1 - animal.getTargetY()) * TILE_SIZE;
+                            
+                            worldX = startX + (endX - startX) * animal.getMoveProgress();
+                            worldY = startY + (endY - startY) * animal.getMoveProgress();
+                        }
+                        
+                        // Apply bounce effect if there's a bounce animation for this animal
+                        float bounceOffset = 0f;
+                        for (AnimationEffect effect : activeAnimations) {
+                            if (effect.type.equals("bounce")) {
+                                float animalCenterX = worldX + TILE_SIZE / 2f;
+                                float animalCenterY = worldY + TILE_SIZE / 2f;
+                                if (Math.abs(effect.x - animalCenterX) < TILE_SIZE && 
+                                    Math.abs(effect.y - animalCenterY) < TILE_SIZE) {
+                                    bounceOffset = effect.bounceHeight;
+                                    break;
+                                }
+                            }
+                        }
+                        worldY += bounceOffset;
+                        
+                        // Determine if animal is moving left (flip image)
+                        boolean movingLeft = animal.isMoving() && animal.getTargetX() < animal.getX();
+                        
+                        // Render animal with proper flipping, using TILE_SIZE x TILE_SIZE
+                        if (movingLeft) {
+                            // Flip horizontally for left movement
+                            spriteBatch.draw(animalTexture, worldX + TILE_SIZE, worldY, -TILE_SIZE, TILE_SIZE);
+                        } else {
+                            // Normal rendering for right movement or stationary
+                            spriteBatch.draw(animalTexture, worldX, worldY, TILE_SIZE, TILE_SIZE);
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    private void updateAnimalMovement(float delta) {
+        if (showAnimalMenu) return;
+        Player currentPlayer = game.getCurrentPlayer();
+        if (currentPlayer == null) return;
+        
+        animalMovementTimer += delta;
+        
+        if (animalMovementTimer >= ANIMAL_MOVEMENT_UPDATE_INTERVAL) {
+            animalMovementTimer = 0f;
+            
+            for (Housing housing : currentPlayer.getHousings()) {
+                for (PurchasedAnimal animal : housing.getOccupants()) {
+                    if (!animal.isInCage()) {
+                        updateAnimalMovement(animal, housing);
+                    }
+                }
+            }
+        }
+        
+        for (Housing housing : currentPlayer.getHousings()) {
+            for (PurchasedAnimal animal : housing.getOccupants()) {
+                if (!animal.isInCage() && animal.isMoving()) {
+                    animal.setMoveProgress(animal.getMoveProgress() + delta * animal.MOVE_SPEED);
+                    
+                    if (animal.getMoveProgress() >= 1.0f) {
+                        animal.setX(animal.getTargetX());
+                        animal.setY(animal.getTargetY());
+                        animal.setMoving(false);
+                        animal.setMoveProgress(0f);
+                    }
+                }
+            }
+        }
+    }
+    
+    private void updateAnimalMovement(PurchasedAnimal animal, Housing housing) {
+        long currentTime = System.currentTimeMillis();
+        if (currentTime - animal.getLastMoveTime() < animal.MOVE_INTERVAL) {
+            return;
+        }
+        
+        int currentX = animal.getX();
+        int currentY = animal.getY();
+        
+        for (int attempts = 0; attempts < 20; attempts++) {
+            int offsetX = random.nextInt(11) - 5;
+            int offsetY = random.nextInt(11) - 5;
+            
+            int targetX = currentX + offsetX;
+            int targetY = currentY + offsetY;
+            
+            if (targetX < 0 || targetX >= MAP_WIDTH || targetY < 0 || targetY >= MAP_HEIGHT) {
+                continue;
+            }
+            
+            if (isAnimalWalkable(targetX, targetY, game.getCurrentPlayer())) {
+                int stepX = currentX;
+                int stepY = currentY;
+                
+                if (targetX > currentX) stepX++;
+                else if (targetX < currentX) stepX--;
+                
+                if (targetY > currentY) stepY++;
+                else if (targetY < currentY) stepY--;
+                
+                if (isAnimalWalkable(stepX, stepY, game.getCurrentPlayer())) {
+                    animal.setTargetX(stepX);
+                    animal.setTargetY(stepY);
+                    animal.setMoving(true);
+                    animal.setMoveProgress(0f);
+                    animal.setLastMoveTime(currentTime);
+                    return;
+                }
+            }
+        }
+    }
+    
+    private List<int[]> findPathToTarget(int startX, int startY, int targetX, int targetY) {
+        PriorityQueue<PathNode> openSet = new PriorityQueue<>();
+        Set<String> closedSet = new HashSet<>();
+        Map<String, PathNode> allNodes = new HashMap<>();
+        
+        PathNode startNode = new PathNode(startX, startY, 0, calculateHeuristic(startX, startY, targetX, targetY));
+        openSet.add(startNode);
+        allNodes.put(startX + "," + startY, startNode);
+        
+        while (!openSet.isEmpty()) {
+            PathNode current = openSet.poll();
+            
+            if (current.x == targetX && current.y == targetY) {
+                return reconstructPath(current);
+            }
+            
+            closedSet.add(current.x + "," + current.y);
+            
+            int[][] directions = {{0, 1}, {1, 0}, {0, -1}, {-1, 0}};
+            for (int[] dir : directions) {
+                int newX = current.x + dir[0];
+                int newY = current.y + dir[1];
+                String key = newX + "," + newY;
+                
+                if (closedSet.contains(key)) continue;
+                
+                if (newX < 0 || newX >= MAP_WIDTH || newY < 0 || newY >= MAP_HEIGHT) continue;
+                
+                if (!isAnimalWalkable(newX, newY, game.getCurrentPlayer())) continue;
+                
+                int newG = current.g + 1;
+                PathNode neighbor = allNodes.get(key);
+                
+                if (neighbor == null) {
+                    neighbor = new PathNode(newX, newY, newG, calculateHeuristic(newX, newY, targetX, targetY));
+                    neighbor.parent = current;
+                    allNodes.put(key, neighbor);
+                    openSet.add(neighbor);
+                } else if (newG < neighbor.g) {
+                    neighbor.g = newG;
+                    neighbor.parent = current;
+                }
+            }
+        }
+        
+        return null;
+    }
+    
+    private int calculateHeuristic(int x1, int y1, int x2, int y2) {
+        return Math.abs(x1 - x2) + Math.abs(y1 - y2);
+    }
+    
+    private List<int[]> reconstructPath(PathNode endNode) {
+        List<int[]> path = new ArrayList<>();
+        PathNode current = endNode;
+        
+        while (current != null) {
+            path.add(0, new int[]{current.x, current.y});
+            current = current.parent;
+        }
+        
+        return path;
+    }
+    
+    private static class PathNode implements Comparable<PathNode> {
+        int x, y, g, h;
+        PathNode parent;
+        
+        PathNode(int x, int y, int g, int h) {
+            this.x = x;
+            this.y = y;
+            this.g = g;
+            this.h = h;
+        }
+        
+        int f() { return g + h; }
+        
+        @Override
+        public int compareTo(PathNode other) {
+            return Integer.compare(this.f(), other.f());
+        }
+    }
+
+    private boolean handleAnimalClick(int screenX, int screenY) {
+        Player currentPlayer = game.getCurrentPlayer();
+        if (currentPlayer == null) return false;
+        com.badlogic.gdx.math.Vector3 mouseInWorld = camera.unproject(new com.badlogic.gdx.math.Vector3(screenX, screenY, 0));
+        float mx = mouseInWorld.x;
+        float my = mouseInWorld.y;
+        for (Housing housing : currentPlayer.getHousings()) {
+            for (PurchasedAnimal animal : housing.getOccupants()) {
+                if (!animal.isInCage()) {
+                    float ax = animal.getX() * TILE_SIZE;
+                    float ay = (MAP_HEIGHT - 1 - animal.getY()) * TILE_SIZE;
+                    if (mx >= ax && mx < ax + TILE_SIZE && my >= ay && my < ay + TILE_SIZE) {
+                        selectedAnimal = animal;
+                        showAnimalMenu = true;
+                        createAnimalMenuUI();
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    private void createAnimalMenuUI() {
+        if (animalMenuTable != null) {
+            animalMenuTable.remove();
+            animalMenuTable = null;
+        }
+        animalMenuTable = new Table();
+        animalMenuTable.setBackground(new TextureRegionDrawable(menuBackgroundTexture));
+        animalMenuTable.setSize(600, 400);
+        animalMenuTable.setPosition(Gdx.graphics.getWidth() / 2f - 300, Gdx.graphics.getHeight() / 2f - 200);
+        animalMenuTable.pad(20);
+        animalMenuTable.defaults().pad(10).width(250);
+
+        Label title = new Label(selectedAnimal != null ? selectedAnimal.getName() : "Animal", skin);
+        title.setAlignment(Align.center);
+        animalMenuTable.add(title).center().row();
+
+        TextButton infoBtn = new TextButton("Info", skin);
+        TextButton feedBtn = new TextButton("Feed", skin);
+        TextButton petBtn = new TextButton("Pet", skin);
+        TextButton sellBtn = new TextButton("Sell", skin);
+        TextButton shepherdBtn = new TextButton("Shepherd", skin);
+        TextButton collectBtn = new TextButton("Collect", skin);
+        TextButton closeBtn = new TextButton("Close", skin);
+
+        animalMenuTable.add(infoBtn).row();
+        animalMenuTable.add(feedBtn).row();
+        animalMenuTable.add(petBtn).row();
+        animalMenuTable.add(sellBtn).row();
+        animalMenuTable.add(shepherdBtn).row();
+        animalMenuTable.add(collectBtn).row();
+        animalMenuTable.add(closeBtn).row();
+
+        infoBtn.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                showAnimalInfoPage();
+            }
+        });
+
+        feedBtn.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                if (controller != null && selectedAnimal != null) {
+                    controller.feedHay(selectedAnimal.getName());
+                    
+                    // Create food particle animation at animal's position
+                    float animalWorldX = selectedAnimal.getX() * TILE_SIZE + TILE_SIZE / 2f;
+                    float animalWorldY = (MAP_HEIGHT - 1 - selectedAnimal.getY()) * TILE_SIZE + TILE_SIZE / 2f;
+                    createAnimation(animalWorldX, animalWorldY, "food");
+                }
+                showAnimalMenu = false;
+                selectedAnimal = null;
+                if (animalMenuTable != null) {
+                    animalMenuTable.remove();
+                    animalMenuTable = null;
+                }
+            }
+        });
+
+        petBtn.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                if (controller != null && selectedAnimal != null) {
+                    controller.petAnimal(selectedAnimal.getName());
+                    
+                    // Create heart and bounce animations at animal's position
+                    float animalWorldX = selectedAnimal.getX() * TILE_SIZE + TILE_SIZE / 2f;
+                    float animalWorldY = (MAP_HEIGHT - 1 - selectedAnimal.getY()) * TILE_SIZE + TILE_SIZE / 2f;
+                    createAnimation(animalWorldX, animalWorldY, "hearts");
+                    createAnimation(animalWorldX, animalWorldY, "bounce");
+                }
+                showAnimalMenu = false;
+                selectedAnimal = null;
+                if (animalMenuTable != null) {
+                    animalMenuTable.remove();
+                    animalMenuTable = null;
+                }
+            }
+        });
+
+        sellBtn.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                if (controller != null && selectedAnimal != null) {
+                    controller.sellAnimal(selectedAnimal.getName());
+                    Player currentPlayer = game.getCurrentPlayer();
+                    if (currentPlayer != null) {
+                        for (Housing housing : currentPlayer.getHousings()) {
+                            for (Iterator<PurchasedAnimal> it = housing.getOccupants().iterator(); it.hasNext(); ) {
+                                PurchasedAnimal a = it.next();
+                                if (a == selectedAnimal) {
+                                    it.remove();
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+                showAnimalMenu = false;
+                selectedAnimal = null;
+                if (animalMenuTable != null) {
+                    animalMenuTable.remove();
+                    animalMenuTable = null;
+                }
+            }
+        });
+
+        shepherdBtn.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                if (selectedAnimal != null) {
+                    animalToShepherd = selectedAnimal.getName();
+                    isShepherdMode = true;
+                    showAnimalMenu = false;
+                    selectedAnimal = null;
+                    if (animalMenuTable != null) {
+                        animalMenuTable.remove();
+                        animalMenuTable = null;
+                    }
+                }
+            }
+        });
+
+        collectBtn.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                showAnimalCollectPage();
+            }
+        });
+
+        closeBtn.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                showAnimalMenu = false;
+                selectedAnimal = null;
+                if (animalMenuTable != null) {
+                    animalMenuTable.remove();
+                    animalMenuTable = null;
+                }
+            }
+        });
+
+        stage.addActor(animalMenuTable);
+        stage.setKeyboardFocus(animalMenuTable);
+        stage.setScrollFocus(animalMenuTable);
+    }
+
+    private void showAnimalInfoPage() {
+        if (animalMenuTable != null) {
+            animalMenuTable.remove();
+            animalMenuTable = null;
+        }
+        animalMenuTable = new Table();
+        animalMenuTable.setBackground(new TextureRegionDrawable(menuBackgroundTexture));
+        animalMenuTable.setSize(600, 400);
+        animalMenuTable.setPosition(Gdx.graphics.getWidth() / 2f - 300, Gdx.graphics.getHeight() / 2f - 200);
+        animalMenuTable.pad(20);
+        animalMenuTable.defaults().pad(10).width(250);
+
+        Label title = new Label(selectedAnimal != null ? selectedAnimal.getName() + " - Info" : "Animal Info", skin);
+        title.setAlignment(Align.center);
+        animalMenuTable.add(title).center().row();
+
+        String info = selectedAnimal != null ? selectedAnimal.toString() : "No animal selected.";
+        Label infoLabel = new Label(info, skin);
+        infoLabel.setAlignment(Align.topLeft);
+        infoLabel.setWrap(true);
+        animalMenuTable.add(infoLabel).expandX().fillX().row();
+
+        Table buttonRow = new Table();
+        TextButton backBtn = new TextButton("Back", skin);
+        TextButton closeBtn = new TextButton("Close", skin);
+        buttonRow.add(backBtn).width(120).padRight(20);
+        buttonRow.add(closeBtn).width(120);
+        animalMenuTable.add(buttonRow).padTop(20).center().row();
+
+        backBtn.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                createAnimalMenuUI();
+            }
+        });
+        closeBtn.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                showAnimalMenu = false;
+                selectedAnimal = null;
+                if (animalMenuTable != null) {
+                    animalMenuTable.remove();
+                    animalMenuTable = null;
+                }
+            }
+        });
+
+        stage.addActor(animalMenuTable);
+        stage.setKeyboardFocus(animalMenuTable);
+        stage.setScrollFocus(animalMenuTable);
+    }
+    
+    private void showAnimalCollectPage() {
+        if (animalMenuTable != null) {
+            animalMenuTable.remove();
+            animalMenuTable = null;
+        }
+        animalMenuTable = new Table();
+        animalMenuTable.setBackground(new TextureRegionDrawable(menuBackgroundTexture));
+        animalMenuTable.setSize(600, 400);
+        animalMenuTable.setPosition(Gdx.graphics.getWidth() / 2f - 300, Gdx.graphics.getHeight() / 2f - 200);
+        animalMenuTable.pad(20);
+        animalMenuTable.defaults().pad(10).width(250);
+
+        Label title = new Label(selectedAnimal != null ? selectedAnimal.getName() + " - Collect" : "Animal Collect", skin);
+        title.setAlignment(Align.center);
+        animalMenuTable.add(title).center().row();
+
+        // Call the controller method to get collectable products
+        String collectResult = "";
+        boolean collectSuccess = false;
+        if (controller != null && selectedAnimal != null) {
+            Result result = controller.showCollectableProducts(selectedAnimal.getName());
+            collectResult = result.Message();
+            collectSuccess = result.isSuccessful();
+        }
+
+        // Display the result message
+        Label resultLabel = new Label(collectResult, skin);
+        resultLabel.setAlignment(Align.topLeft);
+        resultLabel.setWrap(true);
+        animalMenuTable.add(resultLabel).expandX().fillX().row();
+
+        // Add collect button if the result was successful
+        if (collectSuccess) {
+            TextButton collectProductBtn = new TextButton("Collect Product", skin);
+            animalMenuTable.add(collectProductBtn).row();
+            
+            collectProductBtn.addListener(new ClickListener() {
+                @Override
+                public void clicked(InputEvent event, float x, float y) {
+                    if (controller != null && selectedAnimal != null) {
+                        controller.collectAnimalProduct(selectedAnimal.getName());
+                    }
+                    showAnimalMenu = false;
+                    selectedAnimal = null;
+                    if (animalMenuTable != null) {
+                        animalMenuTable.remove();
+                        animalMenuTable = null;
+                    }
+                }
+            });
+        }
+
+        Table buttonRow = new Table();
+        TextButton backBtn = new TextButton("Back", skin);
+        TextButton closeBtn = new TextButton("Close", skin);
+        buttonRow.add(backBtn).width(120).padRight(20);
+        buttonRow.add(closeBtn).width(120);
+        animalMenuTable.add(buttonRow).padTop(20).center().row();
+
+        backBtn.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                createAnimalMenuUI();
+            }
+        });
+        closeBtn.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                showAnimalMenu = false;
+                selectedAnimal = null;
+                if (animalMenuTable != null) {
+                    animalMenuTable.remove();
+                    animalMenuTable = null;
+                }
+            }
+        });
+
+        stage.addActor(animalMenuTable);
+        stage.setKeyboardFocus(animalMenuTable);
+        stage.setScrollFocus(animalMenuTable);
+    }
+
 
     private void startActionAnimation(PlayerActionState state) {
         playerActionState = state;

@@ -43,12 +43,14 @@ content/Animals/Cat_4.png
 content/Animals/Cat_5.png
 content/Animals/Cave_Jelly.png
 content/Animals/Chewing_Stick.png
+content/Animals/Chicken.png
 content/Animals/Chicken_Statue.png
 content/Animals/Chipped_Amphora.png
 content/Animals/Clam.png
 content/Animals/Clay.png
 content/Animals/Cockle.png
 content/Animals/Coral.png
+content/Animals/Cow.png
 content/Animals/Crab.png
 content/Animals/Crayfish.png
 content/Animals/Crow.png
@@ -103,8 +105,6 @@ content/Animals/Stardew_Valley_executable_icon.png
 content/Animals/Truffle.png
 content/Animals/Turtle.png
 content/Animals/Void_Chicken.png
-content/Animals/White_Chicken.png
-content/Animals/White_Cow.png
 content/Animals/Wool.png
 content/Animals_old/BabyBlue Chicken.png
 content/Animals_old/BabyBrown Chicken.png
@@ -5546,6 +5546,23 @@ content/Cut/NPC/harvey.png
 content/Cut/NPC/lia.png
 content/Cut/NPC/robin.png
 content/Cut/NPC/sebastian.png
+content/Cut/animals/Blue_Chicken.png
+content/Cut/animals/Brown_Chicken.png
+content/Cut/animals/Brown_Cow.png
+content/Cut/animals/Chicken.png
+content/Cut/animals/Cow.png
+content/Cut/animals/Dinosaur.png
+content/Cut/animals/Duck.png
+content/Cut/animals/Goat.png
+content/Cut/animals/Golden_Chicken.png
+content/Cut/animals/Ostrich.png
+content/Cut/animals/Pig.png
+content/Cut/animals/Rabbit.png
+content/Cut/animals/Sheep.png
+content/Cut/animals/Void_Chicken.png
+content/Cut/animals/White_Cow.png
+content/Cut/map_elements/Barn.png
+content/Cut/map_elements/Coop.png
 content/Cut/map_elements/blacksmith.png
 content/Cut/map_elements/bush.png
 content/Cut/map_elements/carpenters_shop.png
@@ -9055,20 +9072,18 @@ content/w1/target/classes/view/animations/ShootingAnimation.class
 content/weather/rain1.png
 content/weather/snow.png
 content/weather/snow.png-autosave.kra
-hs_err_pid32084.log
-hs_err_pid42902.log
-hs_err_pid49723.log
-hs_err_pid61693.log
-hs_err_pid66461.log
-hs_err_pid85192.log
-hs_err_pid87526.log
-hs_err_pid88725.log
-hs_err_pid91776.log
-hs_err_pid93994.log
 i18n/bundle.properties
 i18n/bundle_en.properties
 i18n/bundle_pl.properties
 music/theme.ogg
+skin/04B_30__.fnt
+skin/NzSkin.atlas
+skin/NzSkin.json
+skin/NzSkin.png
+skin/impact(1).fnt
+skin/impact(3).fnt
+skin/mac's Extended Minecraft Bold Italic.fnt
+skin/mac's Minecraft(1).fnt
 ui/templates/dialogs/controls.lml
 ui/templates/dialogs/edit.lml
 ui/templates/dialogs/inactive.lml

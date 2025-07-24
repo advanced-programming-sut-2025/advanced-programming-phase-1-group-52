@@ -14,7 +14,16 @@ import com.example.main.enums.design.Shop.ShopEntry;
 import com.example.main.enums.design.Shop.TheStardropSaloon;
 import com.example.main.enums.design.ShopType;
 import com.example.main.enums.design.TileType;
-import com.example.main.enums.items.*;
+import com.example.main.enums.items.AnimalType;
+import com.example.main.enums.items.Backpacks;
+import com.example.main.enums.items.CageType;
+import com.example.main.enums.items.CookingRecipeType;
+import com.example.main.enums.items.CraftingMachineType;
+import com.example.main.enums.items.CraftingRecipes;
+import com.example.main.enums.items.FoodType;
+import com.example.main.enums.items.ForagingSeedType;
+import com.example.main.enums.items.MineralType;
+import com.example.main.enums.items.ToolType;
 import com.example.main.models.App;
 import com.example.main.models.BankAccount;
 import com.example.main.models.Game;
@@ -26,7 +35,15 @@ import com.example.main.models.Tile;
 import com.example.main.models.User;
 import com.example.main.models.building.Housing;
 import com.example.main.models.building.Shop;
-import com.example.main.models.item.*;
+import com.example.main.models.item.CookingRecipe;
+import com.example.main.models.item.CraftingMachine;
+import com.example.main.models.item.CraftingRecipe;
+import com.example.main.models.item.Food;
+import com.example.main.models.item.Item;
+import com.example.main.models.item.Mineral;
+import com.example.main.models.item.PurchasedAnimal;
+import com.example.main.models.item.Seed;
+import com.example.main.models.item.Tool;
 
 public class StoreMenuController {
     public Result showAllProducts() {
@@ -265,9 +282,21 @@ public class StoreMenuController {
             return Result.failure("No housing found with ID " + housingId + ".");
         }
 
-        String requiredBuilding = ranchEnum.getBuildingRequired();
+        String requiredBuilding = ranchEnum.getBuildingRequired().contains("Barn") ? "barn" : "coop";
         if (!target.getType().getName().toLowerCase().contains(requiredBuilding.toLowerCase())) {
             return Result.failure(animalType.getName() + " must live in a " + requiredBuilding + ".");
+        }
+
+        if (ranchEnum.getBuildingRequired().contains("deluxe")) {
+            if (target.getType().getLevel() < 3) {
+                return Result.failure("You need to upgrade your " + requiredBuilding + " to house " + animalType.getName() + ".");
+            }
+        }
+
+        if (ranchEnum.getBuildingRequired().contains("big")) {
+            if (target.getType().getLevel() < 2) {
+                return Result.failure("You need to upgrade your " + requiredBuilding + " to house " + animalType.getName() + ".");
+            }
         }
 
         PurchasedAnimal newAnimal = new PurchasedAnimal(animalType, givenName, target.getX() + 1, target.getY() + 1);
@@ -335,7 +364,7 @@ public class StoreMenuController {
                 cageType = CageType.NormalCage;
             }
 
-            if (map.isPlantThere(x, x + 6, y, y + 3)) {
+            if (map.isPlantThere(x, x + 5, y, y + 7)) {
                 return new Result(false, "You can't place your coop there!");
             }
 
@@ -344,7 +373,7 @@ public class StoreMenuController {
                 players.add(user.getPlayer());
             }
 
-            map.generateBuilding(players, players.indexOf(game.getCurrentPlayer()), TileType.Housing, x, x + 6, y, y + 3);
+            map.generateBuilding(players, players.indexOf(game.getCurrentPlayer()), TileType.Housing, x, x + 5, y, y + 7);
         }
         else {
             if (carpEnum.getDisplayName().contains("Big")) {
@@ -357,7 +386,7 @@ public class StoreMenuController {
                 cageType = CageType.NormalBarn;
             }
 
-            if (map.isPlantThere(x, x + 7, y, y + 4)) {
+            if (map.isPlantThere(x, x + 6, y, y + 7)) {
                 return new Result(false, "You can't place your barn there!");
             }
 
@@ -366,7 +395,7 @@ public class StoreMenuController {
                 players.add(user.getPlayer());
             }
 
-            map.generateBuilding(players, players.indexOf(game.getCurrentPlayer()), TileType.Housing, x, x + 7, y, y + 4);
+            map.generateBuilding(players, players.indexOf(game.getCurrentPlayer()), TileType.Housing, x, x + 6, y, y + 7);
         }
 
         req1.forEach((mat, amt) -> inv.remove2(mat.getName(), amt));
@@ -374,7 +403,7 @@ public class StoreMenuController {
         player.getBankAccount().withdraw(carpEnum.getPrice());
         player.addHousing(cageType, x, y);
         return new Result(true,
-                carpEnum.getDisplayName() + " successfully built at (" + x + "," + y + ")."
+                carpEnum.getDisplayName() + " #" + player.getNextHousingId() + " successfully built at (" + x + "," + y + ")."
         );
     }
 
