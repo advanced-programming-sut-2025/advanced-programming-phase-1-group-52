@@ -55,24 +55,7 @@ import com.example.main.models.Tree;
 import com.example.main.models.User;
 import com.example.main.models.building.House;
 import com.example.main.models.building.Housing;
-import com.example.main.models.item.AnimalProduct;
-import com.example.main.models.item.CookingRecipe;
-import com.example.main.models.item.CraftingMachine;
-import com.example.main.models.item.CraftingRecipe;
-import com.example.main.models.item.Crop;
-import com.example.main.models.item.Fish;
-import com.example.main.models.item.Food;
-import com.example.main.models.item.Fruit;
-import com.example.main.models.item.Good;
-import com.example.main.models.item.Item;
-import com.example.main.models.item.ItemFactory;
-import com.example.main.models.item.Material;
-import com.example.main.models.item.Mineral;
-import com.example.main.models.item.PurchasedAnimal;
-import com.example.main.models.item.Seed;
-import com.example.main.models.item.Tool;
-import com.example.main.models.item.TrashCan;
-import com.example.main.models.item.WateringCan;
+import com.example.main.models.item.*;
 
 
 public class GameMenuController {
@@ -3040,5 +3023,85 @@ public class GameMenuController {
 
         player.addCookingRecipe(new CookingRecipe(recipeType));
         return new Result(true, "Learned cooking recipe: " + recipeType.getDisplayName());
+    }
+
+    public Result placeMachine(CraftingMachine machine, int tileX, int tileY) {
+        if (!map.inBounds(tileX, tileY)) {
+            return new Result(false, "Cannot place outside the farm.");
+        }
+        Tile targetTile = map.getTile(tileX, tileY);
+        if (targetTile.getPlacedMachine() != null || !targetTile.getType().isReachable()) {
+            return new Result(false, "You cannot place a machine there.");
+        }
+
+        // Create the PlacedMachine state object
+        PlacedMachine placedMachine = new PlacedMachine((CraftingMachineType) machine.getItemType());
+        targetTile.setPlacedMachine(placedMachine);
+
+        // Remove the item from inventory
+        game.getCurrentPlayer().getInventory().remove2(machine.getName(), 1);
+
+        return new Result(true, machine.getName() + " placed successfully.");
+    }
+
+    public Result startArtisanProcess(PlacedMachine machine, ArtisanProductType recipe) {
+        Player player = game.getCurrentPlayer();
+        Item ingredient = player.getInventory().findItemByType(recipe.getIngredients().keySet().iterator().next());
+
+        if (ingredient == null || ingredient.getNumber() < 1) {
+            return new Result(false, "You don't have the required ingredient in your inventory.");
+        }
+
+        player.getInventory().remove2(ingredient.getName(), 1);
+        machine.startProcessing(ingredient, recipe);
+
+        return new Result(true, "Processing started for " + recipe.getName());
+    }
+
+    public Result collectArtisanProduct(PlacedMachine machine) {
+        Player player = game.getCurrentPlayer();
+        if (player.getInventory().isFull()) {
+            return new Result(false, "Your inventory is full.");
+        }
+
+        Good product = machine.collectProduct();
+        if (product != null) {
+            player.getInventory().addItem(product);
+            return new Result(true, "Collected 1 " + product.getName());
+        }
+        return new Result(false, "Nothing to collect.");
+    }
+
+    public Result finishArtisanProcessNow(PlacedMachine machine) {
+        Player player = game.getCurrentPlayer();
+        if (player.getEnergy() < 100) {
+            return new Result(false, "Not enough energy to finish instantly.");
+        }
+        if (!machine.isProcessing()) {
+            return new Result(false, "Nothing is being processed.");
+        }
+
+        player.reduceEnergy(100);
+        // Manually set progress to finish
+        while (!machine.isDone()) {
+            machine.updateProgress();
+        }
+
+        return new Result(true, "Process finished instantly!");
+    }
+
+    public Result cancelArtisanProcess(PlacedMachine machine) {
+        if (!machine.isProcessing()) {
+            return new Result(false, "Nothing to cancel.");
+        }
+
+        // Return the ingredient to the player's inventory
+        Item ingredient = machine.getInput();
+        if (ingredient != null) {
+            game.getCurrentPlayer().getInventory().addItem(ingredient);
+        }
+
+        machine.cancelProcessing();
+        return new Result(true, "Process cancelled.");
     }
 }

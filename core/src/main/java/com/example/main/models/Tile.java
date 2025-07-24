@@ -5,6 +5,7 @@ import com.example.main.enums.items.Growable;
 import com.example.main.enums.items.TreeType;
 import com.example.main.models.building.Shop;
 import com.example.main.models.item.Item;
+import com.example.main.models.item.PlacedMachine;
 import com.example.main.models.item.Seed;
 
 
@@ -18,6 +19,7 @@ public class Tile {
     private Seed seed = null;
     private Item item = null;
     private Shop shop = null;
+    private PlacedMachine placedMachine = null;
 
     public Tile(int x, int y, TileType tileType, Player owner) {
         this.x = x;
@@ -84,5 +86,13 @@ public class Tile {
 
     public void setShop(Shop shop) {
         this.shop = shop;
+    }
+
+    public PlacedMachine getPlacedMachine() {
+        return placedMachine;
+    }
+
+    public void setPlacedMachine(PlacedMachine placedMachine) {
+        this.placedMachine = placedMachine;
     }
 }

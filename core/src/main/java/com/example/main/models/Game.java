@@ -39,7 +39,7 @@ public class Game {
         this.date = new Date();
         this.players = players;
         this.currentPlayer = players.getFirst().getPlayer();
-        this.currentUser = players.getFirst(); 
+        this.currentUser = players.getFirst();
         this.todayWeather = Weather.Sunny;
         this.tomorrowWeather = Weather.Rainy;
 
@@ -73,6 +73,7 @@ public class Game {
         if (tensOfMinutesPassed > 0) {
             for (int i = 0; i < tensOfMinutesPassed; i++) {
                 updatePlayerBuffs();
+                updatePlacedMachines();
             }
         }
 
@@ -504,14 +505,13 @@ public class Game {
     }
 
 
-    private void updateArtisanProduct(){
-        for(Item item : this.currentPlayer.getInventory().getItems()){
-            if(item instanceof Good good){
-                if(good.getTimePassed() >= good.getProductType().getProcessingTime()){
-                    good.setReadyToUSe(true);
-                }
-                else{
-                    good.setTimePassed(good.getTimePassed() + 1);
+    public void updatePlacedMachines() {
+        if (map == null) return;
+        for (int i = 0; i < 90; i++) {
+            for (int j = 0; j < 60; j++) {
+                Tile tile = map.getTile(i, j);
+                if (tile != null && tile.getPlacedMachine() != null) {
+                    tile.getPlacedMachine().updateProgress();
                 }
             }
         }
@@ -536,7 +536,7 @@ public class Game {
             }
         }
     }
-                            
+
     public boolean isCrowAttackHappened() {
         return crowAttackHappened;
     }

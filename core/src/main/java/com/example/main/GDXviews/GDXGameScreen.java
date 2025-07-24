@@ -54,13 +54,7 @@ import com.example.main.enums.design.NPCType;
 import com.example.main.enums.design.ShopType;
 import com.example.main.enums.design.TileType;
 import com.example.main.enums.design.Weather;
-import com.example.main.enums.items.AnimalType;
-import com.example.main.enums.items.CageType;
-import com.example.main.enums.items.CookingRecipeType;
-import com.example.main.enums.items.CraftingRecipes;
-import com.example.main.enums.items.CropType;
-import com.example.main.enums.items.ItemType;
-import com.example.main.enums.items.TreeType;
+import com.example.main.enums.items.*;
 import com.example.main.enums.player.Skills;
 import static com.example.main.enums.player.Skills.Farming;
 import static com.example.main.enums.player.Skills.Fishing;
@@ -81,15 +75,7 @@ import com.example.main.models.Tile;
 import com.example.main.models.Time;
 import com.example.main.models.User;
 import com.example.main.models.building.Housing;
-import com.example.main.models.item.CookingRecipe;
-import com.example.main.models.item.CraftingRecipe;
-import com.example.main.models.item.Crop;
-import com.example.main.models.item.Food;
-import com.example.main.models.item.Fruit;
-import com.example.main.models.item.Item;
-import com.example.main.models.item.PurchasedAnimal;
-import com.example.main.models.item.Seed;
-import com.example.main.models.item.Tool;
+import com.example.main.models.item.*;
 
 public class GDXGameScreen implements Screen {
     private Stage stage;
@@ -145,14 +131,14 @@ public class GDXGameScreen implements Screen {
     private Table shopMenuTable;
     private ShopType currentShopType = null;
     private StoreMenuController shopController;
-    
+
     // Building placement mode variables
     private boolean isBuildingPlacementMode = false;
     private String buildingToPlace = null;
     private Texture buildingPlacementTexture = null;
     private float buildingPlacementX = 0f;
     private float buildingPlacementY = 0f;
-    
+
     // Shop menu state management
     private enum ShopMenuState {
         MAIN_MENU,
@@ -266,6 +252,12 @@ public class GDXGameScreen implements Screen {
     private float eatingAnimationTimer = 0f;
     private static final float EATING_ANIMATION_DURATION = 0.75f;
 
+    private boolean isMachinePlacementMode = false;
+    private CraftingMachine machineToPlace = null;
+    private Texture machinePlacementTexture = null;
+    private Stage machineUiStage;
+    private PlacedMachine activeMachine = null;
+
     private Texture ground1Texture;
     private Texture ground2Texture;
     private Texture grass1Texture;
@@ -305,15 +297,15 @@ public class GDXGameScreen implements Screen {
 
     private Texture barnTexture;
     private Texture coopTexture;
-    
+
     // Animal textures
     private Map<AnimalType, Texture> animalTextures = new HashMap<>();
-    
+
     // Housing management
     private boolean showHousingMenu = false;
     private Housing selectedHousing = null;
     private Table housingMenuTable = null;
-    
+
     // Animal movement
     private float animalMovementTimer = 0f;
     private static final float ANIMAL_MOVEMENT_UPDATE_INTERVAL = 3.0f; // 3 seconds for faster testing
@@ -478,14 +470,14 @@ public class GDXGameScreen implements Screen {
     private boolean showAnimalMenu = false;
     private PurchasedAnimal selectedAnimal = null;
     private Table animalMenuTable = null;
-    
+
     // Shepherd mode variables
     private boolean isShepherdMode = false;
     private String animalToShepherd = null;
-    
+
     // Animation system variables
     private ArrayList<AnimationEffect> activeAnimations = new ArrayList<>();
-    
+
     // Animation effect class
     private static class AnimationEffect {
         float x, y;
@@ -494,7 +486,7 @@ public class GDXGameScreen implements Screen {
         String type; // "food", "hearts", "bounce"
         float bounceHeight = 0f;
         float bounceSpeed = 0f;
-        
+
         AnimationEffect(float x, float y, float duration, String type) {
             this.x = x;
             this.y = y;
@@ -559,6 +551,7 @@ public class GDXGameScreen implements Screen {
         craftingCheatMenuStage = new Stage(new ScreenViewport());
         cookingCheatMenuStage = new Stage(new ScreenViewport());
         eatMenuStage = new Stage(new ScreenViewport());
+        machineUiStage = new Stage(new ScreenViewport());
 
         textureManager = new TextureManager();
         textureManager.loadAllItemTextures();
@@ -598,6 +591,7 @@ public class GDXGameScreen implements Screen {
         multiplexer.addProcessor(cookingCheatMenuStage);
         multiplexer.addProcessor(craftingCheatMenuStage);
         multiplexer.addProcessor(eatMenuStage);
+        multiplexer.addProcessor(machineUiStage);
         plantableItems = new ArrayList<>();
         Gdx.input.setInputProcessor(multiplexer);
     }
@@ -637,10 +631,10 @@ public class GDXGameScreen implements Screen {
             }
         }
         handleInput(delta);
-        
+
         // Update animal movement
         updateAnimalMovement(delta);
-        
+
         // Update animations
         updateAnimations(delta);
 
@@ -684,8 +678,9 @@ public class GDXGameScreen implements Screen {
         spriteBatch.begin();
         renderMap();
         renderAnimals();
+        renderMachinePlacement(spriteBatch);
         spriteBatch.end();
-        
+
         // Render animations (after animals so they appear on top)
         renderAnimations();
 
@@ -703,12 +698,12 @@ public class GDXGameScreen implements Screen {
         renderDayNightOverlay();
         renderToolMenu(delta);
         renderInventoryOverlay(delta);
-        
+
         // Render building placement preview
         if (isBuildingPlacementMode && buildingPlacementTexture != null) {
             renderBuildingPlacementPreview();
         }
-        
+
         // Render shepherd mode UI
         renderShepherdModeUI();
         renderCrowAnimations(delta);
@@ -718,6 +713,9 @@ public class GDXGameScreen implements Screen {
         renderCookingCheatMenu(delta);
         renderEatMenu(delta);
         renderBuffs();
+
+        machineUiStage.act(delta);
+        machineUiStage.draw();
 
         stage.act(delta);
         stage.draw();
@@ -861,11 +859,11 @@ public class GDXGameScreen implements Screen {
         // Load NPC interaction textures
         dialogBoxTexture = new Texture("content/Cut/map_elements/dialog_box.png");
         menuBackgroundTexture = new Texture("content/Cut/menu_background.png");
-        
+
         // Load animal textures
         loadAnimalTextures();
     }
-    
+
     private void loadAnimalTextures() {
         // Load all animal textures from the animals directory
         for (AnimalType animalType : AnimalType.values()) {
@@ -948,7 +946,7 @@ public class GDXGameScreen implements Screen {
         if (showAnimalMenu) {
             return;
         }
-        
+
         // Handle building placement mode
         if (isBuildingPlacementMode) {
             handleBuildingPlacement();
@@ -956,7 +954,7 @@ public class GDXGameScreen implements Screen {
             handleCameraMovement(delta);
             return;
         }
-        
+
         // Handle shepherd mode
         if (isShepherdMode) {
             handleShepherdMode();
@@ -980,7 +978,7 @@ public class GDXGameScreen implements Screen {
             }
             return;
         }
-        
+
         // If housing menu is open, only allow housing menu UI
         if (showHousingMenu) {
             // Allow ESC key to close housing menu
@@ -1144,6 +1142,8 @@ public class GDXGameScreen implements Screen {
         handlePlayerMovement(delta);
         handleCameraMovement(delta);
         handleShopInteraction();
+        handleMachinePlacement();
+        handleMachineInteraction();
 
         // Handle NPC interactions
         if (showDialog) {
@@ -1158,7 +1158,7 @@ public class GDXGameScreen implements Screen {
                 handleNPCRightClick(Gdx.input.getX(), Gdx.input.getY());
             }
         }
-        
+
         // Handle housing interactions
         if (Gdx.input.isButtonJustPressed(Input.Buttons.LEFT)) {
             // First, check if an animal was clicked
@@ -1331,17 +1331,17 @@ public class GDXGameScreen implements Screen {
 
         nKeyPressed = nKeyCurrentlyPressed;
     }
-    
+
     private void handleBuildingPlacement() {
         // Update building placement position to follow cursor
         float mouseX = Gdx.input.getX();
         float mouseY = Gdx.input.getY();
-        
+
         // Store screen coordinates for rendering
         // Note: LibGDX Y coordinates are inverted (0 is at top, increases downward)
         buildingPlacementX = mouseX;
         buildingPlacementY = Gdx.graphics.getHeight() - mouseY;
-        
+
         // Handle left click to place building
         if (Gdx.input.isButtonJustPressed(Input.Buttons.LEFT)) {
             // Convert screen coordinates to world coordinates for tile placement
@@ -1349,17 +1349,17 @@ public class GDXGameScreen implements Screen {
             // Convert world coordinates to tile coordinates
             int tileX = (int) (worldCoords.x / TILE_SIZE);
             int tileY = (int) ((MAP_HEIGHT * TILE_SIZE - worldCoords.y) / TILE_SIZE);
-            
+
             // Call the buildBarnOrCoop method
             Result result = shopController.buildBarnOrCoop(buildingToPlace, String.valueOf(tileX), String.valueOf(tileY));
-            
+
             if (result.isSuccessful()) {
                 // Building placed successfully
                 generalMessageLabel.setText(result.Message());
                 generalMessageLabel.setColor(Color.GREEN);
                 generalMessageLabel.setVisible(true);
                 generalMessageTimer = GENERAL_MESSAGE_DURATION;
-                
+
                 // Exit building placement mode
                 isBuildingPlacementMode = false;
                 buildingToPlace = null;
@@ -1372,37 +1372,37 @@ public class GDXGameScreen implements Screen {
                 generalMessageTimer = GENERAL_MESSAGE_DURATION;
             }
         }
-        
+
         // Handle right click to cancel placement
         if (Gdx.input.isButtonJustPressed(Input.Buttons.RIGHT)) {
             isBuildingPlacementMode = false;
             buildingToPlace = null;
             buildingPlacementTexture = null;
-            
+
             generalMessageLabel.setText("Building placement cancelled");
             generalMessageLabel.setColor(Color.YELLOW);
             generalMessageLabel.setVisible(true);
             generalMessageTimer = GENERAL_MESSAGE_DURATION;
         }
     }
-    
+
     private void handleShepherdMode() {
         // Handle camera movement during shepherd mode
         handleCameraMovement(Gdx.graphics.getDeltaTime());
-        
+
         // Handle left click to shepherd animal to target location
         if (Gdx.input.isButtonJustPressed(Input.Buttons.LEFT)) {
             // Get mouse position in screen coordinates
             int mouseX = Gdx.input.getX();
             int mouseY = Gdx.input.getY();
-            
+
             // Convert screen coordinates to world coordinates
             Vector3 worldCoords = camera.unproject(new Vector3(mouseX, mouseY, 0));
-            
+
             // Convert world coordinates to tile coordinates
             int tileX = (int) (worldCoords.x / TILE_SIZE);
             int tileY = (int) ((MAP_HEIGHT * TILE_SIZE - worldCoords.y) / TILE_SIZE);
-            
+
             if (tileX >= 0 && tileX < MAP_WIDTH && tileY >= 0 && tileY < MAP_HEIGHT) {
                 Player currentPlayer = game.getCurrentPlayer();
                 if (currentPlayer != null && isAnimalWalkable(tileX, tileY, currentPlayer)) {
@@ -1423,11 +1423,11 @@ public class GDXGameScreen implements Screen {
                             }
                         }
                     }
-                    
+
                     // Exit shepherd mode
                     isShepherdMode = false;
                     animalToShepherd = null;
-                    
+
                     generalMessageLabel.setText("Animal is moving to new location");
                     generalMessageLabel.setColor(Color.GREEN);
                     generalMessageLabel.setVisible(true);
@@ -1440,23 +1440,23 @@ public class GDXGameScreen implements Screen {
                 }
             }
         }
-        
+
         // Handle right click to cancel shepherd mode
         if (Gdx.input.isButtonJustPressed(Input.Buttons.RIGHT)) {
             isShepherdMode = false;
             animalToShepherd = null;
-            
+
             generalMessageLabel.setText("Shepherd mode cancelled");
             generalMessageLabel.setColor(Color.YELLOW);
             generalMessageLabel.setVisible(true);
             generalMessageTimer = GENERAL_MESSAGE_DURATION;
         }
-        
+
         // Handle ESC key to cancel shepherd mode
         if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
             isShepherdMode = false;
             animalToShepherd = null;
-            
+
             generalMessageLabel.setText("Shepherd mode cancelled");
             generalMessageLabel.setColor(Color.YELLOW);
             generalMessageLabel.setVisible(true);
@@ -1466,78 +1466,78 @@ public class GDXGameScreen implements Screen {
 
     private void renderBuildingPlacementPreview() {
         if (buildingPlacementTexture == null) return;
-        
+
         // Set up sprite batch for UI rendering
         spriteBatch.setProjectionMatrix(hudCamera.combined);
         spriteBatch.begin();
-        
+
         // Draw the building preview with some transparency
         spriteBatch.setColor(1f, 1f, 1f, 0.7f);
-        
+
         // Draw the building texture directly at screen coordinates
         float buildingWidth = buildingPlacementTexture.getWidth() * 2f;
         float buildingHeight = buildingPlacementTexture.getHeight() * 2f;
         // Position the building slightly offset from the cursor so it doesn't cover it completely
         spriteBatch.draw(buildingPlacementTexture, buildingPlacementX + 10, buildingPlacementY - buildingHeight + 10, buildingWidth, buildingHeight);
-        
+
         // Reset color
         spriteBatch.setColor(1f, 1f, 1f, 1f);
         spriteBatch.end();
-        
+
         // Reset projection matrix for world rendering
         spriteBatch.setProjectionMatrix(camera.combined);
     }
-    
+
     private void renderShepherdModeUI() {
         if (!isShepherdMode || animalToShepherd == null) return;
-        
+
         // Set up sprite batch for UI rendering
         spriteBatch.setProjectionMatrix(hudCamera.combined);
         spriteBatch.begin();
-        
+
         // Draw shepherd mode indicator
         hudFont.setColor(Color.YELLOW);
         String shepherdText = "Shepherd Mode: " + animalToShepherd + " - Click to move animal";
         hudFont.draw(spriteBatch, shepherdText, 10, Gdx.graphics.getHeight() - 10);
-        
+
         spriteBatch.end();
-        
+
         // Reset projection matrix for world rendering
         spriteBatch.setProjectionMatrix(camera.combined);
     }
-    
+
     private void createAnimation(float worldX, float worldY, String type) {
         activeAnimations.add(new AnimationEffect(worldX, worldY, 2.0f, type));
     }
-    
+
     private void updateAnimations(float delta) {
         for (int i = activeAnimations.size() - 1; i >= 0; i--) {
             AnimationEffect effect = activeAnimations.get(i);
             effect.elapsed += delta;
-            
+
             if (effect.type.equals("bounce")) {
                 effect.bounceHeight = (float) Math.sin(effect.elapsed * effect.bounceSpeed) * 10f;
                 if (effect.elapsed > effect.duration) {
                     effect.bounceHeight = 0f;
                 }
             }
-            
+
             if (effect.elapsed >= effect.duration) {
                 activeAnimations.remove(i);
             }
         }
     }
-    
+
     private void renderAnimations() {
         if (activeAnimations.isEmpty()) return;
-        
+
         spriteBatch.setProjectionMatrix(camera.combined);
         spriteBatch.begin();
-        
+
         for (AnimationEffect effect : activeAnimations) {
             float alpha = 1.0f - (effect.elapsed / effect.duration);
             alpha = Math.max(0f, alpha);
-            
+
             if (effect.type.equals("food")) {
                 // Render food particles
                 spriteBatch.setColor(1f, 1f, 1f, alpha);
@@ -1546,7 +1546,7 @@ public class GDXGameScreen implements Screen {
                     float offsetY = effect.elapsed * 30f + i * 10f;
                     float particleX = effect.x + offsetX;
                     float particleY = effect.y + offsetY;
-                    
+
                     // Draw a simple food particle (small colored rectangle)
                     spriteBatch.setColor(0.8f, 0.6f, 0.2f, alpha);
                     // Use a simple white texture for the food particle
@@ -1562,14 +1562,14 @@ public class GDXGameScreen implements Screen {
                     float offsetY = effect.elapsed * 40f + i * 15f;
                     float heartX = effect.x + offsetX;
                     float heartY = effect.y + offsetY;
-                    
+
                     // Draw heart shape using text or simple shape
                     hudFont.setColor(1f, 0.3f, 0.7f, alpha);
                     hudFont.draw(spriteBatch, "♥", heartX, heartY);
                 }
             }
         }
-        
+
         spriteBatch.setColor(1f, 1f, 1f, 1f);
         spriteBatch.end();
     }
@@ -1735,7 +1735,7 @@ public class GDXGameScreen implements Screen {
                             if (shopIndex != -1) {
                                 renderShopSprite(x, y, worldX, worldY);
                             }
-                            
+
                             int housingIndex = getHousingIndex(x, y);
                             if (housingIndex != -1) {
                                 renderHousingSprite(x, y, worldX, worldY);
@@ -1802,7 +1802,7 @@ public class GDXGameScreen implements Screen {
             float worldX = playerX * TILE_SIZE;
             float worldY = (MAP_HEIGHT - 1 - playerY) * TILE_SIZE;
 
-            Texture playerTexture = getPlayerTexture(player); 
+            Texture playerTexture = getPlayerTexture(player);
             float playerWidth = playerTexture.getWidth() * 2;
             float playerHeight = playerTexture.getHeight() * 2;
             float renderX = worldX + (TILE_SIZE - playerWidth) / 2f;
@@ -2792,7 +2792,7 @@ public class GDXGameScreen implements Screen {
     private void renderHousingSprite(int tileX, int tileY, float worldX, float worldY) {
         Player currentPlayer = game.getCurrentPlayer();
         if (currentPlayer == null) return;
-        
+
         for (Housing housing : currentPlayer.getHousings()) {
             if (housing.getX() == tileX && housing.getY() == tileY) {
                 CageType cageType = housing.getType();
@@ -2853,12 +2853,12 @@ public class GDXGameScreen implements Screen {
     private int getHousingIndex(int x, int y) {
         Player currentPlayer = game.getCurrentPlayer();
         if (currentPlayer == null) return -1;
-        
+
         List<Housing> housings = currentPlayer.getHousings();
         for (int i = 0; i < housings.size(); i++) {
             Housing housing = housings.get(i);
             CageType cageType = housing.getType();
-            
+
             // Determine building dimensions based on cage type
             int buildingWidth, buildingHeight;
             if (cageType.getName().toLowerCase().contains("barn")) {
@@ -2870,11 +2870,11 @@ public class GDXGameScreen implements Screen {
                 buildingWidth = 6;
                 buildingHeight = 3;
             }
-            
+
             // Check if the given coordinates are within this housing area
             int housingX = housing.getX();
             int housingY = housing.getY();
-            if (x >= housingX && x <= housingX + buildingWidth && 
+            if (x >= housingX && x <= housingX + buildingWidth &&
                 y >= housingY && y <= housingY + buildingHeight) {
                 return i;
             }
@@ -3305,9 +3305,17 @@ public class GDXGameScreen implements Screen {
                     @Override
                     public void clicked(InputEvent event, float x, float y) {
                         Result result = controller.craftItem(recipeEnum.getName());
-                        // Update the crafting menu to reflect new inventory counts
+                        if (result.isSuccessful()) {
+                            Item craftedItem = game.getCurrentPlayer().getInventory().findItemByType(recipeEnum.getProduct());
+                            if (craftedItem instanceof CraftingMachine) {
+                                isMachinePlacementMode = true;
+                                machineToPlace = (CraftingMachine) craftedItem;
+                                machinePlacementTexture = textureManager.getTexture(machineToPlace.getItemType().getEnumName());
+                                isCraftingMenuOpen = false; // Close crafting menu
+                                Gdx.input.setInputProcessor(multiplexer);
+                            }
+                        }
                         showCraftingMenu();
-                        // Show a message to the player
                         generalMessageLabel.setText(result.Message());
                         generalMessageLabel.setVisible(true);
                         generalMessageTimer = GENERAL_MESSAGE_DURATION;
@@ -4298,6 +4306,144 @@ public class GDXGameScreen implements Screen {
         spriteBatch.end();
     }
 
+    // --- START: NEW METHODS FOR MACHINE HANDLING ---
+
+    private void handleMachinePlacement() {
+        if (!isMachinePlacementMode) return;
+
+        // Handle left-click to place
+        if (Gdx.input.isButtonJustPressed(Input.Buttons.LEFT)) {
+            Vector3 worldCoords = camera.unproject(new Vector3(Gdx.input.getX(), Gdx.input.getY(), 0));
+            int tileX = (int) (worldCoords.x / TILE_SIZE);
+            int tileY = MAP_HEIGHT - 1 - (int) (worldCoords.y / TILE_SIZE);
+
+            Result result = controller.placeMachine(machineToPlace, tileX, tileY);
+            generalMessageLabel.setText(result.Message());
+            generalMessageLabel.setVisible(true);
+            generalMessageTimer = GENERAL_MESSAGE_DURATION;
+
+            if (result.isSuccessful()) {
+                isMachinePlacementMode = false;
+                machineToPlace = null;
+                machinePlacementTexture = null;
+            }
+        }
+
+        // Handle right-click to cancel
+        if (Gdx.input.isButtonJustPressed(Input.Buttons.RIGHT)) {
+            isMachinePlacementMode = false;
+            machineToPlace = null;
+            machinePlacementTexture = null;
+        }
+    }
+
+    private void handleMachineInteraction() {
+        if (Gdx.input.isButtonJustPressed(Input.Buttons.RIGHT)) {
+            Vector3 worldCoords = camera.unproject(new Vector3(Gdx.input.getX(), Gdx.input.getY(), 0));
+            int tileX = (int) (worldCoords.x / TILE_SIZE);
+            int tileY = MAP_HEIGHT - 1 - (int) (worldCoords.y / TILE_SIZE);
+
+            if (gameMap.inBounds(tileX, tileY)) {
+                Tile targetTile = gameMap.getTile(tileX, tileY);
+                if (targetTile.getPlacedMachine() != null) {
+                    activeMachine = targetTile.getPlacedMachine();
+                    showMachineUI();
+                    Gdx.input.setInputProcessor(machineUiStage);
+                }
+            }
+        }
+    }
+
+    private void showMachineUI() {
+        machineUiStage.clear();
+        Dialog dialog = new Dialog(activeMachine.getMachineType().getName(), skin, "dialog");
+
+        // UI Components
+        Table content = dialog.getContentTable();
+        Image inputImage = new Image();
+        Image outputImage = new Image();
+        ProgressBar progressBar = new ProgressBar(0, 100, 1, false, skin);
+        Table recipeTable = new Table();
+        ScrollPane recipePane = new ScrollPane(recipeTable, skin);
+
+        // Layout
+        content.add(new Label("Input:", skin));
+        content.add(inputImage).size(48, 48).pad(10);
+        content.add(new Label("Output:", skin));
+        content.add(outputImage).size(48, 48).pad(10).row();
+        content.add(progressBar).colspan(4).fillX().pad(5).row();
+        content.add(recipePane).colspan(4).height(150).fill().pad(5);
+
+        for (ArtisanProductType recipe : ArtisanProductType.values()) {
+            if (recipe.getMachine() == activeMachine.getMachineType()) {
+                TextButton recipeButton = new TextButton(recipe.getName(), skin);
+                recipeTable.add(recipeButton).fillX().pad(2).row();
+
+                recipeButton.addListener(new ClickListener() {
+                    @Override
+                    public void clicked(InputEvent event, float x, float y) {
+                        Result result = controller.startArtisanProcess(activeMachine, recipe);
+                        generalMessageLabel.setText(result.Message());
+                        generalMessageLabel.setVisible(true);
+                        generalMessageTimer = GENERAL_MESSAGE_DURATION;
+                        showMachineUI(); // Refresh the dialog
+                    }
+                });
+            }
+        }
+
+        // Populate Buttons and State
+        if (activeMachine.isIdle()) {
+            dialog.getButtonTable().add(new Label("Select a recipe to start.", skin));
+        } else if (activeMachine.isProcessing()) {
+            inputImage.setDrawable(new TextureRegionDrawable(textureManager.getTexture(activeMachine.getInput().getItemType().getEnumName())));
+            float progress = (float)activeMachine.getProgress() / activeMachine.getCurrentRecipe().getProcessingTime() * 100f;
+            progressBar.setValue(progress);
+
+            TextButton finishNow = new TextButton("Finish Now (-100 Energy)", skin);
+            finishNow.addListener(new ClickListener() { /* ... call controller.finishArtisanProcessNow ... */ });
+            dialog.button(finishNow);
+
+            TextButton cancel = new TextButton("Cancel", skin);
+            cancel.addListener(new ClickListener() { /* ... call controller.cancelArtisanProcess ... */ });
+            dialog.button(cancel);
+
+        } else if (activeMachine.isDone()) {
+            outputImage.setDrawable(new TextureRegionDrawable(textureManager.getTexture(activeMachine.getOutput().getItemType().getEnumName())));
+            progressBar.setValue(100);
+
+            TextButton collect = new TextButton("Collect", skin);
+            collect.addListener(new ClickListener() {
+                @Override
+                public void clicked(InputEvent event, float x, float y) {
+                    controller.collectArtisanProduct(activeMachine);
+                    showMachineUI();
+                }
+            });
+            dialog.button(collect);
+        }
+
+        dialog.button("Close");
+        dialog.show(machineUiStage);
+    }
+
+    private void renderMachinePlacement(SpriteBatch batch) {
+        if (!isMachinePlacementMode || machinePlacementTexture == null) return;
+
+        Vector3 worldCoords = camera.unproject(new Vector3(Gdx.input.getX(), Gdx.input.getY(), 0));
+        int tileX = (int) (worldCoords.x / TILE_SIZE);
+        int tileY = MAP_HEIGHT - 1 - (int) (worldCoords.y / TILE_SIZE);
+
+        float renderX = tileX * TILE_SIZE;
+        float renderY = (MAP_HEIGHT - 1 - tileY) * TILE_SIZE;
+
+        batch.setColor(1, 1, 1, 0.6f); // Make it transparent
+        batch.draw(machinePlacementTexture, renderX, renderY, TILE_SIZE, TILE_SIZE);
+        batch.setColor(1, 1, 1, 1);
+    }
+
+// --- END: NEW METHODS ---
+
     @Override
     public void resize(int width, int height) {
         stage.getViewport().update(width,
@@ -4663,26 +4809,26 @@ public class GDXGameScreen implements Screen {
                             int amount = Integer.parseInt(amountField.getText());
                             if (amount > 0) {
                                 // Check if this is a barn or coop purchase
-                                if (currentShopType == ShopType.CarpentersShop && 
+                                if (currentShopType == ShopType.CarpentersShop &&
                                     (productName.contains("Barn") || productName.contains("Coop"))) {
                                     // Handle barn/coop purchase - enter building placement mode
                                     isBuildingPlacementMode = true;
                                     buildingToPlace = productName;
-                                    
+
                                     // Set the appropriate texture based on the building type
                                     if (productName.contains("Barn")) {
                                         buildingPlacementTexture = barnTexture;
                                     } else if (productName.contains("Coop")) {
                                         buildingPlacementTexture = coopTexture;
                                     }
-                                    
+
                                     // Close the shop menu
                                     showShopMenu = false;
                                     if (shopMenuTable != null) {
                                         shopMenuTable.remove();
                                         shopMenuTable = null;
                                     }
-                                    
+
                                     // Show placement instructions
                                     generalMessageLabel.setText("Click where you want to place the " + productName + ". Right-click to cancel.");
                                     generalMessageLabel.setColor(Color.CYAN);
@@ -4773,7 +4919,7 @@ public class GDXGameScreen implements Screen {
         }
         return productText.trim();
     }
-    
+
     private void showAnimalPurchasePage(String animalKey) {
         if (shopResultSuccess) {
             // keep the message
@@ -4816,7 +4962,7 @@ public class GDXGameScreen implements Screen {
             if (requiredBuilding != null) {
                 String housingTypeName = h.getType().getName().toLowerCase();
                 String requiredBuildingLower = requiredBuilding.toLowerCase();
-                
+
                 // Check if housing type matches the required building
                 if (requiredBuildingLower.contains("barn")) {
                     typeOk = housingTypeName.contains("barn");
@@ -4909,13 +5055,13 @@ public class GDXGameScreen implements Screen {
             shopMenuTable.add(resultLabel).colspan(2).padBottom(15).row();
         }
     }
-    
+
     private void handleHousingClick(int screenX, int screenY) {
         // Convert screen coordinates to world coordinates
         Vector3 mouseInWorld = camera.unproject(new Vector3(screenX, screenY, 0));
         int targetTileX = (int) (mouseInWorld.x / TILE_SIZE);
         int targetTileY = MAP_HEIGHT - 1 - (int) (mouseInWorld.y / TILE_SIZE);
-        
+
         // Check if click is on a housing
         int housingIndex = getHousingIndex(targetTileX, targetTileY);
         if (housingIndex != -1) {
@@ -4927,27 +5073,27 @@ public class GDXGameScreen implements Screen {
             }
         }
     }
-    
+
     private void createHousingMenuUI() {
         if (housingMenuTable != null) {
             housingMenuTable.remove();
         }
-        
+
         housingMenuTable = new Table();
         housingMenuTable.setBackground(new TextureRegionDrawable(menuBackgroundTexture));
         housingMenuTable.setSize(600, 400);
         housingMenuTable.setPosition(Gdx.graphics.getWidth() / 2f - 300, Gdx.graphics.getHeight() / 2f - 200);
-        
+
         // Title
         Label titleLabel = new Label("Housing Management - " + selectedHousing.getType().getName() + " (ID: " + selectedHousing.getId() + ")", skin);
         titleLabel.setFontScale(1.2f);
         titleLabel.setColor(Color.WHITE);
         housingMenuTable.add(titleLabel).colspan(2).padBottom(20).row();
-        
+
         // Animal list with scroll pane
         Table animalListTable = new Table();
         animalListTable.defaults().pad(5);
-        
+
         if (selectedHousing.getOccupants().isEmpty()) {
             Label noAnimalsLabel = new Label("No animals in this housing.", skin);
             noAnimalsLabel.setColor(Color.GRAY);
@@ -4958,24 +5104,24 @@ public class GDXGameScreen implements Screen {
             Label typeHeader = new Label("Type", skin);
             Label statusHeader = new Label("Status", skin);
             Label actionHeader = new Label("Action", skin);
-            
+
             nameHeader.setColor(Color.YELLOW);
             typeHeader.setColor(Color.YELLOW);
             statusHeader.setColor(Color.YELLOW);
             actionHeader.setColor(Color.YELLOW);
-            
+
             animalListTable.add(nameHeader).width(150);
             animalListTable.add(typeHeader).width(100);
             animalListTable.add(statusHeader).width(100);
             animalListTable.add(actionHeader).width(100).row();
-            
+
             // Add each animal
             for (PurchasedAnimal animal : selectedHousing.getOccupants()) {
                 Label nameLabel = new Label(animal.getName(), skin);
                 Label typeLabel = new Label(animal.getType().getName(), skin);
                 Label statusLabel = new Label(animal.isInCage() ? "Inside" : "Outside", skin);
                 statusLabel.setColor(animal.isInCage() ? Color.GREEN : Color.ORANGE);
-                
+
                 TextButton actionButton;
                 if (animal.isInCage()) {
                     actionButton = new TextButton("Bring Out", skin);
@@ -4994,21 +5140,21 @@ public class GDXGameScreen implements Screen {
                         }
                     });
                 }
-                
+
                 animalListTable.add(nameLabel).width(150);
                 animalListTable.add(typeLabel).width(100);
                 animalListTable.add(statusLabel).width(100);
                 animalListTable.add(actionButton).width(100).row();
             }
         }
-        
+
         ScrollPane scrollPane = new ScrollPane(animalListTable, skin);
         scrollPane.setScrollingDisabled(false, false);
         scrollPane.setFadeScrollBars(false);
         scrollPane.setScrollBarPositions(false, true);
-        
+
         housingMenuTable.add(scrollPane).width(500).height(250).padBottom(20).row();
-        
+
         // Close button
         TextButton closeButton = new TextButton("Close", skin);
         closeButton.addListener(new ClickListener() {
@@ -5023,73 +5169,73 @@ public class GDXGameScreen implements Screen {
             }
         });
         housingMenuTable.add(closeButton).width(120).pad(10).row();
-        
+
         stage.addActor(housingMenuTable);
     }
-    
+
     private void bringAnimalOut(PurchasedAnimal animal) {
         // Find a reachable position around the housing
         int[] position = findReachablePositionAroundHousing(selectedHousing);
         animal.setX(position[0]);
         animal.setY(position[1]);
         animal.setInCage(false);
-        
+
         // Initialize movement target to current position
         animal.setTargetX(position[0]);
         animal.setTargetY(position[1]);
         animal.setMoving(false);
         animal.setMoveProgress(0f);
         animal.setLastMoveTime(0); // Start moving immediately
-        
+
         // Update the housing menu
         if (housingMenuTable != null) {
             housingMenuTable.remove();
             createHousingMenuUI();
         }
     }
-    
+
     private void bringAnimalIn(PurchasedAnimal animal) {
         animal.setInCage(true);
-        
+
         // Update the housing menu
         if (housingMenuTable != null) {
             housingMenuTable.remove();
             createHousingMenuUI();
         }
     }
-    
+
     private int[] findReachablePositionAroundHousing(Housing housing) {
         Player currentPlayer = game.getCurrentPlayer();
         if (currentPlayer == null) {
             return new int[]{housing.getX() + 2, housing.getY() + 2}; // Fallback position
         }
-        
+
         // Define potential positions around the housing (all sides)
         List<int[]> potentialPositions = new ArrayList<>();
-        
+
         // Right side positions
         for (int y = housing.getY() + 2; y <= housing.getY() + 6; y++) {
             potentialPositions.add(new int[]{housing.getX() + 8, y});
         }
-        
+
         // Left side positions
         for (int y = housing.getY() + 2; y <= housing.getY() + 6; y++) {
             potentialPositions.add(new int[]{housing.getX() - 1, y});
         }
-        
+
         // Top side positions
         for (int x = housing.getX() + 2; x <= housing.getX() + 6; x++) {
             potentialPositions.add(new int[]{x, housing.getY() + 9});
         }
-        
+
         // Bottom side positions
         for (int x = housing.getX() + 2; x <= housing.getX() + 6; x++) {
             potentialPositions.add(new int[]{x, housing.getY() - 1});
         }
-        
+
         // Shuffle the positions to make spawn location random
         java.util.Collections.shuffle(potentialPositions, random);
-        
+
         // Check each position for walkability
         for (int[] pos : potentialPositions) {
             if (pos[0] >= 0 && pos[0] < MAP_WIDTH && pos[1] >= 0 && pos[1] < MAP_HEIGHT) {
@@ -5098,32 +5244,32 @@ public class GDXGameScreen implements Screen {
                 }
             }
         }
-        
+
         // If no good position found, return a fallback position
         return new int[]{housing.getX() + 2, housing.getY() + 2};
     }
-    
+
     private boolean isAnimalWalkable(int x, int y, Player currentPlayer) {
         // Check if the tile is walkable for animals (similar to player walkability but simpler)
         if (x < 0 || x >= MAP_WIDTH || y < 0 || y >= MAP_HEIGHT) {
             return false;
         }
-        
+
         Tile tile = gameMap.getTile(x, y);
         if (tile == null) {
             return false;
         }
-        
+
         // Animals can walk on grass, earth, and some other walkable tiles
         TileType tileType = tile.getType();
-        return tileType == TileType.Grass || tileType == TileType.Earth || 
+        return tileType == TileType.Grass || tileType == TileType.Earth ||
                tileType == TileType.Shoveled || tileType == TileType.Water;
     }
-    
+
     private void renderAnimals() {
         Player currentPlayer = game.getCurrentPlayer();
         if (currentPlayer == null) return;
-        
+
         for (Housing housing : currentPlayer.getHousings()) {
             for (PurchasedAnimal animal : housing.getOccupants()) {
                 if (!animal.isInCage()) {
@@ -5132,25 +5278,25 @@ public class GDXGameScreen implements Screen {
                     if (animalTexture != null) {
                         float worldX = animal.getX() * TILE_SIZE;
                         float worldY = (MAP_HEIGHT - 1 - animal.getY()) * TILE_SIZE;
-                        
+
                         // Apply movement interpolation if animal is moving
                         if (animal.isMoving()) {
                             float startX = animal.getX() * TILE_SIZE;
                             float startY = (MAP_HEIGHT - 1 - animal.getY()) * TILE_SIZE;
                             float endX = animal.getTargetX() * TILE_SIZE;
                             float endY = (MAP_HEIGHT - 1 - animal.getTargetY()) * TILE_SIZE;
-                            
+
                             worldX = startX + (endX - startX) * animal.getMoveProgress();
                             worldY = startY + (endY - startY) * animal.getMoveProgress();
                         }
-                        
+
                         // Apply bounce effect if there's a bounce animation for this animal
                         float bounceOffset = 0f;
                         for (AnimationEffect effect : activeAnimations) {
                             if (effect.type.equals("bounce")) {
                                 float animalCenterX = worldX + TILE_SIZE / 2f;
                                 float animalCenterY = worldY + TILE_SIZE / 2f;
-                                if (Math.abs(effect.x - animalCenterX) < TILE_SIZE && 
+                                if (Math.abs(effect.x - animalCenterX) < TILE_SIZE &&
                                     Math.abs(effect.y - animalCenterY) < TILE_SIZE) {
                                     bounceOffset = effect.bounceHeight;
                                     break;
@@ -5158,10 +5304,10 @@ public class GDXGameScreen implements Screen {
                             }
                         }
                         worldY += bounceOffset;
-                        
+
                         // Determine if animal is moving left (flip image)
                         boolean movingLeft = animal.isMoving() && animal.getTargetX() < animal.getX();
-                        
+
                         // Render animal with proper flipping, using TILE_SIZE x TILE_SIZE
                         if (movingLeft) {
                             // Flip horizontally for left movement
@@ -5175,17 +5321,17 @@ public class GDXGameScreen implements Screen {
             }
         }
     }
-    
+
     private void updateAnimalMovement(float delta) {
         if (showAnimalMenu) return;
         Player currentPlayer = game.getCurrentPlayer();
         if (currentPlayer == null) return;
-        
+
         animalMovementTimer += delta;
-        
+
         if (animalMovementTimer >= ANIMAL_MOVEMENT_UPDATE_INTERVAL) {
             animalMovementTimer = 0f;
-            
+
             for (Housing housing : currentPlayer.getHousings()) {
                 for (PurchasedAnimal animal : housing.getOccupants()) {
                     if (!animal.isInCage()) {
@@ -5194,12 +5340,12 @@ public class GDXGameScreen implements Screen {
                 }
             }
         }
-        
+
         for (Housing housing : currentPlayer.getHousings()) {
             for (PurchasedAnimal animal : housing.getOccupants()) {
                 if (!animal.isInCage() && animal.isMoving()) {
                     animal.setMoveProgress(animal.getMoveProgress() + delta * animal.MOVE_SPEED);
-                    
+
                     if (animal.getMoveProgress() >= 1.0f) {
                         animal.setX(animal.getTargetX());
                         animal.setY(animal.getTargetY());
@@ -5210,37 +5356,37 @@ public class GDXGameScreen implements Screen {
             }
         }
     }
-    
+
     private void updateAnimalMovement(PurchasedAnimal animal, Housing housing) {
         long currentTime = System.currentTimeMillis();
         if (currentTime - animal.getLastMoveTime() < animal.MOVE_INTERVAL) {
             return;
         }
-        
+
         int currentX = animal.getX();
         int currentY = animal.getY();
-        
+
         for (int attempts = 0; attempts < 20; attempts++) {
             int offsetX = random.nextInt(11) - 5;
             int offsetY = random.nextInt(11) - 5;
-            
+
             int targetX = currentX + offsetX;
             int targetY = currentY + offsetY;
-            
+
             if (targetX < 0 || targetX >= MAP_WIDTH || targetY < 0 || targetY >= MAP_HEIGHT) {
                 continue;
             }
-            
+
             if (isAnimalWalkable(targetX, targetY, game.getCurrentPlayer())) {
                 int stepX = currentX;
                 int stepY = currentY;
-                
+
                 if (targetX > currentX) stepX++;
                 else if (targetX < currentX) stepX--;
-                
+
                 if (targetY > currentY) stepY++;
                 else if (targetY < currentY) stepY--;
-                
+
                 if (isAnimalWalkable(stepX, stepY, game.getCurrentPlayer())) {
                     animal.setTargetX(stepX);
                     animal.setTargetY(stepY);
@@ -5252,40 +5398,40 @@ public class GDXGameScreen implements Screen {
             }
         }
     }
-    
+
     private List<int[]> findPathToTarget(int startX, int startY, int targetX, int targetY) {
         PriorityQueue<PathNode> openSet = new PriorityQueue<>();
         Set<String> closedSet = new HashSet<>();
         Map<String, PathNode> allNodes = new HashMap<>();
-        
+
         PathNode startNode = new PathNode(startX, startY, 0, calculateHeuristic(startX, startY, targetX, targetY));
         openSet.add(startNode);
         allNodes.put(startX + "," + startY, startNode);
-        
+
         while (!openSet.isEmpty()) {
             PathNode current = openSet.poll();
-            
+
             if (current.x == targetX && current.y == targetY) {
                 return reconstructPath(current);
             }
-            
+
             closedSet.add(current.x + "," + current.y);
-            
+
             int[][] directions = {{0, 1}, {1, 0}, {0, -1}, {-1, 0}};
             for (int[] dir : directions) {
                 int newX = current.x + dir[0];
                 int newY = current.y + dir[1];
                 String key = newX + "," + newY;
-                
+
                 if (closedSet.contains(key)) continue;
-                
+
                 if (newX < 0 || newX >= MAP_WIDTH || newY < 0 || newY >= MAP_HEIGHT) continue;
-                
+
                 if (!isAnimalWalkable(newX, newY, game.getCurrentPlayer())) continue;
-                
+
                 int newG = current.g + 1;
                 PathNode neighbor = allNodes.get(key);
-                
+
                 if (neighbor == null) {
                     neighbor = new PathNode(newX, newY, newG, calculateHeuristic(newX, newY, targetX, targetY));
                     neighbor.parent = current;
@@ -5297,39 +5443,39 @@ public class GDXGameScreen implements Screen {
                 }
             }
         }
-        
+
         return null;
     }
-    
+
     private int calculateHeuristic(int x1, int y1, int x2, int y2) {
         return Math.abs(x1 - x2) + Math.abs(y1 - y2);
     }
-    
+
     private List<int[]> reconstructPath(PathNode endNode) {
         List<int[]> path = new ArrayList<>();
         PathNode current = endNode;
-        
+
         while (current != null) {
             path.add(0, new int[]{current.x, current.y});
             current = current.parent;
         }
-        
+
         return path;
     }
-    
+
     private static class PathNode implements Comparable<PathNode> {
         int x, y, g, h;
         PathNode parent;
-        
+
         PathNode(int x, int y, int g, int h) {
             this.x = x;
             this.y = y;
             this.g = g;
             this.h = h;
         }
-        
+
         int f() { return g + h; }
-        
+
         @Override
         public int compareTo(PathNode other) {
             return Integer.compare(this.f(), other.f());
@@ -5403,7 +5549,7 @@ public class GDXGameScreen implements Screen {
             public void clicked(InputEvent event, float x, float y) {
                 if (controller != null && selectedAnimal != null) {
                     controller.feedHay(selectedAnimal.getName());
-                    
+
                     // Create food particle animation at animal's position
                     float animalWorldX = selectedAnimal.getX() * TILE_SIZE + TILE_SIZE / 2f;
                     float animalWorldY = (MAP_HEIGHT - 1 - selectedAnimal.getY()) * TILE_SIZE + TILE_SIZE / 2f;
@@ -5423,7 +5569,7 @@ public class GDXGameScreen implements Screen {
             public void clicked(InputEvent event, float x, float y) {
                 if (controller != null && selectedAnimal != null) {
                     controller.petAnimal(selectedAnimal.getName());
-                    
+
                     // Create heart and bounce animations at animal's position
                     float animalWorldX = selectedAnimal.getX() * TILE_SIZE + TILE_SIZE / 2f;
                     float animalWorldY = (MAP_HEIGHT - 1 - selectedAnimal.getY()) * TILE_SIZE + TILE_SIZE / 2f;
@@ -5557,7 +5703,7 @@ public class GDXGameScreen implements Screen {
         stage.setKeyboardFocus(animalMenuTable);
         stage.setScrollFocus(animalMenuTable);
     }
-    
+
     private void showAnimalCollectPage() {
         if (animalMenuTable != null) {
             animalMenuTable.remove();
@@ -5593,7 +5739,7 @@ public class GDXGameScreen implements Screen {
         if (collectSuccess) {
             TextButton collectProductBtn = new TextButton("Collect Product", skin);
             animalMenuTable.add(collectProductBtn).row();
-            
+
             collectProductBtn.addListener(new ClickListener() {
                 @Override
                 public void clicked(InputEvent event, float x, float y) {
