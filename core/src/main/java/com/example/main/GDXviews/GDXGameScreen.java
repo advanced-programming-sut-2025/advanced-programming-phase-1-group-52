@@ -39,20 +39,10 @@ import com.example.main.enums.design.TileType;
 import com.example.main.enums.design.Weather;
 import com.example.main.enums.items.*;
 import com.example.main.enums.player.Skills;
-import com.example.main.models.App;
-import com.example.main.models.Date;
-import com.example.main.models.Game;
-import com.example.main.models.GameMap;
-import com.example.main.models.NPC;
-import com.example.main.models.NPCFriendship;
-import com.example.main.models.Notification;
-import com.example.main.models.Player;
-import com.example.main.models.Quest;
-import com.example.main.models.Result;
-import com.example.main.models.Tile;
-import com.example.main.models.Time;
-import com.example.main.models.User;
+import com.example.main.models.*;
 import com.example.main.models.item.*;
+
+import static com.example.main.enums.player.Skills.*;
 
 public class GDXGameScreen implements Screen {
     private Stage stage;
@@ -219,7 +209,6 @@ public class GDXGameScreen implements Screen {
 
     // Eating Animation Fields
     private Texture eatingTexture;
-    private Image eatingAnimationImage;
     private float eatingAnimationTimer = 0f;
     private static final float EATING_ANIMATION_DURATION = 0.75f;
 
@@ -293,6 +282,12 @@ public class GDXGameScreen implements Screen {
     // NPC interaction textures
     private Texture dialogBoxTexture;
     private Texture menuBackgroundTexture;
+
+    private Texture maxEnergyBuffTexture;
+    private Texture miningBuffTexture;
+    private Texture farmingBuffTexture;
+    private Texture foragingBuffTexture;
+    private Texture fishingBuffTexture;
 
     // NPC interaction state
     private ArrayList<NPC> nearbyNPCs = new ArrayList<>();
@@ -526,9 +521,6 @@ public class GDXGameScreen implements Screen {
     public void render(float delta) {
         if (eatingAnimationTimer > 0) {
             eatingAnimationTimer -= delta;
-            if (eatingAnimationTimer <= 0) {
-                eatingAnimationImage.setVisible(false);
-            }
         }
 
         if (game.isCrowAttackHappened()) {
@@ -605,6 +597,7 @@ public class GDXGameScreen implements Screen {
         renderCraftingCheatMenu(delta);
         renderCookingCheatMenu(delta);
         renderEatMenu(delta);
+        renderBuffs();
 
         stage.act(delta);
         stage.draw();
@@ -660,6 +653,11 @@ public class GDXGameScreen implements Screen {
         jewelStoneTexture = new Texture("content/Cut/map_elements/jewel_stone.png");
         crowTexture = textureManager.getTexture("Crow");
         eatingTexture = textureManager.getTexture("eating");
+        maxEnergyBuffTexture = textureManager.getTexture("Max_Energy_Buff");
+        miningBuffTexture = textureManager.getTexture("Mining_Skill_Icon");
+        farmingBuffTexture = textureManager.getTexture("Farming_Skill_Icon");
+        foragingBuffTexture = textureManager.getTexture("Foraging_Skill_Icon");
+        fishingBuffTexture = textureManager.getTexture("Fishing_Skill_Icon");
         try {
             blacksmithTexture = new Texture("content/Cut/map_elements/blacksmith.png");
             jojamartTexture = new Texture("content/Cut/map_elements/jojamart.png");
@@ -1393,12 +1391,11 @@ public class GDXGameScreen implements Screen {
                 spriteBatch.setColor(1f, 1f, 1f, 0.7f);
             }
             spriteBatch.draw(playerTexture, renderX, renderY, playerWidth, playerHeight);
-            if (player.equals(game.getCurrentPlayer()) && eatingAnimationTimer > 0) {
-                eatingAnimationImage.setVisible(true);
-                // Position the animation over the player's head
-                float animX = worldX + (TILE_SIZE / 2f) - (eatingAnimationImage.getWidth() / 2f);
-                float animY = worldY + TILE_SIZE; // Adjust Y as needed
-                eatingAnimationImage.setPosition(animX, animY);
+            if (player.equals(game.getCurrentPlayer()) && eatingAnimationTimer > 0 && eatingTexture != null) {
+                float bobOffset = (float) (Math.sin(eatingAnimationTimer * 12) * 4);
+                float animX = worldX + (TILE_SIZE / 2f) - (eatingTexture.getWidth() / 2f);
+                float animY = worldY + TILE_SIZE + bobOffset;
+                spriteBatch.draw(eatingTexture, animX, animY-35);
             }
             spriteBatch.setColor(1f, 1f, 1f, 1f);
 
@@ -3748,11 +3745,6 @@ public class GDXGameScreen implements Screen {
         eatMenuTable.pack();
         eatMenuTable.setPosition(Gdx.graphics.getWidth() / 2f, Gdx.graphics.getHeight() - eatMenuTable.getHeight() - 20, com.badlogic.gdx.utils.Align.center);
         eatMenuStage.addActor(eatMenuTable);
-
-        // Setup for the animation image
-        eatingAnimationImage = new Image(eatingTexture);
-        eatingAnimationImage.setVisible(false);
-        stage.addActor(eatingAnimationImage);
     }
 
     private void showEatMenu() {
@@ -3789,9 +3781,43 @@ public class GDXGameScreen implements Screen {
         eatMenuStage.draw();
     }
 
+    private void renderBuffs() {
+        Player currentPlayer = game.getCurrentPlayer();
+        if (currentPlayer == null || currentPlayer.getActiveBuffs().isEmpty()) {
+            return;
+        }
+
+        spriteBatch.setProjectionMatrix(hudCamera.combined);
+        spriteBatch.begin();
+
+        float buffIconX = Gdx.graphics.getWidth() - 60;
+        float buffIconY = Gdx.graphics.getHeight() - 250; // Position below the clock
+
+        for (ActiveBuff buff : currentPlayer.getActiveBuffs()) {
+            Texture buffTexture = null;
+            if (buff.getType() == ActiveBuff.BuffType.MAX_ENERGY) {
+                buffTexture = maxEnergyBuffTexture;
+            } else if (buff.getType() == ActiveBuff.BuffType.SKILL) {
+                switch (buff.getSkill()) {
+                    case Mining: buffTexture = miningBuffTexture; break;
+                    case Farming: buffTexture = farmingBuffTexture; break;
+                    case Foraging: buffTexture = foragingBuffTexture; break;
+                    case Fishing: buffTexture = fishingBuffTexture; break;
+                }
+            }
+
+            if (buffTexture != null) {
+                spriteBatch.draw(buffTexture, buffIconX - 5, buffIconY + 10, 32, 32);
+                buffIconY -= 40; // Move next icon down
+            }
+        }
+        spriteBatch.end();
+    }
+
     @Override
     public void resize(int width, int height) {
-        stage.getViewport().update(width, height, true);
+        stage.getViewport().update(width,
+            height, true);
         hudCamera.setToOrtho(false, width, height);
     }
 
