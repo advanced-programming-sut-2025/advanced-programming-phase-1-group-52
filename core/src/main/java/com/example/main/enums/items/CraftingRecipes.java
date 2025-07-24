@@ -5,123 +5,124 @@ import java.util.HashMap;
 import java.util.Map;
 
 public enum CraftingRecipes implements ItemType {
+    // Updated to point to the corrected CraftingMachineType enums
     CherryBombRecipe("Cherry Bomb Recipe", Map.of(
         MineralType.Copper_Ore, 4,
-        MaterialType.Coal, 1
-    ), 50, CraftingMachineType.CHERRY_BOMB),
+        MineralType.Coal, 1
+    ), 50, CraftingMachineType.Cherry_Bomb),
 
     BombRecipe("Bomb Recipe", Map.of(
-            MineralType.Iron_Ore, 4,
-            MaterialType.Coal, 1
-    ), 50, CraftingMachineType.BOMB ),
+        MineralType.Iron_Ore, 4,
+        MineralType.Coal, 1
+    ), 50, CraftingMachineType.Bomb ),
 
     MegaBombRecipe("Mega Bomb Recipe", Map.of(
-            MineralType.Gold_Ore, 4,
-            MaterialType.Coal, 1
-    ), 50 , CraftingMachineType.MEGA_BOMB),
+        MineralType.Gold_Ore, 4,
+        MineralType.Coal, 1
+    ), 50 , CraftingMachineType.Mega_Bomb),
 
     SprinklerRecipe("Sprinkler Recipe", Map.of (
-            MineralType.Copper_Bar, 1,
-            MineralType.Iron_Bar, 1
-    ), 0 , CraftingMachineType.SPRINKLER),
+        MineralType.Copper_Bar, 1,
+        MineralType.Iron_Bar, 1
+    ), 0 , CraftingMachineType.Sprinkler),
 
     QualitySprinklerRecipe("Quality Sprinkler Recipe", Map.of(
-            MineralType.Iron_Bar, 1,
-            MineralType.Gold_Bar, 1
-    ), 0 , CraftingMachineType.QUALITY_SPRINKLER),
+        MineralType.Iron_Bar, 1,
+        MineralType.Gold_Bar, 1
+    ), 0 , CraftingMachineType.Quality_Sprinkler),
 
     IridiumSprinklerRecipe("Iridium Sprinkler Recipe", Map.of(
-            MineralType.Gold_Bar, 1,
-            MineralType.Iridium_Bar, 1
-    ), 0 , CraftingMachineType.IRIDIUM_SPRINKLER),
+        MineralType.Gold_Bar, 1,
+        MineralType.Iridium_Bar, 1
+    ), 0 , CraftingMachineType.Iridium_Sprinkler),
 
     CharcoalKilnRecipe("Charcoal Kiln Recipe", Map.of(
-            MaterialType.Wood, 20,
-            MineralType.Copper_Bar, 2
-    ), 0 , CraftingMachineType.CHARCOAL_KILN),
+        MaterialType.Wood, 20,
+        MineralType.Copper_Bar, 2
+    ), 0 , CraftingMachineType.Charcoal_Kiln),
 
     FurnaceRecipe("Furnace Recipe", Map.of(
-            MineralType.Copper_Ore, 20,
-            MaterialType.Stone, 25
-    ), 0, CraftingMachineType.FURNACE),
+        MineralType.Copper_Ore, 20,
+        MaterialType.Stone, 25
+    ), 0, CraftingMachineType.Furnace),
 
     ScarecrowRecipe("Scarecrow Recipe", Map.of(
-            MaterialType.Wood, 50,
-            MaterialType.Coal, 1,
-            MaterialType.Fiber, 20
-    ), 0, CraftingMachineType.SCARECROW),
+        MaterialType.Wood, 50,
+        MineralType.Coal, 1,
+        MaterialType.Fiber, 20
+    ), 0, CraftingMachineType.Scarecrow),
 
     DeluxeScarecrowRecipe("Deluxe Scarecrow Recipe", Map.of(
-            MaterialType.Wood, 50,
-            MaterialType.Coal, 1,
-            MaterialType.Fiber, 20,
-            MineralType.Iridium_Ore, 1
-    ), 0 , CraftingMachineType.DELUXE_SCARECROW),
+        MaterialType.Wood, 50,
+        MineralType.Coal, 1,
+        MaterialType.Fiber, 20,
+        MineralType.Iridium_Ore, 1
+    ), 0 , CraftingMachineType.Deluxe_Scarecrow),
 
     BeeHouseRecipe("Bee House Recipe", Map.of(
-            MaterialType.Wood, 40,
-            MaterialType.Coal, 8,
-            MineralType.Iron_Bar, 1
-    ), 0 , CraftingMachineType.BEE_HOUSE),
+        MaterialType.Wood, 40,
+        MineralType.Coal, 8,
+        MineralType.Iron_Bar, 1
+    ), 0 , CraftingMachineType.Bee_House),
 
     CheesePressRecipe("Cheese Press Recipe", Map.of(
-            MaterialType.Wood, 45,
-            MaterialType.Stone, 45,
-            MineralType.Copper_Bar, 1
-    ), 0, CraftingMachineType.CHEESE_PRESS ),
+        MaterialType.Wood, 45,
+        MaterialType.Stone, 45,
+        MineralType.Copper_Bar, 1
+    ), 0, CraftingMachineType.Cheese_Press ),
 
     KegRecipe("Keg Recipe", Map.of(
-            MaterialType.Wood, 30,
-            MineralType.Copper_Bar, 1,
-            MineralType.Iron_Bar, 1
-    ), 0 , CraftingMachineType.KEG),
+        MaterialType.Wood, 30,
+        MineralType.Copper_Bar, 1,
+        MineralType.Iron_Bar, 1
+    ), 0 , CraftingMachineType.Keg),
 
     LoomRecipe("Loom Recipe", Map.of(
-            MaterialType.Wood, 60,
-            MaterialType.Fiber, 30
-    ), 0, CraftingMachineType.LOOM ),
+        MaterialType.Wood, 60,
+        MaterialType.Fiber, 30
+    ), 0, CraftingMachineType.Loom ),
 
     MayonnaiseMachineRecipe("Mayonnaise Machine Recipe", Map.of(
-            MaterialType.Wood, 15,
-            MaterialType.Stone, 15,
-            MineralType.Copper_Bar, 1
-    ), 0, CraftingMachineType.MAYONNAISE_MACHINE),
+        MaterialType.Wood, 15,
+        MaterialType.Stone, 15,
+        MineralType.Copper_Bar, 1
+    ), 0, CraftingMachineType.Mayonnaise_Machine),
 
     OilMakerRecipe("Oil Maker Recipe", Map.of(
-            MaterialType.Wood, 100,
-            MineralType.Gold_Bar, 1,
-            MineralType.Iron_Bar, 1
-    ), 0, CraftingMachineType.OIL_MAKER),
+        MaterialType.Wood, 100,
+        MineralType.Gold_Bar, 1,
+        MineralType.Iron_Bar, 1
+    ), 0, CraftingMachineType.Oil_Maker),
 
     PreservesJarRecipe("Preserves Jar Recipe", Map.of(
-            MaterialType.Wood, 50,
-            MaterialType.Stone, 40,
-            MaterialType.Coal, 8
-    ), 0, CraftingMachineType.PRESERVES_JAR),
+        MaterialType.Wood, 50,
+        MaterialType.Stone, 40,
+        MineralType.Coal, 8
+    ), 0, CraftingMachineType.Preserves_Jar),
 
     DehydratorRecipe("Dehydrator Recipe", Map.of(
-            MaterialType.Wood, 30,
-            MaterialType.Stone, 20,
-            MaterialType.Fiber, 30
-    ), 0, CraftingMachineType.DEHYDRATOR),
+        MaterialType.Wood, 30,
+        MaterialType.Stone, 20,
+        MaterialType.Fiber, 30
+    ), 0, CraftingMachineType.Dehydrator),
 
     FishSmokerRecipe("Fish Smoker Recipe", Map.of(
-            MaterialType.Wood, 50,
-            MineralType.Iron_Bar, 3,
-            MaterialType.Coal, 10
-    ), 0, CraftingMachineType.FISH_SMOKER),
+        MaterialType.Wood, 50,
+        MineralType.Iron_Bar, 3,
+        MineralType.Coal, 10
+    ), 0, CraftingMachineType.Fish_Smoker),
 
     MysticTreeSeedRecipe("Mystic Tree Seed Recipe", Map.of(
-            ForagingSeedType.Acorn, 5,
-            ForagingSeedType.Maple_Seed, 5,
-            ForagingSeedType.Pine_Cone, 5,
-            ForagingSeedType.Mahogany_Seed, 5
-    ), 100, ForagingSeedType.Mystic_Tree_Seed),
+        ForagingSeedType.Acorn, 5,
+        ForagingSeedType.Maple_Seed, 5,
+        ForagingSeedType.Pine_Cone, 5,
+        ForagingSeedType.Mahogany_Seed, 5
+    ), 100, CraftingMachineType.Mystic_Tree_Seed),
 
     GrassStarterRecipe("Grass Starter Recipe", Map.of(
-            MaterialType.Wood, 1,
-            MaterialType.Fiber, 1
-    ), 0, CraftingMachineType.GRASS_STARTER);
+        MaterialType.Wood, 1,
+        MaterialType.Fiber, 1
+    ), 0, CraftingMachineType.Grass_Starter);
 
 
     private final String displayName;

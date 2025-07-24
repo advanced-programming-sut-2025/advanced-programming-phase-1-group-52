@@ -37,6 +37,7 @@ public class Player {
     private final ArrayList<Talk> talks;
     private ArrayList<CraftingRecipe> craftingRecipes;
     private ArrayList<CookingRecipe> cookingRecipes;
+    private final ArrayList<ActiveBuff> activeBuffs = new ArrayList<>();
     private int energy;
     private House house;
     private HouseRefrigerator houseRefrigerator;
@@ -85,6 +86,18 @@ public class Player {
         }
 
         return null;
+    }
+
+    public ArrayList<ActiveBuff> getActiveBuffs() {
+        return activeBuffs;
+    }
+
+    public Map<Skills, SkillData> getSkills() {
+        return this.skills;
+    }
+
+    public SkillData getSkillData(Skills skill) {
+        return this.skills.get(skill);
     }
 
     public int getTrashCanX() {
@@ -507,8 +520,8 @@ public class Player {
                 craftingRecipes.add(new CraftingRecipe(CraftingRecipes.
                     CherryBombRecipe, 1));
             }
-            if(!this.cookingRecipes.contains(CookingRecipeType.MinersTreat)){
-                this.cookingRecipes.add(new CookingRecipe(CookingRecipeType.MinersTreat));
+            if(!this.cookingRecipes.contains(CookingRecipeType.Miners_Treat)){
+                this.cookingRecipes.add(new CookingRecipe(CookingRecipeType.Miners_Treat));
             }
         }
 
@@ -529,13 +542,13 @@ public class Player {
         SkillData skillData = findSkillData(Skills.Fishing);
         int level = skillData.getLevel();
         if(level >= 2){
-            if(!this.cookingRecipes.contains(CookingRecipeType.DishOTheSea)){
-                this.cookingRecipes.add(new CookingRecipe(CookingRecipeType.DishOTheSea));
+            if(!this.cookingRecipes.contains(CookingRecipeType.Dish_O_The_Sea)){
+                this.cookingRecipes.add(new CookingRecipe(CookingRecipeType.Dish_O_The_Sea));
             }
         }
         if (level >= 3) {
-            if(!this.cookingRecipes.contains(CookingRecipeType.SeaFoamPudding)){
-                this.cookingRecipes.add(new CookingRecipe(CookingRecipeType.SeaFoamPudding));
+            if(!this.cookingRecipes.contains(CookingRecipeType.Seafoam_Pudding)){
+                this.cookingRecipes.add(new CookingRecipe(CookingRecipeType.Seafoam_Pudding));
             }
         }
     }
@@ -551,8 +564,8 @@ public class Player {
             if (!this.craftingRecipes.contains(CraftingRecipes.BeeHouseRecipe)) {
                 this.craftingRecipes.add(new CraftingRecipe(CraftingRecipes.BeeHouseRecipe, 1));
             }
-            if(!this.cookingRecipes.contains(CookingRecipeType.FarmersLunch)) {
-                this.cookingRecipes.add(new CookingRecipe(CookingRecipeType.FarmersLunch));
+            if(!this.cookingRecipes.contains(CookingRecipeType.Farmers_Lunch)) {
+                this.cookingRecipes.add(new CookingRecipe(CookingRecipeType.Farmers_Lunch));
             }
         }
 
@@ -597,13 +610,13 @@ public class Player {
             }
         }
         if (level >= 2) {
-            if(!this.cookingRecipes.contains(CookingRecipeType.VegetableMedley)){
-                this.cookingRecipes.add(new CookingRecipe(CookingRecipeType.VegetableMedley));
+            if(!this.cookingRecipes.contains(CookingRecipeType.Vegetable_Medley)){
+                this.cookingRecipes.add(new CookingRecipe(CookingRecipeType.Vegetable_Medley));
             }
         }
         if(level >= 3){
-            if(!this.cookingRecipes.contains(CookingRecipeType.SurvivalBurger)){
-                this.cookingRecipes.add(new CookingRecipe(CookingRecipeType.SurvivalBurger));
+            if(!this.cookingRecipes.contains(CookingRecipeType.Survival_Burger)){
+                this.cookingRecipes.add(new CookingRecipe(CookingRecipeType.Survival_Burger));
             }
         }
         if (level >= 4) {

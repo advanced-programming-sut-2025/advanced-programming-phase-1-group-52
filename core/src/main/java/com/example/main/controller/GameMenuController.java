@@ -77,6 +77,7 @@ import com.example.main.models.item.WateringCan;
 public class GameMenuController {
     private Game game;
     private GameMap map;
+    private Food lastCookedFood = null;
 
     public void setGame(Game game) {
         this.game = game;
@@ -1400,43 +1401,6 @@ public class GameMenuController {
         return new Result(true, recipeString.toString());
     }
 
-    public Result craftItem(String itemName) {
-        Player player = game.getCurrentPlayer();
-        GameMap map = game.getMap();
-        Tile currentTile = map.getTile(player.currentX(), player.currentY());
-
-        if(!currentTile.getType().equals(TileType.House)) {
-            return new Result(false, "You should be at home to craft item");
-        }
-
-        CraftingRecipes recipeType = findCraftingRecipeType(itemName);
-        if(recipeType == null) {
-            return new Result(false, "error");
-        }
-
-        CraftingRecipe recipe;
-
-        if((recipe = findCraftingRecipeInInventory(player.getCraftingRecipe(), recipeType)) == null) {
-            return new Result(false, "The crafting recipe is not in your inventory");
-        }
-
-        if(player.getInventory().isFull()){
-            return new Result(false, "your inventory is full");
-        }
-
-        Result result = isInventoryReadyToCraft(recipeType);
-
-        if(!result.isSuccessful()){
-            return result;
-        }
-
-        CraftingMachine craftingProduct = new CraftingMachine(recipeType.getProduct(),10);
-        player.getInventory().getItems().add(craftingProduct);
-        player.getInventory().addNumOfItems(1);
-        player.addEnergy(-2);
-        return new Result(true,craftingProduct.getName() + " crafted successfully");
-    }
-
     public Result placeItem(String itemName, String directionStr) {
         Player player = game.getCurrentPlayer();
         GameMap map = game.getMap();
@@ -1496,10 +1460,6 @@ public class GameMenuController {
                 item = ItemFactory.createItemOrThrow(itemName, quantity);
             } catch (IllegalArgumentException e) {
                 return new Result(false, "Item '" + itemName + "' doesn't exist");
-            }
-
-            if (player.getInventory().isFull()) {
-                return new Result(false, "Your inventory is full");
             }
 
             player.getInventory().addItem(item);
@@ -1683,31 +1643,38 @@ public class GameMenuController {
 
     public Result eat(String foodName) {
         Player player = game.getCurrentPlayer();
-        Food food = findFoodInInventory(foodName);
+        Food food = (Food) player.getInventory().findItemByType(
+            Arrays.stream(FoodType.values())
+                .filter(f -> f.getName().equalsIgnoreCase(foodName))
+                .findFirst()
+                .orElse(null)
+        );
+
         if (food == null) {
-            return new Result(false, "you don't have this food to eat");
-        }
-        player.getInventory().remove2(foodName,1);
-        player.addEnergy(food.getFoodType().getEnergy());
-        if(food.getFoodType().isBuffMaxEnergy()){
-            player.setEnergy(300);
-        }
-        if(food.getFoodType().getSkillBuff() != null){
-            if (food.getFoodType().getSkillBuff().equals(Skills.Fishing)){
-                player.catchFish();
-            }
-            if (food.getFoodType().getSkillBuff().equals(Skills.Farming)){
-                player.harvestCrop();
-            }
-            if (food.getFoodType().getSkillBuff().equals(Skills.Foraging)){
-                player.foraging();
-            }
-            if (food.getFoodType().getSkillBuff().equals(Skills.Mining)){
-                player.extract();
-            }
+            return new Result(false, "You don't have this food to eat.");
         }
 
-        return new Result(true,"yummy!");
+        player.getInventory().remove2(foodName, 1);
+        player.addEnergy(food.getFoodType().getEnergy());
+
+        StringBuilder buffMessage = new StringBuilder("Yummy!");
+        FoodType foodType = food.getFoodType();
+
+        // Handle Buffs
+        if (foodType.isBuffMaxEnergy()) {
+            ActiveBuff buff = new ActiveBuff(ActiveBuff.BuffType.MAX_ENERGY, null, foodType.getEffectiveTime());
+            player.getActiveBuffs().add(buff);
+            buffMessage.append("\nMax Energy buff activated for ").append(foodType.getEffectiveTime() * 10).append(" game minutes!");
+        }
+        if (foodType.getSkillBuff() != null) {
+            Skills skillToBuff = foodType.getSkillBuff();
+            player.getSkillData(skillToBuff).applyBuff(4); // Buff to level 4
+            ActiveBuff buff = new ActiveBuff(ActiveBuff.BuffType.SKILL, skillToBuff, foodType.getEffectiveTime());
+            player.getActiveBuffs().add(buff);
+            buffMessage.append("\n").append(skillToBuff.name()).append(" buff activated for ").append(foodType.getEffectiveTime() * 10).append(" game minutes!");
+        }
+
+        return new Result(true, buffMessage.toString());
     }
 
     public Result fishing(String fishingPoleName) {
@@ -2833,5 +2800,244 @@ public class GameMenuController {
         }
 
         return new Result(true, "You can collect\n" + animal.getType().getProducts().get(0).getName() + "\nfrom " + animalName + "!");
+    }
+
+    // main/controller/GameMenuController.java
+
+    public Result craftItem(String recipeName) {
+        Player player = game.getCurrentPlayer();
+
+        // Find the recipe enum by its display name
+        CraftingRecipes recipeType = Arrays.stream(CraftingRecipes.values())
+            .filter(r -> r.getName().equalsIgnoreCase(recipeName))
+            .findFirst()
+            .orElse(null);
+
+        if (recipeType == null) {
+            return new Result(false, "No crafting recipe found with the name: " + recipeName);
+        }
+
+        // 1. Check if the player has learned this recipe
+        boolean hasRecipe = player.getCraftingRecipe().stream()
+            .anyMatch(playerRecipe -> playerRecipe.getRecipeType() == recipeType);
+
+        if (!hasRecipe) {
+            return new Result(false, "You have not learned this recipe yet.");
+        }
+
+        // 2. Check if the player's inventory is full
+        if (player.getInventory().isFull()) {
+            return new Result(false, "Your inventory is full. Make some space first.");
+        }
+
+        // 3. Check if the player has the required ingredients
+        for (Map.Entry<ItemType, Integer> entry : recipeType.getIngredients().entrySet()) {
+            ItemType requiredItemType = entry.getKey();
+            int requiredAmount = entry.getValue();
+            Item playerItem = player.getInventory().findItemByType(requiredItemType);
+
+            if (playerItem == null || playerItem.getNumber() < requiredAmount) {
+                return new Result(false, "You don't have enough " + requiredItemType.getName() + ". Need " + requiredAmount + ".");
+            }
+        }
+
+        // 4. All checks passed: Deduct ingredients
+        for (Map.Entry<ItemType, Integer> entry : recipeType.getIngredients().entrySet()) {
+            player.getInventory().remove2(entry.getKey().getName(), entry.getValue());
+        }
+
+        // 5. Create and add the crafted item using ItemFactory
+        ItemType productType = recipeType.getProduct();
+        try {
+            Item craftedItem = ItemFactory.createItemOrThrow(productType.getName(), 1);
+            player.getInventory().addItem(craftedItem);
+        } catch (Exception e) {
+            // This will catch if ItemFactory doesn't know how to create the item
+            return new Result(false, "Error creating crafted item: " + productType.getName());
+        }
+
+        return new Result(true, "Successfully crafted 1 " + productType.getName() + ".");
+    }
+
+    public Result cookFood(String recipeName) {
+        Player player = game.getCurrentPlayer();
+        Tile currentTile = map.getTile(player.currentX(), player.currentY());
+
+        if (currentTile.getType() != TileType.House) {
+            return new Result(false, "You can only cook inside your house.");
+        }
+
+        CookingRecipeType recipeType = Arrays.stream(CookingRecipeType.values())
+            .filter(r -> r.getDisplayName().equalsIgnoreCase(recipeName))
+            .findFirst()
+            .orElse(null);
+
+        if (recipeType == null) {
+            return new Result(false, "That recipe doesn't exist.");
+        }
+
+        boolean hasRecipe = player.getCookingRecipe().stream()
+            .anyMatch(playerRecipe -> playerRecipe.getRecipeType() == recipeType);
+
+        if (!hasRecipe) {
+            return new Result(false, "You haven't learned this recipe yet.");
+        }
+
+        // --- NEW: Detailed Ingredient Check ---
+        StringBuilder missingIngredients = new StringBuilder();
+        Map<ItemType, Integer> totalIngredients = new HashMap<>();
+        player.getInventory().getItems().forEach(item -> totalIngredients.merge(item.getItemType(), item.getNumber(), Integer::sum));
+        player.getHouseRefrigerator().getItems().forEach(item -> totalIngredients.merge(item.getItemType(), item.getNumber(), Integer::sum));
+
+        for (Map.Entry<ItemType, Integer> entry : recipeType.getIngredients().entrySet()) {
+            int requiredAmount = entry.getValue();
+            int availableAmount = totalIngredients.getOrDefault(entry.getKey(), 0);
+            if (availableAmount < requiredAmount) {
+                missingIngredients.append("\n- ").append(entry.getKey().getName()).append(" (Need: ").append(requiredAmount).append(", Have: ").append(availableAmount).append(")");
+            }
+        }
+
+        if (missingIngredients.length() > 0) {
+            return new Result(false, "You are missing ingredients:" + missingIngredients.toString());
+        }
+        // --- END: Detailed Ingredient Check ---
+
+
+        // All checks passed, now deduct ingredients
+        for (Map.Entry<ItemType, Integer> entry : recipeType.getIngredients().entrySet()) {
+            int amountLeftToDeduct = entry.getValue();
+            Item itemInInventory = player.getInventory().findItemByType(entry.getKey());
+            if (itemInInventory != null) {
+                int amountFromInventory = Math.min(amountLeftToDeduct, itemInInventory.getNumber());
+                player.getInventory().remove2(itemInInventory.getName(), amountFromInventory);
+                amountLeftToDeduct -= amountFromInventory;
+            }
+            if (amountLeftToDeduct > 0) {
+                player.getHouseRefrigerator().remove(entry.getKey(), amountLeftToDeduct);
+            }
+        }
+
+        // Create the food and store it temporarily
+        this.lastCookedFood = new Food(recipeType.getFoodType(), 1);
+        return new Result(true, "Successfully cooked " + lastCookedFood.getName());
+    }
+
+    public Food getJustCookedFood() {
+        return this.lastCookedFood;
+    }
+
+    public Result placeCookedFood(String destination) {
+        Player player = game.getCurrentPlayer();
+        if (lastCookedFood == null) {
+            return new Result(false, "There is no cooked food to place.");
+        }
+
+        if ("inventory".equalsIgnoreCase(destination)) {
+            if (player.getInventory().isFull()) {
+                return new Result(false, "Inventory is full!");
+            }
+            player.getInventory().addItem(lastCookedFood);
+        } else if ("refrigerator".equalsIgnoreCase(destination)) {
+            if (player.getHouseRefrigerator().isFull()) {
+                return new Result(false, "Refrigerator is full!");
+            }
+            player.getHouseRefrigerator().putItem(lastCookedFood);
+        } else {
+            return new Result(false, "Invalid destination.");
+        }
+
+        String message = lastCookedFood.getName() + " placed in " + destination + ".";
+        this.lastCookedFood = null; // Clear the temporary item
+        return new Result(true, message);
+    }
+
+    public Result moveRandomFoodToRefrigerator() {
+        Player player = game.getCurrentPlayer();
+
+        // Find all food items in the inventory
+        List<Item> foodInInventory = player.getInventory().getItems().stream()
+            .filter(item -> item instanceof Food)
+            .collect(Collectors.toList());
+
+        if (foodInInventory.isEmpty()) {
+            return new Result(false, "You have no food in your inventory to move.");
+        }
+
+        if (player.getHouseRefrigerator().isFull()) {
+            // Check if the fridge can at least stack with an existing item
+            boolean canStack = false;
+            for (Item food : foodInInventory) {
+                if (player.getHouseRefrigerator().findItemByType(food.getItemType()) != null) {
+                    canStack = true;
+                    break;
+                }
+            }
+            if (!canStack) {
+                return new Result(false, "The refrigerator is full and cannot accept new items.");
+            }
+        }
+
+        // Select a random food item from the list
+        Random random = new Random();
+        Item itemToMove = foodInInventory.get(random.nextInt(foodInInventory.size()));
+
+        // Create a new food object for the refrigerator to avoid reference issues
+        Food foodForFridge = new Food((FoodType) itemToMove.getItemType(), 1);
+        player.getHouseRefrigerator().putItem(foodForFridge);
+
+        // Remove one from the inventory
+        player.getInventory().remove2(itemToMove.getName(), 1);
+
+        return new Result(true, "Moved 1 " + itemToMove.getName() + " to the refrigerator.");
+    }
+
+    public Result cheatAddCraftingRecipe(String recipeName) {
+        Player player = game.getCurrentPlayer();
+
+        // Find the recipe enum by its display name (more user-friendly)
+        CraftingRecipes recipeType = Arrays.stream(CraftingRecipes.values())
+            .filter(r -> r.getName().equalsIgnoreCase(recipeName))
+            .findFirst()
+            .orElse(null);
+
+        if (recipeType == null) {
+            return new Result(false, "No crafting recipe found with that name.");
+        }
+
+        // Check if the player already knows the recipe
+        boolean alreadyKnown = player.getCraftingRecipe().stream()
+            .anyMatch(r -> r.getRecipeType() == recipeType);
+
+        if (alreadyKnown) {
+            return new Result(false, "You already know this recipe.");
+        }
+
+        player.addCraftingRecipe(new CraftingRecipe(recipeType, 1));
+        return new Result(true, "Learned crafting recipe: " + recipeType.getName());
+    }
+
+    public Result cheatAddCookingRecipe(String recipeName) {
+        Player player = game.getCurrentPlayer();
+
+        // Find the recipe enum by its display name
+        CookingRecipeType recipeType = Arrays.stream(CookingRecipeType.values())
+            .filter(r -> r.getDisplayName().equalsIgnoreCase(recipeName))
+            .findFirst()
+            .orElse(null);
+
+        if (recipeType == null) {
+            return new Result(false, "No cooking recipe found with that name.");
+        }
+
+        // Check if the player already knows the recipe
+        boolean alreadyKnown = player.getCookingRecipe().stream()
+            .anyMatch(r -> r.getRecipeType() == recipeType);
+
+        if (alreadyKnown) {
+            return new Result(false, "You already know this recipe.");
+        }
+
+        player.addCookingRecipe(new CookingRecipe(recipeType));
+        return new Result(true, "Learned cooking recipe: " + recipeType.getDisplayName());
     }
 }

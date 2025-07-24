@@ -1,9 +1,6 @@
 package com.example.main.models;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
+import java.util.*;
 
 import com.example.main.enums.design.NPCType;
 import com.example.main.enums.design.TileType;
@@ -31,13 +28,14 @@ public class Game {
     private final ArrayList<Friendship> friendships = new ArrayList<>();
     private final ArrayList<NPC> NPCs = new ArrayList<>();
     private int switchCounter = 0;
+    private boolean crowAttackHappened = false;
 
     public Game(ArrayList<User> players) {
         this.time = new Time();
         this.date = new Date();
         this.players = players;
         this.currentPlayer = players.getFirst().getPlayer();
-        this.currentUser = players.getFirst(); // Initialize currentUser to match currentPlayer
+        this.currentUser = players.getFirst(); 
         this.todayWeather = Weather.Sunny;
         this.tomorrowWeather = Weather.Rainy;
 
@@ -65,7 +63,15 @@ public class Game {
      * @param minutes The number of minutes to advance.
      */
     public void advanceTimeByMinutes(int minutes) {
+        int tensOfMinutesPassed = (this.time.getMinute() + minutes) / 10 - this.time.getMinute() / 10;
         int daysPassed = this.time.addMinutes(minutes);
+
+        if (tensOfMinutesPassed > 0) {
+            for (int i = 0; i < tensOfMinutesPassed; i++) {
+                updatePlayerBuffs();
+            }
+        }
+
         if (daysPassed > 0) {
             for (int i = 0; i < daysPassed; i++) {
                 advanceDay();
@@ -184,7 +190,8 @@ public class Game {
     public void crowsAttack() {
         if (map == null) return;
         Random rand = new Random();
-        if (rand.nextInt() == 0) {
+        if (rand.nextInt(5) == 0) {
+            crowAttackHappened = true;
             int numPlants = 0;
             Tile[][] tiles = this.map.getTiles();
             ArrayList<Tile> targetTiles = new ArrayList<>();
@@ -506,6 +513,7 @@ public class Game {
         }
     }
 
+
     public void handleAnimalProducts() {
         for (User user : this.players) {
             Player player = user.getPlayer();
@@ -519,9 +527,41 @@ public class Game {
                         animal.setWasFull(false);
                     }
 
-                    animal.setCollected(false);
+                    animal.setCollected(false)
+                }
+            }
+        }
+    }
+                            
+    public boolean isCrowAttackHappened() {
+        return crowAttackHappened;
+    }
+
+    public void resetCrowAttackFlag() {
+        this.crowAttackHappened = false;
+    }
+
+    public void updatePlayerBuffs() {
+        for (User user : players) {
+            Player player = user.getPlayer();
+            if (player == null) continue;
+            boolean hasMaxEnergyBuff = player.getActiveBuffs().stream()
+                .anyMatch(buff -> buff.getType() == ActiveBuff.BuffType.MAX_ENERGY);
+            if (hasMaxEnergyBuff) {
+                player.setEnergy(200);
+            }
+            Iterator<ActiveBuff> iterator = player.getActiveBuffs().iterator();
+            while (iterator.hasNext()) {
+                ActiveBuff buff = iterator.next();
+                buff.decrementDuration();
+                if (buff.isExpired()) {
+                    if (buff.getType() == ActiveBuff.BuffType.SKILL) {
+                        player.getSkillData(buff.getSkill()).removeBuff();
+                    }
+                    iterator.remove();
                 }
             }
         }
     }
 }
+

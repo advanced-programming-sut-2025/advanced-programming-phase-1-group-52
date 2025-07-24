@@ -172,7 +172,7 @@ public class HomeMenuController {
             if(player.getInventory().isFull()) {
                 return new Result(false, "Your inventory is full");
             }
-            Item pickedItem = refrigerator.pickItem(itemName);
+            Item pickedItem = null;
             if(pickedItem == null) {
                 return new Result(false, "this item is not in the refrigerator");
             }
