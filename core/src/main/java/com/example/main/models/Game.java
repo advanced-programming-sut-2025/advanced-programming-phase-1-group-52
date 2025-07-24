@@ -1,6 +1,10 @@
 package com.example.main.models;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
 
 import com.example.main.enums.design.NPCType;
 import com.example.main.enums.design.TileType;
@@ -527,7 +531,7 @@ public class Game {
                         animal.setWasFull(false);
                     }
 
-                    animal.setCollected(false)
+                    animal.setCollected(false);
                 }
             }
         }

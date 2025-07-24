@@ -36,6 +36,7 @@ import com.example.main.enums.items.TreeType;
 import com.example.main.enums.player.Skills;
 import com.example.main.enums.regex.GameMenuCommands;
 import com.example.main.enums.regex.NPCDialogs;
+import com.example.main.models.ActiveBuff;
 import com.example.main.models.App;
 import com.example.main.models.Date;
 import com.example.main.models.Friendship;
