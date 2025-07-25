@@ -940,14 +940,6 @@ public class GDXGameScreen implements Screen {
         if (actionTimer > 0) {
             return;
         }
-        // If shop menu is open, only allow shop menu UI to handle input
-        if (showShopMenu) {
-            return;
-        }
-
-        if (showAnimalMenu) {
-            return;
-        }
         
         // Handle building placement mode
         if (isBuildingPlacementMode) {
@@ -962,6 +954,24 @@ public class GDXGameScreen implements Screen {
             handleShepherdMode();
             return;
         }
+        
+        // If shop menu is open, only allow shop menu UI to handle input
+        if (showShopMenu) {
+            // Allow ESC key to close shop menu
+            if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
+                showShopMenu = false;
+                if (shopMenuTable != null) {
+                    shopMenuTable.remove();
+                    shopMenuTable = null;
+                }
+            }
+            return;
+        }
+
+        if (showAnimalMenu) {
+            return;
+        }
+        
         // If trade menu is open, only allow trade menu UI
         if (showTradeMenu) {
             return;
@@ -2168,6 +2178,9 @@ public class GDXGameScreen implements Screen {
         );
 
         stage.addActor(npcMenuTable);
+        
+        // Ensure the stage is the input processor for NPC menu
+        Gdx.input.setInputProcessor(stage);
 
         switch (currentNPCMenuState) {
             case MAIN_MENU:
@@ -2236,6 +2249,8 @@ public class GDXGameScreen implements Screen {
                     npcMenuTable.remove();
                     npcMenuTable = null;
                 }
+                // Restore input processor to multiplexer
+                Gdx.input.setInputProcessor(multiplexer);
             }
         });
 
@@ -2288,6 +2303,8 @@ public class GDXGameScreen implements Screen {
                     npcMenuTable.remove();
                     npcMenuTable = null;
                 }
+                // Restore input processor to multiplexer
+                Gdx.input.setInputProcessor(multiplexer);
             }
         });
 
@@ -2403,6 +2420,8 @@ public class GDXGameScreen implements Screen {
                     npcMenuTable.remove();
                     npcMenuTable = null;
                 }
+                // Restore input processor to multiplexer
+                Gdx.input.setInputProcessor(multiplexer);
             }
         });
 
@@ -2503,6 +2522,8 @@ public class GDXGameScreen implements Screen {
                     npcMenuTable.remove();
                     npcMenuTable = null;
                 }
+                // Restore input processor to multiplexer
+                Gdx.input.setInputProcessor(multiplexer);
             }
         });
         npcMenuTable.add(backButton).size(200, 50).pad(10);
@@ -4446,6 +4467,9 @@ public class GDXGameScreen implements Screen {
         shopMenuTable.setBackground(backgroundDrawable);
 
         stage.addActor(shopMenuTable);
+        
+        // Ensure the stage is the input processor for shop menu
+        Gdx.input.setInputProcessor(stage);
 
         // Create the appropriate menu based on state
         switch (currentShopMenuState) {
@@ -4504,6 +4528,8 @@ public class GDXGameScreen implements Screen {
                     shopMenuTable.remove();
                     shopMenuTable = null;
                 }
+                // Restore input processor to multiplexer
+                Gdx.input.setInputProcessor(multiplexer);
             }
         });
         shopMenuTable.add(closeButton).width(200).pad(10).row();
@@ -4581,6 +4607,8 @@ public class GDXGameScreen implements Screen {
                     shopMenuTable.remove();
                     shopMenuTable = null;
                 }
+                // Restore input processor to multiplexer
+                Gdx.input.setInputProcessor(multiplexer);
             }
         });
         buttonTable.add(closeButton).width(200).pad(20);
@@ -4759,6 +4787,8 @@ public class GDXGameScreen implements Screen {
                     shopMenuTable.remove();
                     shopMenuTable = null;
                 }
+                // Restore input processor to multiplexer
+                Gdx.input.setInputProcessor(multiplexer);
             }
         });
         buttonTable.add(closeButton).width(200).pad(20);
