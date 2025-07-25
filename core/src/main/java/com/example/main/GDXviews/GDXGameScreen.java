@@ -532,6 +532,9 @@ public class GDXGameScreen implements Screen {
     private ScrollPane chatScrollPane;
     private Table chatMessagesTable;
 
+    // Add this field to track unread messages
+    private Map<String, Boolean> unreadTalkNotifications = new HashMap<>();
+
     public GDXGameScreen() {
         controller = new GameMenuController();
         shopController = new StoreMenuController();
@@ -672,6 +675,14 @@ public class GDXGameScreen implements Screen {
 
         if (!isInventoryOpen) {
         updateTime(delta);
+        }
+
+        // Update general message timer
+        if (generalMessageTimer > 0) {
+            generalMessageTimer -= delta;
+            if (generalMessageTimer <= 0) {
+                generalMessageLabel.setVisible(false);
+            }
         }
 
         Player currentPlayer = game.getCurrentPlayer();
@@ -1021,13 +1032,11 @@ public class GDXGameScreen implements Screen {
             }
             return;
         }
-        //handleTradeMenuToggle();
-        com.badlogic.gdx.math.Vector3 mouseInWorld = camera.unproject(new com.badlogic.gdx.math.Vector3(Gdx.input.getX(), Gdx.input.getY(), 0));
-        int targetTileX = (int) (mouseInWorld.x / TILE_SIZE);
-        int targetTileY = MAP_HEIGHT - 1 - (int) (mouseInWorld.y / TILE_SIZE);
-
-        if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
-            if (showFriendsMenu) {
+        
+        // If friends menu is open, only allow friends menu UI
+        if (showFriendsMenu) {
+            // Allow ESC key to close friends menu
+            if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
                 showFriendsMenu = false;
                 currentFriendsMenuState = FriendsMenuState.MAIN_MENU;
                 selectedPlayerForActions = null;
@@ -1038,7 +1047,16 @@ public class GDXGameScreen implements Screen {
                     friendsMenuTable = null;
                 }
                 Gdx.input.setInputProcessor(multiplexer);
-            } else if (isPlantingSelectionOpen) {
+            }
+            return;
+        }
+        //handleTradeMenuToggle();
+        com.badlogic.gdx.math.Vector3 mouseInWorld = camera.unproject(new com.badlogic.gdx.math.Vector3(Gdx.input.getX(), Gdx.input.getY(), 0));
+        int targetTileX = (int) (mouseInWorld.x / TILE_SIZE);
+        int targetTileY = MAP_HEIGHT - 1 - (int) (mouseInWorld.y / TILE_SIZE);
+
+        if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
+            if (isPlantingSelectionOpen) {
                 closePlantingMenu();
             } else {
                 isInventoryOpen = !isInventoryOpen;
@@ -1131,6 +1149,8 @@ public class GDXGameScreen implements Screen {
         if (Gdx.input.isKeyJustPressed(Input.Keys.F)) {
             showFriendsMenu = !showFriendsMenu;
             if (showFriendsMenu) {
+                // Check for new messages when opening friends menu
+                checkForNewMessages();
                 createFriendsMenuUI();
                 Gdx.input.setInputProcessor(stage);
             } else {
@@ -1139,7 +1159,7 @@ public class GDXGameScreen implements Screen {
         }
 
         if (isInventoryOpen || isToolMenuOpen || isCheatMenuOpen || isPlantingSelectionOpen
-            || isCraftingMenuOpen || isCookingMenuOpen || isCraftingCheatMenuOpen || isCookingCheatMenuOpen || isEatMenuOpen || showFriendsMenu) {
+            || isCraftingMenuOpen || isCookingMenuOpen || isCraftingCheatMenuOpen || isCookingCheatMenuOpen || isEatMenuOpen) {
             return;
         }
 
@@ -5767,58 +5787,42 @@ public class GDXGameScreen implements Screen {
 
     private void createMainFriendsMenu() {
         friendsMenuTable.clear();
-
         // Title
         Label titleLabel = new Label("Friends Menu", skin);
         titleLabel.setFontScale(1.5f);
         friendsMenuTable.add(titleLabel).colspan(2).pad(20).row();
-
         // Get other players (excluding current player)
         Player currentPlayer = game.getCurrentPlayer();
         ArrayList<Player> otherPlayers = new ArrayList<>();
-        ArrayList<String> playersWithNewMessages = new ArrayList<>();
-        
         for (User user : game.getPlayers()) {
             Player player = user.getPlayer();
             if (player != null && !player.equals(currentPlayer)) {
                 otherPlayers.add(player);
-                
-                // Check if this player has new messages
-                Result result = controller.talkHistory(player.getUsername());
-                String history = result.Message();
-                if (!history.contains("No conversation history") && history.contains("New message")) {
-                    playersWithNewMessages.add(player.getUsername());
-                }
             }
         }
-
         // Create buttons for each other player
         for (Player player : otherPlayers) {
             String buttonText = player.getUsername();
-            if (playersWithNewMessages.contains(player.getUsername())) {
+            if (Boolean.TRUE.equals(unreadTalkNotifications.get(player.getUsername()))) {
                 buttonText += " [NEW]";
             }
-            
             TextButton playerButton = new TextButton(buttonText, skin);
             final String playerName = player.getUsername();
-            
-            // Color the button if there are new messages
-            if (playersWithNewMessages.contains(player.getUsername())) {
+            if (Boolean.TRUE.equals(unreadTalkNotifications.get(player.getUsername()))) {
                 playerButton.setColor(Color.YELLOW);
             }
-            
             playerButton.addListener(new ClickListener() {
                 @Override
                 public void clicked(InputEvent event, float x, float y) {
                     selectedPlayerForActions = playerName;
                     currentFriendsMenuState = FriendsMenuState.PLAYER_ACTIONS;
+                    // Clear notification when chat is opened
+                    unreadTalkNotifications.put(playerName, false);
                     createFriendsMenuUI();
                 }
             });
-
             friendsMenuTable.add(playerButton).size(200, 50).pad(10);
         }
-
         // Close button
         TextButton closeButton = new TextButton("Close", skin);
         closeButton.addListener(new ClickListener() {
@@ -5836,7 +5840,6 @@ public class GDXGameScreen implements Screen {
                 Gdx.input.setInputProcessor(multiplexer);
             }
         });
-
         friendsMenuTable.add(closeButton).size(200, 50).pad(10).row();
     }
 
@@ -5879,6 +5882,8 @@ public class GDXGameScreen implements Screen {
             @Override
             public void clicked(InputEvent event, float x, float y) {
                 currentFriendsMenuState = FriendsMenuState.CHAT_ROOM;
+                // Mark messages as read when opening chat
+                unreadTalkNotifications.put(selectedPlayerForActions, false);
                 createFriendsMenuUI();
             }
         });
@@ -5966,6 +5971,8 @@ public class GDXGameScreen implements Screen {
                 showFriendsMenu = false;
                 currentFriendsMenuState = FriendsMenuState.MAIN_MENU;
                 selectedPlayerForActions = null;
+                friendshipResultMessage = "";
+                friendshipResultSuccess = false;
                 if (friendsMenuTable != null) {
                     friendsMenuTable.remove();
                     friendsMenuTable = null;
@@ -6079,6 +6086,8 @@ public class GDXGameScreen implements Screen {
         // Create chat messages area
         chatMessagesTable = new Table();
         chatMessagesTable.setBackground(new TextureRegionDrawable(menuBackgroundTexture));
+        chatMessagesTable.left().top(); // Ensure messages are added left-to-right, top-to-bottom
+        chatMessagesTable.defaults().expandX().fillX().pad(2);
         
         // Load previous messages
         loadChatHistory();
@@ -6132,6 +6141,8 @@ public class GDXGameScreen implements Screen {
             @Override
             public void clicked(InputEvent event, float x, float y) {
                 currentFriendsMenuState = FriendsMenuState.PLAYER_ACTIONS;
+                friendshipResultMessage = "";
+                friendshipResultSuccess = false;
                 createFriendsMenuUI();
             }
         });
@@ -6142,6 +6153,8 @@ public class GDXGameScreen implements Screen {
                 showFriendsMenu = false;
                 currentFriendsMenuState = FriendsMenuState.MAIN_MENU;
                 selectedPlayerForActions = null;
+                friendshipResultMessage = "";
+                friendshipResultSuccess = false;
                 if (friendsMenuTable != null) {
                     friendsMenuTable.remove();
                     friendsMenuTable = null;
@@ -6186,21 +6199,82 @@ public class GDXGameScreen implements Screen {
                 String[] lines = history.split("\n");
                 for (String line : lines) {
                     if (line.trim().isEmpty()) continue;
-                    
-                    Label messageLabel = new Label(line, skin);
-                    messageLabel.setWrap(true);
-                    messageLabel.setFontScale(0.9f);
-                    
-                    // Color code messages (sender vs receiver)
-                    if (line.contains(currentPlayer.getUsername() + ":")) {
-                        messageLabel.setColor(Color.BLUE);
-                    } else if (line.contains(targetPlayer.getUsername() + ":")) {
-                        messageLabel.setColor(Color.GREEN);
+                    if (line.contains(":")) {
+                        // Format: sender to receiver: message
+                        String[] parts = line.split(":", 2);
+                        if (parts.length == 2) {
+                            String header = parts[0].trim();
+                            String message = parts[1].trim();
+                            String sender = header;
+                            String receiver = "";
+                            if (header.contains(" to ")) {
+                                String[] headerParts = header.split(" to ", 2);
+                                sender = headerParts[0].trim();
+                                receiver = headerParts[1].trim();
+                            }
+                            String formattedMessage = sender + " to " + receiver + ": " + message;
+                            Label messageLabel = new Label(formattedMessage, skin);
+                            messageLabel.setWrap(false);
+                            messageLabel.setFontScale(0.9f);
+                            messageLabel.setAlignment(Align.left);
+                            if (sender.equals(currentPlayer.getUsername())) {
+                                messageLabel.setColor(Color.GREEN);
+                            } else if (receiver.equals(currentPlayer.getUsername())) {
+                                messageLabel.setColor(Color.BLUE);
+                            } else {
+                                messageLabel.setColor(Color.BLACK);
+                            }
+                            chatMessagesTable.add(messageLabel).growX().left().pad(5).row();
+                        }
                     } else {
-                        messageLabel.setColor(Color.BLACK);
+                        Label infoLabel = new Label(line, skin);
+                        infoLabel.setColor(Color.GRAY);
+                        infoLabel.setFontScale(0.8f);
+                        infoLabel.setWrap(false);
+                        infoLabel.setAlignment(Align.left);
+                        chatMessagesTable.add(infoLabel).growX().left().pad(2).row();
                     }
-                    
-                    chatMessagesTable.add(messageLabel).fillX().pad(5).row();
+                }
+            }
+        }
+        
+        // Scroll to bottom to show latest messages
+        if (chatScrollPane != null) {
+            chatScrollPane.setScrollPercentY(1.0f);
+        }
+    }
+
+    private void checkForNewMessages() {
+        Player currentPlayer = game.getCurrentPlayer();
+        if (currentPlayer == null) return;
+        for (User user : game.getPlayers()) {
+            Player player = user.getPlayer();
+            if (player != null && !player.equals(currentPlayer)) {
+                Result result = controller.talkHistory(player.getUsername());
+                String history = result.Message();
+                if (!history.contains("No conversation history")) {
+                    String[] lines = history.split("\n");
+                    for (int i = lines.length - 1; i >= 0; i--) {
+                        String line = lines[i].trim();
+                        if (!line.isEmpty() && line.contains(":")) {
+                            String[] parts = line.split(":", 2);
+                            if (parts.length == 2) {
+                                String header = parts[0].trim();
+                                String sender = header;
+                                String receiver = "";
+                                if (header.contains(" to ")) {
+                                    String[] headerParts = header.split(" to ", 2);
+                                    sender = headerParts[0].trim();
+                                    receiver = headerParts[1].trim();
+                                }
+                                // If the last message is from the other player to current player, mark as unread
+                                if (sender.equals(player.getUsername()) && receiver.equals(currentPlayer.getUsername())) {
+                                    unreadTalkNotifications.put(player.getUsername(), true);
+                                }
+                                break;
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -6209,20 +6283,14 @@ public class GDXGameScreen implements Screen {
     private void sendChatMessage() {
         String message = chatMessageField.getText().trim();
         if (!message.isEmpty()) {
-            // Send the message using the controller
             Result result = controller.talk(selectedPlayerForActions, message);
-            
             if (result.isSuccessful()) {
-                // Clear the input field
+                // Only mark as unread for the recipient, not the sender
+                unreadTalkNotifications.put(selectedPlayerForActions, true);
                 chatMessageField.setText("");
-                
-                // Reload chat history to show the new message
                 loadChatHistory();
-                
-                // Scroll to bottom
                 chatScrollPane.setScrollPercentY(1.0f);
             } else {
-                // Show error message
                 friendshipResultMessage = result.Message();
                 friendshipResultSuccess = false;
                 createChatRoomMenu();
