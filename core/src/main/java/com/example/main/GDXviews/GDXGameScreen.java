@@ -69,6 +69,7 @@ import static com.example.main.enums.player.Skills.Mining;
 import com.example.main.models.ActiveBuff;
 import com.example.main.models.App;
 import com.example.main.models.Date;
+import com.example.main.models.Friendship;
 import com.example.main.models.Game;
 import com.example.main.models.GameMap;
 import com.example.main.models.NPC;
@@ -507,6 +508,23 @@ public class GDXGameScreen implements Screen {
         }
     }
 
+    // Friends menu variables
+    private boolean showFriendsMenu = false;
+    private boolean fKeyPressed = false;
+    private Table friendsMenuTable;
+
+    // Friends menu state management
+    private enum FriendsMenuState {
+        MAIN_MENU,
+        PLAYER_ACTIONS,
+        FRIENDSHIP_DETAILS
+    }
+
+    private FriendsMenuState currentFriendsMenuState = FriendsMenuState.MAIN_MENU;
+    private String selectedPlayerForActions = null;
+    private String friendshipResultMessage = "";
+    private boolean friendshipResultSuccess = false;
+
     public GDXGameScreen() {
         controller = new GameMenuController();
         shopController = new StoreMenuController();
@@ -598,6 +616,7 @@ public class GDXGameScreen implements Screen {
         multiplexer.addProcessor(cookingCheatMenuStage);
         multiplexer.addProcessor(craftingCheatMenuStage);
         multiplexer.addProcessor(eatMenuStage);
+        multiplexer.addProcessor(stage); // For friends menu
         plantableItems = new ArrayList<>();
         Gdx.input.setInputProcessor(multiplexer);
     }
@@ -717,6 +736,7 @@ public class GDXGameScreen implements Screen {
         renderCraftingCheatMenu(delta);
         renderCookingCheatMenu(delta);
         renderEatMenu(delta);
+        renderFriendsMenu(delta);
         renderBuffs();
 
         stage.act(delta);
@@ -1000,7 +1020,18 @@ public class GDXGameScreen implements Screen {
         int targetTileY = MAP_HEIGHT - 1 - (int) (mouseInWorld.y / TILE_SIZE);
 
         if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
-            if (isPlantingSelectionOpen) {
+            if (showFriendsMenu) {
+                showFriendsMenu = false;
+                currentFriendsMenuState = FriendsMenuState.MAIN_MENU;
+                selectedPlayerForActions = null;
+                friendshipResultMessage = "";
+                friendshipResultSuccess = false;
+                if (friendsMenuTable != null) {
+                    friendsMenuTable.remove();
+                    friendsMenuTable = null;
+                }
+                Gdx.input.setInputProcessor(multiplexer);
+            } else if (isPlantingSelectionOpen) {
                 closePlantingMenu();
             } else {
                 isInventoryOpen = !isInventoryOpen;
@@ -1090,8 +1121,18 @@ public class GDXGameScreen implements Screen {
             }
         }
 
+        if (Gdx.input.isKeyJustPressed(Input.Keys.F)) {
+            showFriendsMenu = !showFriendsMenu;
+            if (showFriendsMenu) {
+                createFriendsMenuUI();
+                Gdx.input.setInputProcessor(stage);
+            } else {
+                Gdx.input.setInputProcessor(multiplexer);
+            }
+        }
+
         if (isInventoryOpen || isToolMenuOpen || isCheatMenuOpen || isPlantingSelectionOpen
-            || isCraftingMenuOpen || isCookingMenuOpen || isCraftingCheatMenuOpen || isCookingCheatMenuOpen || isEatMenuOpen) {
+            || isCraftingMenuOpen || isCookingMenuOpen || isCraftingCheatMenuOpen || isCookingCheatMenuOpen || isEatMenuOpen || showFriendsMenu) {
             return;
         }
 
@@ -4396,6 +4437,12 @@ public class GDXGameScreen implements Screen {
         dialogBoxTexture.dispose();
         menuBackgroundTexture.dispose();
 
+        // Clean up friends menu
+        if (friendsMenuTable != null) {
+            friendsMenuTable.remove();
+            friendsMenuTable = null;
+        }
+
         textureManager.dispose();
     }
 
@@ -5680,4 +5727,317 @@ public class GDXGameScreen implements Screen {
         dialog.show(cookingStage); // Show the dialog on the cooking stage
     }
 
+    private void createFriendsMenuUI() {
+        if (friendsMenuTable != null) {
+            friendsMenuTable.remove();
+        }
+
+        friendsMenuTable = new Table();
+        friendsMenuTable.setBackground(new TextureRegionDrawable(menuBackgroundTexture));
+        friendsMenuTable.setSize(Gdx.graphics.getWidth() * 0.75f, Gdx.graphics.getHeight() * 0.75f);
+        friendsMenuTable.setPosition(
+            (Gdx.graphics.getWidth() - friendsMenuTable.getWidth()) / 2f,
+            (Gdx.graphics.getHeight() - friendsMenuTable.getHeight()) / 2f
+        );
+
+        stage.addActor(friendsMenuTable);
+
+        switch (currentFriendsMenuState) {
+            case MAIN_MENU:
+                createMainFriendsMenu();
+                break;
+            case PLAYER_ACTIONS:
+                createPlayerActionsMenu();
+                break;
+            case FRIENDSHIP_DETAILS:
+                createFriendshipDetailsMenu();
+                break;
+        }
+    }
+
+    private void createMainFriendsMenu() {
+        friendsMenuTable.clear();
+
+        // Title
+        Label titleLabel = new Label("Friends Menu", skin);
+        titleLabel.setFontScale(1.5f);
+        friendsMenuTable.add(titleLabel).colspan(2).pad(20).row();
+
+        // Get other players (excluding current player)
+        Player currentPlayer = game.getCurrentPlayer();
+        ArrayList<Player> otherPlayers = new ArrayList<>();
+        
+        for (User user : game.getPlayers()) {
+            Player player = user.getPlayer();
+            if (player != null && !player.equals(currentPlayer)) {
+                otherPlayers.add(player);
+            }
+        }
+
+        // Create buttons for each other player
+        for (Player player : otherPlayers) {
+            TextButton playerButton = new TextButton(player.getUsername(), skin);
+            final String playerName = player.getUsername();
+            
+            playerButton.addListener(new ClickListener() {
+                @Override
+                public void clicked(InputEvent event, float x, float y) {
+                    selectedPlayerForActions = playerName;
+                    currentFriendsMenuState = FriendsMenuState.PLAYER_ACTIONS;
+                    createFriendsMenuUI();
+                }
+            });
+
+            friendsMenuTable.add(playerButton).size(200, 50).pad(10);
+        }
+
+        // Close button
+        TextButton closeButton = new TextButton("Close", skin);
+        closeButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                showFriendsMenu = false;
+                currentFriendsMenuState = FriendsMenuState.MAIN_MENU;
+                selectedPlayerForActions = null;
+                friendshipResultMessage = "";
+                friendshipResultSuccess = false;
+                if (friendsMenuTable != null) {
+                    friendsMenuTable.remove();
+                    friendsMenuTable = null;
+                }
+                Gdx.input.setInputProcessor(multiplexer);
+            }
+        });
+
+        friendsMenuTable.add(closeButton).size(200, 50).pad(10).row();
+    }
+
+    private void createPlayerActionsMenu() {
+        friendsMenuTable.clear();
+
+        // Title with player name
+        Label titleLabel = new Label("Actions with " + selectedPlayerForActions, skin);
+        titleLabel.setFontScale(1.5f);
+        friendsMenuTable.add(titleLabel).colspan(2).pad(20).row();
+
+        // Show error message if any
+        if (!friendshipResultMessage.isEmpty()) {
+            Label resultLabel = new Label(friendshipResultMessage, skin);
+            resultLabel.setFontScale(1.2f);
+            resultLabel.setColor(friendshipResultSuccess ? Color.GREEN : Color.RED);
+            friendsMenuTable.add(resultLabel).colspan(2).pad(10).fillX().center().row();
+        }
+
+        // Action buttons
+        TextButton friendshipButton = new TextButton("Friendship", skin);
+        TextButton talkButton = new TextButton("Talk", skin);
+        TextButton giftButton = new TextButton("Gift", skin);
+        TextButton hugButton = new TextButton("Hug", skin);
+        TextButton flowerButton = new TextButton("Flower", skin);
+        TextButton marriageButton = new TextButton("Marriage", skin);
+        TextButton backButton = new TextButton("Back", skin);
+        TextButton closeButton = new TextButton("Close", skin);
+
+        // Add button listeners
+        friendshipButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                currentFriendsMenuState = FriendsMenuState.FRIENDSHIP_DETAILS;
+                createFriendsMenuUI();
+            }
+        });
+
+        talkButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                // For now, just show talk history
+                Result result = controller.talkHistory(selectedPlayerForActions);
+                generalMessageLabel.setText(result.Message());
+                generalMessageLabel.setVisible(true);
+                generalMessageTimer = GENERAL_MESSAGE_DURATION;
+            }
+        });
+
+        giftButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                // For now, just show a message
+                generalMessageLabel.setText("Gift functionality - select an item from inventory to gift");
+                generalMessageLabel.setVisible(true);
+                generalMessageTimer = GENERAL_MESSAGE_DURATION;
+            }
+        });
+
+        hugButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                Result result = controller.hug(selectedPlayerForActions);
+                if (result.isSuccessful()) {
+                    // Close menu on success
+                    showFriendsMenu = false;
+                    currentFriendsMenuState = FriendsMenuState.MAIN_MENU;
+                    selectedPlayerForActions = null;
+                    if (friendsMenuTable != null) {
+                        friendsMenuTable.remove();
+                        friendsMenuTable = null;
+                    }
+                    Gdx.input.setInputProcessor(multiplexer);
+                } else {
+                    // Show error message in red on top of menu
+                    friendshipResultMessage = result.Message();
+                    friendshipResultSuccess = false;
+                    createPlayerActionsMenu();
+                }
+            }
+        });
+
+        flowerButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                Result result = controller.flowerSomeone(selectedPlayerForActions);
+                if (result.isSuccessful()) {
+                    // Close menu on success
+                    showFriendsMenu = false;
+                    currentFriendsMenuState = FriendsMenuState.MAIN_MENU;
+                    selectedPlayerForActions = null;
+                    if (friendsMenuTable != null) {
+                        friendsMenuTable.remove();
+                        friendsMenuTable = null;
+                    }
+                    Gdx.input.setInputProcessor(multiplexer);
+                } else {
+                    // Show error message in red on top of menu
+                    friendshipResultMessage = result.Message();
+                    friendshipResultSuccess = false;
+                    createPlayerActionsMenu();
+                }
+            }
+        });
+
+        marriageButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                Result result = controller.askMarriage(selectedPlayerForActions);
+                generalMessageLabel.setText(result.Message());
+                generalMessageLabel.setVisible(true);
+                generalMessageTimer = GENERAL_MESSAGE_DURATION;
+            }
+        });
+
+        backButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                currentFriendsMenuState = FriendsMenuState.MAIN_MENU;
+                selectedPlayerForActions = null;
+                friendshipResultMessage = "";
+                friendshipResultSuccess = false;
+                createFriendsMenuUI();
+            }
+        });
+
+        closeButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                showFriendsMenu = false;
+                currentFriendsMenuState = FriendsMenuState.MAIN_MENU;
+                selectedPlayerForActions = null;
+                if (friendsMenuTable != null) {
+                    friendsMenuTable.remove();
+                    friendsMenuTable = null;
+                }
+                Gdx.input.setInputProcessor(multiplexer);
+            }
+        });
+
+        // Add buttons to table
+        friendsMenuTable.add(friendshipButton).size(200, 50).pad(10);
+        friendsMenuTable.add(talkButton).size(200, 50).pad(10).row();
+        friendsMenuTable.add(giftButton).size(200, 50).pad(10);
+        friendsMenuTable.add(hugButton).size(200, 50).pad(10).row();
+        friendsMenuTable.add(flowerButton).size(200, 50).pad(10);
+        friendsMenuTable.add(marriageButton).size(200, 50).pad(10).row();
+        friendsMenuTable.add(backButton).size(200, 50).pad(10);
+        friendsMenuTable.add(closeButton).size(200, 50).pad(10);
+    }
+
+    private void renderFriendsMenu(float delta) {
+        if (!showFriendsMenu) {
+            return;
+        }
+
+        // The menu is rendered by the stage, so we just need to act on it
+        stage.act(delta);
+    }
+
+    private void createFriendshipDetailsMenu() {
+        friendsMenuTable.clear();
+
+        // Title
+        Label titleLabel = new Label("Friendship Details with " + selectedPlayerForActions, skin);
+        titleLabel.setFontScale(1.5f);
+        friendsMenuTable.add(titleLabel).colspan(2).pad(20).row();
+
+        // Get friendship details
+        Player currentPlayer = game.getCurrentPlayer();
+        Player targetPlayer = null;
+        
+        // Find the target player
+        for (User user : game.getPlayers()) {
+            Player player = user.getPlayer();
+            if (player != null && player.getUsername().equals(selectedPlayerForActions)) {
+                targetPlayer = player;
+                break;
+            }
+        }
+
+        if (targetPlayer != null) {
+            // Get friendship object and display its toString
+            Friendship friendship = game.getFriendshipByPlayers(currentPlayer, targetPlayer);
+            if (friendship != null) {
+                Label friendshipLabel = new Label(friendship.toString(), skin);
+                friendshipLabel.setFontScale(1.0f);
+                friendshipLabel.setWrap(true);
+                friendsMenuTable.add(friendshipLabel).colspan(2).pad(20).fillX().expandX().row();
+            } else {
+                Label noFriendshipLabel = new Label("No friendship data available", skin);
+                noFriendshipLabel.setFontScale(1.0f);
+                friendsMenuTable.add(noFriendshipLabel).colspan(2).pad(20).row();
+            }
+        } else {
+            Label errorLabel = new Label("Player not found", skin);
+            errorLabel.setFontScale(1.0f);
+            friendsMenuTable.add(errorLabel).colspan(2).pad(20).row();
+        }
+
+        // Back and Close buttons
+        TextButton backButton = new TextButton("Back", skin);
+        TextButton closeButton = new TextButton("Close", skin);
+
+        backButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                currentFriendsMenuState = FriendsMenuState.PLAYER_ACTIONS;
+                friendshipResultMessage = "";
+                friendshipResultSuccess = false;
+                createFriendsMenuUI();
+            }
+        });
+
+        closeButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                showFriendsMenu = false;
+                currentFriendsMenuState = FriendsMenuState.MAIN_MENU;
+                selectedPlayerForActions = null;
+                if (friendsMenuTable != null) {
+                    friendsMenuTable.remove();
+                    friendsMenuTable = null;
+                }
+                Gdx.input.setInputProcessor(multiplexer);
+            }
+        });
+
+        friendsMenuTable.add(backButton).size(200, 50).pad(10);
+        friendsMenuTable.add(closeButton).size(200, 50).pad(10);
+    }
 }
