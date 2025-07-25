@@ -505,7 +505,11 @@ public class GDXGameScreen implements Screen {
         stage = new Stage(new ScreenViewport());
         Gdx.input.setInputProcessor(stage);
         skin = new Skin(Gdx.files.internal("uiskin.json"));
+        ProgressBar.ProgressBarStyle progressBarStyle = new ProgressBar.ProgressBarStyle();
+        progressBarStyle.background = skin.newDrawable("white", Color.DARK_GRAY);
+        progressBarStyle.knobBefore = skin.newDrawable("white", Color.GREEN);
 
+        skin.add("default-horizontal", progressBarStyle);
         spriteBatch = new SpriteBatch();
         camera = new OrthographicCamera();
         hudCamera = new OrthographicCamera();
@@ -992,7 +996,12 @@ public class GDXGameScreen implements Screen {
             }
             return;
         }
-        //handleTradeMenuToggle();
+
+        if (isInventoryOpen || isToolMenuOpen || isCheatMenuOpen || isPlantingSelectionOpen
+            || isCraftingMenuOpen || isCookingMenuOpen || isCraftingCheatMenuOpen || isCookingCheatMenuOpen || isEatMenuOpen) {
+            return;
+        }
+
         com.badlogic.gdx.math.Vector3 mouseInWorld = camera.unproject(new com.badlogic.gdx.math.Vector3(Gdx.input.getX(), Gdx.input.getY(), 0));
         int targetTileX = (int) (mouseInWorld.x / TILE_SIZE);
         int targetTileY = MAP_HEIGHT - 1 - (int) (mouseInWorld.y / TILE_SIZE);
@@ -1086,11 +1095,6 @@ public class GDXGameScreen implements Screen {
             } else {
                 Gdx.input.setInputProcessor(multiplexer);
             }
-        }
-
-        if (isInventoryOpen || isToolMenuOpen || isCheatMenuOpen || isPlantingSelectionOpen
-            || isCraftingMenuOpen || isCookingMenuOpen || isCraftingCheatMenuOpen || isCookingCheatMenuOpen || isEatMenuOpen) {
-            return;
         }
 
         if (Gdx.input.isKeyJustPressed(Input.Keys.SPACE)) {
@@ -2593,18 +2597,12 @@ public class GDXGameScreen implements Screen {
         if (tile.getPlant() != null && tile.getPlant() instanceof Crop) {
             Crop crop = (Crop) tile.getPlant();
             ItemType itemType = crop.getCropType();
-
-            // Ensure we are only dealing with CropType enums here
             if (itemType instanceof CropType) {
                 CropType cropType = (CropType) itemType;
-
-                // Construct texture name based on growth stage
-                // The stage is 1-based, so we don't need to add 1
                 String textureKey = cropType.getEnumName() + "_Stage_" + crop.getCurrentStage();
                 Texture cropTexture = textureManager.getTexture(textureKey);
 
                 if (cropTexture != null) {
-                    // Draw at real PNG size, bottom-aligned to the tile
                     float px = worldX + (TILE_SIZE - cropTexture.getWidth()) / 2f;
                     float py = worldY;
                     spriteBatch.draw(cropTexture, px, py, cropTexture.getWidth(), cropTexture.getHeight());
@@ -2615,10 +2613,17 @@ public class GDXGameScreen implements Screen {
             Texture seedTexture = textureManager.getTexture(textureKey);
 
             if (seedTexture != null) {
-                // Draw at real PNG size, bottom-aligned to the tile
                 float px = worldX + (TILE_SIZE - seedTexture.getWidth()) / 2f;
                 float py = worldY;
                 spriteBatch.draw(seedTexture, px, py, seedTexture.getWidth(), seedTexture.getHeight());
+            }
+        }
+
+        if (tile.getPlacedMachine() != null) {
+            PlacedMachine machine = tile.getPlacedMachine();
+            Texture machineTexture = textureManager.getTexture(machine.getMachineType().getEnumName());
+            if (machineTexture != null) {
+                spriteBatch.draw(machineTexture, worldX, worldY, TILE_SIZE, TILE_SIZE);
             }
         }
     }
@@ -4374,25 +4379,28 @@ public class GDXGameScreen implements Screen {
         content.add(progressBar).colspan(4).fillX().pad(5).row();
         content.add(recipePane).colspan(4).height(150).fill().pad(5);
 
-        for (ArtisanProductType recipe : ArtisanProductType.values()) {
-            if (recipe.getMachine() == activeMachine.getMachineType()) {
-                TextButton recipeButton = new TextButton(recipe.getName(), skin);
-                recipeTable.add(recipeButton).fillX().pad(2).row();
+        // Populate Recipes (only if the machine is idle)
+        if (activeMachine.isIdle()) {
+            for (ArtisanProductType recipe : ArtisanProductType.values()) {
+                if (recipe.getMachine() == activeMachine.getMachineType()) {
+                    TextButton recipeButton = new TextButton(recipe.getName(), skin);
+                    recipeTable.add(recipeButton).fillX().pad(2).row();
 
-                recipeButton.addListener(new ClickListener() {
-                    @Override
-                    public void clicked(InputEvent event, float x, float y) {
-                        Result result = controller.startArtisanProcess(activeMachine, recipe);
-                        generalMessageLabel.setText(result.Message());
-                        generalMessageLabel.setVisible(true);
-                        generalMessageTimer = GENERAL_MESSAGE_DURATION;
-                        showMachineUI(); // Refresh the dialog
-                    }
-                });
+                    recipeButton.addListener(new ClickListener() {
+                        @Override
+                        public void clicked(InputEvent event, float x, float y) {
+                            Result result = controller.startArtisanProcess(activeMachine, recipe);
+                            generalMessageLabel.setText(result.Message());
+                            generalMessageLabel.setVisible(true);
+                            generalMessageTimer = GENERAL_MESSAGE_DURATION;
+                            showMachineUI(); // Refresh the dialog
+                        }
+                    });
+                }
             }
         }
 
-        // Populate Buttons and State
+        // Populate Buttons and State based on machine status
         if (activeMachine.isIdle()) {
             dialog.getButtonTable().add(new Label("Select a recipe to start.", skin));
         } else if (activeMachine.isProcessing()) {
@@ -4401,11 +4409,29 @@ public class GDXGameScreen implements Screen {
             progressBar.setValue(progress);
 
             TextButton finishNow = new TextButton("Finish Now (-100 Energy)", skin);
-            finishNow.addListener(new ClickListener() { /* ... call controller.finishArtisanProcessNow ... */ });
+            finishNow.addListener(new ClickListener() {
+                @Override
+                public void clicked(InputEvent event, float x, float y) {
+                    Result result = controller.finishArtisanProcessNow(activeMachine);
+                    generalMessageLabel.setText(result.Message());
+                    generalMessageLabel.setVisible(true);
+                    generalMessageTimer = GENERAL_MESSAGE_DURATION;
+                    showMachineUI(); // Refresh the dialog
+                }
+            });
             dialog.button(finishNow);
 
             TextButton cancel = new TextButton("Cancel", skin);
-            cancel.addListener(new ClickListener() { /* ... call controller.cancelArtisanProcess ... */ });
+            cancel.addListener(new ClickListener() {
+                @Override
+                public void clicked(InputEvent event, float x, float y) {
+                    Result result = controller.cancelArtisanProcess(activeMachine);
+                    generalMessageLabel.setText(result.Message());
+                    generalMessageLabel.setVisible(true);
+                    generalMessageTimer = GENERAL_MESSAGE_DURATION;
+                    showMachineUI(); // Refresh the dialog
+                }
+            });
             dialog.button(cancel);
 
         } else if (activeMachine.isDone()) {
@@ -4416,7 +4442,10 @@ public class GDXGameScreen implements Screen {
             collect.addListener(new ClickListener() {
                 @Override
                 public void clicked(InputEvent event, float x, float y) {
-                    controller.collectArtisanProduct(activeMachine);
+                    Result result = controller.collectArtisanProduct(activeMachine);
+                    generalMessageLabel.setText(result.Message());
+                    generalMessageLabel.setVisible(true);
+                    generalMessageTimer = GENERAL_MESSAGE_DURATION;
                     showMachineUI();
                 }
             });

@@ -132,7 +132,7 @@ public enum ArtisanProductType implements ItemType {
         return this.energy;
     }
     public int getProcessingTime() {
-        return this.processingTime;
+        return this.processingTime * 3;
     }
     public Map<ItemType, Integer> getIngredients() {
         return this.ingredients;
