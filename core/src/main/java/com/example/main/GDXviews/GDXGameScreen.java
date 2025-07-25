@@ -2907,41 +2907,36 @@ public class GDXGameScreen implements Screen {
         float screenWidth = Gdx.graphics.getWidth();
         float screenHeight = Gdx.graphics.getHeight();
 
-        float minimapSize = Math.min(screenWidth, screenHeight) * 0.4f;
+        float minimapSize = Math.min(screenWidth, screenHeight) * 0.25f; // Smaller size
 
         float minimapX = (screenWidth - minimapSize) / 2f;
         float minimapY = (screenHeight - minimapSize) / 2f;
 
         renderMinimapBackgroundAndBorder(minimapX, minimapY, minimapSize, minimapSize);
 
-        spriteBatch.begin();
-
+        // Create a proper minimap camera
         OrthographicCamera minimapCamera = new OrthographicCamera();
-
-        float zoomToFitWidth = minimapSize / (MAP_WIDTH * TILE_SIZE);
-        float zoomToFitHeight = minimapSize / (MAP_HEIGHT * TILE_SIZE);
-
-        float minimapZoom = Math.min(zoomToFitWidth, zoomToFitHeight);
-
-        minimapZoom *= 0.80f;
-
-        minimapCamera.setToOrtho(false, MAP_WIDTH * TILE_SIZE, MAP_HEIGHT * TILE_SIZE);
-        minimapCamera.zoom = 1f / minimapZoom;
-        minimapCamera.position.set((MAP_WIDTH * TILE_SIZE) / 2f, (MAP_HEIGHT * TILE_SIZE) / 2f, 0);
-        minimapCamera.update();
-
-        minimapCamera.viewportWidth = minimapSize;
-        minimapCamera.viewportHeight = minimapSize;
-        minimapCamera.position.set(minimapX + minimapSize / 2f, minimapY + minimapSize / 2f, 0);
+        minimapCamera.setToOrtho(false, minimapSize, minimapSize);
+        minimapCamera.position.set(minimapSize / 2f, minimapSize / 2f, 0);
         minimapCamera.update();
 
         spriteBatch.setProjectionMatrix(minimapCamera.combined);
+        spriteBatch.begin();
 
-        renderMinimapContent();
+        // Calculate scale to fit the entire map in the minimap
+        float scaleX = minimapSize / (MAP_WIDTH * TILE_SIZE);
+        float scaleY = minimapSize / (MAP_HEIGHT * TILE_SIZE);
+        float scale = Math.min(scaleX, scaleY) * 0.9f; // 90% to leave some border
+
+        // Calculate offset to center the map
+        float offsetX = (minimapSize - (MAP_WIDTH * TILE_SIZE * scale)) / 2f;
+        float offsetY = (minimapSize - (MAP_HEIGHT * TILE_SIZE * scale)) / 2f;
+
+        renderMinimapContent(scale, offsetX, offsetY);
 
         spriteBatch.end();
 
-        camera.update();
+        // Reset to main camera
         spriteBatch.setProjectionMatrix(camera.combined);
     }
 
@@ -3017,43 +3012,94 @@ public class GDXGameScreen implements Screen {
     }
 
 
-    private void renderMinimapContent() {
+    private void renderMinimapContent(float scale, float offsetX, float offsetY) {
         Tile[][] tiles = gameMap.getTiles();
 
+        // Render only lakes (water tiles)
         for (int x = 0; x < MAP_WIDTH; x++) {
             for (int y = 0; y < MAP_HEIGHT; y++) {
                 if (tiles[x] != null && tiles[x][y] != null) {
                     Tile tile = tiles[x][y];
 
-                    float worldX = x * TILE_SIZE;
-                    float worldY = (MAP_HEIGHT - 1 - y) * TILE_SIZE;
+                    if (tile.getType() == TileType.Water) {
+                        float worldX = offsetX + (x * TILE_SIZE * scale);
+                        float worldY = offsetY + ((MAP_HEIGHT - 1 - y) * TILE_SIZE * scale);
 
-                    Texture minimapTexture = getMinimapTexture(tile.getType());
-                    if (minimapTexture != null) {
-                        spriteBatch.draw(minimapTexture, worldX, worldY, TILE_SIZE, TILE_SIZE);
+                        // Render water as blue
+                        spriteBatch.setColor(0.2f, 0.4f, 0.8f, 1f); // Blue for water
+                        spriteBatch.draw(ground1Texture, worldX, worldY, TILE_SIZE * scale, TILE_SIZE * scale);
+                        spriteBatch.setColor(1f, 1f, 1f, 1f);
                     }
                 }
             }
         }
 
-        Player currentPlayer = game.getCurrentPlayer();
-        if (currentPlayer != null) {
-            float playerX = currentPlayer.currentX();
-            float playerY = currentPlayer.currentY();
+        // Render buildings and structures
+        for (int y = 0; y < MAP_HEIGHT; y++) {
+            for (int x = 0; x < MAP_WIDTH; x++) {
+                if (tiles[x] != null && tiles[x][y] != null) {
+                    Tile tile = tiles[x][y];
+                    TileType tileType = tile.getType();
 
-            float startX = currentPlayer.currentX();
-            float startY = currentPlayer.currentY();
+                    float worldX = offsetX + (x * TILE_SIZE * scale);
+                    float worldY = offsetY + ((MAP_HEIGHT - 1 - y) * TILE_SIZE * scale);
 
-            float worldX = playerX * TILE_SIZE;
-            float worldY = (MAP_HEIGHT - 1 - playerY) * TILE_SIZE;
+                    if (tileType == TileType.House || tileType == TileType.Wall) {
+                        renderMinimapHouseSprite(x, y, worldX, worldY, scale);
+                        
+                        if (tileType == TileType.Wall) {
+                            int npcIndex = getNPCIndexForHouse(x, y);
+                            if (npcIndex != -1) {
+                                renderMinimapNPCHouseSprite(x, y, worldX, worldY, scale);
+                            }
 
-            spriteBatch.setColor(1f, 1f, 0f, 1f);
-            spriteBatch.draw(ground1Texture, worldX, worldY, TILE_SIZE, TILE_SIZE);
+                            int shopIndex = getShopIndex(x, y);
+                            if (shopIndex != -1) {
+                                renderMinimapShopSprite(x, y, worldX, worldY, scale);
+                            }
+                            
+                            int housingIndex = getHousingIndex(x, y);
+                            if (housingIndex != -1) {
+                                renderMinimapHousingSprite(x, y, worldX, worldY, scale);
+                            }
+                        }
+                    } else if (tileType == TileType.NPCHouse) {
+                        renderMinimapNPCHouseSprite(x, y, worldX, worldY, scale);
+                    } else if (tileType == TileType.Shop) {
+                        renderMinimapShopSprite(x, y, worldX, worldY, scale);
+                    }
+                }
+            }
+        }
+
+        // Render players
+        for (User user : game.getPlayers()) {
+            Player player = user.getPlayer();
+            if (player == null) continue;
+
+            float playerX = player.currentX();
+            float playerY = player.currentY();
+
+            if (playerX < 0 || playerX >= MAP_WIDTH || playerY < 0 || playerY >= MAP_HEIGHT) {
+                continue;
+            }
+
+            float worldX = offsetX + (playerX * TILE_SIZE * scale);
+            float worldY = offsetY + ((MAP_HEIGHT - 1 - playerY) * TILE_SIZE * scale);
+
+            // Draw player as a colored dot
+            if (player.equals(game.getCurrentPlayer())) {
+                spriteBatch.setColor(1f, 1f, 0f, 1f); // Yellow for current player
+            } else {
+                spriteBatch.setColor(0f, 1f, 0f, 1f); // Green for other players
+            }
+            spriteBatch.draw(ground1Texture, worldX + (TILE_SIZE * scale * 0.25f), worldY + (TILE_SIZE * scale * 0.25f), 
+                           TILE_SIZE * scale * 0.5f, TILE_SIZE * scale * 0.5f);
             spriteBatch.setColor(1f, 1f, 1f, 1f);
         }
     }
 
-    private Texture getMinimapTexture(TileType tileType) {
+    private Texture getMinimapBaseTexture(TileType tileType) {
         switch (tileType) {
             case Water:
                 return lake1Texture;
@@ -3073,6 +3119,130 @@ public class GDXGameScreen implements Screen {
                 return blacksmithTexture;
             default:
                 return ground1Texture;
+        }
+    }
+
+    private void renderMinimapHouseSprite(int tileX, int tileY, float worldX, float worldY, float scale) {
+        int playerIndex = getPlayerIndexForHouse(tileX, tileY);
+        if (playerIndex != -1 && playerIndex < playerHouseVariants.length) {
+            Texture houseTexture = null;
+            switch (playerHouseVariants[playerIndex]) {
+                case 0:
+                    houseTexture = house1Texture;
+                    break;
+                case 1:
+                    houseTexture = house2Texture;
+                    break;
+                case 2:
+                    houseTexture = house3Texture;
+                    break;
+            }
+            if (houseTexture != null) {
+                spriteBatch.setColor(0.8f, 0.6f, 0.4f, 1f); // Brown for houses
+                spriteBatch.draw(houseTexture, worldX, worldY, TILE_SIZE * scale, TILE_SIZE * scale);
+                spriteBatch.setColor(1f, 1f, 1f, 1f);
+            }
+        }
+    }
+
+    private void renderMinimapNPCHouseSprite(int tileX, int tileY, float worldX, float worldY, float scale) {
+        int npcIndex = getNPCIndexForHouse(tileX, tileY);
+        if (npcIndex != -1 && npcIndex < npcHouseVariants.length) {
+            Texture npcHouseTexture = null;
+            switch (npcHouseVariants[npcIndex]) {
+                case 0:
+                    npcHouseTexture = npcHouse1Texture;
+                    break;
+                case 1:
+                    npcHouseTexture = npcHouse2Texture;
+                    break;
+                case 2:
+                    npcHouseTexture = npcHouse3Texture;
+                    break;
+                case 3:
+                    npcHouseTexture = npcHouse4Texture;
+                    break;
+                case 4:
+                    npcHouseTexture = npcHouse5Texture;
+                    break;
+            }
+            if (npcHouseTexture != null) {
+                spriteBatch.setColor(0.6f, 0.4f, 0.8f, 1f); // Purple for NPC houses
+                spriteBatch.draw(npcHouseTexture, worldX, worldY, TILE_SIZE * scale, TILE_SIZE * scale);
+                spriteBatch.setColor(1f, 1f, 1f, 1f);
+            }
+        }
+    }
+
+    private void renderMinimapShopSprite(int tileX, int tileY, float worldX, float worldY, float scale) {
+        int shopIndex = getShopIndex(tileX, tileY);
+        if (shopIndex != -1) {
+            Texture shopTexture = null;
+            switch (shopIndex) {
+                case 0:
+                    shopTexture = blacksmithTexture;
+                    break;
+                case 1:
+                    shopTexture = jojamartTexture;
+                    break;
+                case 2:
+                    shopTexture = pierresShopTexture;
+                    break;
+                case 3:
+                    shopTexture = carpentersShopTexture;
+                    break;
+                case 4:
+                    shopTexture = fishShopTexture;
+                    break;
+                case 5:
+                    shopTexture = ranchTexture;
+                    break;
+                case 6:
+                    shopTexture = saloonTexture;
+                    break;
+            }
+            if (shopTexture != null) {
+                spriteBatch.setColor(0.8f, 0.8f, 0.2f, 1f); // Yellow for shops
+                spriteBatch.draw(shopTexture, worldX, worldY, TILE_SIZE * scale, TILE_SIZE * scale);
+                spriteBatch.setColor(1f, 1f, 1f, 1f);
+            }
+        }
+    }
+
+    private void renderMinimapHousingSprite(int tileX, int tileY, float worldX, float worldY, float scale) {
+        int housingIndex = getHousingIndex(tileX, tileY);
+        if (housingIndex != -1) {
+            Texture housingTexture = null;
+            if (housingIndex == 0) {
+                housingTexture = barnTexture;
+            } else if (housingIndex == 1) {
+                housingTexture = coopTexture;
+            }
+            if (housingTexture != null) {
+                spriteBatch.setColor(0.4f, 0.2f, 0.1f, 1f); // Dark brown for housing
+                spriteBatch.draw(housingTexture, worldX, worldY, TILE_SIZE * scale, TILE_SIZE * scale);
+                spriteBatch.setColor(1f, 1f, 1f, 1f);
+            }
+        }
+    }
+
+    private void renderMinimapTreeSprite(int tileX, int tileY, float worldX, float worldY, float scale) {
+        Texture treeTexture = null;
+        switch (treeVariantMap[tileX][tileY]) {
+            case 0:
+                treeTexture = tree1Texture;
+                break;
+            case 1:
+                treeTexture = tree2Texture;
+                break;
+            case 2:
+                treeTexture = tree3Texture;
+                break;
+        }
+        if (treeTexture != null) {
+            spriteBatch.setColor(0.2f, 0.6f, 0.2f, 1f); // Dark green for trees
+            spriteBatch.draw(treeTexture, worldX, worldY, TILE_SIZE * scale, TILE_SIZE * scale);
+            spriteBatch.setColor(1f, 1f, 1f, 1f);
         }
     }
 
