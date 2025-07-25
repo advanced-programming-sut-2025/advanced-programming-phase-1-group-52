@@ -25,6 +25,7 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
+import com.badlogic.gdx.scenes.scene2d.InputListener;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Dialog;
 import com.badlogic.gdx.scenes.scene2d.ui.HorizontalGroup;
@@ -517,13 +518,19 @@ public class GDXGameScreen implements Screen {
     private enum FriendsMenuState {
         MAIN_MENU,
         PLAYER_ACTIONS,
-        FRIENDSHIP_DETAILS
+        FRIENDSHIP_DETAILS,
+        CHAT_ROOM
     }
 
     private FriendsMenuState currentFriendsMenuState = FriendsMenuState.MAIN_MENU;
     private String selectedPlayerForActions = null;
     private String friendshipResultMessage = "";
     private boolean friendshipResultSuccess = false;
+    
+    // Chat room variables
+    private TextField chatMessageField;
+    private ScrollPane chatScrollPane;
+    private Table chatMessagesTable;
 
     public GDXGameScreen() {
         controller = new GameMenuController();
@@ -5752,6 +5759,9 @@ public class GDXGameScreen implements Screen {
             case FRIENDSHIP_DETAILS:
                 createFriendshipDetailsMenu();
                 break;
+            case CHAT_ROOM:
+                createChatRoomMenu();
+                break;
         }
     }
 
@@ -5766,18 +5776,36 @@ public class GDXGameScreen implements Screen {
         // Get other players (excluding current player)
         Player currentPlayer = game.getCurrentPlayer();
         ArrayList<Player> otherPlayers = new ArrayList<>();
+        ArrayList<String> playersWithNewMessages = new ArrayList<>();
         
         for (User user : game.getPlayers()) {
             Player player = user.getPlayer();
             if (player != null && !player.equals(currentPlayer)) {
                 otherPlayers.add(player);
+                
+                // Check if this player has new messages
+                Result result = controller.talkHistory(player.getUsername());
+                String history = result.Message();
+                if (!history.contains("No conversation history") && history.contains("New message")) {
+                    playersWithNewMessages.add(player.getUsername());
+                }
             }
         }
 
         // Create buttons for each other player
         for (Player player : otherPlayers) {
-            TextButton playerButton = new TextButton(player.getUsername(), skin);
+            String buttonText = player.getUsername();
+            if (playersWithNewMessages.contains(player.getUsername())) {
+                buttonText += " [NEW]";
+            }
+            
+            TextButton playerButton = new TextButton(buttonText, skin);
             final String playerName = player.getUsername();
+            
+            // Color the button if there are new messages
+            if (playersWithNewMessages.contains(player.getUsername())) {
+                playerButton.setColor(Color.YELLOW);
+            }
             
             playerButton.addListener(new ClickListener() {
                 @Override
@@ -5850,11 +5878,8 @@ public class GDXGameScreen implements Screen {
         talkButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                // For now, just show talk history
-                Result result = controller.talkHistory(selectedPlayerForActions);
-                generalMessageLabel.setText(result.Message());
-                generalMessageLabel.setVisible(true);
-                generalMessageTimer = GENERAL_MESSAGE_DURATION;
+                currentFriendsMenuState = FriendsMenuState.CHAT_ROOM;
+                createFriendsMenuUI();
             }
         });
 
@@ -5997,11 +6022,13 @@ public class GDXGameScreen implements Screen {
                 Label friendshipLabel = new Label(friendship.toString(), skin);
                 friendshipLabel.setFontScale(1.0f);
                 friendshipLabel.setWrap(true);
-                friendsMenuTable.add(friendshipLabel).colspan(2).pad(20).fillX().expandX().row();
+                friendshipLabel.setAlignment(Align.center);
+                friendsMenuTable.add(friendshipLabel).colspan(2).pad(20).fillX().expandX().center().row();
             } else {
                 Label noFriendshipLabel = new Label("No friendship data available", skin);
                 noFriendshipLabel.setFontScale(1.0f);
-                friendsMenuTable.add(noFriendshipLabel).colspan(2).pad(20).row();
+                noFriendshipLabel.setAlignment(Align.center);
+                friendsMenuTable.add(noFriendshipLabel).colspan(2).pad(20).center().row();
             }
         } else {
             Label errorLabel = new Label("Player not found", skin);
@@ -6039,5 +6066,167 @@ public class GDXGameScreen implements Screen {
 
         friendsMenuTable.add(backButton).size(200, 50).pad(10);
         friendsMenuTable.add(closeButton).size(200, 50).pad(10);
+    }
+
+    private void createChatRoomMenu() {
+        friendsMenuTable.clear();
+
+        // Title with player name
+        Label titleLabel = new Label("Chat with " + selectedPlayerForActions, skin);
+        titleLabel.setFontScale(1.5f);
+        friendsMenuTable.add(titleLabel).colspan(2).pad(20).row();
+
+        // Create chat messages area
+        chatMessagesTable = new Table();
+        chatMessagesTable.setBackground(new TextureRegionDrawable(menuBackgroundTexture));
+        
+        // Load previous messages
+        loadChatHistory();
+        
+        // Create scroll pane for messages
+        chatScrollPane = new ScrollPane(chatMessagesTable, skin);
+        chatScrollPane.setScrollBarPositions(false, true);
+        chatScrollPane.setFadeScrollBars(false);
+        chatScrollPane.setScrollPercentY(1.0f); // Scroll to bottom
+        
+        friendsMenuTable.add(chatScrollPane).colspan(2).fill().expand().pad(10).row();
+
+        // Create input area
+        Table inputTable = new Table();
+        
+        chatMessageField = new TextField("", skin);
+        chatMessageField.setMessageText("Type your message here...");
+        chatMessageField.setMaxLength(200);
+        
+        TextButton sendButton = new TextButton("Send", skin);
+        
+        sendButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                sendChatMessage();
+            }
+        });
+        
+        // Add enter key support
+        chatMessageField.addListener(new InputListener() {
+            @Override
+            public boolean keyDown(InputEvent event, int keycode) {
+                if (keycode == Input.Keys.ENTER) {
+                    sendChatMessage();
+                    return true;
+                }
+                return false;
+            }
+        });
+        
+        inputTable.add(chatMessageField).expandX().fillX().padRight(10);
+        inputTable.add(sendButton).width(80);
+        
+        friendsMenuTable.add(inputTable).colspan(2).fillX().pad(10).row();
+
+        // Back and Close buttons
+        TextButton backButton = new TextButton("Back", skin);
+        TextButton closeButton = new TextButton("Close", skin);
+
+        backButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                currentFriendsMenuState = FriendsMenuState.PLAYER_ACTIONS;
+                createFriendsMenuUI();
+            }
+        });
+
+        closeButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                showFriendsMenu = false;
+                currentFriendsMenuState = FriendsMenuState.MAIN_MENU;
+                selectedPlayerForActions = null;
+                if (friendsMenuTable != null) {
+                    friendsMenuTable.remove();
+                    friendsMenuTable = null;
+                }
+                Gdx.input.setInputProcessor(multiplexer);
+            }
+        });
+
+        friendsMenuTable.add(backButton).size(200, 50).pad(10);
+        friendsMenuTable.add(closeButton).size(200, 50).pad(10);
+        
+        // Set focus to message field
+        stage.setKeyboardFocus(chatMessageField);
+    }
+
+    private void loadChatHistory() {
+        chatMessagesTable.clear();
+        
+        Player currentPlayer = game.getCurrentPlayer();
+        Player targetPlayer = null;
+        
+        // Find the target player
+        for (User user : game.getPlayers()) {
+            Player player = user.getPlayer();
+            if (player != null && player.getUsername().equals(selectedPlayerForActions)) {
+                targetPlayer = player;
+                break;
+            }
+        }
+        
+        if (targetPlayer != null) {
+            // Get talk history
+            Result result = controller.talkHistory(selectedPlayerForActions);
+            String history = result.Message();
+            
+            if (history.contains("No conversation history")) {
+                Label noHistoryLabel = new Label("No previous messages", skin);
+                noHistoryLabel.setColor(Color.GRAY);
+                chatMessagesTable.add(noHistoryLabel).pad(10).row();
+            } else {
+                // Parse and display messages
+                String[] lines = history.split("\n");
+                for (String line : lines) {
+                    if (line.trim().isEmpty()) continue;
+                    
+                    Label messageLabel = new Label(line, skin);
+                    messageLabel.setWrap(true);
+                    messageLabel.setFontScale(0.9f);
+                    
+                    // Color code messages (sender vs receiver)
+                    if (line.contains(currentPlayer.getUsername() + ":")) {
+                        messageLabel.setColor(Color.BLUE);
+                    } else if (line.contains(targetPlayer.getUsername() + ":")) {
+                        messageLabel.setColor(Color.GREEN);
+                    } else {
+                        messageLabel.setColor(Color.BLACK);
+                    }
+                    
+                    chatMessagesTable.add(messageLabel).fillX().pad(5).row();
+                }
+            }
+        }
+    }
+
+    private void sendChatMessage() {
+        String message = chatMessageField.getText().trim();
+        if (!message.isEmpty()) {
+            // Send the message using the controller
+            Result result = controller.talk(selectedPlayerForActions, message);
+            
+            if (result.isSuccessful()) {
+                // Clear the input field
+                chatMessageField.setText("");
+                
+                // Reload chat history to show the new message
+                loadChatHistory();
+                
+                // Scroll to bottom
+                chatScrollPane.setScrollPercentY(1.0f);
+            } else {
+                // Show error message
+                friendshipResultMessage = result.Message();
+                friendshipResultSuccess = false;
+                createChatRoomMenu();
+            }
+        }
     }
 }

@@ -793,12 +793,10 @@ public class GameMenuController {
             return new Result(false, "You should be near" + receiverName);
         }
 
-        // Create talk object with proper sender and receiver
         Talk talk = new Talk(currentPlayer, player, message);
 
-        // Add the talk to BOTH players' talk lists so both can see the conversation
-        currentPlayer.addTalk(talk);  // Sender keeps record of what they sent
-        player.addTalk(talk);         // Receiver gets the message in their history
+        currentPlayer.addTalk(talk);
+        player.addTalk(talk);
 
         Friendship friendship = game.getFriendshipByPlayers(currentPlayer, player);
         friendship.addFriendshipPoints(10);
@@ -820,12 +818,9 @@ public class GameMenuController {
         Player currentPlayer = game.getCurrentPlayer();
         StringBuilder stringBuilder = new StringBuilder();
 
-        // Show complete conversation history between current player and target player
-        // Check all talks involving both players
         boolean foundAnyTalks = false;
 
         for (Talk talk : currentPlayer.getTalks()) {
-            // Show talks where current player talked to target player OR target player talked to current player
             if ((talk.getSender().equals(currentPlayer) && talk.getReceiver().equals(targetPlayer)) ||
                 (talk.getSender().equals(targetPlayer) && talk.getReceiver().equals(currentPlayer))) {
                 stringBuilder.append(talk.toString()).append("\n");
