@@ -60,20 +60,8 @@ import static com.example.main.enums.player.Skills.Farming;
 import static com.example.main.enums.player.Skills.Fishing;
 import static com.example.main.enums.player.Skills.Foraging;
 import static com.example.main.enums.player.Skills.Mining;
-import com.example.main.models.ActiveBuff;
-import com.example.main.models.App;
-import com.example.main.models.Date;
-import com.example.main.models.Game;
-import com.example.main.models.GameMap;
-import com.example.main.models.NPC;
-import com.example.main.models.NPCFriendship;
-import com.example.main.models.Notification;
-import com.example.main.models.Player;
-import com.example.main.models.Quest;
-import com.example.main.models.Result;
-import com.example.main.models.Tile;
-import com.example.main.models.Time;
-import com.example.main.models.User;
+
+import com.example.main.models.*;
 import com.example.main.models.building.Housing;
 import com.example.main.models.item.*;
 
@@ -258,6 +246,12 @@ public class GDXGameScreen implements Screen {
     private Stage machineUiStage;
     private PlacedMachine activeMachine = null;
 
+    // Fishing Minigame Fields
+    private boolean isFishingMinigameActive = false;
+    private Stage fishingStage;
+    private Texture fishingBarBg, playerBarTexture, fishIconTexture, legendaryCrownTexture;
+    private Texture progressBarBg, progressBarFill;
+
     private Texture ground1Texture;
     private Texture ground2Texture;
     private Texture grass1Texture;
@@ -322,16 +316,16 @@ public class GDXGameScreen implements Screen {
     private Texture femaleLeft1Texture, femaleLeft2Texture;
     private Texture femaleRight1Texture, femaleRight2Texture;
 
-    // Action Textures
-    private Texture maleWateringDown, maleWateringUp, maleWateringLeft, maleWateringRight;
-    private Texture maleHoeDown, maleHoeUp, maleHoeLeft, maleHoeRight;
-    private Texture maleScytheDown, maleScytheUp, maleScytheLeft, maleScytheRight;
-    private Texture malePlanting; // Planting can be a single animation
+    // Tool Idle Textures
+    private Texture maleHoeIdle1Texture, maleHoeIdle2Texture;
+    private Texture maleScytheIdle1Texture, maleScytheIdle2Texture;
+    private Texture maleWatercanIdle1Texture, maleWatercanIdle2Texture;
+    private Texture malePlantingIdleTexture;
 
-    private Texture femaleWateringDown, femaleWateringUp, femaleWateringLeft, femaleWateringRight;
-    private Texture femaleHoeDown, femaleHoeUp, femaleHoeLeft, femaleHoeRight;
-    private Texture femaleScytheDown, femaleScytheUp, femaleScytheLeft, femaleScytheRight;
-    private Texture femalePlanting;
+    private Texture femaleHoeIdle1Texture, femaleHoeIdle2Texture;
+    private Texture femaleScytheIdle1Texture, femaleScytheIdle2Texture;
+    private Texture femaleWatercanIdle1Texture, femaleWatercanIdle2Texture;
+    private Texture femalePlantingIdleTexture;
 
     // NPC textures
     private Texture sebastianTexture;
@@ -556,6 +550,7 @@ public class GDXGameScreen implements Screen {
         cookingCheatMenuStage = new Stage(new ScreenViewport());
         eatMenuStage = new Stage(new ScreenViewport());
         machineUiStage = new Stage(new ScreenViewport());
+        fishingStage = new Stage(new ScreenViewport());
 
         textureManager = new TextureManager();
         textureManager.loadAllItemTextures();
@@ -596,6 +591,7 @@ public class GDXGameScreen implements Screen {
         multiplexer.addProcessor(craftingCheatMenuStage);
         multiplexer.addProcessor(eatMenuStage);
         multiplexer.addProcessor(machineUiStage);
+        multiplexer.addProcessor(fishingStage);
         plantableItems = new ArrayList<>();
         Gdx.input.setInputProcessor(multiplexer);
     }
@@ -635,12 +631,9 @@ public class GDXGameScreen implements Screen {
             }
         }
         handleInput(delta);
-
-        // Update animal movement
         updateAnimalMovement(delta);
-
-        // Update animations
         updateAnimations(delta);
+        updateFishingMinigame(delta);
 
         if (!isInventoryOpen) {
         updateTime(delta);
@@ -717,6 +710,7 @@ public class GDXGameScreen implements Screen {
         renderCookingCheatMenu(delta);
         renderEatMenu(delta);
         renderBuffs();
+        renderFishingMinigame();
 
         machineUiStage.act(delta);
         machineUiStage.draw();
@@ -780,6 +774,12 @@ public class GDXGameScreen implements Screen {
         farmingBuffTexture = textureManager.getTexture("Farming_Skill_Icon");
         foragingBuffTexture = textureManager.getTexture("Foraging_Skill_Icon");
         fishingBuffTexture = textureManager.getTexture("Fishing_Skill_Icon");
+        fishingBarBg = textureManager.getTexture("fishing_bar_background");
+        playerBarTexture = textureManager.getTexture("fishing_player_bar");
+        fishIconTexture = textureManager.getTexture("fishing_fish_icon");
+        legendaryCrownTexture = textureManager.getTexture("fishing_legendary_crown");
+        progressBarBg = textureManager.getTexture("fishing_progress_bar_background");
+        progressBarFill = textureManager.getTexture("fishing_progress_bar_fill");
         try {
             blacksmithTexture = new Texture("content/Cut/map_elements/blacksmith.png");
             jojamartTexture = new Texture("content/Cut/map_elements/jojamart.png");
@@ -815,33 +815,21 @@ public class GDXGameScreen implements Screen {
         maleRight1Texture = new Texture("content/Cut/player/male_right1.png");
         maleRight2Texture = new Texture("content/Cut/player/male_right2.png");
 
-        maleWateringDown = textureManager.getTexture("down");
-        maleWateringUp = textureManager.getTexture("up");
-        maleWateringLeft = textureManager.getTexture("left");
-        maleWateringRight = textureManager.getTexture("right");
-        maleHoeDown = textureManager.getTexture("down");
-        maleHoeUp = textureManager.getTexture("up");
-        maleHoeRight = textureManager.getTexture("right");
-        maleHoeLeft = textureManager.getTexture("left");
-        maleScytheDown = textureManager.getTexture("down");
-        maleScytheLeft = textureManager.getTexture("left");
-        maleScytheRight = textureManager.getTexture("right");
-        maleScytheUp = textureManager.getTexture("up");
-        malePlanting = textureManager.getTexture("plant");
+        maleHoeIdle1Texture = textureManager.getTexture("male_hoe_idle1");
+        maleHoeIdle2Texture = textureManager.getTexture("male_hoe_idle2");
+        maleScytheIdle1Texture = textureManager.getTexture("male_scyhte_idle1"); // Note the typo fix from your list
+        maleScytheIdle2Texture = textureManager.getTexture("male_scyhte_idle2"); // Note the typo fix from your list
+        maleWatercanIdle1Texture = textureManager.getTexture("male_watercan_idle1");
+        maleWatercanIdle2Texture = textureManager.getTexture("male_watercan_idle2");
+        malePlantingIdleTexture = textureManager.getTexture("male_planting_idle");
 
-        femaleWateringDown = textureManager.getTexture("down");
-        femaleWateringUp = textureManager.getTexture("up");
-        femaleWateringLeft = textureManager.getTexture("left");
-        femaleWateringRight = textureManager.getTexture("right");
-        femaleHoeDown = textureManager.getTexture("down");
-        femaleHoeUp = textureManager.getTexture("up");
-        femaleHoeRight = textureManager.getTexture("right");
-        femaleHoeLeft = textureManager.getTexture("left");
-        femaleScytheDown = textureManager.getTexture("down");
-        femaleScytheLeft = textureManager.getTexture("left");
-        femaleScytheRight = textureManager.getTexture("right");
-        femaleScytheUp = textureManager.getTexture("up");
-        femalePlanting = textureManager.getTexture("plant");
+        femaleHoeIdle1Texture = textureManager.getTexture("male_hoe_idle1");
+        femaleHoeIdle2Texture = textureManager.getTexture("male_hoe_idle2");
+        femaleScytheIdle1Texture = textureManager.getTexture("male_scyhte_idle1");
+        femaleScytheIdle2Texture = textureManager.getTexture("male_scyhte_idle2");
+        femaleWatercanIdle1Texture = textureManager.getTexture("male_watercan_idle1");
+        femaleWatercanIdle2Texture = textureManager.getTexture("male_watercan_idle2");
+        femalePlantingIdleTexture = textureManager.getTexture("male_planting_idle");
 
         femaleIdleTexture = new Texture("content/Cut/player/female_idle.png");
         femaleDown1Texture = new Texture("content/Cut/player/female_down1.png");
@@ -938,7 +926,15 @@ public class GDXGameScreen implements Screen {
         }
     }
 
+    // In main/GDXviews/GDXGameScreen.java
+
     private void handleInput(float delta) {
+        // --- ADD isFishingMinigameActive HERE ---
+        if (isFishingMinigameActive) {
+            // The updateFishingMinigame method will handle input during the game
+            return;
+        }
+
         if (actionTimer > 0) {
             return;
         }
@@ -1107,39 +1103,55 @@ public class GDXGameScreen implements Screen {
             }
         }
 
+        // --- MODIFIED ENTER KEY LOGIC ---
         if (Gdx.input.isKeyJustPressed(Input.Keys.ENTER)) {
             if (controller != null && game.getCurrentPlayer() != null) {
-                Tool currentTool = game.getCurrentPlayer().getCurrentTool(); // Get the current tool
+                Tool currentTool = game.getCurrentPlayer().getCurrentTool();
                 String message;
+
                 if (currentTool == null) {
                     message = "No tool equipped!";
                     generalMessageLabel.setColor(Color.YELLOW);
                 } else {
-                    Result result;
-                    if (targetTileX >= 0 && targetTileX < MAP_WIDTH && targetTileY >= 0 && targetTileY < MAP_HEIGHT) {
-                        Tile targetTile = gameMap.getTiles()[targetTileX][targetTileY];
-                        result = controller.useTool(targetTile);
+                    // Check for Fishing Rod first
+                    if (currentTool.getToolType().name().contains("Rod")) {
+                        Result result = controller.fishing(currentTool.getName());
+                        message = result.Message();
+                        generalMessageLabel.setColor(Color.CYAN);
                         if (result.isSuccessful()) {
-                            String toolName = currentTool.getToolType().name().toLowerCase();
-                            if (toolName.contains("watering_can")) {
-                                startActionAnimation(PlayerActionState.WATERING);
-                            } else if (toolName.contains("hoe")) {
-                                startActionAnimation(PlayerActionState.TILLING);
-                            } else if (toolName.contains("scythe")) {
-                                startActionAnimation(PlayerActionState.HARVESTING);
-                            }
+                            startFishingMinigame(); // Activate the minigame UI
                         }
-                    } else {
-                        result = new Result(false, "Target is outside the map.");
                     }
-                    message = result.Message();
-                    generalMessageLabel.setColor(Color.WHITE);
+                    // Handle all other tools
+                    else {
+                        Result result;
+                        if (targetTileX >= 0 && targetTileX < MAP_WIDTH && targetTileY >= 0 && targetTileY < MAP_HEIGHT) {
+                            Tile targetTile = gameMap.getTiles()[targetTileX][targetTileY];
+                            result = controller.useTool(targetTile);
+                            if (result.isSuccessful()) {
+                                String toolName = currentTool.getToolType().name().toLowerCase();
+                                if (toolName.contains("watering_can")) {
+                                    startActionAnimation(PlayerActionState.WATERING);
+                                } else if (toolName.contains("hoe")) {
+                                    startActionAnimation(PlayerActionState.TILLING);
+                                } else if (toolName.contains("scythe")) {
+                                    startActionAnimation(PlayerActionState.HARVESTING);
+                                }
+                            }
+                        } else {
+                            result = new Result(false, "Target is outside the map.");
+                        }
+                        message = result.Message();
+                        generalMessageLabel.setColor(Color.WHITE);
+                    }
                 }
                 generalMessageLabel.setText(message);
                 generalMessageLabel.setVisible(true);
                 generalMessageTimer = GENERAL_MESSAGE_DURATION;
             }
         }
+        // --- END MODIFIED ENTER KEY LOGIC ---
+
 
         handleMinimapToggle();
         handleTurnSwitching();
@@ -1198,7 +1210,6 @@ public class GDXGameScreen implements Screen {
             controller.cheatSetEnergy(200);
         }
     }
-
 
     private void handlePlayerMovement(float delta) {
         Player currentPlayer = game.getCurrentPlayer();
@@ -1831,9 +1842,7 @@ public class GDXGameScreen implements Screen {
                 if(player.getEnergy() > 0) player.setFainted(false);
             }
 
-
-            // --- Draw Equipped Tool (Always After Player) ---
-            if (player.equals(game.getCurrentPlayer()) && player.getCurrentTool() != null) {
+            if (player.equals(game.getCurrentPlayer()) && player.getCurrentTool() != null && actionTimer <= 0) {
                 Tool currentTool = player.getCurrentTool();
                 String key = generateTextureKey(currentTool);
                 Texture toolTexture = textureManager.getTexture(key);
@@ -1858,60 +1867,60 @@ public class GDXGameScreen implements Screen {
         }
     }
 
-    private Texture getPlayerTexture(Player player) {
-        boolean isMale = player.getGender().name().equals("Male");
-        Player currentPlayer = game.getCurrentPlayer();
+        private Texture getPlayerTexture(Player player) {
+            boolean isMale = player.getGender().name().equals("Male");
+            Player currentPlayer = game.getCurrentPlayer();
 
-        // --- Action Animation Logic ---
-        if (player.equals(currentPlayer) && playerActionState != PlayerActionState.IDLE && playerActionState != PlayerActionState.WALKING) {
-            switch (playerActionState) {
-                case WATERING:
-                    switch (playerDirection) {
-                        case UP: case UP_LEFT: case UP_RIGHT: return isMale ? maleWateringUp : femaleWateringUp;
-                        case LEFT: return isMale ? maleWateringLeft : femaleWateringLeft;
-                        case RIGHT: return isMale ? maleWateringRight : femaleWateringRight;
-                        default: return isMale ? maleWateringDown : femaleWateringDown;
-                    }
-                case TILLING:
-                    switch (playerDirection) {
-                        case UP: case UP_LEFT: case UP_RIGHT: return isMale ? maleHoeUp : femaleHoeUp;
-                        case LEFT: return isMale ? maleHoeLeft : femaleHoeLeft;
-                        case RIGHT: return isMale ? maleHoeRight : femaleHoeRight;
-                        default: return isMale ? maleHoeDown : femaleHoeDown;
-                    }
-                case HARVESTING:
-                    switch (playerDirection) {
-                        case UP: case UP_LEFT: case UP_RIGHT: return isMale ? maleScytheUp : femaleScytheUp;
-                        case LEFT: return isMale ? maleScytheLeft : femaleScytheLeft;
-                        case RIGHT: return isMale ? maleScytheRight : femaleScytheRight;
-                        default: return isMale ? maleScytheDown : femaleScytheDown;
-                    }
-                case PLANTING:
-                    // Planting is often direction-agnostic, but you could add directions if you want
-                    return isMale ? malePlanting : femalePlanting;
+            // --- Action Animation Logic ---
+            if (player.equals(currentPlayer) && playerActionState != PlayerActionState.IDLE && playerActionState != PlayerActionState.WALKING) {
+                switch (playerActionState) {
+                    case WATERING:
+                        switch (playerDirection) {
+                            case UP: case UP_LEFT: case UP_RIGHT: return isMale ? maleWatercanIdle2Texture : femaleWatercanIdle1Texture;
+                            case LEFT: return isMale ? maleWatercanIdle2Texture : femaleWatercanIdle1Texture;
+                            case RIGHT: return isMale ? maleWatercanIdle2Texture : femaleWatercanIdle1Texture;
+                            default: return isMale ? maleWatercanIdle2Texture : femaleWatercanIdle1Texture;
+                        }
+                    case TILLING:
+                        switch (playerDirection) {
+                            case UP: case UP_LEFT: case UP_RIGHT: return isMale ? maleHoeIdle2Texture : femaleHoeIdle2Texture;
+                            case LEFT: return isMale ? maleHoeIdle2Texture : femaleHoeIdle2Texture;
+                            case RIGHT: return isMale ? maleHoeIdle2Texture : femaleHoeIdle2Texture;
+                            default: return isMale ? maleHoeIdle2Texture : femaleHoeIdle2Texture;
+                        }
+                    case HARVESTING:
+                        switch (playerDirection) {
+                            case UP: case UP_LEFT: case UP_RIGHT: return isMale ? maleScytheIdle2Texture : femaleScytheIdle2Texture;
+                            case LEFT: return isMale ? maleScytheIdle2Texture : femaleScytheIdle2Texture;
+                            case RIGHT: return isMale ? maleScytheIdle2Texture : femaleScytheIdle2Texture;
+                            default: return isMale ? maleScytheIdle2Texture : femaleScytheIdle2Texture;
+                        }
+                    case PLANTING:
+                        // Planting is often direction-agnostic, but you could add directions if you want
+                        return isMale ? malePlantingIdleTexture : femalePlantingIdleTexture;
+                }
+            }
+
+            // --- Original Idle/Walking Logic ---
+            if (!player.equals(currentPlayer) || !playerMoving) {
+                return isMale ? maleIdleTexture : femaleIdleTexture;
+            }
+
+            int animFrame = ((int) (playerAnimationTime / ANIMATION_SPEED)) % 2;
+
+            switch (playerDirection) {
+                case DOWN: case DOWN_LEFT: case DOWN_RIGHT:
+                    return isMale ? (animFrame == 0 ? maleDown1Texture : maleDown2Texture) : (animFrame == 0 ? femaleDown1Texture : femaleDown2Texture);
+                case UP: case UP_LEFT: case UP_RIGHT:
+                    return isMale ? (animFrame == 0 ? maleUp1Texture : maleUp2Texture) : (animFrame == 0 ? femaleUp1Texture : femaleUp2Texture);
+                case LEFT:
+                    return isMale ? (animFrame == 0 ? maleLeft1Texture : maleLeft2Texture) : (animFrame == 0 ? femaleLeft1Texture : femaleLeft2Texture);
+                case RIGHT:
+                    return isMale ? (animFrame == 0 ? maleRight1Texture : maleRight2Texture) : (animFrame == 0 ? femaleRight1Texture : femaleRight2Texture);
+                default:
+                    return isMale ? maleIdleTexture : femaleIdleTexture;
             }
         }
-
-        // --- Original Idle/Walking Logic ---
-        if (!player.equals(currentPlayer) || !playerMoving) {
-            return isMale ? maleIdleTexture : femaleIdleTexture;
-        }
-
-        int animFrame = ((int) (playerAnimationTime / ANIMATION_SPEED)) % 2;
-
-        switch (playerDirection) {
-            case DOWN: case DOWN_LEFT: case DOWN_RIGHT:
-                return isMale ? (animFrame == 0 ? maleDown1Texture : maleDown2Texture) : (animFrame == 0 ? femaleDown1Texture : femaleDown2Texture);
-            case UP: case UP_LEFT: case UP_RIGHT:
-                return isMale ? (animFrame == 0 ? maleUp1Texture : maleUp2Texture) : (animFrame == 0 ? femaleUp1Texture : femaleUp2Texture);
-            case LEFT:
-                return isMale ? (animFrame == 0 ? maleLeft1Texture : maleLeft2Texture) : (animFrame == 0 ? femaleLeft1Texture : femaleLeft2Texture);
-            case RIGHT:
-                return isMale ? (animFrame == 0 ? maleRight1Texture : maleRight2Texture) : (animFrame == 0 ? femaleRight1Texture : femaleRight2Texture);
-            default:
-                return isMale ? maleIdleTexture : femaleIdleTexture;
-        }
-    }
 
     private void renderNPCs() {
         ArrayList<NPC> npcs = game.getNPCs();
@@ -4471,7 +4480,107 @@ public class GDXGameScreen implements Screen {
         batch.setColor(1, 1, 1, 1);
     }
 
-// --- END: NEW METHODS ---
+    private void startFishingMinigame() {
+        if (controller.getActiveMinigame() == null) return;
+        isFishingMinigameActive = true;
+        Gdx.input.setInputProcessor(fishingStage); // Take exclusive control of input
+    }
+
+    private void endFishingMinigame(boolean success) {
+        isFishingMinigameActive = false;
+        Gdx.input.setInputProcessor(multiplexer); // Return control
+
+        FishingMinigame minigame = controller.getActiveMinigame();
+        if (minigame == null) return;
+
+        if (success) {
+            Fish caughtFish = new Fish(minigame.getFish(), 1);
+            // Apply perfect catch bonus
+            if (minigame.isPerfect()) {
+                generalMessageLabel.setText("Perfect Catch! " + caughtFish.getName());
+                // Logic to upgrade quality can be added here
+            } else {
+                generalMessageLabel.setText("You caught a " + caughtFish.getName() + "!");
+            }
+            game.getCurrentPlayer().getInventory().addItem(caughtFish);
+            game.getCurrentPlayer().catchFish();
+        } else {
+            generalMessageLabel.setText("The fish got away...");
+        }
+
+        generalMessageLabel.setVisible(true);
+        generalMessageTimer = GENERAL_MESSAGE_DURATION;
+    }
+
+    private void updateFishingMinigame(float delta) {
+        if (!isFishingMinigameActive) return;
+
+        FishingMinigame minigame = controller.getActiveMinigame();
+        if (minigame == null) {
+            endFishingMinigame(false);
+            return;
+        }
+
+        // Handle input for the minigame
+        boolean holdingUp = Gdx.input.isKeyPressed(Input.Keys.UP) || Gdx.input.isKeyPressed(Input.Keys.W);
+        boolean holdingDown = Gdx.input.isKeyPressed(Input.Keys.DOWN) || Gdx.input.isKeyPressed(Input.Keys.S);
+        if (Gdx.input.isKeyJustPressed(Input.Keys.Q)) {
+            endFishingMinigame(false);
+            return;
+        }
+
+        minigame.update(delta, holdingUp, holdingDown);
+
+        // Check for win/loss conditions
+        if (minigame.getCaptureProgress() >= 1.0f) {
+            endFishingMinigame(true);
+        } else if (minigame.getCaptureProgress() <= 0f) {
+            endFishingMinigame(false);
+        }
+    }
+
+    private void renderFishingMinigame() {
+        if (!isFishingMinigameActive) return;
+
+        FishingMinigame minigame = controller.getActiveMinigame();
+        if (minigame == null) return;
+
+        float screenWidth = Gdx.graphics.getWidth();
+        float screenHeight = Gdx.graphics.getHeight();
+
+        // All drawing happens on the HUD camera
+        spriteBatch.setProjectionMatrix(hudCamera.combined);
+        spriteBatch.begin();
+
+        // Main vertical bar
+        float barWidth = 64;
+        float barHeight = screenHeight * 0.7f;
+        float barX = (screenWidth - barWidth) / 2f;
+        float barY = (screenHeight - barHeight) / 2f;
+        spriteBatch.draw(fishingBarBg, barX, barY, barWidth, barHeight);
+
+        // Player's green bar
+        float playerBarHeight = barHeight * minigame.getPlayerBarSize();
+        float playerBarY = barY + (barHeight - playerBarHeight) * minigame.getPlayerBarPosition();
+        spriteBatch.draw(playerBarTexture, barX, playerBarY, barWidth, playerBarHeight);
+
+        // Fish Icon
+        float fishY = barY + (barHeight - fishIconTexture.getHeight()) * minigame.getFishPosition();
+        spriteBatch.draw(fishIconTexture, barX + (barWidth - fishIconTexture.getWidth()) / 2f, fishY);
+
+        // Legendary Crown
+        if (minigame.getFish().getType().equals("Legendary")) {
+            spriteBatch.draw(legendaryCrownTexture, barX + (barWidth - legendaryCrownTexture.getWidth()) / 2f, fishY + fishIconTexture.getHeight() - 10);
+        }
+
+        // Capture Progress Bar
+        float progressX = barX + barWidth + 20;
+        float progressY = barY;
+        spriteBatch.draw(progressBarBg, progressX, progressY, progressBarBg.getWidth(), barHeight);
+        spriteBatch.draw(progressBarFill, progressX, progressY, progressBarBg.getWidth(), barHeight * minigame.getCaptureProgress());
+
+        spriteBatch.end();
+    }
 
     @Override
     public void resize(int width, int height) {
