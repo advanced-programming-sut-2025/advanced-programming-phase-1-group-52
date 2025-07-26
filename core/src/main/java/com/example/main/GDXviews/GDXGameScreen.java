@@ -683,6 +683,7 @@ public class GDXGameScreen implements Screen {
         spriteBatch.setProjectionMatrix(camera.combined);
         spriteBatch.begin();
         renderMap();
+        renderGiantCrops();
         renderAnimals();
         renderMachinePlacement(spriteBatch);
         spriteBatch.end();
@@ -2614,6 +2615,9 @@ public class GDXGameScreen implements Screen {
         }
 
         if (tile.getPlant() != null && tile.getPlant() instanceof Crop) {
+            if (tile.isPartOfGiantCrop()) {
+                return;
+            }
             Crop crop = (Crop) tile.getPlant();
             ItemType itemType = crop.getCropType();
             if (itemType instanceof CropType) {
@@ -4871,6 +4875,30 @@ public class GDXGameScreen implements Screen {
 
         journalStack.add(contentTable);
         menuContentTable.add(journalStack).width(Gdx.graphics.getWidth() * 0.8f).height(Gdx.graphics.getHeight() * 0.8f);
+    }
+
+    private void renderGiantCrops() {
+        Tile[][] tiles = gameMap.getTiles();
+        for (int x = 0; x < MAP_WIDTH; x++) {
+            for (int y = 0; y < MAP_HEIGHT; y++) {
+                Tile tile = tiles[x][y];
+
+                if (tile != null && tile.isPartOfGiantCrop() && tile.getGiantCropRootX() == x && tile.getGiantCropRootY() == y) {
+                    Crop crop = (Crop) tile.getPlant();
+                    CropType cropType = (CropType) crop.getCropType();
+                    int finalStage = cropType.getStages().size();
+                    String textureKey = cropType.getEnumName() + "_Stage_" + finalStage;
+                    Texture cropTexture = textureManager.getTexture(textureKey);
+                    // --- END OF NEW LOGIC ---
+
+                    if (cropTexture != null) {
+                        float worldX = x * TILE_SIZE;
+                        float worldY = (MAP_HEIGHT - 1 - y) * TILE_SIZE;
+                        spriteBatch.draw(cropTexture, worldX, worldY - TILE_SIZE, TILE_SIZE * 2, TILE_SIZE * 2);
+                    }
+                }
+            }
+        }
     }
 
     @Override

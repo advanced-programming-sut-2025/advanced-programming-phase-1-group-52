@@ -2611,11 +2611,43 @@ public class GameMenuController {
         return new Result(true, "You are now in store menu!");
     }
 
+    // In useTool(Tile targetTile)
     public Result useTool(Tile targetTile) {
         Player player = game.getCurrentPlayer();
         if (targetTile == null) {
             return new Result(false, "Invalid target tile.");
         }
+
+        Tool currentTool = player.getCurrentTool();
+        if (currentTool != null && currentTool.getToolType().name().contains("Axe") && targetTile.isPartOfGiantCrop()) {
+            if (player.getInventory().isFull()) {
+                return new Result(false, "Your inventory is full.");
+            }
+
+            int rootX = targetTile.getGiantCropRootX();
+            int rootY = targetTile.getGiantCropRootY();
+            Tile rootTile = game.getMap().getTile(rootX, rootY);
+            Crop crop = (Crop) rootTile.getPlant();
+            CropType cropType = (CropType) crop.getCropType();
+
+            // Give a larger, random yield (e.g., 15-21)
+            int yield = 15 + new Random().nextInt(7);
+            player.getInventory().addItem(new Crop(cropType, yield));
+
+            // Clear all four tiles that made up the giant crop
+            for (int i = 0; i < 2; i++) {
+                for (int j = 0; j < 2; j++) {
+                    Tile partOfCrop = game.getMap().getTile(rootX + i, rootY + j);
+                    partOfCrop.resetGiantCropStatus();
+                    partOfCrop.setPlant(null);
+                    partOfCrop.setType(TileType.Shoveled);
+                }
+            }
+
+            player.addSkillExperience(Skills.Farming, 50);
+            return new Result(true, "You harvested a giant " + cropType.getName() + " and got " + yield + "!");
+        }
+
         return player.handleToolUse(targetTile);
     }
 
