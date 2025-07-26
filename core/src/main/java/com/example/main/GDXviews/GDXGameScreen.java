@@ -538,6 +538,8 @@ public class GDXGameScreen implements Screen {
 
     // Add this field to track unread messages
     private Map<String, Boolean> unreadTalkNotifications = new HashMap<>();
+    // Add this for gift notifications
+    private Map<String, Boolean> unreadGiftNotifications = new HashMap<>();
     
     // Gift menu variables
     private Table giftMenuTable;
@@ -1168,8 +1170,9 @@ public class GDXGameScreen implements Screen {
         if (Gdx.input.isKeyJustPressed(Input.Keys.F)) {
             showFriendsMenu = !showFriendsMenu;
             if (showFriendsMenu) {
-                // Check for new messages when opening friends menu
+                // Check for new messages and gifts when opening friends menu
                 checkForNewMessages();
+                checkForNewGifts();
                 createFriendsMenuUI();
                 Gdx.input.setInputProcessor(stage);
             } else {
@@ -5885,15 +5888,24 @@ public class GDXGameScreen implements Screen {
         // Show error message if any
         if (!friendshipResultMessage.isEmpty()) {
             Label resultLabel = new Label(friendshipResultMessage, skin);
-            resultLabel.setFontScale(1.2f);
             resultLabel.setColor(friendshipResultSuccess ? Color.GREEN : Color.RED);
             friendsMenuTable.add(resultLabel).colspan(2).pad(10).fillX().center().row();
         }
 
-        // Action buttons
+        // Action buttons with notification tags
+        String talkButtonText = "Talk";
+        if (Boolean.TRUE.equals(unreadTalkNotifications.get(selectedPlayerForActions))) {
+            talkButtonText += " [NEW]";
+        }
+        TextButton talkButton = new TextButton(talkButtonText, skin);
+
+        String giftButtonText = "Gift";
+        if (Boolean.TRUE.equals(unreadGiftNotifications.get(selectedPlayerForActions))) {
+            giftButtonText += " [NEW]";
+        }
+        TextButton giftButton = new TextButton(giftButtonText, skin);
+
         TextButton friendshipButton = new TextButton("Friendship", skin);
-        TextButton talkButton = new TextButton("Talk", skin);
-        TextButton giftButton = new TextButton("Gift", skin);
         TextButton hugButton = new TextButton("Hug", skin);
         TextButton flowerButton = new TextButton("Flower", skin);
         TextButton marriageButton = new TextButton("Marriage", skin);
@@ -5923,6 +5935,8 @@ public class GDXGameScreen implements Screen {
             @Override
             public void clicked(InputEvent event, float x, float y) {
                 currentFriendsMenuState = FriendsMenuState.GIFT_MENU;
+                // Mark gifts as read when opening gift menu
+                unreadGiftNotifications.put(selectedPlayerForActions, false);
                 createFriendsMenuUI();
             }
         });
@@ -6308,6 +6322,48 @@ public class GDXGameScreen implements Screen {
             }
         }
     }
+    
+    private void checkForNewGifts() {
+        Player currentPlayer = game.getCurrentPlayer();
+        if (currentPlayer == null) return;
+        for (User user : game.getPlayers()) {
+            Player player = user.getPlayer();
+            if (player != null && !player.equals(currentPlayer)) {
+                Result result = controller.showGiftHistoryWith(player.getUsername());
+                String giftsText = result.Message();
+                
+                if (!giftsText.contains("No conversation history") && !giftsText.trim().isEmpty()) {
+                    String[] giftBlocks = giftsText.split("------------------------");
+                    if (giftBlocks.length > 0) {
+                        String lastGiftBlock = giftBlocks[giftBlocks.length - 1].trim();
+                        if (!lastGiftBlock.isEmpty()) {
+                            // Check if the last gift is from the other player to current player
+                            String[] lines = lastGiftBlock.split("\n");
+                            for (String line : lines) {
+                                if (line.startsWith("Gift from ")) {
+                                    String senderName = line.substring(10).split(":")[0].trim();
+                                    if (senderName.equals(player.getUsername())) {
+                                        // Check if this gift is unrated (Rate: 0)
+                                        boolean hasUnratedGift = false;
+                                        for (String giftLine : lines) {
+                                            if (giftLine.trim().equals("Rate: 0")) {
+                                                hasUnratedGift = true;
+                                                break;
+                                            }
+                                        }
+                                        if (hasUnratedGift) {
+                                            unreadGiftNotifications.put(player.getUsername(), true);
+                                        }
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
 
     private void sendChatMessage() {
         String message = chatMessageField.getText().trim();
@@ -6422,33 +6478,21 @@ public class GDXGameScreen implements Screen {
             noGiftsLabel.setColor(Color.GRAY);
             receivedGiftsTable.add(noGiftsLabel).row();
         } else {
-            // Parse and display gifts
-            String[] lines = giftsText.split("\n");
-            String currentGiftId = null;
-            String currentGiftInfo = "";
-            
-            for (String line : lines) {
-                if (line.trim().isEmpty()) continue;
-                
-                if (line.startsWith("Gift from")) {
-                    // Save previous gift if exists
-                    if (currentGiftId != null && !currentGiftInfo.isEmpty()) {
-                        addGiftToTable(currentGiftInfo, currentGiftId);
+            // Split gifts by separator
+            String[] giftBlocks = giftsText.split("------------------------");
+            for (String block : giftBlocks) {
+                String trimmed = block.trim();
+                if (!trimmed.isEmpty()) {
+                    // Extract gift ID
+                    String giftId = null;
+                    for (String line : trimmed.split("\n")) {
+                        if (line.startsWith("ID:")) {
+                            giftId = line.substring(3).trim();
+                            break;
+                        }
                     }
-                    // Start new gift
-                    currentGiftInfo = line;
-                    currentGiftId = null;
-                } else if (line.startsWith("ID:")) {
-                    currentGiftId = line.substring(3).trim();
-                    currentGiftInfo += "\n" + line;
-                } else {
-                    currentGiftInfo += "\n" + line;
+                    addGiftToTable(trimmed, giftId);
                 }
-            }
-            
-            // Add the last gift
-            if (currentGiftId != null && !currentGiftInfo.isEmpty()) {
-                addGiftToTable(currentGiftInfo, currentGiftId);
             }
         }
         
@@ -6479,25 +6523,29 @@ public class GDXGameScreen implements Screen {
         giftLabel.setAlignment(Align.left);
         
         // Check if gift is rated (rate = 0 means not rated)
-        if (giftInfo.contains("Rate: 0")) {
-            // Create rating input field and button
-            Table giftTable = new Table();
-            giftTable.defaults().expandX().fillX().pad(2);
-            
-            giftTable.add(giftLabel).row();
-            
-            // Rating input field
-            giftRatingField = new TextField("", skin);
-            giftRatingField.setMessageText("Enter rating (1-5)");
-            giftRatingField.setMaxLength(1);
-            
-            // Rate button
+        boolean unrated = false;
+        for (String line : giftInfo.split("\n")) {
+            if (line.trim().equals("Rate: 0")) {
+                unrated = true;
+                break;
+            }
+        }
+        
+        Table giftTable = new Table();
+        giftTable.defaults().expandX().fillX().pad(2);
+        giftTable.add(giftLabel).row();
+        
+        if (unrated) {
+            // Unique rating field and button for each gift
+            final TextField ratingField = new TextField("", skin);
+            ratingField.setMessageText("Enter rating (1-5)");
+            ratingField.setMaxLength(1);
             TextButton rateButton = new TextButton("Rate Gift", skin);
             final String finalGiftId = giftId;
             rateButton.addListener(new ClickListener() {
                 @Override
                 public void clicked(InputEvent event, float x, float y) {
-                    String rating = giftRatingField.getText().trim();
+                    String rating = ratingField.getText().trim();
                     if (!rating.isEmpty()) {
                         Result result = controller.rateGift(finalGiftId, rating);
                         if (result.isSuccessful()) {
@@ -6513,15 +6561,10 @@ public class GDXGameScreen implements Screen {
                     }
                 }
             });
-            
-            giftTable.add(giftRatingField).size(150, 30).pad(5);
+            giftTable.add(ratingField).size(150, 30).pad(5);
             giftTable.add(rateButton).size(100, 30).pad(5).row();
-            
-            receivedGiftsTable.add(giftTable).row();
-        } else {
-            // Gift is already rated, just show info
-            receivedGiftsTable.add(giftLabel).row();
         }
+        receivedGiftsTable.add(giftTable).padBottom(10).row();
     }
 
     private void createGiftHistoryMenu() {

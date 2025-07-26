@@ -47,6 +47,6 @@ public class Gift {
     public String toString() {
         return "Gift from " + sender.getUsername() + ":\n" + "Item: " + 
         item.getName() + "\n" + "Amount: " + amount + "\n" + "Rate: " + 
-        rate + "\nID: " + id;
+        rate + "\nID: " + id + "\n------------------------\n";
     }
 }
