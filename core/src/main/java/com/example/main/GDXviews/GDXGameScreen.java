@@ -251,6 +251,7 @@ public class GDXGameScreen implements Screen {
     private Stage fishingStage;
     private Texture fishingBarBg, playerBarTexture, fishIconTexture, legendaryCrownTexture;
     private Texture progressBarBg, progressBarFill;
+    private boolean isTrashModeActive = false;
 
     private Texture ground1Texture;
     private Texture ground2Texture;
@@ -3617,20 +3618,32 @@ public class GDXGameScreen implements Screen {
     private void showInventoryDisplay(boolean showOnlyPlantables) {
         menuContentTable.clear();
         Table itemsTable = new Table();
-        updateInventoryGrid(itemsTable, showOnlyPlantables); // Pass the filter flag
+        updateInventoryGrid(itemsTable, showOnlyPlantables);
 
-        ScrollPane.ScrollPaneStyle scrollPaneStyle = new ScrollPane.ScrollPaneStyle();
-        scrollPaneStyle.background = new TextureRegionDrawable(new TextureRegion(inventoryBackground));
-        ScrollPane scrollPane = new ScrollPane(itemsTable, scrollPaneStyle);
+        ScrollPane scrollPane = new ScrollPane(itemsTable, skin); // Simplified this line
         scrollPane.setFadeScrollBars(false);
-        scrollPane.setScrollingDisabled(true, false);
 
         menuContentTable.add(scrollPane).expand().fill().pad(20).row();
-
-        // In planting mode, don't show the regular back button
-        if (!isPlantingMode) {
-            addBackButtonToMenu();
+        TextButton trashButton = new TextButton("Trash Item", skin);
+        if (isTrashModeActive) {
+            trashButton.setText("Cancel Trash");
+            trashButton.setColor(Color.RED);
+        } else {
+            trashButton.setColor(Color.WHITE);
         }
+
+        trashButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                isTrashModeActive = !isTrashModeActive; // Toggle trash mode
+                showInventoryDisplay(false); // Refresh the inventory view
+            }
+        });
+
+        Table bottomButtons = new Table();
+        bottomButtons.add(trashButton).pad(10);
+        addBackButtonToMenu(bottomButtons); // Pass the table to add the back button
+        menuContentTable.add(bottomButtons).bottom().left();
     }
 
     private void showSkillsDisplay() {
@@ -3686,7 +3699,9 @@ public class GDXGameScreen implements Screen {
         }
 
         menuContentTable.add(skillsTable).expand().center().row();
-        addBackButtonToMenu();
+        Table bottomButtonTable = new Table();
+        addBackButtonToMenu(bottomButtonTable);
+        menuContentTable.add(bottomButtonTable).bottom().left();
     }
 
     private void showSocialDisplay() {
@@ -3713,7 +3728,9 @@ public class GDXGameScreen implements Screen {
 
         socialStack.add(contentTable);
         menuContentTable.add(socialStack).width(Gdx.graphics.getWidth() * 0.8f).height(Gdx.graphics.getHeight() * 0.8f);
-        addBackButtonToMenu();
+        Table bottomButtonTable = new Table();
+        addBackButtonToMenu(bottomButtonTable);
+        menuContentTable.add(bottomButtonTable).bottom().left();
     }
 
     private void showSettingsMenu() {
@@ -3739,18 +3756,22 @@ public class GDXGameScreen implements Screen {
 
         menuContentTable.add(leaveGameButton).width(200).pad(10).row();
         menuContentTable.add(kickPlayerButton).width(200).pad(10).row();
-        addBackButtonToMenu();
+        Table bottomButtonTable = new Table();
+        addBackButtonToMenu(bottomButtonTable);
+        menuContentTable.add(bottomButtonTable).bottom().left();
     }
 
-    private void addBackButtonToMenu() {
+    private void addBackButtonToMenu(Table buttonTable) {
         TextButton backButton = new TextButton("Back", skin);
         backButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
+                isTrashModeActive = false; // Ensure trash mode is off when going back
                 showMainMenuButtons();
             }
         });
-        menuContentTable.add(backButton).pad(10).bottom().left();
+        // Add the back button to the provided table
+        buttonTable.add(backButton).pad(10);
     }
 
     private void updateInventoryGrid(Table table, boolean showOnlyPlantables) {
@@ -3805,6 +3826,15 @@ public class GDXGameScreen implements Screen {
                 generalMessageLabel.setVisible(true);
                 generalMessageTimer = GENERAL_MESSAGE_DURATION;
                 }});
+            }
+            else if (isTrashModeActive) {
+                itemSlot.addListener(new ClickListener() {
+                    @Override
+                    public void clicked(InputEvent event, float x, float y) {
+                        // Show a confirmation dialog before deleting
+                        showTrashConfirmationDialog(item);
+                    }
+                });
             }
 
             table.add(itemSlot).pad(8);
@@ -5961,7 +5991,22 @@ public class GDXGameScreen implements Screen {
         }
         dialog.button(fridgeButton, "refrigerator");
 
-        dialog.show(cookingStage); // Show the dialog on the cooking stage
+        dialog.show(cookingStage);
     }
 
+    private void showTrashConfirmationDialog(Item item) {
+        new Dialog("Confirm Deletion", skin, "dialog") {
+            protected void result(Object object) {
+                if (Boolean.TRUE.equals(object)) {
+                    controller.removeItemFromInventory(item.getName(), item.getNumber());
+                    showInventoryDisplay(false);
+                }
+            }
+        }.text("Are you sure you want to permanently delete all " + item.getNumber() + "x " + item.getName() + "?")
+            .button("Yes, Delete", true)
+            .button("No, Cancel", false)
+            .key(Input.Keys.ENTER, true)
+            .key(Input.Keys.ESCAPE, false)
+            .show(inventoryStage);
+    }
 }
