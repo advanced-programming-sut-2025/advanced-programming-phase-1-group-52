@@ -20,6 +20,9 @@ public class Tile {
     private Item item = null;
     private Shop shop = null;
     private PlacedMachine placedMachine = null;
+    private boolean isPartOfGiantCrop = false;
+    private int giantCropRootX = -1;
+    private int giantCropRootY = -1;
 
     public Tile(int x, int y, TileType tileType, Player owner) {
         this.x = x;
@@ -95,4 +98,35 @@ public class Tile {
     public void setPlacedMachine(PlacedMachine placedMachine) {
         this.placedMachine = placedMachine;
     }
+
+    public boolean isPartOfGiantCrop() {
+        return isPartOfGiantCrop;
+    }
+
+    public void setPartOfGiantCrop(boolean partOfGiantCrop) {
+        isPartOfGiantCrop = partOfGiantCrop;
+    }
+
+    public int getGiantCropRootX() {
+        return giantCropRootX;
+    }
+
+    public void setGiantCropRootX(int giantCropRootX) {
+        this.giantCropRootX = giantCropRootX;
+    }
+
+    public int getGiantCropRootY() {
+        return giantCropRootY;
+    }
+
+    public void setGiantCropRootY(int giantCropRootY) {
+        this.giantCropRootY = giantCropRootY;
+    }
+
+    public void resetGiantCropStatus() {
+        this.isPartOfGiantCrop = false;
+        this.giantCropRootX = -1;
+        this.giantCropRootY = -1;
+    }
+
 }

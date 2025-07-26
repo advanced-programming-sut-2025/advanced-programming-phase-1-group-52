@@ -11,6 +11,7 @@ import com.example.main.enums.design.TileType;
 import com.example.main.enums.design.Weather;
 import com.example.main.enums.items.CropType;
 import com.example.main.enums.items.Growable;
+import com.example.main.enums.items.ItemType;
 import com.example.main.models.building.Housing;
 import com.example.main.models.item.Crop;
 import com.example.main.models.item.Fruit;
@@ -100,6 +101,7 @@ public class Game {
             map.regenerateQuarries();
         }
         updateTreesAndPlants();
+        checkForGiantCrops();
         resetHarvestFlags();
         checkForLightning();
         crowsAttack();
@@ -419,6 +421,8 @@ public class Game {
         }
     }
 
+    // In main/models/Game.java
+
     public void updateTreesAndPlants() {
         if (map == null) return;
 
@@ -427,83 +431,89 @@ public class Game {
                 Tile tile = map.getTile(i, j);
                 if (tile.getPlant() != null) {
                     Growable plant = tile.getPlant();
-                    boolean wasWatered = plant.isWateredToday();
 
-                    // --- Logic for removing dead plants ---
-                    if (!wasWatered) {
-                        if (plant instanceof Fruit fruit) {
+                    // --- Handle Crops (Both Farm and Wild Forageables) ---
+                    if (plant instanceof Crop crop) {
+                        ItemType type = crop.getCropType();
+
+                        // THIS IS THE CRITICAL CHECK: We only process growth for actual farm crops.
+                        if (type instanceof CropType cropType) {
+                            boolean wasWatered = plant.isWateredToday();
+
+                            // 1. Logic for removing dead farm crops
+                            if (!wasWatered) {
+                                if (crop.isNotWateredForTwoDays()) {
+                                    tile.setPlant(null);
+                                    tile.setType(TileType.Shoveled);
+                                    continue; // Skip to the next tile
+                                } else {
+                                    crop.setNotWateredForTwoDays(true);
+                                }
+                            } else {
+                                crop.setNotWateredForTwoDays(false);
+                            }
+
+                            // 2. Growth Logic (only runs if watered)
+                            if (!plant.isReadyToHarvest() && wasWatered) {
+                                plant.setDayPassed(plant.getDayPassed() + 1);
+
+                                int daysPassed = plant.getDayPassed();
+                                int newStage = 1;
+                                int daysRequiredForNextStage = 0;
+                                List<Integer> stages = cropType.getStages();
+
+                                for (Integer stageDuration : stages) {
+                                    daysRequiredForNextStage += stageDuration;
+                                    if (daysPassed >= daysRequiredForNextStage) {
+                                        newStage++;
+                                    } else {
+                                        break;
+                                    }
+                                }
+                                plant.setCurrentStage(newStage);
+                            }
+
+                            // 3. Maturity Check
+                            if (plant.getDayPassed() >= cropType.getTotalHarvestTime()) {
+                                plant.setReadyToHarvest(true);
+                            }
+                        }
+                        // If 'type' is a ForagingCropType, all the logic above is skipped.
+
+                    }
+                    // --- Handle Fruit Trees ---
+                    else if (plant instanceof Fruit fruit) {
+                        boolean wasWatered = fruit.isWateredToday();
+                        if (!wasWatered && !fruit.getTreeType().isForaging()) {
                             fruit.incrementUnwateredDays();
                             if (fruit.getUnwateredDays() >= 2) {
                                 tile.setPlant(null);
                                 continue;
                             }
-                        } else if (plant instanceof Crop crop) {
-                            if (crop.isNotWateredForTwoDays()) {
-                                tile.setPlant(null);
-                                tile.setType(TileType.Shoveled);
-                                continue;
-                            } else {
-                                crop.setNotWateredForTwoDays(true);
-                            }
-                        }
-                    } else {
-                        if (plant instanceof Fruit fruit) {
+                        } else {
                             fruit.setUnwateredDays(0);
                         }
-                        if (plant instanceof Crop crop) {
-                            crop.setNotWateredForTwoDays(false);
-                        }
-                    }
 
-                    // --- Growth Logic ---
-                    if (!plant.isReadyToHarvest()) {
-                        // Only increment days passed if watered (or if it's a wild tree that doesn't need water)
-                        if (wasWatered || (plant instanceof Fruit && ((Fruit)plant).getTreeType().isForaging())) {
-                            plant.setDayPassed(plant.getDayPassed() + 1);
-                        }
-
-                        int daysPassed = plant.getDayPassed();
-                        int newStage = 1; // Start at stage 1
-                        int daysRequiredForNextStage = 0;
-
-                        List<Integer> stages = new ArrayList<>();
-                        if (plant instanceof Fruit fruit) {
-                            stages = fruit.getTreeType().getStages();
-                        } else if (plant instanceof Crop crop && crop.getCropType() instanceof CropType) {
-                            stages = ((CropType) crop.getCropType()).getStages();
-                        }
-
-                        // Calculate the current stage based on days passed
-                        for (Integer stageDuration : stages) {
-                            daysRequiredForNextStage += stageDuration;
-                            if (daysPassed >= daysRequiredForNextStage) {
-                                newStage++;
-                            } else {
-                                break; // Stop when we find the current stage
+                        if (!fruit.isReadyToHarvest()) {
+                            if (wasWatered || fruit.getTreeType().isForaging()) {
+                                fruit.setDayPassed(fruit.getDayPassed() + 1);
                             }
+                            // Update fruit tree stage logic here if needed
                         }
-                        plant.setCurrentStage(newStage);
-                    }
 
-                    // Check for maturity
-                    if (plant instanceof Fruit fruit) {
                         if (fruit.getDayPassed() >= fruit.getTreeType().getTotalHarvestTime() && fruit.getTreeType().getSeasons().contains(date.getCurrentSeason())) {
                             fruit.setReadyToHarvest(true);
                         } else {
                             fruit.setReadyToHarvest(false);
                         }
-                    } else if (plant instanceof Crop crop && crop.getCropType() instanceof CropType) {
-                        if (crop.getDayPassed() >= ((CropType) crop.getCropType()).getTotalHarvestTime()) {
-                            crop.setReadyToHarvest(true);
-                        }
                     }
 
+                    // Reset watered status for ALL plants at the end of the day
                     plant.setWateredToday(false);
                 }
             }
         }
     }
-
 
     public void updatePlacedMachines() {
         if (map == null) return;
@@ -563,6 +573,57 @@ public class Game {
                         player.getSkillData(buff.getSkill()).removeBuff();
                     }
                     iterator.remove();
+                }
+            }
+        }
+    }
+
+    public void checkForGiantCrops() {
+        if (map == null) return;
+        Tile[][] tiles = map.getTiles();
+        Random rand = new Random();
+
+        // Iterate through all possible top-left corners of a 2x2 square
+        for (int x = 0; x < 89; x++) {
+            for (int y = 0; y < 59; y++) {
+
+                // 1. Check if a 2x2 square of the same giant-able crop exists
+                Tile topLeft = tiles[x][y];
+                if (topLeft == null || !(topLeft.getPlant() instanceof Crop)) continue;
+
+                Crop firstCrop = (Crop) topLeft.getPlant();
+                CropType cropType = (CropType) firstCrop.getCropType();
+
+                if (!cropType.canBecomeGiant() || !firstCrop.isReadyToHarvest()) continue;
+
+                Tile topRight = tiles[x + 1][y];
+                Tile bottomLeft = tiles[x][y + 1];
+                Tile bottomRight = tiles[x + 1][y + 1];
+
+                if (topRight != null && bottomLeft != null && bottomRight != null &&
+                    topRight.getPlant() instanceof Crop && ((Crop) topRight.getPlant()).getCropType() == cropType && ((Crop) topRight.getPlant()).isReadyToHarvest() &&
+                    bottomLeft.getPlant() instanceof Crop && ((Crop) bottomLeft.getPlant()).getCropType() == cropType && ((Crop) bottomLeft.getPlant()).isReadyToHarvest() &&
+                    bottomRight.getPlant() instanceof Crop && ((Crop) bottomRight.getPlant()).getCropType() == cropType && ((Crop) bottomRight.getPlant()).isReadyToHarvest()) {
+
+                    // 2. 5% chance to merge into a giant crop
+                    if (rand.nextInt(100) < 5) {
+                        // 3. Mark all four tiles as part of a giant crop, pointing to the top-left tile
+                        topLeft.setPartOfGiantCrop(true);
+                        topLeft.setGiantCropRootX(x);
+                        topLeft.setGiantCropRootY(y);
+
+                        topRight.setPartOfGiantCrop(true);
+                        topRight.setGiantCropRootX(x);
+                        topRight.setGiantCropRootY(y);
+
+                        bottomLeft.setPartOfGiantCrop(true);
+                        bottomLeft.setGiantCropRootX(x);
+                        bottomLeft.setGiantCropRootY(y);
+
+                        bottomRight.setPartOfGiantCrop(true);
+                        bottomRight.setGiantCropRootX(x);
+                        bottomRight.setGiantCropRootY(y);
+                    }
                 }
             }
         }
