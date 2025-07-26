@@ -36,23 +36,7 @@ import com.example.main.enums.items.TreeType;
 import com.example.main.enums.player.Skills;
 import com.example.main.enums.regex.GameMenuCommands;
 import com.example.main.enums.regex.NPCDialogs;
-import com.example.main.models.ActiveBuff;
-import com.example.main.models.App;
-import com.example.main.models.Date;
-import com.example.main.models.Friendship;
-import com.example.main.models.Game;
-import com.example.main.models.GameMap;
-import com.example.main.models.Gift;
-import com.example.main.models.Inventory;
-import com.example.main.models.NPC;
-import com.example.main.models.Player;
-import com.example.main.models.Quest;
-import com.example.main.models.Result;
-import com.example.main.models.Talk;
-import com.example.main.models.Tile;
-import com.example.main.models.Time;
-import com.example.main.models.Tree;
-import com.example.main.models.User;
+import com.example.main.models.*;
 import com.example.main.models.building.House;
 import com.example.main.models.building.Housing;
 import com.example.main.models.item.*;
@@ -62,6 +46,7 @@ public class GameMenuController {
     private Game game;
     private GameMap map;
     private Food lastCookedFood = null;
+    private FishingMinigame activeMinigame = null;
 
     public void setGame(Game game) {
         this.game = game;
@@ -213,6 +198,10 @@ public class GameMenuController {
 
     public Result terminateGame() {
         return new Result(true, "Game terminated");
+    }
+
+    public FishingMinigame getActiveMinigame() {
+        return activeMinigame;
     }
 
     public Result switchTurn() {
@@ -1260,9 +1249,6 @@ public class GameMenuController {
         return new Result(true, info.toString());
     }
 
-    public void fishingAndDisplay(ToolType pole) {
-    }
-
     public Result plant(String seedName, String directionStr) {
         GameMap map = game.getMap();
         Player player = game.getCurrentPlayer();
@@ -1664,54 +1650,35 @@ public class GameMenuController {
     public Result fishing(String fishingPoleName) {
         Player player = game.getCurrentPlayer();
         Tool fishingPole = player.getInventory().getTool(fishingPoleName);
-        if(fishingPole == null){
+        if (fishingPole == null) {
             return new Result(false, "No fishing pole found");
         }
         Tile currentTile = map.getTile(player.currentX(), player.currentY());
-        if(!isAdjacentToWater(currentTile)){
-            return new Result(false, "You are not adjacent to water");
+        if (!isAdjacentToWater(currentTile)) {
+            return new Result(false, "You must be next to water to fish.");
         }
-        if(player.getInventory().isFull()){
-            return new Result(false, "Your inventory is full");
+        if (player.getInventory().isFull()) {
+            return new Result(false, "Your inventory is full.");
         }
-        List<Fish> possibleFish = new ArrayList<>();
-        double r;
-        double m;
-        Random random = new Random();
-        for (FishType fish : FishType.values()) {
-            if (fish.getSeason().equals(game.getDate().getCurrentSeason()) && fish.getType().equals("Ordinary")) {
-                do {
-                    r = Math.random();
-                } while (r == 0.0);
-                m = seasonRate();
-                int fishCount = (int) Math.ceil(2 + player.getSkillLevel(Skills.Fishing) * m * r);
-                fishCount = Math.min(fishCount, 6);
-                Fish newFish = new Fish(fish, fishCount);
-                possibleFish.add(newFish);
-            }
-            if(fish.getSeason().equals(game.getDate().getCurrentSeason()) && fish.getType().equals("Legendary") && (player.getSkillLevel(Skills.Fishing) >= 4)){
-                do {
-                    r = Math.random();
-                } while (r == 0.0);
-                m = seasonRate();
-                int fishCount = (int) Math.ceil(2 + player.getSkillLevel(Skills.Fishing) * m * r);
-                fishCount = Math.min(fishCount, 6);
-                Fish newFish = new Fish(fish, fishCount);
-                possibleFish.add(newFish);
-            }
+
+        // --- NEW LOGIC ---
+        // Find a random fish that can be caught
+        List<FishType> possibleFish = Arrays.stream(FishType.values())
+            .filter(f -> f.getSeason() == game.getDate().getCurrentSeason() || f.getSeason() == Season.Special)
+            .collect(Collectors.toList());
+
+        if (possibleFish.isEmpty()) {
+            return new Result(false, "There are no fish in season.");
         }
-        do {
-            r = Math.random();
-        } while (r == 0.0);
-        m = seasonRate();
-        int index = random.nextInt(possibleFish.size());
-        Fish fish = possibleFish.get(index);
-        double quality = (r *  (player.getSkillLevel(Skills.Fishing) + 2) * poleRate(fishingPoleName));
-        quality /= (7-m);
-        fish.setQuality(quality);
-        player.getInventory().addItem(fish);
-        player.catchFish();
-        return new Result(true, fish.getNumber() + "x of " + fish.getFishType().getName() + " added to your inventory");
+
+        Random rand = new Random();
+        FishType caughtFish = possibleFish.get(rand.nextInt(possibleFish.size()));
+
+        // Create and store the minigame instance
+        this.activeMinigame = new FishingMinigame(caughtFish);
+
+        // Signal success to the view, which will then start the minigame UI
+        return new Result(true, "A fish has bitten!");
     }
 
     public Result cheatTileType(String direction) {
@@ -2937,8 +2904,6 @@ public class GameMenuController {
 
     public Result moveRandomFoodToRefrigerator() {
         Player player = game.getCurrentPlayer();
-
-        // Find all food items in the inventory
         List<Item> foodInInventory = player.getInventory().getItems().stream()
             .filter(item -> item instanceof Food)
             .collect(Collectors.toList());
@@ -2948,7 +2913,6 @@ public class GameMenuController {
         }
 
         if (player.getHouseRefrigerator().isFull()) {
-            // Check if the fridge can at least stack with an existing item
             boolean canStack = false;
             for (Item food : foodInInventory) {
                 if (player.getHouseRefrigerator().findItemByType(food.getItemType()) != null) {
