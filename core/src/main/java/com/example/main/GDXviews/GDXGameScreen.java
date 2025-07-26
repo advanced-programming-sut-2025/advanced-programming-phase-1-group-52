@@ -255,6 +255,8 @@ public class GDXGameScreen implements Screen {
 
     private boolean isInfoMenuOpen = false;
     private Stage infoStage;
+    private boolean isQuestMenuOpen = false;
+    private boolean isJournalMenuOpen = false;
 
     private Texture ground1Texture;
     private Texture ground2Texture;
@@ -1002,7 +1004,7 @@ public class GDXGameScreen implements Screen {
 
         if (isInventoryOpen || isToolMenuOpen || isCheatMenuOpen || isPlantingSelectionOpen
             || isCraftingMenuOpen || isCookingMenuOpen || isCraftingCheatMenuOpen || isCookingCheatMenuOpen
-            || isEatMenuOpen || isInfoMenuOpen) {
+            || isEatMenuOpen || isInfoMenuOpen || isQuestMenuOpen || isJournalMenuOpen) {
             return;
         }
 
@@ -3557,22 +3559,29 @@ public class GDXGameScreen implements Screen {
 
         Table buttonTable = new Table();
 
+        TextButton journalButton = new TextButton("Journal", skin);
         TextButton inventoryButton = new TextButton("Inventory", skin);
         TextButton skillsButton = new TextButton("Skills", skin);
         TextButton socialButton = new TextButton("Social", skin);
         TextButton mapButton = new TextButton("Map", skin);
         TextButton craftInfoButton = new TextButton("Craft Info", skin);
+        TextButton questsButton = new TextButton("Show Quests", skin);
         TextButton settingsButton = new TextButton("Settings", skin);
         TextButton closeButton = new TextButton("Close", skin);
 
-        // --- (Your existing ClickListener logic for all the buttons goes here) ---
         inventoryButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
                 showInventoryDisplay(false);
             }
         });
-
+        questsButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                isQuestMenuOpen = true;
+                showQuestsMenu();
+            }
+        });
         skillsButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
@@ -3615,15 +3624,24 @@ public class GDXGameScreen implements Screen {
                 showInfoMenu();
             }
         });
+        journalButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                isJournalMenuOpen = true;
+                showJournalMenu();
+            }
+        });
 
         float buttonWidth = 200f;
         float buttonPad = 10f;
 
+        buttonTable.add(journalButton).width(buttonWidth).pad(buttonPad).row();
         buttonTable.add(inventoryButton).width(buttonWidth).pad(buttonPad).row();
         buttonTable.add(skillsButton).width(buttonWidth).pad(buttonPad).row();
         buttonTable.add(socialButton).width(buttonWidth).pad(buttonPad).row();
         buttonTable.add(mapButton).width(buttonWidth).pad(buttonPad).row();
         buttonTable.add(craftInfoButton).width(buttonWidth).pad(buttonPad).row();
+        buttonTable.add(questsButton).width(buttonWidth).pad(buttonPad).row();
         buttonTable.add(settingsButton).width(buttonWidth).pad(buttonPad).row();
         buttonTable.add(closeButton).width(buttonWidth).pad(buttonPad).row();
         mainStack.add(buttonTable);
@@ -3808,6 +3826,8 @@ public class GDXGameScreen implements Screen {
             public void clicked(InputEvent event, float x, float y) {
                 isTrashModeActive = false;
                 isInfoMenuOpen = false;
+                isQuestMenuOpen = false;
+                isJournalMenuOpen = false;
                 showMainMenuButtons();
             }
         });
@@ -4753,6 +4773,104 @@ public class GDXGameScreen implements Screen {
 
     private void renderInfoMenu(float delta) {
         if (!isInfoMenuOpen) return;
+    }
+
+    // In main/GDXviews/GDXGameScreen.java
+
+    private void showQuestsMenu() {
+        menuContentTable.clear();
+
+        Stack questStack = new Stack();
+        questStack.add(new Image(inventoryBackground));
+
+        Table contentTable = new Table();
+        contentTable.pad(20);
+
+        contentTable.add(new Label("Active Quests", skin)).padBottom(15).row();
+
+        // Call the controller to get the quest information
+        Result result = controller.showQuests();
+        String questsText = result.Message();
+
+        // If there are no quests, display a message
+        if (questsText.trim().isEmpty()) {
+            questsText = "No active quests at the moment.";
+        }
+
+        Label questsLabel = new Label(questsText, skin);
+        questsLabel.setWrap(true);
+        questsLabel.setAlignment(Align.topLeft);
+
+        ScrollPane scrollPane = new ScrollPane(questsLabel, skin);
+        scrollPane.setFadeScrollBars(false);
+
+        contentTable.add(scrollPane).expand().fill().padBottom(15).row();
+
+        Table bottomButtonTable = new Table();
+        addBackButtonToMenu(bottomButtonTable);
+        contentTable.add(bottomButtonTable).bottom().left();
+
+        questStack.add(contentTable);
+        menuContentTable.add(questStack).width(Gdx.graphics.getWidth() * 0.8f).height(Gdx.graphics.getHeight() * 0.8f);
+    }
+
+    // In main/GDXviews/GDXGameScreen.java
+
+    private void showJournalMenu() {
+        menuContentTable.clear();
+
+        Stack journalStack = new Stack();
+        journalStack.add(new Image(inventoryBackground));
+
+        Table contentTable = new Table();
+        contentTable.pad(20);
+
+        // --- Title ---
+        contentTable.add(new Label("Journal", skin)).padBottom(20).row();
+
+        // --- Date and Weather Info ---
+        Table infoTable = new Table();
+        infoTable.defaults().pad(5).left();
+        Date currentDate = game.getDate();
+        String dateInfo = "Day " + currentDate.getCurrentDay() + " of " + currentDate.getCurrentSeason().name();
+        String weatherInfo = "Weather: " + game.getTodayWeather().name();
+
+        infoTable.add(new Label(dateInfo, skin)).row();
+        infoTable.add(new Label(weatherInfo, skin)).row();
+        contentTable.add(infoTable).left().padBottom(20).row();
+
+        // --- Quests Section ---
+        contentTable.add(new Label("--- Active Quests ---", skin)).padBottom(10).row();
+        Result result = controller.showQuests();
+        String questsText = result.Message();
+        if (questsText.trim().isEmpty()) {
+            questsText = "No active quests.";
+        }
+        Label questsLabel = new Label(questsText, skin);
+        questsLabel.setWrap(true);
+        questsLabel.setAlignment(Align.topLeft);
+
+        ScrollPane questScrollPane = new ScrollPane(questsLabel, skin);
+        questScrollPane.setFadeScrollBars(false);
+        contentTable.add(questScrollPane).expand().fillX().height(150).padBottom(20).row();
+
+        // --- News Section (Placeholder) ---
+        contentTable.add(new Label("--- Daily News ---", skin)).padBottom(10).row();
+        Label newsLabel = new Label("The news channel is quiet today.", skin);
+        newsLabel.setWrap(true);
+        newsLabel.setAlignment(Align.topLeft);
+
+        ScrollPane newsScrollPane = new ScrollPane(newsLabel, skin);
+        newsScrollPane.setFadeScrollBars(false);
+        contentTable.add(newsScrollPane).expand().fillX().height(100).padBottom(20).row();
+
+        // --- Back Button ---
+        Table bottomButtonTable = new Table();
+        addBackButtonToMenu(bottomButtonTable);
+        contentTable.add(bottomButtonTable).bottom().left().expandY();
+
+        journalStack.add(contentTable);
+        menuContentTable.add(journalStack).width(Gdx.graphics.getWidth() * 0.8f).height(Gdx.graphics.getHeight() * 0.8f);
     }
 
     @Override
