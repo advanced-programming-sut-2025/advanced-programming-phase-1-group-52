@@ -519,7 +519,11 @@ public class GDXGameScreen implements Screen {
         MAIN_MENU,
         PLAYER_ACTIONS,
         FRIENDSHIP_DETAILS,
-        CHAT_ROOM
+        CHAT_ROOM,
+        GIFT_MENU,
+        RECEIVED_GIFTS,
+        GIFT_HISTORY,
+        SEND_GIFT
     }
 
     private FriendsMenuState currentFriendsMenuState = FriendsMenuState.MAIN_MENU;
@@ -534,6 +538,21 @@ public class GDXGameScreen implements Screen {
 
     // Add this field to track unread messages
     private Map<String, Boolean> unreadTalkNotifications = new HashMap<>();
+    
+    // Gift menu variables
+    private Table giftMenuTable;
+    private Table receivedGiftsTable;
+    private Table giftHistoryTable;
+    private ScrollPane receivedGiftsScrollPane;
+    private ScrollPane giftHistoryScrollPane;
+    private TextField giftRatingField;
+    private String selectedGiftId = null;
+    
+    // Send gift variables
+    private Table sendGiftTable;
+    private ScrollPane sendGiftScrollPane;
+    private String giftErrorMessage = "";
+    private boolean showGiftError = false;
 
     public GDXGameScreen() {
         controller = new GameMenuController();
@@ -5782,6 +5801,18 @@ public class GDXGameScreen implements Screen {
             case CHAT_ROOM:
                 createChatRoomMenu();
                 break;
+            case GIFT_MENU:
+                createPlayerGiftMenu();
+                break;
+            case RECEIVED_GIFTS:
+                createReceivedGiftsMenu();
+                break;
+            case GIFT_HISTORY:
+                createGiftHistoryMenu();
+                break;
+            case SEND_GIFT:
+                createSendGiftMenu();
+                break;
         }
     }
 
@@ -5891,10 +5922,8 @@ public class GDXGameScreen implements Screen {
         giftButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                // For now, just show a message
-                generalMessageLabel.setText("Gift functionality - select an item from inventory to gift");
-                generalMessageLabel.setVisible(true);
-                generalMessageTimer = GENERAL_MESSAGE_DURATION;
+                currentFriendsMenuState = FriendsMenuState.GIFT_MENU;
+                createFriendsMenuUI();
             }
         });
 
@@ -6296,5 +6325,403 @@ public class GDXGameScreen implements Screen {
                 createChatRoomMenu();
             }
         }
+    }
+
+    private void createPlayerGiftMenu() {
+        friendsMenuTable.clear();
+        
+        // Title
+        Label titleLabel = new Label("Gift Menu", skin);
+        titleLabel.setFontScale(1.5f);
+        friendsMenuTable.add(titleLabel).colspan(2).pad(20).row();
+        
+        // Gift menu buttons
+        TextButton sendGiftButton = new TextButton("Send Gift", skin);
+        TextButton receivedGiftsButton = new TextButton("Received Gifts", skin);
+        TextButton giftHistoryButton = new TextButton("Gift History", skin);
+        TextButton backButton = new TextButton("Back", skin);
+        TextButton closeButton = new TextButton("Close", skin);
+        
+        // Add button listeners
+        sendGiftButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                currentFriendsMenuState = FriendsMenuState.SEND_GIFT;
+                giftErrorMessage = "";
+                showGiftError = false;
+                createFriendsMenuUI();
+            }
+        });
+        
+        receivedGiftsButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                currentFriendsMenuState = FriendsMenuState.RECEIVED_GIFTS;
+                createFriendsMenuUI();
+            }
+        });
+        
+        giftHistoryButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                currentFriendsMenuState = FriendsMenuState.GIFT_HISTORY;
+                createFriendsMenuUI();
+            }
+        });
+        
+        backButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                currentFriendsMenuState = FriendsMenuState.PLAYER_ACTIONS;
+                createFriendsMenuUI();
+            }
+        });
+        
+        closeButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                showFriendsMenu = false;
+                currentFriendsMenuState = FriendsMenuState.MAIN_MENU;
+                selectedPlayerForActions = null;
+                friendshipResultMessage = "";
+                friendshipResultSuccess = false;
+                if (friendsMenuTable != null) {
+                    friendsMenuTable.remove();
+                    friendsMenuTable = null;
+                }
+                Gdx.input.setInputProcessor(multiplexer);
+            }
+        });
+        
+        // Add buttons to table
+        friendsMenuTable.add(sendGiftButton).size(200, 50).pad(10);
+        friendsMenuTable.add(receivedGiftsButton).size(200, 50).pad(10).row();
+        friendsMenuTable.add(giftHistoryButton).size(200, 50).pad(10);
+        friendsMenuTable.add(backButton).size(200, 50).pad(10).row();
+        friendsMenuTable.add(closeButton).size(200, 50).pad(10).row();
+    }
+
+    private void createReceivedGiftsMenu() {
+        friendsMenuTable.clear();
+        
+        // Title
+        Label titleLabel = new Label("Received Gifts", skin);
+        titleLabel.setFontScale(1.5f);
+        friendsMenuTable.add(titleLabel).colspan(2).pad(20).row();
+        
+        // Get received gifts
+        Result result = controller.showGiftsList();
+        String giftsText = result.Message();
+        
+        // Create scrollable table for gifts
+        receivedGiftsTable = new Table();
+        receivedGiftsTable.defaults().expandX().fillX().pad(2);
+        
+        if (giftsText.contains("No conversation history") || giftsText.trim().isEmpty()) {
+            Label noGiftsLabel = new Label("No gifts received yet!", skin);
+            noGiftsLabel.setColor(Color.GRAY);
+            receivedGiftsTable.add(noGiftsLabel).row();
+        } else {
+            // Parse and display gifts
+            String[] lines = giftsText.split("\n");
+            String currentGiftId = null;
+            String currentGiftInfo = "";
+            
+            for (String line : lines) {
+                if (line.trim().isEmpty()) continue;
+                
+                if (line.startsWith("Gift from")) {
+                    // Save previous gift if exists
+                    if (currentGiftId != null && !currentGiftInfo.isEmpty()) {
+                        addGiftToTable(currentGiftInfo, currentGiftId);
+                    }
+                    // Start new gift
+                    currentGiftInfo = line;
+                    currentGiftId = null;
+                } else if (line.startsWith("ID:")) {
+                    currentGiftId = line.substring(3).trim();
+                    currentGiftInfo += "\n" + line;
+                } else {
+                    currentGiftInfo += "\n" + line;
+                }
+            }
+            
+            // Add the last gift
+            if (currentGiftId != null && !currentGiftInfo.isEmpty()) {
+                addGiftToTable(currentGiftInfo, currentGiftId);
+            }
+        }
+        
+        // Create scroll pane
+        receivedGiftsScrollPane = new ScrollPane(receivedGiftsTable, skin);
+        receivedGiftsScrollPane.setFadeScrollBars(false);
+        receivedGiftsScrollPane.setScrollBarPositions(false, true);
+        
+        friendsMenuTable.add(receivedGiftsScrollPane).size(600, 400).pad(10).row();
+        
+        // Back button
+        TextButton backButton = new TextButton("Back", skin);
+        backButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                currentFriendsMenuState = FriendsMenuState.GIFT_MENU;
+                createFriendsMenuUI();
+            }
+        });
+        
+        friendsMenuTable.add(backButton).size(200, 50).pad(10).row();
+    }
+
+    private void addGiftToTable(String giftInfo, String giftId) {
+        // Create gift info label
+        Label giftLabel = new Label(giftInfo, skin);
+        giftLabel.setWrap(true);
+        giftLabel.setAlignment(Align.left);
+        
+        // Check if gift is rated (rate = 0 means not rated)
+        if (giftInfo.contains("Rate: 0")) {
+            // Create rating input field and button
+            Table giftTable = new Table();
+            giftTable.defaults().expandX().fillX().pad(2);
+            
+            giftTable.add(giftLabel).row();
+            
+            // Rating input field
+            giftRatingField = new TextField("", skin);
+            giftRatingField.setMessageText("Enter rating (1-5)");
+            giftRatingField.setMaxLength(1);
+            
+            // Rate button
+            TextButton rateButton = new TextButton("Rate Gift", skin);
+            final String finalGiftId = giftId;
+            rateButton.addListener(new ClickListener() {
+                @Override
+                public void clicked(InputEvent event, float x, float y) {
+                    String rating = giftRatingField.getText().trim();
+                    if (!rating.isEmpty()) {
+                        Result result = controller.rateGift(finalGiftId, rating);
+                        if (result.isSuccessful()) {
+                            // Refresh the received gifts menu
+                            currentFriendsMenuState = FriendsMenuState.RECEIVED_GIFTS;
+                            createFriendsMenuUI();
+                        } else {
+                            // Show error message
+                            generalMessageLabel.setText(result.Message());
+                            generalMessageLabel.setVisible(true);
+                            generalMessageTimer = GENERAL_MESSAGE_DURATION;
+                        }
+                    }
+                }
+            });
+            
+            giftTable.add(giftRatingField).size(150, 30).pad(5);
+            giftTable.add(rateButton).size(100, 30).pad(5).row();
+            
+            receivedGiftsTable.add(giftTable).row();
+        } else {
+            // Gift is already rated, just show info
+            receivedGiftsTable.add(giftLabel).row();
+        }
+    }
+
+    private void createGiftHistoryMenu() {
+        friendsMenuTable.clear();
+        
+        // Title
+        Label titleLabel = new Label("Gift History with " + selectedPlayerForActions, skin);
+        titleLabel.setFontScale(1.5f);
+        friendsMenuTable.add(titleLabel).colspan(2).pad(20).row();
+        
+        // Get gift history
+        Result result = controller.showGiftHistoryWith(selectedPlayerForActions);
+        String giftsText = result.Message();
+        
+        // Create scrollable table for gifts
+        giftHistoryTable = new Table();
+        giftHistoryTable.defaults().expandX().fillX().pad(2);
+        
+        if (giftsText.contains("No conversation history") || giftsText.trim().isEmpty()) {
+            Label noGiftsLabel = new Label("No gift history with " + selectedPlayerForActions + "!", skin);
+            noGiftsLabel.setColor(Color.GRAY);
+            giftHistoryTable.add(noGiftsLabel).row();
+        } else {
+            // Parse and display gifts
+            String[] lines = giftsText.split("\n");
+            for (String line : lines) {
+                if (line.trim().isEmpty()) continue;
+                
+                Label giftLabel = new Label(line, skin);
+                giftLabel.setWrap(true);
+                giftLabel.setAlignment(Align.left);
+                giftHistoryTable.add(giftLabel).row();
+            }
+        }
+        
+        // Create scroll pane
+        giftHistoryScrollPane = new ScrollPane(giftHistoryTable, skin);
+        giftHistoryScrollPane.setFadeScrollBars(false);
+        giftHistoryScrollPane.setScrollBarPositions(false, true);
+        
+        friendsMenuTable.add(giftHistoryScrollPane).size(600, 400).pad(10).row();
+        
+        // Back button
+        TextButton backButton = new TextButton("Back", skin);
+        backButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                currentFriendsMenuState = FriendsMenuState.GIFT_MENU;
+                createFriendsMenuUI();
+            }
+        });
+        
+        friendsMenuTable.add(backButton).size(200, 50).pad(10).row();
+    }
+    
+    private void createSendGiftMenu() {
+        friendsMenuTable.clear();
+        
+        // Title
+        Label titleLabel = new Label("Send Gift to " + selectedPlayerForActions, skin);
+        titleLabel.setFontScale(1.5f);
+        friendsMenuTable.add(titleLabel).colspan(2).pad(20).row();
+        
+        // Error message display
+        if (showGiftError && !giftErrorMessage.isEmpty()) {
+            Label errorLabel = new Label(giftErrorMessage, skin);
+            errorLabel.setColor(Color.RED);
+            friendsMenuTable.add(errorLabel).colspan(2).pad(10).row();
+        }
+        
+        // Get inventory items
+        Result result = controller.showInventoryItems();
+        String inventoryText = result.Message();
+        
+        // Create scrollable table for inventory items
+        sendGiftTable = new Table();
+        sendGiftTable.defaults().expandX().fillX().pad(2);
+        
+        if (inventoryText.contains("You have no items") || inventoryText.trim().isEmpty()) {
+            Label noItemsLabel = new Label("No items in inventory!", skin);
+            noItemsLabel.setColor(Color.GRAY);
+            sendGiftTable.add(noItemsLabel).row();
+        } else {
+            // Parse and display inventory items
+            String[] lines = inventoryText.split("\n");
+            for (String line : lines) {
+                if (line.trim().isEmpty()) continue;
+                
+                // Format: "ItemName xAmount"
+                String[] parts = line.split(" x");
+                if (parts.length == 2) {
+                    String itemName = parts[0].trim();
+                    int maxAmount = Integer.parseInt(parts[1].trim());
+                    
+                    // Create row for this item
+                    Table itemRow = new Table();
+                    itemRow.defaults().expandX().fillX().pad(2);
+                    
+                    // Item name and amount
+                    Label itemLabel = new Label(itemName + " x" + maxAmount, skin);
+                    itemRow.add(itemLabel).expandX().left().pad(5);
+                    
+                    // Amount input field
+                    TextField amountField = new TextField("1", skin);
+                    amountField.setTextFieldFilter(new TextField.TextFieldFilter.DigitsOnlyFilter());
+                    itemRow.add(amountField).size(80, 30).pad(5);
+                    
+                    // Gift button
+                    TextButton giftButton = new TextButton("Gift", skin);
+                    giftButton.addListener(new ClickListener() {
+                        @Override
+                        public void clicked(InputEvent event, float x, float y) {
+                            String amountText = amountField.getText().trim();
+                            if (amountText.isEmpty()) {
+                                giftErrorMessage = "Please enter an amount";
+                                showGiftError = true;
+                                createSendGiftMenu();
+                                return;
+                            }
+                            
+                            int amount;
+                            try {
+                                amount = Integer.parseInt(amountText);
+                            } catch (NumberFormatException e) {
+                                giftErrorMessage = "Invalid amount";
+                                showGiftError = true;
+                                createSendGiftMenu();
+                                return;
+                            }
+                            
+                            if (amount <= 0) {
+                                giftErrorMessage = "Amount must be greater than 0";
+                                showGiftError = true;
+                                createSendGiftMenu();
+                                return;
+                            }
+                            
+                            if (amount > maxAmount) {
+                                giftErrorMessage = "You don't have enough " + itemName;
+                                showGiftError = true;
+                                createSendGiftMenu();
+                                return;
+                            }
+                            
+                            // Call giftPlayer method
+                            Result giftResult = controller.giftPlayer(selectedPlayerForActions, itemName, String.valueOf(amount));
+                            if (giftResult.isSuccessful()) {
+                                // Close friends menu on success
+                                showFriendsMenu = false;
+                                currentFriendsMenuState = FriendsMenuState.MAIN_MENU;
+                                selectedPlayerForActions = null;
+                                friendshipResultMessage = "";
+                                friendshipResultSuccess = false;
+                                giftErrorMessage = "";
+                                showGiftError = false;
+                                if (friendsMenuTable != null) {
+                                    friendsMenuTable.remove();
+                                    friendsMenuTable = null;
+                                }
+                                Gdx.input.setInputProcessor(multiplexer);
+                                
+                                // Show success message
+                                generalMessageLabel.setText(giftResult.Message());
+                                generalMessageLabel.setVisible(true);
+                                generalMessageTimer = GENERAL_MESSAGE_DURATION;
+                            } else {
+                                // Show error message
+                                giftErrorMessage = giftResult.Message();
+                                showGiftError = true;
+                                createSendGiftMenu();
+                            }
+                        }
+                    });
+                    itemRow.add(giftButton).size(80, 30).pad(5);
+                    
+                    sendGiftTable.add(itemRow).row();
+                }
+            }
+        }
+        
+        // Create scroll pane
+        sendGiftScrollPane = new ScrollPane(sendGiftTable, skin);
+        sendGiftScrollPane.setFadeScrollBars(false);
+        sendGiftScrollPane.setScrollBarPositions(false, true);
+        
+        // Add scroll pane to main table
+        friendsMenuTable.add(sendGiftScrollPane).size(600, 400).pad(10).row();
+        
+        // Back button
+        TextButton backButton = new TextButton("Back", skin);
+        backButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                currentFriendsMenuState = FriendsMenuState.GIFT_MENU;
+                giftErrorMessage = "";
+                showGiftError = false;
+                createFriendsMenuUI();
+            }
+        });
+        
+        friendsMenuTable.add(backButton).size(200, 50).pad(10).row();
     }
 }
