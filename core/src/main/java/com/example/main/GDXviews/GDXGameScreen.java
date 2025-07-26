@@ -251,6 +251,10 @@ public class GDXGameScreen implements Screen {
     private Stage fishingStage;
     private Texture fishingBarBg, playerBarTexture, fishIconTexture, legendaryCrownTexture;
     private Texture progressBarBg, progressBarFill;
+    private boolean isTrashModeActive = false;
+
+    private boolean isInfoMenuOpen = false;
+    private Stage infoStage;
 
     private Texture ground1Texture;
     private Texture ground2Texture;
@@ -551,6 +555,7 @@ public class GDXGameScreen implements Screen {
         eatMenuStage = new Stage(new ScreenViewport());
         machineUiStage = new Stage(new ScreenViewport());
         fishingStage = new Stage(new ScreenViewport());
+        infoStage = new Stage(new ScreenViewport());
 
         textureManager = new TextureManager();
         textureManager.loadAllItemTextures();
@@ -576,6 +581,7 @@ public class GDXGameScreen implements Screen {
         setupCraftingCheatMenuUI();
         setupCookingCheatMenuUI();
         setupEatMenuUI();
+        setupInfoMenuUI();
 
         crowAnimations = new ArrayList<>();
         playerFoodItems = new ArrayList<>();
@@ -592,6 +598,7 @@ public class GDXGameScreen implements Screen {
         multiplexer.addProcessor(eatMenuStage);
         multiplexer.addProcessor(machineUiStage);
         multiplexer.addProcessor(fishingStage);
+        multiplexer.addProcessor(infoStage);
         plantableItems = new ArrayList<>();
         Gdx.input.setInputProcessor(multiplexer);
     }
@@ -994,7 +1001,8 @@ public class GDXGameScreen implements Screen {
         }
 
         if (isInventoryOpen || isToolMenuOpen || isCheatMenuOpen || isPlantingSelectionOpen
-            || isCraftingMenuOpen || isCookingMenuOpen || isCraftingCheatMenuOpen || isCookingCheatMenuOpen || isEatMenuOpen) {
+            || isCraftingMenuOpen || isCookingMenuOpen || isCraftingCheatMenuOpen || isCookingCheatMenuOpen
+            || isEatMenuOpen || isInfoMenuOpen) {
             return;
         }
 
@@ -3214,21 +3222,12 @@ public class GDXGameScreen implements Screen {
         }
     }
 
+    // In GDXGameScreen.java
+
     private void renderInventoryOverlay(float delta) {
         if (!isInventoryOpen) {
             return;
         }
-
-        float width = Gdx.graphics.getWidth() * 0.8f;
-        float height = Gdx.graphics.getHeight() * 0.8f;
-        float x = (Gdx.graphics.getWidth() - width) / 2;
-        float y = (Gdx.graphics.getHeight() - height) / 2;
-
-        spriteBatch.setProjectionMatrix(hudCamera.combined);
-        spriteBatch.begin();
-        spriteBatch.draw(inventoryBackground, x, y, width, height);
-        spriteBatch.end();
-
         inventoryStage.getViewport().update(Gdx.graphics.getWidth(), Gdx.graphics.getHeight(), true);
         inventoryStage.act(delta);
         inventoryStage.draw();
@@ -3553,13 +3552,20 @@ public class GDXGameScreen implements Screen {
     private void showMainMenuButtons() {
         menuContentTable.clear();
 
+        Stack mainStack = new Stack();
+        mainStack.add(new Image(inventoryBackground)); // Add the background
+
+        Table buttonTable = new Table();
+
         TextButton inventoryButton = new TextButton("Inventory", skin);
         TextButton skillsButton = new TextButton("Skills", skin);
         TextButton socialButton = new TextButton("Social", skin);
         TextButton mapButton = new TextButton("Map", skin);
+        TextButton craftInfoButton = new TextButton("Craft Info", skin);
         TextButton settingsButton = new TextButton("Settings", skin);
         TextButton closeButton = new TextButton("Close", skin);
 
+        // --- (Your existing ClickListener logic for all the buttons goes here) ---
         inventoryButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
@@ -3602,39 +3608,77 @@ public class GDXGameScreen implements Screen {
                 isInventoryOpen = false;
             }
         });
+        craftInfoButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                isInfoMenuOpen = true;
+                showInfoMenu();
+            }
+        });
 
         float buttonWidth = 200f;
         float buttonPad = 10f;
 
-        menuContentTable.add(inventoryButton).width(buttonWidth).pad(buttonPad).row();
-        menuContentTable.add(skillsButton).width(buttonWidth).pad(buttonPad).row();
-        menuContentTable.add(socialButton).width(buttonWidth).pad(buttonPad).row();
-        menuContentTable.add(mapButton).width(buttonWidth).pad(buttonPad).row();
-        menuContentTable.add(settingsButton).width(buttonWidth).pad(buttonPad).row();
-        menuContentTable.add(closeButton).width(buttonWidth).pad(buttonPad).row();
+        buttonTable.add(inventoryButton).width(buttonWidth).pad(buttonPad).row();
+        buttonTable.add(skillsButton).width(buttonWidth).pad(buttonPad).row();
+        buttonTable.add(socialButton).width(buttonWidth).pad(buttonPad).row();
+        buttonTable.add(mapButton).width(buttonWidth).pad(buttonPad).row();
+        buttonTable.add(craftInfoButton).width(buttonWidth).pad(buttonPad).row();
+        buttonTable.add(settingsButton).width(buttonWidth).pad(buttonPad).row();
+        buttonTable.add(closeButton).width(buttonWidth).pad(buttonPad).row();
+        mainStack.add(buttonTable);
+        menuContentTable.add(mainStack).width(Gdx.graphics.getWidth() * 0.8f).height(Gdx.graphics.getHeight() * 0.8f);
     }
 
     private void showInventoryDisplay(boolean showOnlyPlantables) {
         menuContentTable.clear();
+        // Use a Stack to layer the background behind the content
+        Stack inventoryStack = new Stack();
+        inventoryStack.add(new Image(inventoryBackground)); // Add background image
+
+        Table contentTable = new Table();
         Table itemsTable = new Table();
-        updateInventoryGrid(itemsTable, showOnlyPlantables); // Pass the filter flag
+        updateInventoryGrid(itemsTable, showOnlyPlantables);
 
-        ScrollPane.ScrollPaneStyle scrollPaneStyle = new ScrollPane.ScrollPaneStyle();
-        scrollPaneStyle.background = new TextureRegionDrawable(new TextureRegion(inventoryBackground));
-        ScrollPane scrollPane = new ScrollPane(itemsTable, scrollPaneStyle);
+        ScrollPane scrollPane = new ScrollPane(itemsTable, skin);
         scrollPane.setFadeScrollBars(false);
-        scrollPane.setScrollingDisabled(true, false);
 
-        menuContentTable.add(scrollPane).expand().fill().pad(20).row();
+        contentTable.add(scrollPane).expand().fill().pad(40).row();
 
-        // In planting mode, don't show the regular back button
-        if (!isPlantingMode) {
-            addBackButtonToMenu();
+        TextButton trashButton = new TextButton("Trash Item", skin);
+        if (isTrashModeActive) {
+            trashButton.setText("Cancel Trash");
+            trashButton.setColor(Color.RED);
+        } else {
+            trashButton.setColor(Color.WHITE);
         }
+
+        trashButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                isTrashModeActive = !isTrashModeActive;
+                showInventoryDisplay(false);
+            }
+        });
+
+        Table bottomButtons = new Table();
+        bottomButtons.add(trashButton).pad(10);
+        addBackButtonToMenu(bottomButtons);
+        contentTable.add(bottomButtons).bottom().left();
+
+        inventoryStack.add(contentTable);
+        menuContentTable.add(inventoryStack).width(Gdx.graphics.getWidth() * 0.8f).height(Gdx.graphics.getHeight() * 0.8f);
     }
 
     private void showSkillsDisplay() {
         menuContentTable.clear();
+        // Use a Stack to layer the background behind the content
+        Stack skillsStack = new Stack();
+        skillsStack.add(new Image(inventoryBackground));
+
+        // A second table to hold the actual content on top of the background
+        Table contentTable = new Table();
+
         Player currentPlayer = game.getCurrentPlayer();
         if (currentPlayer == null) return;
 
@@ -3642,17 +3686,12 @@ public class GDXGameScreen implements Screen {
         TooltipManager tooltipManager = new TooltipManager();
         tooltipManager.instant();
 
-        // --- NEW: Programmatically create a style for the ProgressBar ---
         ProgressBar.ProgressBarStyle barStyle = new ProgressBar.ProgressBarStyle();
-        // Use simple, reliable drawables from the default skin
         barStyle.background = skin.getDrawable("default-slider");
         barStyle.knobBefore = skin.getDrawable("default-slider-knob");
-        // --- End of New Code ---
 
         for (Skills skill : Skills.values()) {
             Table skillRow = new Table();
-
-            // Icon and Tooltip
             Texture iconTexture = textureManager.getTexture(skill.name() + "_Skill_Icon");
             Image icon;
             if (iconTexture != null) {
@@ -3665,28 +3704,28 @@ public class GDXGameScreen implements Screen {
             }
             skillRow.add(icon).size(48, 48).padRight(10);
 
-            // Name
             skillRow.add(new Label(skill.name(), skin)).width(100);
 
-            // Progress Bar - Using the new custom style
             ProgressBar progressBar = new ProgressBar(0, 100, 1, false, barStyle);
-
-            // Calculate and set progress
             int currentExp = currentPlayer.getSkillExperience(skill);
             int expForNextLevel = skill.getExpForNextLevel();
             float progress = (expForNextLevel > 0) ? ((float)currentExp / expForNextLevel) * 100f : 0f;
             progressBar.setValue(progress);
 
             skillRow.add(progressBar).width(200).padRight(10);
-
-            // Level
             skillRow.add(new Label("Level " + currentPlayer.getSkillLevel(skill), skin));
 
             skillsTable.add(skillRow).padBottom(10).row();
         }
 
-        menuContentTable.add(skillsTable).expand().center().row();
-        addBackButtonToMenu();
+        contentTable.add(skillsTable).expand().center().row();
+
+        Table bottomButtonTable = new Table();
+        addBackButtonToMenu(bottomButtonTable);
+        contentTable.add(bottomButtonTable).bottom().left();
+
+        skillsStack.add(contentTable);
+        menuContentTable.add(skillsStack).width(Gdx.graphics.getWidth() * 0.8f).height(Gdx.graphics.getHeight() * 0.8f);
     }
 
     private void showSocialDisplay() {
@@ -3711,13 +3750,21 @@ public class GDXGameScreen implements Screen {
 
         contentTable.add(scrollPane).expand().fill().pad(40).row();
 
+        // Add the back button to the content table, not the menuContentTable
+        Table bottomButtonTable = new Table();
+        addBackButtonToMenu(bottomButtonTable);
+        contentTable.add(bottomButtonTable).bottom().left();
+
         socialStack.add(contentTable);
         menuContentTable.add(socialStack).width(Gdx.graphics.getWidth() * 0.8f).height(Gdx.graphics.getHeight() * 0.8f);
-        addBackButtonToMenu();
     }
 
     private void showSettingsMenu() {
         menuContentTable.clear();
+        Stack settingsStack = new Stack();
+        settingsStack.add(new Image(inventoryBackground));
+
+        Table contentTable = new Table();
 
         TextButton leaveGameButton = new TextButton("Leave Game", skin);
         TextButton kickPlayerButton = new TextButton("Kick Player", skin);
@@ -3737,20 +3784,34 @@ public class GDXGameScreen implements Screen {
             }
         });
 
-        menuContentTable.add(leaveGameButton).width(200).pad(10).row();
-        menuContentTable.add(kickPlayerButton).width(200).pad(10).row();
-        addBackButtonToMenu();
+        // A table to center the main buttons
+        Table mainButtons = new Table();
+        mainButtons.add(leaveGameButton).width(200).pad(10).row();
+        mainButtons.add(kickPlayerButton).width(200).pad(10).row();
+
+        // Add the main buttons to the content table, allowing them to expand and center
+        contentTable.add(mainButtons).expand().center().row();
+
+        // A separate table for the back button to align it to the bottom-left
+        Table bottomButtonTable = new Table();
+        addBackButtonToMenu(bottomButtonTable);
+        contentTable.add(bottomButtonTable).bottom().left();
+
+        settingsStack.add(contentTable);
+        menuContentTable.add(settingsStack).width(Gdx.graphics.getWidth() * 0.8f).height(Gdx.graphics.getHeight() * 0.8f);
     }
 
-    private void addBackButtonToMenu() {
+    private void addBackButtonToMenu(Table buttonTable) {
         TextButton backButton = new TextButton("Back", skin);
         backButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
+                isTrashModeActive = false;
+                isInfoMenuOpen = false;
                 showMainMenuButtons();
             }
         });
-        menuContentTable.add(backButton).pad(10).bottom().left();
+        buttonTable.add(backButton).pad(10);
     }
 
     private void updateInventoryGrid(Table table, boolean showOnlyPlantables) {
@@ -3805,6 +3866,15 @@ public class GDXGameScreen implements Screen {
                 generalMessageLabel.setVisible(true);
                 generalMessageTimer = GENERAL_MESSAGE_DURATION;
                 }});
+            }
+            else if (isTrashModeActive) {
+                itemSlot.addListener(new ClickListener() {
+                    @Override
+                    public void clicked(InputEvent event, float x, float y) {
+                        // Show a confirmation dialog before deleting
+                        showTrashConfirmationDialog(item);
+                    }
+                });
             }
 
             table.add(itemSlot).pad(8);
@@ -4320,8 +4390,6 @@ public class GDXGameScreen implements Screen {
         spriteBatch.end();
     }
 
-    // --- START: NEW METHODS FOR MACHINE HANDLING ---
-
     private void handleMachinePlacement() {
         if (!isMachinePlacementMode) return;
 
@@ -4580,6 +4648,111 @@ public class GDXGameScreen implements Screen {
         spriteBatch.draw(progressBarFill, progressX, progressY, progressBarBg.getWidth(), barHeight * minigame.getCaptureProgress());
 
         spriteBatch.end();
+    }
+
+    private void setupInfoMenuUI() {}
+
+    private void showInfoMenu() {
+        menuContentTable.clear();
+        isInfoMenuOpen = true;
+
+        Stack infoStack = new Stack();
+        infoStack.add(new Image(inventoryBackground));
+
+        Table contentTable = new Table();
+        contentTable.pad(20);
+
+        TextField searchField = new TextField("", skin);
+        searchField.setMessageText("Enter plant or tree name...");
+
+        TextButton searchButton = new TextButton("Get Info", skin);
+
+        // --- NEW: Image widget for the plant/tree ---
+        Image itemImage = new Image();
+
+        // --- MODIFIED: Label with center alignment ---
+        Label infoLabel = new Label("Enter a name and click 'Get Info'.", skin);
+        infoLabel.setWrap(true);
+        infoLabel.setAlignment(Align.center); // Center the text
+
+        ScrollPane scrollPane = new ScrollPane(infoLabel, skin);
+        scrollPane.setFadeScrollBars(false);
+
+        searchButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                String plantName = searchField.getText().trim();
+                if (plantName.isEmpty()) {
+                    infoLabel.setText("Please enter a name.");
+                    itemImage.setDrawable(null); // Clear the image
+                    return;
+                }
+
+                // First, try searching for a crop
+                Result result = controller.craftInfo(plantName);
+                String textureKey = null;
+
+                if (result.isSuccessful()) {
+                    // Find the CropType to get its enum name for the texture
+                    for (CropType type : CropType.values()) {
+                        if (type.getName().equalsIgnoreCase(plantName)) {
+                            textureKey = type.getEnumName();
+                            break;
+                        }
+                    }
+                } else {
+                    // If not found, try searching for a tree
+                    result = controller.treeInfo(plantName);
+                    if (result.isSuccessful()) {
+                        // Find the TreeType to get its enum name for the texture
+                        for (TreeType type : TreeType.values()) {
+                            if (type.getName().equalsIgnoreCase(plantName)) {
+                                textureKey = type.getEnumName();
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                // Display the result text
+                if (result.isSuccessful()) {
+                    infoLabel.setText(result.Message());
+                } else {
+                    infoLabel.setText("Could not find information for '" + plantName + "'.");
+                }
+
+                // --- NEW: Update the image ---
+                if (textureKey != null) {
+                    Texture itemTexture = textureManager.getTexture(textureKey);
+                    if (itemTexture != null) {
+                        itemImage.setDrawable(new TextureRegionDrawable(new TextureRegion(itemTexture)));
+                    } else {
+                        itemImage.setDrawable(null); // Clear image if texture not found
+                    }
+                } else {
+                    itemImage.setDrawable(null); // Clear image if no key found
+                }
+            }
+        });
+
+        Table searchBar = new Table();
+        searchBar.add(searchField).width(300).padRight(10);
+        searchBar.add(searchButton);
+
+        contentTable.add(searchBar).padBottom(15).row();
+        contentTable.add(itemImage).size(64, 64).padBottom(15).row(); // <-- ADDED image widget
+        contentTable.add(scrollPane).expand().fill().padBottom(15).row();
+
+        Table bottomButtonTable = new Table();
+        addBackButtonToMenu(bottomButtonTable);
+        contentTable.add(bottomButtonTable).bottom().left();
+
+        infoStack.add(contentTable);
+        menuContentTable.add(infoStack).width(Gdx.graphics.getWidth() * 0.8f).height(Gdx.graphics.getHeight() * 0.8f);
+    }
+
+    private void renderInfoMenu(float delta) {
+        if (!isInfoMenuOpen) return;
     }
 
     @Override
@@ -5961,7 +6134,22 @@ public class GDXGameScreen implements Screen {
         }
         dialog.button(fridgeButton, "refrigerator");
 
-        dialog.show(cookingStage); // Show the dialog on the cooking stage
+        dialog.show(cookingStage);
     }
 
+    private void showTrashConfirmationDialog(Item item) {
+        new Dialog("Confirm Deletion", skin, "dialog") {
+            protected void result(Object object) {
+                if (Boolean.TRUE.equals(object)) {
+                    controller.removeItemFromInventory(item.getName(), item.getNumber());
+                    showInventoryDisplay(false);
+                }
+            }
+        }.text("Are you sure you want to permanently delete all " + item.getNumber() + "x " + item.getName() + "?")
+            .button("Yes, Delete", true)
+            .button("No, Cancel", false)
+            .key(Input.Keys.ENTER, true)
+            .key(Input.Keys.ESCAPE, false)
+            .show(inventoryStage);
+    }
 }

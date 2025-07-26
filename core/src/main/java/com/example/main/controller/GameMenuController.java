@@ -1141,25 +1141,22 @@ public class GameMenuController {
         return new Result(true, items.toString());
     }
 
-    public Result removeItemFromInventory(String itemName, String itemNumberStr) {
-        // todo : handle trim in view for now
-        // todo : calculate return money
-        Inventory inventory = game.getCurrentPlayer().getInventory();
-        int itemNumber;
-        Item item;
-        if ((item = findItem(itemName, inventory.getItems())) == null) {
-            return new Result(false, "Item not found");
+    public Result removeItemFromInventory(String itemName, int quantity) {
+        Player player = game.getCurrentPlayer();
+        Item item = player.getInventory().getItemByName(itemName);
+
+        if (item == null) {
+            return new Result(false, "Item not found.");
+        }
+        if (item.getNumber() < quantity) {
+            return new Result(false, "Not enough items to remove.");
+        }
+        if (item instanceof Tool) {
+            return new Result(false, "Cannot trash a tool!");
         }
 
-        if (itemNumberStr != null && !itemNumberStr.isEmpty()) {
-            itemNumber = Integer.parseInt(itemNumberStr);
-            item.setNumber(item.getNumber() - itemNumber);
-            return new Result(true, "x" + itemNumber + item.getName() + " has been removed");
-        } else {
-            inventory.getItems().remove(item);
-            inventory.addNumOfItems(-1);
-            return new Result(true, "Item removed from inventory");
-        }
+        player.getInventory().remove2(itemName, quantity);
+        return new Result(true, quantity + "x " + itemName + " removed from inventory.");
     }
 
     public Result equipTool(String toolName){
