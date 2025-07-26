@@ -237,7 +237,6 @@ public class GameMenuController {
         boolean isPlayerAvailable = game.switchCurrentPlayer();
         if(isPlayerAvailable){
             game.getCurrentPlayer().showNotifs();
-            game.getCurrentPlayer().resetNotifs();
             return new Result(true, "Game switched to " + game.getCurrentPlayer().getUsername() + " ");
         }
         return new Result(false, "you can not switch to other players");

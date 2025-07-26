@@ -146,7 +146,7 @@ public class Player {
     }
 
     public void setSpouse(Player player) {
-        this.spouse = spouse;
+        this.spouse = player;
     }
 
     public void addNotif(Player sender, String message) {

@@ -523,7 +523,9 @@ public class GDXGameScreen implements Screen {
         GIFT_MENU,
         RECEIVED_GIFTS,
         GIFT_HISTORY,
-        SEND_GIFT
+        SEND_GIFT,
+        MARRIAGE_MENU,
+        MARRIAGE_RESPOND
     }
 
     private FriendsMenuState currentFriendsMenuState = FriendsMenuState.MAIN_MENU;
@@ -555,6 +557,11 @@ public class GDXGameScreen implements Screen {
     private ScrollPane sendGiftScrollPane;
     private String giftErrorMessage = "";
     private boolean showGiftError = false;
+    
+    // Marriage variables
+    private String marriageErrorMessage = "";
+    private boolean showMarriageError = false;
+    private String marriageProposer = null;
 
     public GDXGameScreen() {
         controller = new GameMenuController();
@@ -713,7 +720,6 @@ public class GDXGameScreen implements Screen {
             generalMessageLabel.setColor(Color.CYAN); // Use a distinct color for notifications
             generalMessageLabel.setVisible(true);
             generalMessageTimer = GENERAL_MESSAGE_DURATION;
-            currentPlayer.resetNotifs(); // Clear notifications after displaying
         }
 
         if (currentPlayer != null && currentPlayer.getCurrentTool() != null) {
@@ -5816,6 +5822,12 @@ public class GDXGameScreen implements Screen {
             case SEND_GIFT:
                 createSendGiftMenu();
                 break;
+            case MARRIAGE_MENU:
+                createMarriageMenu();
+                break;
+            case MARRIAGE_RESPOND:
+                createMarriageRespondMenu();
+                break;
         }
     }
 
@@ -5990,10 +6002,10 @@ public class GDXGameScreen implements Screen {
         marriageButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                Result result = controller.askMarriage(selectedPlayerForActions);
-                generalMessageLabel.setText(result.Message());
-                generalMessageLabel.setVisible(true);
-                generalMessageTimer = GENERAL_MESSAGE_DURATION;
+                currentFriendsMenuState = FriendsMenuState.MARRIAGE_MENU;
+                marriageErrorMessage = "";
+                showMarriageError = false;
+                createFriendsMenuUI();
             }
         });
 
@@ -6370,8 +6382,10 @@ public class GDXGameScreen implements Screen {
         if (!message.isEmpty()) {
             Result result = controller.talk(selectedPlayerForActions, message);
             if (result.isSuccessful()) {
-                // Only mark as unread for the recipient, not the sender
-                unreadTalkNotifications.put(selectedPlayerForActions, true);
+                // Only mark as unread for the receiver, not the sender
+                if (!selectedPlayerForActions.equals(game.getCurrentPlayer().getUsername())) {
+                    unreadTalkNotifications.put(selectedPlayerForActions, true);
+                }
                 chatMessageField.setText("");
                 loadChatHistory();
                 chatScrollPane.setScrollPercentY(1.0f);
@@ -6766,5 +6780,222 @@ public class GDXGameScreen implements Screen {
         });
         
         friendsMenuTable.add(backButton).size(200, 50).pad(10).row();
+    }
+    
+    private void createMarriageMenu() {
+        friendsMenuTable.clear();
+        
+        // Title
+        Label titleLabel = new Label("Marriage Menu", skin);
+        titleLabel.setFontScale(1.5f);
+        friendsMenuTable.add(titleLabel).colspan(2).pad(20).row();
+        
+        // Error message display
+        if (showMarriageError && !marriageErrorMessage.isEmpty()) {
+            Label errorLabel = new Label(marriageErrorMessage, skin);
+            errorLabel.setColor(Color.RED);
+            friendsMenuTable.add(errorLabel).colspan(2).pad(10).row();
+        }
+        
+        // Marriage menu buttons
+        TextButton askMarriageButton = new TextButton("Ask Marriage", skin);
+        TextButton respondButton = new TextButton("Respond", skin);
+        TextButton backButton = new TextButton("Back", skin);
+        TextButton closeButton = new TextButton("Close", skin);
+        
+        // Add button listeners
+        askMarriageButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                Result result = controller.askMarriage(selectedPlayerForActions);
+                if (result.isSuccessful()) {
+                    // Close menu on success
+                    showFriendsMenu = false;
+                    currentFriendsMenuState = FriendsMenuState.MAIN_MENU;
+                    selectedPlayerForActions = null;
+                    if (friendsMenuTable != null) {
+                        friendsMenuTable.remove();
+                        friendsMenuTable = null;
+                    }
+                    Gdx.input.setInputProcessor(multiplexer);
+                } else {
+                    // Show error message in red on top of menu
+                    marriageErrorMessage = result.Message();
+                    showMarriageError = true;
+                    createMarriageMenu();
+                }
+            }
+        });
+        
+        respondButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                currentFriendsMenuState = FriendsMenuState.MARRIAGE_RESPOND;
+                createFriendsMenuUI();
+            }
+        });
+        
+        backButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                currentFriendsMenuState = FriendsMenuState.PLAYER_ACTIONS;
+                marriageErrorMessage = "";
+                showMarriageError = false;
+                createFriendsMenuUI();
+            }
+        });
+        
+        closeButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                showFriendsMenu = false;
+                currentFriendsMenuState = FriendsMenuState.MAIN_MENU;
+                selectedPlayerForActions = null;
+                marriageErrorMessage = "";
+                showMarriageError = false;
+                if (friendsMenuTable != null) {
+                    friendsMenuTable.remove();
+                    friendsMenuTable = null;
+                }
+                Gdx.input.setInputProcessor(multiplexer);
+            }
+        });
+        
+        // Add buttons to table
+        friendsMenuTable.add(askMarriageButton).size(200, 50).pad(10).row();
+        friendsMenuTable.add(respondButton).size(200, 50).pad(10).row();
+        friendsMenuTable.add(backButton).size(200, 50).pad(10).row();
+        friendsMenuTable.add(closeButton).size(200, 50).pad(10).row();
+    }
+    
+    private void createMarriageRespondMenu() {
+        friendsMenuTable.clear();
+        
+        // Title
+        Label titleLabel = new Label("Marriage Proposals", skin);
+        titleLabel.setFontScale(1.5f);
+        friendsMenuTable.add(titleLabel).colspan(2).pad(20).row();
+        
+        // Check if there are any marriage proposals
+        Player currentPlayer = game.getCurrentPlayer();
+        ArrayList<Notification> notifications = currentPlayer.getNotifications();
+        boolean hasMarriageProposals = false;
+        
+        // Look for marriage proposal notifications
+        for (Notification notification : notifications) {
+            if (notification.getMessage().contains(" has proposed to you!")) {
+                hasMarriageProposals = true;
+                String proposerName = notification.sender().getUsername();
+                
+                // Display the proposal
+                Label proposalLabel = new Label(proposerName + " has proposed to you!", skin);
+                proposalLabel.setFontScale(1.2f);
+                friendsMenuTable.add(proposalLabel).colspan(2).pad(10).row();
+                
+                // Accept and Reject buttons
+                TextButton acceptButton = new TextButton("Accept", skin);
+                TextButton rejectButton = new TextButton("Reject", skin);
+                
+                acceptButton.addListener(new ClickListener() {
+                    @Override
+                    public void clicked(InputEvent event, float x, float y) {
+                        Result result = controller.respondToMarriage("accept", proposerName);
+                        if (result.isSuccessful()) {
+                            // Remove the proposal notification after responding
+                            removeMarriageProposalNotification(proposerName);
+                            showFriendsMenu = false;
+                            currentFriendsMenuState = FriendsMenuState.MAIN_MENU;
+                            selectedPlayerForActions = null;
+                            if (friendsMenuTable != null) {
+                                friendsMenuTable.remove();
+                                friendsMenuTable = null;
+                            }
+                            Gdx.input.setInputProcessor(multiplexer);
+                        } else {
+                            generalMessageLabel.setText(result.Message());
+                            generalMessageLabel.setVisible(true);
+                            generalMessageTimer = GENERAL_MESSAGE_DURATION;
+                        }
+                    }
+                });
+                
+                rejectButton.addListener(new ClickListener() {
+                    @Override
+                    public void clicked(InputEvent event, float x, float y) {
+                        Result result = controller.respondToMarriage("reject", proposerName);
+                        if (result.isSuccessful()) {
+                            // Remove the proposal notification after responding
+                            removeMarriageProposalNotification(proposerName);
+                            showFriendsMenu = false;
+                            currentFriendsMenuState = FriendsMenuState.MAIN_MENU;
+                            selectedPlayerForActions = null;
+                            if (friendsMenuTable != null) {
+                                friendsMenuTable.remove();
+                                friendsMenuTable = null;
+                            }
+                            Gdx.input.setInputProcessor(multiplexer);
+                        } else {
+                            generalMessageLabel.setText(result.Message());
+                            generalMessageLabel.setVisible(true);
+                            generalMessageTimer = GENERAL_MESSAGE_DURATION;
+                        }
+                    }
+                });
+                
+                friendsMenuTable.add(acceptButton).size(150, 40).pad(5);
+                friendsMenuTable.add(rejectButton).size(150, 40).pad(5).row();
+            }
+        }
+        
+        if (!hasMarriageProposals) {
+            Label messageLabel = new Label("No marriage proposals found.", skin);
+            messageLabel.setAlignment(Align.center);
+            friendsMenuTable.add(messageLabel).colspan(2).pad(20).row();
+        }
+        
+        // Back and Close buttons
+        TextButton backButton = new TextButton("Back", skin);
+        TextButton closeButton = new TextButton("Close", skin);
+        
+        backButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                currentFriendsMenuState = FriendsMenuState.MARRIAGE_MENU;
+                createFriendsMenuUI();
+            }
+        });
+        
+        closeButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                showFriendsMenu = false;
+                currentFriendsMenuState = FriendsMenuState.MAIN_MENU;
+                selectedPlayerForActions = null;
+                if (friendsMenuTable != null) {
+                    friendsMenuTable.remove();
+                    friendsMenuTable = null;
+                }
+                Gdx.input.setInputProcessor(multiplexer);
+            }
+        });
+        
+        // Add buttons to table
+        friendsMenuTable.add(backButton).size(200, 50).pad(10).row();
+        friendsMenuTable.add(closeButton).size(200, 50).pad(10).row();
+    }
+    
+    // Helper to remove marriage proposal notification after responding
+    private void removeMarriageProposalNotification(String proposerName) {
+        Player currentPlayer = game.getCurrentPlayer();
+        ArrayList<Notification> notifications = currentPlayer.getNotifications();
+        notifications.removeIf(n -> n.sender() != null && n.sender().getUsername().equals(proposerName) && n.getMessage().contains(" has proposed to you!"));
+    }
+    
+    // In the gift sending logic, only set unread for the receiver
+    // (Assume this is called after a successful gift)
+    private void markGiftNotificationForReceiver(String receiverUsername) {
+        if (!receiverUsername.equals(game.getCurrentPlayer().getUsername())) {
+            unreadGiftNotifications.put(receiverUsername, true);
+        }
     }
 }

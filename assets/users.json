@@ -49,4 +49,14 @@
 	securityQuestion: PetName
 	securityAnswer: cat
 }
+{
+	class: com.example.main.models.User
+	username: girl
+	password: Girl123!
+	nickname: girl
+	email: girl@gmail.com
+	gender: Female
+	securityQuestion: PetName
+	securityAnswer: pet
+}
 ]
