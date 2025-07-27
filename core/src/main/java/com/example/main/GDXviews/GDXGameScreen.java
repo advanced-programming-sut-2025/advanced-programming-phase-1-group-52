@@ -561,6 +561,13 @@ public class GDXGameScreen implements Screen {
     private TextField giftRatingField;
     private String selectedGiftId = null;
     
+    // Sell menu variables
+    private boolean showSellMenu = false;
+    private Table sellMenuTable;
+    private ScrollPane sellMenuScrollPane;
+    private String sellErrorMessage = "";
+    private boolean showSellError = false;
+    
     // Send gift variables
     private Table sendGiftTable;
     private ScrollPane sendGiftScrollPane;
@@ -791,6 +798,7 @@ public class GDXGameScreen implements Screen {
         renderCookingCheatMenu(delta);
         renderEatMenu(delta);
         renderFriendsMenu(delta);
+        renderSellMenu(delta);
         renderBuffs();
 
         stage.act(delta);
@@ -1203,7 +1211,7 @@ public class GDXGameScreen implements Screen {
         }
 
         if (isInventoryOpen || isToolMenuOpen || isCheatMenuOpen || isPlantingSelectionOpen
-            || isCraftingMenuOpen || isCookingMenuOpen || isCraftingCheatMenuOpen || isCookingCheatMenuOpen || isEatMenuOpen) {
+            || isCraftingMenuOpen || isCookingMenuOpen || isCraftingCheatMenuOpen || isCookingCheatMenuOpen || isEatMenuOpen || showSellMenu) {
             return;
         }
 
@@ -5548,16 +5556,10 @@ public class GDXGameScreen implements Screen {
         
         // Check if click is on the current player's trash can
         if (currentPlayer.getTrashCanX() == tileX && currentPlayer.getTrashCanY() == tileY) {
-            // Show a message about the trash can
-            TrashCan trashCan = currentPlayer.getTrashCan();
-            if (trashCan != null) {
-                String message = "Trash Can: " + trashCan.getTrashCanType().getName() + 
-                               " (Efficiency: " + trashCan.getPercentage() + "%)";
-                generalMessageLabel.setText(message);
-                generalMessageLabel.setColor(Color.CYAN);
-                generalMessageLabel.setVisible(true);
-                generalMessageTimer = GENERAL_MESSAGE_DURATION;
-            }
+            // Open the sell menu
+            showSellMenu = true;
+            createSellMenuUI();
+            Gdx.input.setInputProcessor(stage);
             return true;
         }
         
@@ -6152,6 +6154,15 @@ public class GDXGameScreen implements Screen {
 
     private void renderFriendsMenu(float delta) {
         if (!showFriendsMenu) {
+            return;
+        }
+
+        // The menu is rendered by the stage, so we just need to act on it
+        stage.act(delta);
+    }
+
+    private void renderSellMenu(float delta) {
+        if (!showSellMenu) {
             return;
         }
 
@@ -6885,34 +6896,172 @@ public class GDXGameScreen implements Screen {
         friendsMenuTable.add(backButton).size(200, 50).pad(10).row();
     }
     
+    private void createSellMenuUI() {
+        if (sellMenuTable != null) {
+            sellMenuTable.remove();
+        }
+
+        sellMenuTable = new Table();
+        sellMenuTable.setBackground(new TextureRegionDrawable(menuBackgroundTexture));
+        sellMenuTable.setSize(Gdx.graphics.getWidth() * 0.75f, Gdx.graphics.getHeight() * 0.75f);
+        sellMenuTable.setPosition(
+            (Gdx.graphics.getWidth() - sellMenuTable.getWidth()) / 2f,
+            (Gdx.graphics.getHeight() - sellMenuTable.getHeight()) / 2f
+        );
+
+        stage.addActor(sellMenuTable);
+
+        Label titleLabel = new Label("Sell Items", skin);
+        titleLabel.setFontScale(1.5f);
+        sellMenuTable.add(titleLabel).colspan(2).pad(20).row();
+        
+        if (showSellError && !sellErrorMessage.isEmpty()) {
+            Label errorLabel = new Label(sellErrorMessage, skin);
+            errorLabel.setColor(Color.RED);
+            sellMenuTable.add(errorLabel).colspan(2).pad(10).row();
+        }
+        
+        Result result = controller.showInventoryItems();
+        String inventoryText = result.Message();
+        
+        Table itemsTable = new Table();
+        itemsTable.defaults().expandX().fillX().pad(2);
+        
+        if (inventoryText.contains("You have no items") || inventoryText.trim().isEmpty()) {
+            Label noItemsLabel = new Label("No items in inventory!", skin);
+            noItemsLabel.setColor(Color.GRAY);
+            itemsTable.add(noItemsLabel).row();
+        } else {
+            String[] lines = inventoryText.split("\n");
+            for (String line : lines) {
+                if (line.trim().isEmpty()) continue;
+                
+                String[] parts = line.split(" x");
+                if (parts.length == 2) {
+                    String itemName = parts[0].trim();
+                    int maxAmount = Integer.parseInt(parts[1].trim());
+                    
+                    Table itemRow = new Table();
+                    itemRow.defaults().expandX().fillX().pad(2);
+                    
+                    Label itemLabel = new Label(itemName + " x" + maxAmount, skin);
+                    itemRow.add(itemLabel).expandX().left().pad(5);
+                    
+                    TextField amountField = new TextField("1", skin);
+                    amountField.setTextFieldFilter(new TextField.TextFieldFilter.DigitsOnlyFilter());
+                    itemRow.add(amountField).size(80, 30).pad(5);
+                    
+                    TextButton sellButton = new TextButton("Sell", skin);
+                    sellButton.addListener(new ClickListener() {
+                        @Override
+                        public void clicked(InputEvent event, float x, float y) {
+                            String amountText = amountField.getText().trim();
+                            if (amountText.isEmpty()) {
+                                sellErrorMessage = "Please enter an amount";
+                                showSellError = true;
+                                createSellMenuUI();
+                                return;
+                            }
+                            
+                            int amount;
+                            try {
+                                amount = Integer.parseInt(amountText);
+                            } catch (NumberFormatException e) {
+                                sellErrorMessage = "Invalid amount";
+                                showSellError = true;
+                                createSellMenuUI();
+                                return;
+                            }
+                            
+                            if (amount <= 0) {
+                                sellErrorMessage = "Amount must be greater than 0";
+                                showSellError = true;
+                                createSellMenuUI();
+                                return;
+                            }
+                            
+                            if (amount > maxAmount) {
+                                sellErrorMessage = "You don't have enough " + itemName;
+                                showSellError = true;
+                                createSellMenuUI();
+                                return;
+                            }
+                            
+                            Result sellResult = controller.sell(itemName, String.valueOf(amount));
+                            if (sellResult.isSuccessful()) {
+                                showSellMenu = false;
+                                sellErrorMessage = "";
+                                showSellError = false;
+                                if (sellMenuTable != null) {
+                                    sellMenuTable.remove();
+                                    sellMenuTable = null;
+                                }
+                                Gdx.input.setInputProcessor(multiplexer);
+                                
+                                generalMessageLabel.setText(sellResult.Message());
+                                generalMessageLabel.setVisible(true);
+                                generalMessageTimer = GENERAL_MESSAGE_DURATION;
+                            } else {
+                                sellErrorMessage = sellResult.Message();
+                                showSellError = true;
+                                createSellMenuUI();
+                            }
+                        }
+                    });
+                    itemRow.add(sellButton).size(80, 30).pad(5);
+                    
+                    itemsTable.add(itemRow).row();
+                }
+            }
+        }
+        
+        sellMenuScrollPane = new ScrollPane(itemsTable, skin);
+        sellMenuScrollPane.setFadeScrollBars(false);
+        sellMenuScrollPane.setScrollBarPositions(false, true);
+        
+        sellMenuTable.add(sellMenuScrollPane).size(600, 400).pad(10).row();
+        
+        TextButton closeButton = new TextButton("Close", skin);
+        closeButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                showSellMenu = false;
+                sellErrorMessage = "";
+                showSellError = false;
+                if (sellMenuTable != null) {
+                    sellMenuTable.remove();
+                    sellMenuTable = null;
+                }
+                Gdx.input.setInputProcessor(multiplexer);
+            }
+        });
+        
+        sellMenuTable.add(closeButton).size(200, 50).pad(10).row();
+    }
+    
     private void createMarriageMenu() {
         friendsMenuTable.clear();
         
-        // Title
         Label titleLabel = new Label("Marriage Menu", skin);
         titleLabel.setFontScale(1.5f);
         friendsMenuTable.add(titleLabel).colspan(2).pad(20).row();
         
-        // Error message display
         if (showMarriageError && !marriageErrorMessage.isEmpty()) {
             Label errorLabel = new Label(marriageErrorMessage, skin);
             errorLabel.setColor(Color.RED);
             friendsMenuTable.add(errorLabel).colspan(2).pad(10).row();
         }
         
-        // Marriage menu buttons
         TextButton askMarriageButton = new TextButton("Ask Marriage", skin);
         TextButton respondButton = new TextButton("Respond", skin);
         TextButton backButton = new TextButton("Back", skin);
         TextButton closeButton = new TextButton("Close", skin);
         
-        // Add button listeners
         askMarriageButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
                 Result result = controller.askMarriage(selectedPlayerForActions);
                 if (result.isSuccessful()) {
-                    // Close menu on success
                     showFriendsMenu = false;
                     currentFriendsMenuState = FriendsMenuState.MAIN_MENU;
                     selectedPlayerForActions = null;
@@ -6922,7 +7071,6 @@ public class GDXGameScreen implements Screen {
                     }
                     Gdx.input.setInputProcessor(multiplexer);
                 } else {
-                    // Show error message in red on top of menu
                     marriageErrorMessage = result.Message();
                     showMarriageError = true;
                     createMarriageMenu();
@@ -6973,29 +7121,24 @@ public class GDXGameScreen implements Screen {
     
     private void createMarriageRespondMenu() {
         friendsMenuTable.clear();
-        
-        // Title
+
         Label titleLabel = new Label("Marriage Proposals", skin);
         titleLabel.setFontScale(1.5f);
         friendsMenuTable.add(titleLabel).colspan(2).pad(20).row();
         
-        // Check if there are any marriage proposals
         Player currentPlayer = game.getCurrentPlayer();
         ArrayList<Notification> notifications = currentPlayer.getNotifications();
         boolean hasMarriageProposals = false;
         
-        // Look for marriage proposal notifications
         for (Notification notification : notifications) {
             if (notification.getMessage().contains(" has proposed to you!")) {
                 hasMarriageProposals = true;
                 String proposerName = notification.sender().getUsername();
                 
-                // Display the proposal
                 Label proposalLabel = new Label(proposerName + " has proposed to you!", skin);
                 proposalLabel.setFontScale(1.2f);
                 friendsMenuTable.add(proposalLabel).colspan(2).pad(10).row();
                 
-                // Accept and Reject buttons
                 TextButton acceptButton = new TextButton("Accept", skin);
                 TextButton rejectButton = new TextButton("Reject", skin);
                 
@@ -7004,7 +7147,6 @@ public class GDXGameScreen implements Screen {
                     public void clicked(InputEvent event, float x, float y) {
                         Result result = controller.respondToMarriage("accept", proposerName);
                         if (result.isSuccessful()) {
-                            // Remove the proposal notification after responding
                             removeMarriageProposalNotification(proposerName);
                             showFriendsMenu = false;
                             currentFriendsMenuState = FriendsMenuState.MAIN_MENU;
@@ -7027,7 +7169,6 @@ public class GDXGameScreen implements Screen {
                     public void clicked(InputEvent event, float x, float y) {
                         Result result = controller.respondToMarriage("reject", proposerName);
                         if (result.isSuccessful()) {
-                            // Remove the proposal notification after responding
                             removeMarriageProposalNotification(proposerName);
                             showFriendsMenu = false;
                             currentFriendsMenuState = FriendsMenuState.MAIN_MENU;
@@ -7056,7 +7197,6 @@ public class GDXGameScreen implements Screen {
             friendsMenuTable.add(messageLabel).colspan(2).pad(20).row();
         }
         
-        // Back and Close buttons
         TextButton backButton = new TextButton("Back", skin);
         TextButton closeButton = new TextButton("Close", skin);
         
@@ -7082,20 +7222,16 @@ public class GDXGameScreen implements Screen {
             }
         });
         
-        // Add buttons to table
         friendsMenuTable.add(backButton).size(200, 50).pad(10).row();
         friendsMenuTable.add(closeButton).size(200, 50).pad(10).row();
     }
     
-    // Helper to remove marriage proposal notification after responding
     private void removeMarriageProposalNotification(String proposerName) {
         Player currentPlayer = game.getCurrentPlayer();
         ArrayList<Notification> notifications = currentPlayer.getNotifications();
         notifications.removeIf(n -> n.sender() != null && n.sender().getUsername().equals(proposerName) && n.getMessage().contains(" has proposed to you!"));
     }
     
-    // In the gift sending logic, only set unread for the receiver
-    // (Assume this is called after a successful gift)
     private void markGiftNotificationForReceiver(String receiverUsername) {
         if (!receiverUsername.equals(game.getCurrentPlayer().getUsername())) {
             unreadGiftNotifications.put(receiverUsername, true);
