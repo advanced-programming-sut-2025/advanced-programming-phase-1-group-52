@@ -1,25 +1,27 @@
 package com.example.main.enums.items;
 
 public enum FruitType implements ItemType{
-    Apricot("Apricot"),
-    Cherry("Cherry"),
-    Banana("Banana"),
-    Mango("Mango"),
-    Orange("Orange"),
-    Peach("Peach"),
-    Apple("Apple"),
-    Pomegranate("Pomegranate"),
-    Oak_Resin("Oak resin"),
-    Maple_Syrup("Maple syrup"),
-    Pine_Tar("Pine tar"),
-    Sap("Sap"),
-    Common_Mushroom("Common mushroom"),
-    Mystic_Syrup("Mystic syrup");
+    Apricot("Apricot", 50),
+    Cherry("Cherry", 10),
+    Banana("Banana", 30),
+    Mango("Mango", 40),
+    Orange("Orange", 20),
+    Peach("Peach", 15),
+    Apple("Apple", 15),
+    Pomegranate("Pomegranate", 30),
+    Oak_Resin("Oak resin", 40),
+    Maple_Syrup("Maple syrup", 50),
+    Pine_Tar("Pine tar", 50),
+    Sap("Sap", 40),
+    Common_Mushroom("Common mushroom", 10),
+    Mystic_Syrup("Mystic syrup", 50);
 
     private final String fruitName;
+    private final int price;
 
-    FruitType(String fruitName) {
+    FruitType(String fruitName, int price) {
         this.fruitName = fruitName;
+        this.price = price;
     }
 
     @Override
@@ -34,5 +36,9 @@ public enum FruitType implements ItemType{
 
     public String getEnumName() {
         return name();
+    }
+
+    public int getPrice() {
+        return price;
     }
 }

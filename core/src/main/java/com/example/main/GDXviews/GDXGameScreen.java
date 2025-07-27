@@ -61,6 +61,7 @@ import com.example.main.enums.items.CookingRecipeType;
 import com.example.main.enums.items.CraftingRecipes;
 import com.example.main.enums.items.CropType;
 import com.example.main.enums.items.ItemType;
+import com.example.main.enums.items.TrashCanType;
 import com.example.main.enums.items.TreeType;
 import com.example.main.enums.player.Skills;
 import static com.example.main.enums.player.Skills.Farming;
@@ -92,6 +93,7 @@ import com.example.main.models.item.Item;
 import com.example.main.models.item.PurchasedAnimal;
 import com.example.main.models.item.Seed;
 import com.example.main.models.item.Tool;
+import com.example.main.models.item.TrashCan;
 
 public class GDXGameScreen implements Screen {
     private Stage stage;
@@ -307,6 +309,13 @@ public class GDXGameScreen implements Screen {
 
     private Texture barnTexture;
     private Texture coopTexture;
+    
+    // Trash can textures
+    private Texture trashCanTexture;
+    private Texture copperTrashCanTexture;
+    private Texture steelTrashCanTexture;
+    private Texture goldTrashCanTexture;
+    private Texture iridiumTrashCanTexture;
     
     // Animal textures
     private Map<AnimalType, Texture> animalTextures = new HashMap<>();
@@ -868,6 +877,13 @@ public class GDXGameScreen implements Screen {
         barnTexture = new Texture("content/Cut/map_elements/Barn.png");
         coopTexture = new Texture("content/Cut/map_elements/Coop.png");
 
+        // Load trash can textures
+        trashCanTexture = new Texture("content/Cut/map_elements/Trash_Can.png");
+        copperTrashCanTexture = new Texture("content/Cut/map_elements/Trash_Can.png"); // Using same texture for now
+        steelTrashCanTexture = new Texture("content/Cut/map_elements/Trash_Can.png"); // Using same texture for now
+        goldTrashCanTexture = new Texture("content/Cut/map_elements/Trash_Can.png"); // Using same texture for now
+        iridiumTrashCanTexture = new Texture("content/Cut/map_elements/Trash_Can.png"); // Using same texture for now
+
         maleIdleTexture = new Texture("content/Cut/player/male_idle.png");
         maleDown1Texture = new Texture("content/Cut/player/male_down1.png");
         maleDown2Texture = new Texture("content/Cut/player/male_down2.png");
@@ -1259,6 +1275,10 @@ public class GDXGameScreen implements Screen {
         if (Gdx.input.isButtonJustPressed(Input.Buttons.LEFT)) {
             // First, check if an animal was clicked
             if (handleAnimalClick(Gdx.input.getX(), Gdx.input.getY())) {
+                return;
+            }
+            // Check if a trash can was clicked
+            if (handleTrashCanClick(Gdx.input.getX(), Gdx.input.getY())) {
                 return;
             }
             handleHousingClick(Gdx.input.getX(), Gdx.input.getY());
@@ -1865,6 +1885,7 @@ public class GDXGameScreen implements Screen {
 
         renderPlayer();
         renderNPCs();
+        renderTrashCans();
 
         updateNearbyNPCs();
         renderMeetButtons();
@@ -2041,6 +2062,42 @@ public class GDXGameScreen implements Screen {
         }
     }
 
+    private void renderTrashCans() {
+        for (User user : game.getPlayers()) {
+            Player player = user.getPlayer();
+            if (player == null) {
+                continue;
+            }
+
+            int trashCanX = player.getTrashCanX();
+            int trashCanY = player.getTrashCanY();
+
+            if (trashCanX < 0 || trashCanX >= MAP_WIDTH || trashCanY < 0 || trashCanY >= MAP_HEIGHT) {
+                continue;
+            }
+
+            float worldX = trashCanX * TILE_SIZE;
+            float worldY = (MAP_HEIGHT - 1 - trashCanY) * TILE_SIZE;
+
+            TrashCan trashCan = player.getTrashCan();
+            if (trashCan == null) {
+                continue;
+            }
+
+            Texture trashCanTexture = getTrashCanTexture(trashCan.getTrashCanType());
+            if (trashCanTexture == null) {
+                continue;
+            }
+
+            float trashCanWidth = TILE_SIZE; 
+            float trashCanHeight = TILE_SIZE; 
+            float renderX = worldX; 
+            float renderY = worldY; 
+
+            spriteBatch.draw(trashCanTexture, renderX, renderY, trashCanWidth, trashCanHeight);
+        }
+    }
+
     private Texture getNPCTexture(NPC npc) {
         NPCType npcType = npc.getType();
         switch (npcType) {
@@ -2056,6 +2113,23 @@ public class GDXGameScreen implements Screen {
                 return robinTexture;
             default:
                 return null;
+        }
+    }
+
+    private Texture getTrashCanTexture(TrashCanType trashCanType) {
+        switch (trashCanType) {
+            case Trash_Can:
+                return trashCanTexture;
+            case Copper_Trash_Can:
+                return copperTrashCanTexture;
+            case Steel_Trash_Can:
+                return steelTrashCanTexture;
+            case Gold_Trash_Can:
+                return goldTrashCanTexture;
+            case Iridium_Trash_Can:
+                return iridiumTrashCanTexture;
+            default:
+                return trashCanTexture;
         }
     }
 
@@ -5458,6 +5532,35 @@ public class GDXGameScreen implements Screen {
                 }
             }
         }
+        return false;
+    }
+
+    private boolean handleTrashCanClick(int screenX, int screenY) {
+        // Convert screen coordinates to world coordinates
+        Vector3 worldCoords = camera.unproject(new Vector3(screenX, screenY, 0));
+        
+        // Convert world coordinates to tile coordinates
+        int tileX = (int) (worldCoords.x / TILE_SIZE);
+        int tileY = (int) ((MAP_HEIGHT * TILE_SIZE - worldCoords.y) / TILE_SIZE);
+        
+        Player currentPlayer = game.getCurrentPlayer();
+        if (currentPlayer == null) return false;
+        
+        // Check if click is on the current player's trash can
+        if (currentPlayer.getTrashCanX() == tileX && currentPlayer.getTrashCanY() == tileY) {
+            // Show a message about the trash can
+            TrashCan trashCan = currentPlayer.getTrashCan();
+            if (trashCan != null) {
+                String message = "Trash Can: " + trashCan.getTrashCanType().getName() + 
+                               " (Efficiency: " + trashCan.getPercentage() + "%)";
+                generalMessageLabel.setText(message);
+                generalMessageLabel.setColor(Color.CYAN);
+                generalMessageLabel.setVisible(true);
+                generalMessageTimer = GENERAL_MESSAGE_DURATION;
+            }
+            return true;
+        }
+        
         return false;
     }
 

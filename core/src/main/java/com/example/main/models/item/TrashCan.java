@@ -7,6 +7,7 @@ public class TrashCan extends Item{
     private int percentage;
     public TrashCan(TrashCanType type, int number) {
         super(type, number);
+        this.trashCanType = type; 
         if (type.equals(TrashCanType.Trash_Can)){
             this.percentage = 0;
         }

@@ -680,6 +680,15 @@ public class Player {
         inventory.getItems().add(new TrashCan(TrashCanType.Trash_Can,1));
     }
 
+    public TrashCan getTrashCan() {
+        for (Item item : inventory.getItems()) {
+            if (item instanceof TrashCan) {
+                return (TrashCan) item;
+            }
+        }
+        return null;
+    }
+
     public HouseRefrigerator getHouseRefrigerator() {
         return houseRefrigerator;
     }

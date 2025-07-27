@@ -5563,6 +5563,11 @@ content/Cut/animals/Void_Chicken.png
 content/Cut/animals/White_Cow.png
 content/Cut/map_elements/Barn.png
 content/Cut/map_elements/Coop.png
+content/Cut/map_elements/Copper_Trash_Can.png
+content/Cut/map_elements/Gold_Trash_Can.png
+content/Cut/map_elements/Iridium_Trash_Can.png
+content/Cut/map_elements/Steel_Trash_Can.png
+content/Cut/map_elements/Trash_Can.png
 content/Cut/map_elements/blacksmith.png
 content/Cut/map_elements/bush.png
 content/Cut/map_elements/carpenters_shop.png
@@ -9058,6 +9063,7 @@ hs_err_pid101545.log
 hs_err_pid102893.log
 hs_err_pid103945.log
 hs_err_pid104060.log
+hs_err_pid10559.log
 hs_err_pid105758.log
 hs_err_pid108268.log
 hs_err_pid108444.log
@@ -9068,6 +9074,7 @@ hs_err_pid11022.log
 hs_err_pid11209.log
 hs_err_pid112288.log
 hs_err_pid113802.log
+hs_err_pid11652.log
 hs_err_pid11908.log
 hs_err_pid11918.log
 hs_err_pid12052.log
@@ -9078,6 +9085,7 @@ hs_err_pid124616.log
 hs_err_pid12501.log
 hs_err_pid126762.log
 hs_err_pid12908.log
+hs_err_pid13118.log
 hs_err_pid13153.log
 hs_err_pid132168.log
 hs_err_pid132840.log
@@ -9086,6 +9094,7 @@ hs_err_pid135715.log
 hs_err_pid13770.log
 hs_err_pid138256.log
 hs_err_pid13966.log
+hs_err_pid13996.log
 hs_err_pid14001.log
 hs_err_pid142396.log
 hs_err_pid144846.log
@@ -9207,12 +9216,14 @@ hs_err_pid5611.log
 hs_err_pid56364.log
 hs_err_pid56862.log
 hs_err_pid57531.log
+hs_err_pid58171.log
 hs_err_pid59134.log
 hs_err_pid59344.log
 hs_err_pid59597.log
 hs_err_pid59624.log
 hs_err_pid5966.log
 hs_err_pid5976.log
+hs_err_pid6007.log
 hs_err_pid61294.log
 hs_err_pid61693.log
 hs_err_pid61741.log
@@ -9230,6 +9241,7 @@ hs_err_pid68505.log
 hs_err_pid68558.log
 hs_err_pid6890.log
 hs_err_pid69343.log
+hs_err_pid7017.log
 hs_err_pid71022.log
 hs_err_pid72638.log
 hs_err_pid7343.log
@@ -9263,6 +9275,7 @@ hs_err_pid91776.log
 hs_err_pid93215.log
 hs_err_pid93218.log
 hs_err_pid93994.log
+hs_err_pid9427.log
 hs_err_pid9488.log
 hs_err_pid96335.log
 hs_err_pid96671.log
