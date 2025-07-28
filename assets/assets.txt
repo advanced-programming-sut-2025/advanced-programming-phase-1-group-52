@@ -5563,6 +5563,11 @@ content/Cut/animals/Void_Chicken.png
 content/Cut/animals/White_Cow.png
 content/Cut/map_elements/Barn.png
 content/Cut/map_elements/Coop.png
+content/Cut/map_elements/Copper_Trash_Can.png
+content/Cut/map_elements/Gold_Trash_Can.png
+content/Cut/map_elements/Iridium_Trash_Can.png
+content/Cut/map_elements/Steel_Trash_Can.png
+content/Cut/map_elements/Trash_Can.png
 content/Cut/map_elements/blacksmith.png
 content/Cut/map_elements/bush.png
 content/Cut/map_elements/carpenters_shop.png

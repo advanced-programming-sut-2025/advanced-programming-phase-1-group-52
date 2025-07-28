@@ -1,15 +1,16 @@
 package com.example.main.controller;
 
-import com.example.main.enums.design.FarmThemes;
-import com.example.main.models.App;
-import com.example.main.models.Result;
-import com.example.main.models.User;
-import com.example.main.models.Game;
-import com.example.main.models.GameMap;
-import com.example.main.models.Player;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
+
+import com.example.main.enums.design.FarmThemes;
+import com.example.main.models.App;
+import com.example.main.models.Game;
+import com.example.main.models.GameMap;
+import com.example.main.models.Player;
+import com.example.main.models.Result;
+import com.example.main.models.User;
 
 public class PreGameMenuController {
 
@@ -65,15 +66,39 @@ public class PreGameMenuController {
         }
 
         Player p1 = new Player(loggedInUser.getUsername(), loggedInUser.getGender());
+        p1.setOriginX(4);
+        p1.setOriginY(4);
+        p1.setCurrentX(4);
+        p1.setCurrentY(4);
+        p1.setTrashCanX(9);
+        p1.setTrashCanY(1);
         loggedInUser.setCurrentPlayer(p1);
 
         Player p2 = new Player(user2.getUsername(), user2.getGender());
+        p2.setOriginX(84);
+        p2.setOriginY(4);
+        p2.setCurrentX(84);
+        p2.setCurrentY(4);
+        p2.setTrashCanX(80);
+        p2.setTrashCanY(1);
         user2.setCurrentPlayer(p2);
 
         Player p3 = new Player(user3.getUsername(), user3.getGender());
+        p3.setOriginX(4);
+        p3.setOriginY(34);
+        p3.setCurrentX(4);
+        p3.setCurrentY(34);
+        p3.setTrashCanX(9);
+        p3.setTrashCanY(31);
         user3.setCurrentPlayer(p3);
 
         Player p4 = new Player(user4.getUsername(), user4.getGender());
+        p4.setOriginX(84);
+        p4.setOriginY(34);
+        p4.setCurrentX(84);
+        p4.setCurrentY(34);
+        p4.setTrashCanX(80);
+        p4.setTrashCanY(31);
         user4.setCurrentPlayer(p4);
 
         Game newGame = new Game(players);

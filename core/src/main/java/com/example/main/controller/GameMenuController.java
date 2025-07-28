@@ -81,8 +81,8 @@ public class GameMenuController {
         player1.setOriginY(4);
         player1.setCurrentX(4);
         player1.setCurrentY(4);
-        player1.setTrashCanX(0);
-        player1.setTrashCanY(0);
+        player1.setTrashCanX(9);
+        player1.setTrashCanY(1);
         loggedInUser.setCurrentPlayer(player1);
         players.add(loggedInUser);
 
@@ -91,8 +91,8 @@ public class GameMenuController {
         player2.setOriginY(4);
         player2.setCurrentX(84);
         player2.setCurrentY(4);
-        player2.setTrashCanX(89);
-        player2.setTrashCanY(0);
+        player2.setTrashCanX(80);
+        player2.setTrashCanY(1);
         user1.setCurrentPlayer(player2);
         players.add(user1);
 
@@ -101,8 +101,8 @@ public class GameMenuController {
         player3.setOriginY(34);
         player3.setCurrentX(4);
         player3.setCurrentY(34);
-        player3.setTrashCanX(0);
-        player3.setTrashCanY(59);
+        player3.setTrashCanX(9);
+        player3.setTrashCanY(31);
         user2.setCurrentPlayer(player3);
         players.add(user2);
 
@@ -111,8 +111,8 @@ public class GameMenuController {
         player4.setOriginY(34);
         player4.setCurrentX(84);
         player4.setCurrentY(34);
-        player4.setTrashCanX(89);
-        player4.setTrashCanY(59);
+        player4.setTrashCanX(80);
+        player4.setTrashCanY(31);
         user3.setCurrentPlayer(player4);
         players.add(user3);
 
@@ -209,7 +209,6 @@ public class GameMenuController {
         boolean isPlayerAvailable = game.switchCurrentPlayer();
         if(isPlayerAvailable){
             game.getCurrentPlayer().showNotifs();
-            game.getCurrentPlayer().resetNotifs();
             return new Result(true, "Game switched to " + game.getCurrentPlayer().getUsername() + " ");
         }
         return new Result(false, "you can not switch to other players");
@@ -765,12 +764,10 @@ public class GameMenuController {
             return new Result(false, "You should be near" + receiverName);
         }
 
-        // Create talk object with proper sender and receiver
         Talk talk = new Talk(currentPlayer, player, message);
 
-        // Add the talk to BOTH players' talk lists so both can see the conversation
-        currentPlayer.addTalk(talk);  // Sender keeps record of what they sent
-        player.addTalk(talk);         // Receiver gets the message in their history
+        currentPlayer.addTalk(talk);
+        player.addTalk(talk);
 
         Friendship friendship = game.getFriendshipByPlayers(currentPlayer, player);
         friendship.addFriendshipPoints(10);
@@ -792,12 +789,9 @@ public class GameMenuController {
         Player currentPlayer = game.getCurrentPlayer();
         StringBuilder stringBuilder = new StringBuilder();
 
-        // Show complete conversation history between current player and target player
-        // Check all talks involving both players
         boolean foundAnyTalks = false;
 
         for (Talk talk : currentPlayer.getTalks()) {
-            // Show talks where current player talked to target player OR target player talked to current player
             if ((talk.getSender().equals(currentPlayer) && talk.getReceiver().equals(targetPlayer)) ||
                 (talk.getSender().equals(targetPlayer) && talk.getReceiver().equals(currentPlayer))) {
                 stringBuilder.append(talk.toString()).append("\n");
@@ -2035,9 +2029,11 @@ public class GameMenuController {
             switch (item.getItemType()) {
                 case AnimalProductType animalProductType -> {
                     currentPlayer.getBankAccount().setFardaeiDollar(animalProductType.getPrice());
+                    break;
                 }
                 case ArtisanProductType artisanProductType -> {
                     currentPlayer.getBankAccount().setFardaeiDollar(artisanProductType.getSellPrice());
+                    break;
                 }
                 case CraftingMachineType craftingMachineType -> {
                     if (craftingMachineType.getPrice() == null) {
@@ -2046,30 +2042,39 @@ public class GameMenuController {
                     else {
                         currentPlayer.getBankAccount().setFardaeiDollar(craftingMachineType.getPrice());
                     }
+                    break;
                 }
                 case CropType cropType -> {
                     currentPlayer.getBankAccount().setFardaeiDollar(cropType.getBaseSellPrice());
+                    break;
                 }
                 case FishType fishType -> {
                     currentPlayer.getBankAccount().setFardaeiDollar(fishType.getPrice());
+                    break;
                 }
                 case FoodType foodType -> {
-
+                    currentPlayer.getBankAccount().setFardaeiDollar(foodType.getSellPrice());
+                    break;
                 }
                 case ForagingCropType foragingCropType -> {
                     currentPlayer.getBankAccount().setFardaeiDollar(foragingCropType.getBaseSellPrice());
+                    break;
                 }
                 case ForagingSeedType foragingSeedType -> {
                     currentPlayer.getBankAccount().setFardaeiDollar(foragingSeedType.getPrice());
+                    break;
                 }
                 case FruitType fruitType -> {
-
+                    currentPlayer.getBankAccount().setFardaeiDollar(fruitType.getPrice());
+                    break;
                 }
                 case MaterialType materialType -> {
-
+                    currentPlayer.getBankAccount().setFardaeiDollar(materialType.getPrice());
+                    break;
                 }
                 case MineralType mineralType -> {
                     currentPlayer.getBankAccount().setFardaeiDollar(mineralType.getPrice());
+                    break;
                 }
                 default -> {
                     return new Result(false, "You can't sell this item!");
@@ -2094,9 +2099,11 @@ public class GameMenuController {
             switch (item.getItemType()) {
                 case AnimalProductType animalProductType -> {
                     currentPlayer.getBankAccount().setFardaeiDollar(animalProductType.getPrice());
+                    break;
                 }
                 case ArtisanProductType artisanProductType -> {
                     currentPlayer.getBankAccount().setFardaeiDollar(artisanProductType.getSellPrice());
+                    break;
                 }
                 case CraftingMachineType craftingMachineType -> {
                     if (craftingMachineType.getPrice() == null) {
@@ -2105,30 +2112,39 @@ public class GameMenuController {
                     else {
                         currentPlayer.getBankAccount().setFardaeiDollar(craftingMachineType.getPrice());
                     }
+                    break;
                 }
                 case CropType cropType -> {
                     currentPlayer.getBankAccount().setFardaeiDollar(cropType.getBaseSellPrice());
+                    break;
                 }
                 case FishType fishType -> {
                     currentPlayer.getBankAccount().setFardaeiDollar(fishType.getPrice());
+                    break;
                 }
                 case FoodType foodType -> {
-
+                    currentPlayer.getBankAccount().setFardaeiDollar(foodType.getSellPrice());
+                    break;
                 }
                 case ForagingCropType foragingCropType -> {
                     currentPlayer.getBankAccount().setFardaeiDollar(foragingCropType.getBaseSellPrice());
+                    break;
                 }
                 case ForagingSeedType foragingSeedType -> {
                     currentPlayer.getBankAccount().setFardaeiDollar(foragingSeedType.getPrice());
+                    break;
                 }
                 case FruitType fruitType -> {
-
+                    currentPlayer.getBankAccount().setFardaeiDollar(fruitType.getPrice());
+                    break;
                 }
                 case MaterialType materialType -> {
-
+                    currentPlayer.getBankAccount().setFardaeiDollar(materialType.getPrice());
+                    break;
                 }
                 case MineralType mineralType -> {
                     currentPlayer.getBankAccount().setFardaeiDollar(mineralType.getPrice());
+                    break;
                 }
                 default -> {
                     return new Result(false, "You can't sell this item!");

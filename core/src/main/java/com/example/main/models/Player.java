@@ -140,7 +140,7 @@ public class Player {
     }
 
     public void setSpouse(Player player) {
-        this.spouse = spouse;
+        this.spouse = player;
     }
 
     public void addNotif(Player sender, String message) {
@@ -676,6 +676,15 @@ public class Player {
 
     private void addTrashCan(){
         inventory.getItems().add(new TrashCan(TrashCanType.Trash_Can,1));
+    }
+
+    public TrashCan getTrashCan() {
+        for (Item item : inventory.getItems()) {
+            if (item instanceof TrashCan) {
+                return (TrashCan) item;
+            }
+        }
+        return null;
     }
 
     public HouseRefrigerator getHouseRefrigerator() {

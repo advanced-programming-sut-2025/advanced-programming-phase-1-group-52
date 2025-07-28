@@ -50,8 +50,7 @@ public class Friendship {
     @Override
     public String toString() {
         return players.get(0).getUsername() + " and " + players.get(1).getUsername() +
-                "\nLevel: " + friendshipLevel +
-                "\nPoints: " + friendshipPoints +
-                "\n----------------------------\n";
+                " friendship\nLevel: " + friendshipLevel +
+                "\nPoints: " + friendshipPoints;
     }
 }
