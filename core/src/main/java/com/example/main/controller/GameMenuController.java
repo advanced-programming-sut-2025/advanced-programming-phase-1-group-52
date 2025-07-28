@@ -2239,6 +2239,7 @@ public class GameMenuController {
             return new Result(false, "You are not near the animal!");
         }
 
+        animal.addFriendshipPoints(10);
         animal.setFull(true);
         return new Result(true, "Done!");
     }
@@ -2274,7 +2275,6 @@ public class GameMenuController {
         for (int i = 0; i < items.size(); i++) {
             Item item = items.get(i);
             try {
-                // Check basic item integrity
                 String name = item.getName();
                 ItemType type = item.getItemType();
                 int number = item.getNumber();
@@ -2291,7 +2291,6 @@ public class GameMenuController {
                     report.append("WARNING: Item at index ").append(i).append(" has invalid quantity: ").append(number).append("\n");
                 }
 
-                // Check specific types
                 if (item instanceof Material material) {
                     MaterialType matType = material.getMaterialType();
                     if (matType == null) {
@@ -2353,7 +2352,6 @@ public class GameMenuController {
 
                 report.append("OK: NPC '").append(npcName).append("' has ").append(quests.size()).append(" quests\n");
 
-                // Check each quest
                 int questIndex = 0;
                 for (Quest quest : quests.keySet()) {
                     try {
@@ -2404,7 +2402,6 @@ public class GameMenuController {
         StringBuilder debug = new StringBuilder();
         debug.append("=== QUEST DEBUG INFORMATION ===\n");
 
-        // Check basic game state
         debug.append("Game object: ").append(game != null ? "OK" : "NULL").append("\n");
         if (game == null) {
             return new Result(true, debug.toString());
@@ -2420,7 +2417,6 @@ public class GameMenuController {
 
         debug.append("Number of NPCs: ").append(game.getNPCs().size()).append("\n");
 
-        // Parse the quest ID
         int id;
         try {
             id = Integer.parseInt(idString);
@@ -2430,7 +2426,6 @@ public class GameMenuController {
             return new Result(true, debug.toString());
         }
 
-        // Search for the specific quest
         NPC targetNpc = null;
         Quest targetQuest = null;
         Boolean questCompleted = null;
@@ -2458,11 +2453,9 @@ public class GameMenuController {
             debug.append("Quest ID: ").append(targetQuest.getId()).append("\n");
             debug.append("Completed: ").append(questCompleted).append("\n");
 
-            // Check demand
             if (targetQuest.getDemand() != null) {
                 debug.append("Demand: ").append(targetQuest.getDemand().getName()).append(" x").append(targetQuest.getDemandAmount()).append("\n");
 
-                // Check if player has the item
                 Item demandedItem = game.getCurrentPlayer().getInventory().findItemByType(targetQuest.getDemand());
                 if (demandedItem != null) {
                     debug.append("Player has: ").append(demandedItem.getNumber()).append(" ").append(demandedItem.getName()).append("\n");
@@ -2475,21 +2468,18 @@ public class GameMenuController {
                 debug.append("Demand: NULL (ERROR!)\n");
             }
 
-            // Check reward
             if (targetQuest.getReward() != null) {
                 debug.append("Reward: ").append(targetQuest.getReward().getName()).append(" x").append(targetQuest.getRewardAmount()).append("\n");
             } else {
                 debug.append("Reward: Friendship level upgrade\n");
             }
 
-            // Check quest visibility
             boolean isVisible = isQuestVisible(targetQuest, targetNpc);
             debug.append("Quest visible: ").append(isVisible ? "YES" : "NO").append("\n");
 
             if (!isVisible) {
                 debug.append("Visibility requirements:\n");
 
-                // Get quest index
                 HashMap<Quest, Boolean> quests = targetNpc.getQuests();
                 List<Quest> questsList = new ArrayList<>(quests.keySet());
                 int questIndex = questsList.indexOf(targetQuest);
@@ -2514,7 +2504,6 @@ public class GameMenuController {
             }
         }
 
-        // Check each NPC for overview
         debug.append("\n=== ALL NPCS OVERVIEW ===\n");
         int npcIndex = 0;
         for (NPC npc : game.getNPCs()) {
@@ -2662,17 +2651,16 @@ public class GameMenuController {
         }
 
         Seed seed = (Seed) itemToPlant;
-        // This now correctly handles any seed type, not just foraging seeds
         ItemType plantable = ((ForagingSeedType) seed.getItemType()).getPlantType();
 
         if (plantable instanceof CropType) {
             Crop newCrop = new Crop(plantable, 1);
-            newCrop.setCurrentStage(1); // Set initial stage
+            newCrop.setCurrentStage(1);
             targetTile.setPlant(newCrop);
             targetTile.setType(TileType.Planted);
         } else if (plantable instanceof TreeType) {
             Fruit newFruit = new Fruit(((TreeType) plantable).getProduct(), 1);
-            newFruit.setCurrentStage(1); // Set initial stage
+            newFruit.setCurrentStage(1);
             targetTile.setPlant(newFruit);
             targetTile.setTree(new Tree((TreeType) plantable));
             targetTile.setType(TileType.Tree);

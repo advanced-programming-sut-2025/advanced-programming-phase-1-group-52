@@ -9080,11 +9080,6 @@ content/w1/target/classes/view/animations/ShootingAnimation.class
 content/weather/rain1.png
 content/weather/snow.png
 content/weather/snow.png-autosave.kra
-hs_err_pid32084.log
-hs_err_pid42902.log
-hs_err_pid49723.log
-hs_err_pid61693.log
-hs_err_pid66461.log
 hs_err_pid85192.log
 hs_err_pid87526.log
 hs_err_pid88725.log
