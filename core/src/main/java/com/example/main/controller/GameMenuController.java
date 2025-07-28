@@ -36,49 +36,17 @@ import com.example.main.enums.items.TreeType;
 import com.example.main.enums.player.Skills;
 import com.example.main.enums.regex.GameMenuCommands;
 import com.example.main.enums.regex.NPCDialogs;
-import com.example.main.models.ActiveBuff;
-import com.example.main.models.App;
-import com.example.main.models.Date;
-import com.example.main.models.Friendship;
-import com.example.main.models.Game;
-import com.example.main.models.GameMap;
-import com.example.main.models.Gift;
-import com.example.main.models.Inventory;
-import com.example.main.models.NPC;
-import com.example.main.models.Player;
-import com.example.main.models.Quest;
-import com.example.main.models.Result;
-import com.example.main.models.Talk;
-import com.example.main.models.Tile;
-import com.example.main.models.Time;
-import com.example.main.models.Tree;
-import com.example.main.models.User;
+import com.example.main.models.*;
 import com.example.main.models.building.House;
 import com.example.main.models.building.Housing;
-import com.example.main.models.item.AnimalProduct;
-import com.example.main.models.item.CookingRecipe;
-import com.example.main.models.item.CraftingMachine;
-import com.example.main.models.item.CraftingRecipe;
-import com.example.main.models.item.Crop;
-import com.example.main.models.item.Fish;
-import com.example.main.models.item.Food;
-import com.example.main.models.item.Fruit;
-import com.example.main.models.item.Good;
-import com.example.main.models.item.Item;
-import com.example.main.models.item.ItemFactory;
-import com.example.main.models.item.Material;
-import com.example.main.models.item.Mineral;
-import com.example.main.models.item.PurchasedAnimal;
-import com.example.main.models.item.Seed;
-import com.example.main.models.item.Tool;
-import com.example.main.models.item.TrashCan;
-import com.example.main.models.item.WateringCan;
+import com.example.main.models.item.*;
 
 
 public class GameMenuController {
     private Game game;
     private GameMap map;
     private Food lastCookedFood = null;
+    private FishingMinigame activeMinigame = null;
 
     public void setGame(Game game) {
         this.game = game;
@@ -230,6 +198,10 @@ public class GameMenuController {
 
     public Result terminateGame() {
         return new Result(true, "Game terminated");
+    }
+
+    public FishingMinigame getActiveMinigame() {
+        return activeMinigame;
     }
 
     public Result switchTurn() {
@@ -1169,25 +1141,22 @@ public class GameMenuController {
         return new Result(true, items.toString());
     }
 
-    public Result removeItemFromInventory(String itemName, String itemNumberStr) {
-        // todo : handle trim in view for now
-        // todo : calculate return money
-        Inventory inventory = game.getCurrentPlayer().getInventory();
-        int itemNumber;
-        Item item;
-        if ((item = findItem(itemName, inventory.getItems())) == null) {
-            return new Result(false, "Item not found");
+    public Result removeItemFromInventory(String itemName, int quantity) {
+        Player player = game.getCurrentPlayer();
+        Item item = player.getInventory().getItemByName(itemName);
+
+        if (item == null) {
+            return new Result(false, "Item not found.");
+        }
+        if (item.getNumber() < quantity) {
+            return new Result(false, "Not enough items to remove.");
+        }
+        if (item instanceof Tool) {
+            return new Result(false, "Cannot trash a tool!");
         }
 
-        if (itemNumberStr != null && !itemNumberStr.isEmpty()) {
-            itemNumber = Integer.parseInt(itemNumberStr);
-            item.setNumber(item.getNumber() - itemNumber);
-            return new Result(true, "x" + itemNumber + item.getName() + " has been removed");
-        } else {
-            inventory.getItems().remove(item);
-            inventory.addNumOfItems(-1);
-            return new Result(true, "Item removed from inventory");
-        }
+        player.getInventory().remove2(itemName, quantity);
+        return new Result(true, quantity + "x " + itemName + " removed from inventory.");
     }
 
     public Result equipTool(String toolName){
@@ -1275,9 +1244,6 @@ public class GameMenuController {
         }
         info.deleteCharAt(info.length() - 1);
         return new Result(true, info.toString());
-    }
-
-    public void fishingAndDisplay(ToolType pole) {
     }
 
     public Result plant(String seedName, String directionStr) {
@@ -1681,54 +1647,35 @@ public class GameMenuController {
     public Result fishing(String fishingPoleName) {
         Player player = game.getCurrentPlayer();
         Tool fishingPole = player.getInventory().getTool(fishingPoleName);
-        if(fishingPole == null){
+        if (fishingPole == null) {
             return new Result(false, "No fishing pole found");
         }
         Tile currentTile = map.getTile(player.currentX(), player.currentY());
-        if(!isAdjacentToWater(currentTile)){
-            return new Result(false, "You are not adjacent to water");
+        if (!isAdjacentToWater(currentTile)) {
+            return new Result(false, "You must be next to water to fish.");
         }
-        if(player.getInventory().isFull()){
-            return new Result(false, "Your inventory is full");
+        if (player.getInventory().isFull()) {
+            return new Result(false, "Your inventory is full.");
         }
-        List<Fish> possibleFish = new ArrayList<>();
-        double r;
-        double m;
-        Random random = new Random();
-        for (FishType fish : FishType.values()) {
-            if (fish.getSeason().equals(game.getDate().getCurrentSeason()) && fish.getType().equals("Ordinary")) {
-                do {
-                    r = Math.random();
-                } while (r == 0.0);
-                m = seasonRate();
-                int fishCount = (int) Math.ceil(2 + player.getSkillLevel(Skills.Fishing) * m * r);
-                fishCount = Math.min(fishCount, 6);
-                Fish newFish = new Fish(fish, fishCount);
-                possibleFish.add(newFish);
-            }
-            if(fish.getSeason().equals(game.getDate().getCurrentSeason()) && fish.getType().equals("Legendary") && (player.getSkillLevel(Skills.Fishing) >= 4)){
-                do {
-                    r = Math.random();
-                } while (r == 0.0);
-                m = seasonRate();
-                int fishCount = (int) Math.ceil(2 + player.getSkillLevel(Skills.Fishing) * m * r);
-                fishCount = Math.min(fishCount, 6);
-                Fish newFish = new Fish(fish, fishCount);
-                possibleFish.add(newFish);
-            }
+
+        // --- NEW LOGIC ---
+        // Find a random fish that can be caught
+        List<FishType> possibleFish = Arrays.stream(FishType.values())
+            .filter(f -> f.getSeason() == game.getDate().getCurrentSeason() || f.getSeason() == Season.Special)
+            .collect(Collectors.toList());
+
+        if (possibleFish.isEmpty()) {
+            return new Result(false, "There are no fish in season.");
         }
-        do {
-            r = Math.random();
-        } while (r == 0.0);
-        m = seasonRate();
-        int index = random.nextInt(possibleFish.size());
-        Fish fish = possibleFish.get(index);
-        double quality = (r *  (player.getSkillLevel(Skills.Fishing) + 2) * poleRate(fishingPoleName));
-        quality /= (7-m);
-        fish.setQuality(quality);
-        player.getInventory().addItem(fish);
-        player.catchFish();
-        return new Result(true, fish.getNumber() + "x of " + fish.getFishType().getName() + " added to your inventory");
+
+        Random rand = new Random();
+        FishType caughtFish = possibleFish.get(rand.nextInt(possibleFish.size()));
+
+        // Create and store the minigame instance
+        this.activeMinigame = new FishingMinigame(caughtFish);
+
+        // Signal success to the view, which will then start the minigame UI
+        return new Result(true, "A fish has bitten!");
     }
 
     public Result cheatTileType(String direction) {
@@ -2653,11 +2600,43 @@ public class GameMenuController {
         return new Result(true, "You are now in store menu!");
     }
 
+    // In useTool(Tile targetTile)
     public Result useTool(Tile targetTile) {
         Player player = game.getCurrentPlayer();
         if (targetTile == null) {
             return new Result(false, "Invalid target tile.");
         }
+
+        Tool currentTool = player.getCurrentTool();
+        if (currentTool != null && currentTool.getToolType().name().contains("Axe") && targetTile.isPartOfGiantCrop()) {
+            if (player.getInventory().isFull()) {
+                return new Result(false, "Your inventory is full.");
+            }
+
+            int rootX = targetTile.getGiantCropRootX();
+            int rootY = targetTile.getGiantCropRootY();
+            Tile rootTile = game.getMap().getTile(rootX, rootY);
+            Crop crop = (Crop) rootTile.getPlant();
+            CropType cropType = (CropType) crop.getCropType();
+
+            // Give a larger, random yield (e.g., 15-21)
+            int yield = 15 + new Random().nextInt(7);
+            player.getInventory().addItem(new Crop(cropType, yield));
+
+            // Clear all four tiles that made up the giant crop
+            for (int i = 0; i < 2; i++) {
+                for (int j = 0; j < 2; j++) {
+                    Tile partOfCrop = game.getMap().getTile(rootX + i, rootY + j);
+                    partOfCrop.resetGiantCropStatus();
+                    partOfCrop.setPlant(null);
+                    partOfCrop.setType(TileType.Shoveled);
+                }
+            }
+
+            player.addSkillExperience(Skills.Farming, 50);
+            return new Result(true, "You harvested a giant " + cropType.getName() + " and got " + yield + "!");
+        }
+
         return player.handleToolUse(targetTile);
     }
 
@@ -2942,8 +2921,6 @@ public class GameMenuController {
 
     public Result moveRandomFoodToRefrigerator() {
         Player player = game.getCurrentPlayer();
-
-        // Find all food items in the inventory
         List<Item> foodInInventory = player.getInventory().getItems().stream()
             .filter(item -> item instanceof Food)
             .collect(Collectors.toList());
@@ -2953,7 +2930,6 @@ public class GameMenuController {
         }
 
         if (player.getHouseRefrigerator().isFull()) {
-            // Check if the fridge can at least stack with an existing item
             boolean canStack = false;
             for (Item food : foodInInventory) {
                 if (player.getHouseRefrigerator().findItemByType(food.getItemType()) != null) {
@@ -3028,5 +3004,85 @@ public class GameMenuController {
 
         player.addCookingRecipe(new CookingRecipe(recipeType));
         return new Result(true, "Learned cooking recipe: " + recipeType.getDisplayName());
+    }
+
+    public Result placeMachine(CraftingMachine machine, int tileX, int tileY) {
+        if (!map.inBounds(tileX, tileY)) {
+            return new Result(false, "Cannot place outside the farm.");
+        }
+        Tile targetTile = map.getTile(tileX, tileY);
+        if (targetTile.getPlacedMachine() != null || !targetTile.getType().isReachable()) {
+            return new Result(false, "You cannot place a machine there.");
+        }
+
+        // Create the PlacedMachine state object
+        PlacedMachine placedMachine = new PlacedMachine((CraftingMachineType) machine.getItemType());
+        targetTile.setPlacedMachine(placedMachine);
+
+        // Remove the item from inventory
+        game.getCurrentPlayer().getInventory().remove2(machine.getName(), 1);
+
+        return new Result(true, machine.getName() + " placed successfully.");
+    }
+
+    public Result startArtisanProcess(PlacedMachine machine, ArtisanProductType recipe) {
+        Player player = game.getCurrentPlayer();
+        Item ingredient = player.getInventory().findItemByType(recipe.getIngredients().keySet().iterator().next());
+
+        if (ingredient == null || ingredient.getNumber() < 1) {
+            return new Result(false, "You don't have the required ingredient in your inventory.");
+        }
+
+        player.getInventory().remove2(ingredient.getName(), 1);
+        machine.startProcessing(ingredient, recipe);
+
+        return new Result(true, "Processing started for " + recipe.getName());
+    }
+
+    public Result collectArtisanProduct(PlacedMachine machine) {
+        Player player = game.getCurrentPlayer();
+        if (player.getInventory().isFull()) {
+            return new Result(false, "Your inventory is full.");
+        }
+
+        Good product = machine.collectProduct();
+        if (product != null) {
+            player.getInventory().addItem(product);
+            return new Result(true, "Collected 1 " + product.getName());
+        }
+        return new Result(false, "Nothing to collect.");
+    }
+
+    public Result finishArtisanProcessNow(PlacedMachine machine) {
+        Player player = game.getCurrentPlayer();
+        if (player.getEnergy() < 100) {
+            return new Result(false, "Not enough energy to finish instantly.");
+        }
+        if (!machine.isProcessing()) {
+            return new Result(false, "Nothing is being processed.");
+        }
+
+        player.reduceEnergy(100);
+        // Manually set progress to finish
+        while (!machine.isDone()) {
+            machine.updateProgress();
+        }
+
+        return new Result(true, "Process finished instantly!");
+    }
+
+    public Result cancelArtisanProcess(PlacedMachine machine) {
+        if (!machine.isProcessing()) {
+            return new Result(false, "Nothing to cancel.");
+        }
+
+        // Return the ingredient to the player's inventory
+        Item ingredient = machine.getInput();
+        if (ingredient != null) {
+            game.getCurrentPlayer().getInventory().addItem(ingredient);
+        }
+
+        machine.cancelProcessing();
+        return new Result(true, "Process cancelled.");
     }
 }

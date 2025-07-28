@@ -85,9 +85,9 @@ public class GameMenu implements AppMenu {
         else if ((matcher = GameMenuCommands.InventoryShow.getMatcher(input)) != null) {
             System.out.println(controller.showInventoryItems().Message());
         }
-        else if ((matcher = GameMenuCommands.RemoveInventoryItems.getMatcher(input)) != null) {
-            System.out.println(controller.removeItemFromInventory(matcher.group("name"),matcher.group("number")).Message());
-        }
+//        else if ((matcher = GameMenuCommands.RemoveInventoryItems.getMatcher(input)) != null) {
+//            System.out.println(controller.removeItemFromInventory(matcher.group("name"),matcher.group("number")).Message());
+//        }
         else if ((matcher = GameMenuCommands.ToolEquip.getMatcher(input)) != null) {
             System.out.println(controller.equipTool(matcher.group("name")).Message());
         }
