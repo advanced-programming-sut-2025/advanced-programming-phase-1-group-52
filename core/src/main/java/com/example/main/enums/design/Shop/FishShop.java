@@ -12,13 +12,13 @@ public enum FishShop implements ShopEntry{
             "A recipe to make Fish Smoker", 10000, -1, 1),
     Trout_Soup_Product(MaterialType.Trout_Soup,  "Trout Soup",
             "Pretty salty.", 250, -1, 1),
-    Bamboo_Pole_Product(ToolType.Bamboo_Pole, "Bamboo Pole",
+    Bamboo_Rod_Product(ToolType.Bamboo_Rod, "Bamboo rod",
             "Use in the water to catch fish.", 500, -1, 1),
-    Training_Rod_Product(ToolType.Training_Rod, "Training Rod",
+    Training_Rod_Product(ToolType.Training_Rod, "Training rod",
             "It's a lot easier to use than other rods, but can only catch basic fish.", 25, -1, 1),
-    Fiberglass_Rod_Product(ToolType.Fiberglass_Rod, "Fiberglass Rod",
+    Fiberglass_Rod_Product(ToolType.Fiberglass_Rod, "Fiberglass rod",
             "Use in the water to catch fish.", 1800, 2, 1),
-    Iridium_Rod_Product(ToolType.Iridium_Rod, "Iridium Rod",
+    Iridium_Rod_Product(ToolType.Iridium_Rod, "Iridium rod",
             "Use in the water to catch fish.", 7500, 4, 1);
 
 

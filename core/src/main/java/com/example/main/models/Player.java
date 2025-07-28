@@ -7,13 +7,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.example.main.enums.design.TileType;
-import com.example.main.enums.items.CageType;
-import com.example.main.enums.items.CookingRecipeType;
-import com.example.main.enums.items.CraftingRecipes;
-import com.example.main.enums.items.CropType;
-import com.example.main.enums.items.MaterialType;
-import com.example.main.enums.items.ToolType;
-import com.example.main.enums.items.TrashCanType;
+import com.example.main.enums.items.*;
 import com.example.main.enums.player.Gender;
 import com.example.main.enums.player.Skills;
 import com.example.main.models.building.House;
@@ -308,13 +302,11 @@ public class Player {
                 return new Result(false, "Your inventory is full.");
             }
 
-            // --- UNIFIED HARVESTING LOGIC ---
             if (tile.getPlant() != null && tile.getPlant().isReadyToHarvest()) {
                 if (tile.getPlant() instanceof Crop) {
                     Crop crop = (Crop) tile.getPlant();
-                    if (crop.getCropType() instanceof CropType) {
-                        CropType cropType = (CropType) crop.getCropType();
-
+                    ItemType itemType = crop.getCropType();
+                    if (itemType instanceof CropType cropType) {
                         inventory.addItem(new Crop(cropType, 1));
                         addSkillExperience(Skills.Farming, 10);
 
@@ -327,18 +319,24 @@ public class Player {
                             crop.setDayPassed(totalTime - regrowthTime);
                             crop.setReadyToHarvest(false);
                         }
-
                         reduceEnergy(energyConsumption);
                         return new Result(true, "Harvested a " + cropType.getName() + "!");
+
+                    } else if (itemType instanceof ForagingCropType foragingCropType) {
+                        inventory.addItem(new Crop(foragingCropType, 1));
+                        addSkillExperience(Skills.Foraging, 7); // Foraging XP for these
+                        tile.setPlant(null); // Wild forageables are always one-time harvests
+                        tile.setType(TileType.Earth);
+                        reduceEnergy(energyConsumption);
+                        return new Result(true, "Harvested a " + foragingCropType.getName() + "!");
                     }
-                } else if (tile.getPlant() instanceof Fruit) {
+                }  else if (tile.getPlant() instanceof Fruit) {
                     Fruit fruitTree = (Fruit) tile.getPlant();
                     int harvestAmount = fruitTree.getTreeType().getHarvestCycle();
                     Fruit harvestedFruit = new Fruit(fruitTree.getFruitType(), harvestAmount);
                     inventory.addItem(harvestedFruit);
                     fruitTree.setHasBeenHarvestedToday(true); // Prevents re-harvesting with 'J' key
 
-                    // Reset the tree's growth to allow it to produce fruit again
                     fruitTree.setReadyToHarvest(false);
                     fruitTree.setDayPassed(0);
                     fruitTree.setCurrentStage(1);

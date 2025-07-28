@@ -124,7 +124,6 @@ public enum CraftingRecipes implements ItemType {
         MaterialType.Fiber, 1
     ), 0, CraftingMachineType.Grass_Starter);
 
-
     private final String displayName;
     private final Map<ItemType, Integer> ingredients;
     private final int price;

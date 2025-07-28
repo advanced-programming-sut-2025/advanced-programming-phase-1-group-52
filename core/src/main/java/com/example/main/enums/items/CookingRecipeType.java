@@ -44,7 +44,7 @@ public enum CookingRecipeType implements ItemType {
         {
             ingredients.put(MaterialType.Wheat_Flour, 1);
             ingredients.put(CropType.Tomato, 1);
-            ingredients.put(ArtisanProductType.CHEESE, 1);
+            ingredients.put(ArtisanProductType.Cheese, 1);
         }
     },
     Tortilla("Tortilla Recipe", 50, null, false, 0, 50, FoodType.Tortilla) {

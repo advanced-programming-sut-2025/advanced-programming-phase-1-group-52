@@ -28,19 +28,19 @@ public enum NPCType {
     }},
     Harvey(32, 50) {{
         favorites.add(FoodType.Coffee);
-        favorites.add(ArtisanProductType.GRAPE_WINE);
-        favorites.add(ArtisanProductType.PICKLES);
+        favorites.add(ArtisanProductType.Wine);
+        favorites.add(ArtisanProductType.Pickles);
 
         Random rand = new Random();
         CropType cropType = CropType.values()[rand.nextInt(CropType.values().length)];
         quests.add(new Quest(this, cropType, 12, MaterialType.Gold_Coin, 750));
         quests.add(new Quest(this, FishType.Salmon, 1, MaterialType.Gold_Coin, 0));
-        quests.add(new Quest(this, ArtisanProductType.GRAPE_WINE, 1, FoodType.Salad, 5));
+        quests.add(new Quest(this, ArtisanProductType.Wine, 1, FoodType.Salad, 5));
     }},
     Lia(42, 50) {{
         favorites.add(FoodType.Salad);
         favorites.add(CropType.Grape);
-        favorites.add(ArtisanProductType.GRAPE_WINE);
+        favorites.add(ArtisanProductType.Wine);
 
         quests.add(new Quest(this, MaterialType.Hardwood, 10, MaterialType.Gold_Coin, 500));
         quests.add(new Quest(this, FishType.Salmon, 1, CookingRecipeType.Salmon_Dinner, 1));

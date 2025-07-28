@@ -21,6 +21,7 @@ public class ItemFactory {
         ITEM_CONSTRUCTORS.put(ArtisanProductType.class, (type, number) -> new Good((ArtisanProductType) type, number));
         ITEM_CONSTRUCTORS.put(FoodType.class, (type, number) -> new Food((FoodType) type, number));
         ITEM_CONSTRUCTORS.put(AnimalProductType.class, (type, number) -> new AnimalProduct((AnimalProductType) type, number));
+        ITEM_CONSTRUCTORS.put(FruitType.class, (type, number) -> new Fruit((FruitType) type, number));
         ITEM_CONSTRUCTORS.put(ToolType.class, (type, number) -> {
             ToolType toolType = (ToolType) type;
             if (toolType.name().contains("Watering_Can")) {
@@ -31,23 +32,24 @@ public class ItemFactory {
     }
 
     private static final List<Class<? extends Enum<?>>> ITEM_ENUMS = Arrays.asList(
-            CropType.class,
-            ForagingCropType.class,
-            ForagingSeedType.class,
-            MineralType.class,
-            ToolType.class,
-            TreeType.class,
-            AnimalType.class,
-            AnimalProductType.class,
-            Backpacks.class,
-            CageType.class,
-            FishType.class,
-            TrashCanType.class,
-            CraftingRecipes.class,
-            CraftingMachineType.class,
-            MaterialType.class,
-            ArtisanProductType.class,
-            FoodType.class
+        CropType.class,
+        ForagingCropType.class,
+        ForagingSeedType.class,
+        MineralType.class,
+        ToolType.class,
+        TreeType.class,
+        AnimalType.class,
+        AnimalProductType.class,
+        Backpacks.class,
+        CageType.class,
+        FishType.class,
+        TrashCanType.class,
+        CraftingRecipes.class,
+        CraftingMachineType.class,
+        MaterialType.class,
+        ArtisanProductType.class,
+        FoodType.class,
+        FruitType.class
     );
 
     public static Optional<Item> createItem(String name, int number) {
