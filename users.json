@@ -1,0 +1,12 @@
+[
+{
+	class: com.example.main.models.User
+	username: sanyar
+	password: Sanyar2006!
+	nickname: sanyar
+	email: sanyar@gmail.com
+	gender: Male
+	securityQuestion: PetName
+	securityAnswer: mamad
+}
+]

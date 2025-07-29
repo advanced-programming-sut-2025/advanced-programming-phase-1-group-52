@@ -27,7 +27,8 @@ public class DatabaseManager {
             fileHandle = null;
         } else {
             isTerminalMode = false;
-            fileHandle = Gdx.files.local(USERS_FILE);
+            // Look for users.json in assets directory
+            fileHandle = Gdx.files.internal(USERS_FILE);
         }
     }
 
