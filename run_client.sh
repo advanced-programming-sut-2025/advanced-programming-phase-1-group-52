@@ -12,4 +12,4 @@ echo "Usage: ./run_client.sh [server_ip] [server_port]"
 echo ""
 
 # Run the client
-java -cp "lwjgl3/build/libs/*" com.example.main.lwjgl3.NetworkClientLauncher "$SERVER_IP" "$SERVER_PORT" 
+java -cp "core/build/classes/java/main:lwjgl3/build/classes/java/main:core/build/libs/*" com.example.main.lwjgl3.NetworkClientLauncher "$SERVER_IP" "$SERVER_PORT"

@@ -5,6 +5,7 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.example.main.GDXmodels.DatabaseManager;
 import com.example.main.GDXviews.GDXLoginMenu;
 import com.example.main.GDXviews.GDXSignUpMenu;
+import com.example.main.network.client.GameClient;
 import com.example.main.views.AppView;
 
 public class Main extends Game {
@@ -13,7 +14,8 @@ public class Main extends Game {
     private static Main main;
     private static SpriteBatch batch;
     private static DatabaseManager databaseManager;
-    
+    private GameClient gameClient;
+
     // Network configuration
     private static String serverIp = "localhost";
     private static int serverPort = 8080;
@@ -33,6 +35,7 @@ public class Main extends Game {
         main = this;
         batch = new SpriteBatch();
         databaseManager = new DatabaseManager();
+        gameClient = new GameClient("localhost", 8080);
 
         if (isNetworkMode) {
             // In network mode, start with login screen
@@ -49,6 +52,9 @@ public class Main extends Game {
     }
     @Override
     public void dispose() {
+        if (gameClient != null && gameClient.isConnected()) {
+            gameClient.disconnect();
+        }
         super.dispose();
     }
 
@@ -63,23 +69,27 @@ public class Main extends Game {
     public static DatabaseManager getDatabaseManager() {
         return databaseManager;
     }
-    
+
     // Network methods
     public static void setNetworkInfo(String ip, int port) {
         serverIp = ip;
         serverPort = port;
         isNetworkMode = true;
     }
-    
+
     public static String getServerIp() {
         return serverIp;
     }
-    
+
     public static int getServerPort() {
         return serverPort;
     }
-    
+
     public static boolean isNetworkMode() {
         return isNetworkMode;
+    }
+
+    public GameClient getGameClient() {
+        return gameClient;
     }
 }
