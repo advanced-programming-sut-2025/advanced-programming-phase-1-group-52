@@ -1,8 +1,10 @@
 package com.example.main.controller;
 
+import com.example.main.Main;
 import com.example.main.enums.Menu;
 import com.example.main.models.App;
 import com.example.main.models.Result;
+import com.example.main.network.client.GameClient;
 
 public class MainMenuController {
     public Result menuEnter(String menuName) {
@@ -26,6 +28,12 @@ public class MainMenuController {
     public Result userLogout() {
         App.getInstance().setCurrentUser(null);
         App.getInstance().setCurrentMenu(Menu.LoginMenu);
-        return new Result(true, "You are logged out.");
+        GameClient client = Main.getInstance().getGameClient();
+        if (client != null && client.isAuthenticated()) {
+            client.logout();
+            return new Result(true, "Logout successful.");
+        } else {
+            return new Result(false, "No user was logged in.");
+        }
     }
 }

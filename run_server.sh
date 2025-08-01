@@ -11,5 +11,5 @@ echo "Starting server on $IP:$PORT"
 echo "Usage: ./run_server.sh [ip] [port]"
 echo ""
 
-# Run the server
-java -cp "lwjgl3/build/libs/*" com.example.main.lwjgl3.NetworkServerLauncher "$IP" "$PORT" 
+# CORRECTED: Classpath includes core, lwjgl3, AND library dependencies
+java -cp "core/build/classes/java/main:lwjgl3/build/classes/java/main:core/build/libs/*" com.example.main.lwjgl3.NetworkServerLauncher "$IP" "$PORT"

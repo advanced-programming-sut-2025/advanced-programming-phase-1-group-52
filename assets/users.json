@@ -1,62 +1,56 @@
 [
-{
-	class: com.example.main.models.User
-	username: radin
-	password: radin
-	nickname: rad
-	email: radin@gmail.com
-	gender: Male
-	securityQuestion: PetName
-	securityAnswer: nik
-}
-{
-	class: com.example.main.models.User
-	username: ali
-	password: r(*tv8BQ
-	nickname: alix
-	email: ali@gmail.com
-	gender: Male
-	securityQuestion: PetName
-	securityAnswer: dog
-}
-{
-	class: com.example.main.models.User
-	username: sanyar
-	password: sanyar
-	nickname: sany
-	email: sanyar@gmail.com
-	gender: Male
-	securityQuestion: PetName
-	securityAnswer: dog
-}
-{
-	class: com.example.main.models.User
-	username: mamad
-	password: mamad
-	nickname: mamy
-	email: mamad@gmail.com
-	gender: Male
-	securityQuestion: PetName
-	securityAnswer: dog
-}
-{
-	class: com.example.main.models.User
-	username: Sanyar
-	password: Sanyar2006!
-	nickname: sanyar
-	email: sanyar@gmail.com
-	gender: Male
-	securityQuestion: PetName
-	securityAnswer: cat
-}
-{
-	class: com.example.main.models.User
-	username: girl
-	password: Girl123!
-	nickname: girl
-	email: girl@gmail.com
-	gender: Female
-	securityQuestion: PetName
-	securityAnswer: pet
-}
+  {
+    "username": "radin",
+    "password": "radin",
+    "nickname": "rad",
+    "email": "radin@gmail.com",
+    "gender": "Male",
+    "securityQuestion": "PetName",
+    "securityAnswer": "nik"
+  },
+  {
+    "username": "ali",
+    "password": "r(*tv8BQ",
+    "nickname": "alix",
+    "email": "ali@gmail.com",
+    "gender": "Male",
+    "securityQuestion": "PetName",
+    "securityAnswer": "dog"
+  },
+  {
+    "username": "sanyar",
+    "password": "sanyar",
+    "nickname": "sany",
+    "email": "sanyar@gmail.com",
+    "gender": "Male",
+    "securityQuestion": "PetName",
+    "securityAnswer": "dog"
+  },
+  {
+    "username": "mamad",
+    "password": "mamad",
+    "nickname": "mamy",
+    "email": "mamad@gmail.com",
+    "gender": "Male",
+    "securityQuestion": "PetName",
+    "securityAnswer": "dog"
+  },
+  {
+    "username": "Sanyar",
+    "password": "Sanyar2006!",
+    "nickname": "sanyar",
+    "email": "sanyar@gmail.com",
+    "gender": "Male",
+    "securityQuestion": "PetName",
+    "securityAnswer": "cat"
+  },
+  {
+    "username": "girl",
+    "password": "Girl123!",
+    "nickname": "girl",
+    "email": "girl@gmail.com",
+    "gender": "Female",
+    "securityQuestion": "PetName",
+    "securityAnswer": "pet"
+  }
 ]
