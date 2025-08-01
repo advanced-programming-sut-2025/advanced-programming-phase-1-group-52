@@ -2,6 +2,8 @@ package com.example.main.controller;
 
 import java.util.Scanner;
 
+import com.example.main.auth.AuthManager;
+import com.example.main.auth.AuthResult;
 import com.example.main.enums.Menu;
 import com.example.main.enums.regex.SecurityQuestion;
 import com.example.main.enums.regex.SignUpMenuCommands;
@@ -13,23 +15,17 @@ public class LoginMenuController {
     private boolean awaitingNewPassword = false;
 
     public Result login(String username, String password) {
-        User foundUser = null;
-        for (User user : App.getInstance().getUsers()) {
-            if (user.getUsername().equals(username)) {
-                foundUser = user;
-            }
+        AuthManager authManager = AuthManager.getInstance();
+        AuthResult result = authManager.authenticate(username, password);
+        
+        if (result.isSuccess()) {
+            User user = authManager.getUser(username);
+            App.getInstance().setCurrentUser(user);
+            App.getInstance().setCurrentMenu(Menu.MainMenu);
+            return new Result(true, "Login Successful.");
+        } else {
+            return new Result(false, result.getMessage());
         }
-        if (foundUser == null) {
-            return new Result(false,"No user account found with the provided Username.");
-        }
-        if (!foundUser.getPassword().equals(password)) {
-            return new Result(false,"Wrong password.");
-        }
-
-        App.getInstance().setCurrentUser(foundUser);
-        App.getInstance().setCurrentMenu(Menu.MainMenu);
-
-        return new Result(true,"Login Successful.");
     }
 
     public Result forgetPassword(String username, Scanner scanner) {

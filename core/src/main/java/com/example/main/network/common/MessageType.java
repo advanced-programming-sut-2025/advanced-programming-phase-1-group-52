@@ -1,0 +1,31 @@
+package com.example.main.network.common;
+
+public enum MessageType {
+    AUTHENTICATION,
+    AUTH_SUCCESS,
+    AUTH_FAILED,
+    GAME_STATE,
+    PLAYER_ACTION,
+    PLAYER_JOIN,
+    PLAYER_LEAVE,
+    HEARTBEAT,
+    DISCONNECT,
+    ERROR,
+    // Lobby messages
+    LOBBY_JOIN,
+    LOBBY_LEAVE,
+    LOBBY_INVITE,
+    LOBBY_INVITE_ACCEPT,
+    LOBBY_INVITE_DECLINE,
+    LOBBY_INVITE_NOTIFICATION,
+    LOBBY_INVITE_RESPONSE,
+    LOBBY_ADMIN_CHANGE,
+    LOBBY_PLAYERS_UPDATE,
+    LOBBY_READY,
+    LOBBY_START_GAME,
+    // Online users messages
+    REQUEST_ONLINE_USERS,
+    ONLINE_USERS_UPDATE,
+    // Lobby requests
+    REQUEST_AVAILABLE_LOBBIES
+}

@@ -99,7 +99,8 @@ public class GDXPreGameMenu implements Screen {
         table.add(messageLabel).colspan(3).pad(10).center();
         table.row();
         table.add(new Label("Player 1 (You):", skin)).left();
-        table.add(new Label(App.getInstance().getCurrentUser().getUsername(), skin)).pad(5);
+        String currentUsername = App.getInstance().getCurrentUser() != null ? App.getInstance().getCurrentUser().getUsername() : "Guest";
+        table.add(new Label(currentUsername, skin)).pad(5);
         table.add(map1Select).width(150).pad(5);
         table.row();
         table.add(new Label("Player 2:", skin)).left();

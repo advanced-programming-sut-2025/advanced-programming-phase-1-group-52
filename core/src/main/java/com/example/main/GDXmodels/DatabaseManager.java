@@ -27,7 +27,8 @@ public class DatabaseManager {
             fileHandle = null;
         } else {
             isTerminalMode = false;
-            fileHandle = Gdx.files.local(USERS_FILE);
+            // Look for users.json in assets directory
+            fileHandle = Gdx.files.internal(USERS_FILE);
         }
     }
 
@@ -46,7 +47,8 @@ public class DatabaseManager {
             return loadUsersTerminal();
         } else {
             if (!fileHandle.exists()) return new ArrayList<>();
-            return json.fromJson(ArrayList.class, User.class, fileHandle);
+            String jsonString = fileHandle.readString();
+            return json.fromJson(ArrayList.class, User.class, jsonString);
         }
     }
     
@@ -61,6 +63,7 @@ public class DatabaseManager {
     private List<User> loadUsersTerminal() {
         File file = new File(USERS_FILE);
         if (!file.exists()) {
+            System.err.println("users.json not found at: " + file.getAbsolutePath());
             return new ArrayList<>();
         }
         
@@ -70,9 +73,16 @@ public class DatabaseManager {
             while ((character = reader.read()) != -1) {
                 content.append((char) character);
             }
-            return json.fromJson(ArrayList.class, User.class, content.toString());
+            String jsonString = content.toString();
+            
+            List<User> users = json.fromJson(ArrayList.class, User.class, jsonString);
+            return users != null ? users : new ArrayList<>();
         } catch (IOException e) {
             System.err.println("Error loading users: " + e.getMessage());
+            return new ArrayList<>();
+        } catch (Exception e) {
+            System.err.println("Error parsing users JSON: " + e.getMessage());
+            e.printStackTrace();
             return new ArrayList<>();
         }
     }

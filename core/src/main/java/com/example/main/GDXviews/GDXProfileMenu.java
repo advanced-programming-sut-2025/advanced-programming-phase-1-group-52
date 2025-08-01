@@ -147,7 +147,8 @@ public class GDXProfileMenu implements Screen {
     @Override
     public void show() {
         // You can refresh user info here if needed when the screen is shown
-        userInfoLabel.setText("User: " + App.getInstance().getCurrentUser().getUsername());
+        String username = App.getInstance().getCurrentUser() != null ? App.getInstance().getCurrentUser().getUsername() : "Guest";
+        userInfoLabel.setText("User: " + username);
         messageLabel.setText("");
     }
 

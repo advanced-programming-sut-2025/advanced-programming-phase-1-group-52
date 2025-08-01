@@ -13,13 +13,13 @@ import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.example.main.Main;
 import com.example.main.controller.MainMenuController;
-import com.example.main.models.App;
 import com.example.main.models.Result;
 
 public class GDXMainMenu implements Screen {
     private Stage stage;
     private Skin skin;
     private MainMenuController controller;
+    private Label welcomeLabel;
 
     public GDXMainMenu() {
         controller = new MainMenuController();
@@ -31,9 +31,10 @@ public class GDXMainMenu implements Screen {
         table.setFillParent(true);
         stage.addActor(table);
 
-        Label welcomeLabel = new Label("Welcome, " + App.getInstance().getCurrentUser().getUsername(), skin);
+        welcomeLabel = new Label("Welcome, Guest", skin);
 
         TextButton preGameMenuButton = new TextButton("Go to PreGame Menu", skin);
+        TextButton networkLobbyButton = new TextButton("Play Online", skin);
         TextButton profileMenuButton = new TextButton("Go to Profile Menu", skin);
         TextButton logoutButton = new TextButton("Logout", skin);
         TextButton exitButton = new TextButton("Exit", skin);
@@ -44,6 +45,15 @@ public class GDXMainMenu implements Screen {
                 Result result = controller.menuEnter("PreGameMenu");
                 System.out.println(result.Message());
                 Main.getInstance().setScreen(new GDXPreGameMenu());
+            }
+        });
+
+        networkLobbyButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                Result result = controller.menuEnter("NetworkLobby");
+                System.out.println(result.Message());
+                Main.getInstance().setScreen(new GDXOnlineMenu());
             }
         });
 
@@ -75,13 +85,19 @@ public class GDXMainMenu implements Screen {
 
         table.add(welcomeLabel).padBottom(20).row();
         table.add(preGameMenuButton).width(200).pad(10).row();
+        table.add(networkLobbyButton).width(200).pad(10).row();
         table.add(profileMenuButton).width(200).pad(10).row();
         table.add(logoutButton).width(200).pad(10).row();
         table.add(exitButton).width(200).pad(10).row();
     }
 
     @Override
-    public void show() {}
+    public void show() {
+        // Update welcome message with current user
+        String username = com.example.main.models.App.getInstance().getCurrentUser() != null ? 
+            com.example.main.models.App.getInstance().getCurrentUser().getUsername() : "Guest";
+        welcomeLabel.setText("Welcome, " + username);
+    }
 
     @Override
     public void render(float delta) {

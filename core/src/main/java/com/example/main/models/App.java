@@ -1,26 +1,19 @@
 package com.example.main.models;
 
-import com.example.main.GDXmodels.DatabaseManager;
-import com.example.main.enums.Menu;
-
 import java.util.ArrayList;
 import java.util.List;
 
+import com.example.main.auth.AuthManager;
+import com.example.main.enums.Menu;
+
 public class App {
     private static App instance;
-    private List<User> users;
     private ArrayList<Game> games;
-    private final DatabaseManager dbManager;
     private Menu currentMenu;
     private User currentUser;
     private Game currentGame;
 
     private App() {
-        dbManager = new DatabaseManager();
-        users = dbManager.loadUsers();
-        if (users == null) {
-            users = new ArrayList<>();
-        }
         games = new ArrayList<>();
     }
 
@@ -30,7 +23,7 @@ public class App {
     }
 
     public List<User> getUsers() {
-        return users;
+        return AuthManager.getInstance().getAllUsers();
     }
 
     public ArrayList<Game> getGames() {
@@ -66,15 +59,15 @@ public class App {
     }
 
     public List<User> users() {
-        return users;
+        return AuthManager.getInstance().getAllUsers();
     }
 
     public void addUsers(User user) {
-        this.users.add(user);
-        dbManager.saveUsers(users);
+        AuthManager.getInstance().registerUser(user);
     }
 
     public void updateUserData() {
-        dbManager.saveUsers(users);
+        // User data is now managed by AuthManager
+        // This method is kept for compatibility
     }
 }
