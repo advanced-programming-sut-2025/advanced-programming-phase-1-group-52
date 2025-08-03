@@ -9,7 +9,7 @@ import com.example.main.network.client.GameClient;
 public class MainMenuController {
     public Result menuEnter(String menuName) {
             Menu menu = Menu.valueOf(menuName);
-            if (menu == Menu.GameMenu || menu == Menu.ProfileMenu) {
+            if (menu == Menu.GameMenu || menu == Menu.ProfileMenu || menu == Menu.PreGameMenu || menu == Menu.NetworkLobby || menu == Menu.MainMenu) {
                 App.getInstance().setCurrentMenu(menu);
                 return new Result(true, "Entered " + menu.name() + " successfully.");
             } else {

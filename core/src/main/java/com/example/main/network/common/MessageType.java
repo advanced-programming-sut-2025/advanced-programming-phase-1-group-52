@@ -10,13 +10,11 @@ public enum MessageType {
     PLAYER_LEAVE,
     HEARTBEAT,
     DISCONNECT,
-<<<<<<< HEAD
-    ERROR
-=======
     ERROR,
     REGISTER,
     // Lobby messages
     LOBBY_JOIN,
+    LOBBY_JOIN_SUCCESS,
     LOBBY_LEAVE,
     LOBBY_INVITE,
     LOBBY_INVITE_ACCEPT,
@@ -32,5 +30,4 @@ public enum MessageType {
     ONLINE_USERS_UPDATE,
     // Lobby requests
     REQUEST_AVAILABLE_LOBBIES
->>>>>>> main
 }

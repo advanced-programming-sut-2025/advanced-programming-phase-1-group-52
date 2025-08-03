@@ -4189,7 +4189,7 @@ public class GDXGameScreen implements Screen {
             @Override
             public void clicked(InputEvent event, float x, float y) {
                 isInventoryOpen = false;
-                Main.getInstance().setScreen(new GDXMainMenu());
+                Main.getInstance().setScreen(new GDXMainMenu(com.example.main.models.App.getInstance().getNetworkService()));
             }
         });
 

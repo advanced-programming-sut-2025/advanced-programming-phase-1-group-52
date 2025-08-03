@@ -5,20 +5,15 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
-<<<<<<< HEAD
-=======
+import java.util.Map;
 import java.util.UUID;
->>>>>>> main
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-<<<<<<< HEAD
-=======
 import com.example.main.auth.AuthManager;
 import com.example.main.auth.AuthResult;
->>>>>>> main
 import com.example.main.models.Game;
 import com.example.main.models.User;
 import com.example.main.network.NetworkConstants;
@@ -35,12 +30,9 @@ public class GameServer {
     private final ExecutorService executorService;
     private final ConcurrentHashMap<String, ClientHandler> connectedClients;
     private final ConcurrentHashMap<String, User> authenticatedUsers;
-<<<<<<< HEAD
-=======
     private final ConcurrentHashMap<String, Lobby> lobbies;
     private final ConcurrentHashMap<String, String> clientToLobby; // clientId -> lobbyId
     private final ConcurrentHashMap<String, String> usernameToClientId; // username -> clientId
->>>>>>> main
     private Game game;
     private final List<User> availableUsers;
     
@@ -51,12 +43,9 @@ public class GameServer {
         this.executorService = Executors.newCachedThreadPool();
         this.connectedClients = new ConcurrentHashMap<>();
         this.authenticatedUsers = new ConcurrentHashMap<>();
-<<<<<<< HEAD
-=======
         this.lobbies = new ConcurrentHashMap<>();
         this.clientToLobby = new ConcurrentHashMap<>();
         this.usernameToClientId = new ConcurrentHashMap<>();
->>>>>>> main
         this.availableUsers = new ArrayList<>();
         
         System.out.println("Game Server started on port " + port);
@@ -106,8 +95,15 @@ public class GameServer {
     }
     
     public void addClient(String clientId, ClientHandler handler) {
+        System.out.println("Adding client: " + clientId + " (Total before: " + connectedClients.size() + ")");
         connectedClients.put(clientId, handler);
-        System.out.println("Client added: " + clientId + " (Total: " + connectedClients.size() + ")");
+        System.out.println("Client added: " + clientId + " (Total after: " + connectedClients.size() + ")");
+        
+        // Print current authenticated users for debugging
+        System.out.println("Current authenticated users: " + authenticatedUsers.size());
+        for (Map.Entry<String, User> entry : authenticatedUsers.entrySet()) {
+            System.out.println("  Authenticated user: " + entry.getValue().getUsername() + " (client ID: " + entry.getKey() + ")");
+        }
     }
     
     public void removeClient(String clientId) {
@@ -116,10 +112,6 @@ public class GameServer {
             handler.disconnect();
         }
         
-<<<<<<< HEAD
-        // Remove authenticated user
-        authenticatedUsers.remove(clientId);
-=======
         // Remove authenticated user and logout from AuthManager
         User user = authenticatedUsers.remove(clientId);
         if (user != null) {
@@ -127,44 +119,15 @@ public class GameServer {
             AuthManager authManager = AuthManager.getInstance();
             authManager.logoutByUsername(user.getUsername());
             System.out.println("User logged out: " + user.getUsername());
+            // Broadcast online users update
+            broadcastOnlineUsersUpdate();
         }
->>>>>>> main
         
         System.out.println("Client removed: " + clientId + " (Total: " + connectedClients.size() + ")");
     }
     
     public boolean authenticateUser(String clientId, String username, String password) {
-<<<<<<< HEAD
-        // Simple authentication - in a real application, you'd check against a database
-        System.out.println("Authentication attempt for client " + clientId + ": username=" + username + ", password=" + password);
-        
-        User user = findUserByUsername(username);
-        if (user == null) {
-            System.out.println("User not found: " + username);
-            System.out.println("Available users: " + availableUsers.size());
-            for (User availableUser : availableUsers) {
-                System.out.println("  - " + availableUser.getUsername() + " (" + availableUser.getNickname() + ")");
-            }
-            return false;
-        }
-        
-        if (!user.getPassword().equals(password)) {
-            System.out.println("Password mismatch for user: " + username);
-            System.out.println("Expected: " + user.getPassword() + ", Got: " + password);
-            return false;
-        }
-        
-        // Check if user is already logged in
-        if (isUserAlreadyLoggedIn(username)) {
-            System.out.println("User " + username + " is already logged in");
-            return false;
-        }
-        
-        authenticatedUsers.put(clientId, user);
-        System.out.println("User authenticated: " + username + " for client: " + clientId);
-        return true;
-=======
-        System.out.println("Authentication attempt for client " + clientId + ": username=" + username + ", password=" + password);
+        System.out.println("TEST Authentication attempt for client " + clientId + ": username=" + username + ", password=" + password);
         
         // Use the new AuthManager for authentication
         AuthManager authManager = AuthManager.getInstance();
@@ -181,7 +144,6 @@ public class GameServer {
             System.out.println("Authentication failed: " + result.getMessage());
             return false;
         }
->>>>>>> main
     }
     
     private boolean isUserAlreadyLoggedIn(String username) {
@@ -193,22 +155,32 @@ public class GameServer {
         return false;
     }
     
-<<<<<<< HEAD
-=======
     // Lobby management methods
     public String createLobby(String hostClientId) {
+        System.out.println("Creating new lobby for client " + hostClientId);
+        System.out.println("Current authenticated users: " + authenticatedUsers.size());
+        for (Map.Entry<String, User> entry : authenticatedUsers.entrySet()) {
+            System.out.println("  Authenticated user: " + entry.getValue().getUsername() + " (client ID: " + entry.getKey() + ")");
+        }
+        
         String lobbyId = UUID.randomUUID().toString();
         Lobby lobby = new Lobby(lobbyId, hostClientId);
         lobbies.put(lobbyId, lobby);
         
         // Add host to lobby
         User hostUser = authenticatedUsers.get(hostClientId);
+        System.out.println("Host user for client " + hostClientId + ": " + hostUser);
         if (hostUser != null) {
             lobby.addPlayer(hostClientId, hostUser);
-            clientToLobby.put(hostClientId, lobbyId);
+            System.out.println("Added host user to lobby: " + hostUser.getUsername());
+        } else {
+            System.out.println("Host user is null for client " + hostClientId);
+            System.out.println("Available client IDs in authenticatedUsers: " + authenticatedUsers.keySet());
         }
         
-        System.out.println("Lobby created: " + lobbyId + " by " + hostUser.getUsername());
+        System.out.println("Creating new lobby " + lobbyId + " for client " + hostClientId);
+        System.out.println("Host user: " + hostUser + " (username: " + (hostUser != null ? hostUser.getUsername() : "null") + ")");
+        
         return lobbyId;
     }
     
@@ -294,19 +266,28 @@ public class GameServer {
         return lobby != null && lobby.canStartGame();
     }
     
+    public void broadcastOnlineUsersUpdate() {
+        List<User> onlineUsers = new ArrayList<>(authenticatedUsers.values());
+
+        if (onlineUsers.size() < 1) return; // Don't broadcast an empty list or a list with one user
+
+        // Create a message with the list of online users
+        java.util.HashMap<String, Object> messageData = new java.util.HashMap<>();
+        messageData.put("users", onlineUsers);
+        Message message = new Message(messageData, MessageType.ONLINE_USERS_UPDATE);
+        broadcastMessage(message);
+    }
+    
     public String getClientLobbyId(String clientId) {
         return clientToLobby.get(clientId);
     }
     
 
     
->>>>>>> main
     public User getAuthenticatedUser(String clientId) {
         return authenticatedUsers.get(clientId);
     }
     
-<<<<<<< HEAD
-=======
     public String getClientIdByUsername(String username) {
         for (java.util.Map.Entry<String, User> entry : authenticatedUsers.entrySet()) {
             if (entry.getValue().getUsername().equals(username)) {
@@ -316,7 +297,6 @@ public class GameServer {
         return null;
     }
     
->>>>>>> main
     public void broadcastMessage(Message message) {
         for (ClientHandler handler : connectedClients.values()) {
             handler.sendMessage(message);
@@ -424,15 +404,11 @@ public class GameServer {
     }
     
     public List<User> getAvailableUsers() {
-<<<<<<< HEAD
-        return new ArrayList<>(availableUsers);
-=======
         return availableUsers;
     }
     
     public AuthManager getAuthManager() {
         return AuthManager.getInstance();
->>>>>>> main
     }
     
     public static void main(String[] args) {

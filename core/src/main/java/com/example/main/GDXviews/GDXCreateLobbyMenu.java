@@ -16,6 +16,7 @@ import com.badlogic.gdx.scenes.scene2d.ui.TextField;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.example.main.Main;
+import com.example.main.service.NetworkService;
 import com.example.main.controller.NetworkLobbyController;
 
 public class GDXCreateLobbyMenu implements Screen {
@@ -30,9 +31,11 @@ public class GDXCreateLobbyMenu implements Screen {
     private CheckBox visibleLobbyCheckBox;
     
     private NetworkLobbyController controller;
+    private NetworkService networkService;
 
-    public GDXCreateLobbyMenu() {
-        controller = new NetworkLobbyController();
+    public GDXCreateLobbyMenu(NetworkService networkService) {
+        this.networkService = networkService;
+        this.controller = new NetworkLobbyController(this.networkService);
         stage = new Stage(new ScreenViewport());
         Gdx.input.setInputProcessor(stage);
         skin = new Skin(Gdx.files.internal("uiskin.json"));
@@ -80,7 +83,31 @@ public class GDXCreateLobbyMenu implements Screen {
         backButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                Main.getInstance().setScreen(new GDXOnlineMenu());
+                Main.getInstance().setScreen(new GDXOnlineMenu(networkService));
+            }
+        });
+
+        // Set up lobby creation callback
+        controller.setLobbyCreationCallback(new NetworkLobbyController.LobbyCreationCallback() {
+            @Override
+            public void onLobbyCreationSuccess(String lobbyId, String lobbyName) {
+                Gdx.app.postRunnable(new Runnable() {
+                    @Override
+                    public void run() {
+                        // Navigate to the lobby screen
+                        Main.getInstance().setScreen(new GDXLobbyScreen(lobbyId, lobbyName, true));
+                    }
+                });
+            }
+
+            @Override
+            public void onLobbyCreationFailed(String reason) {
+                Gdx.app.postRunnable(new Runnable() {
+                    @Override
+                    public void run() {
+                        statusLabel.setText("Failed to create lobby: " + reason);
+                    }
+                });
             }
         });
 
@@ -124,16 +151,14 @@ public class GDXCreateLobbyMenu implements Screen {
 
         boolean isVisible = visibleLobbyCheckBox.isChecked();
         
-        // Generate unique lobby ID
-        String lobbyId = UUID.randomUUID().toString();
-        
-        // Create lobby with settings
-        boolean success = controller.createLobbyWithSettings(lobbyId, lobbyName, isPrivate, password, isVisible);
+        // For now, we'll create a simple lobby without specific settings
+        // The server will generate the lobby ID and assign us as host
+        boolean success = controller.createLobby();
         
         if (success) {
-            statusLabel.setText("Lobby created successfully!");
-            // Navigate to the lobby screen
-            Main.getInstance().setScreen(new GDXLobbyScreen(lobbyId, lobbyName, true));
+            statusLabel.setText("Creating lobby...");
+            // We'll navigate to the lobby screen when we receive the lobby join success message
+            // This is handled in the ClientMessageHandler and NetworkLobbyController
         } else {
             statusLabel.setText("Failed to create lobby!");
         }
@@ -141,13 +166,14 @@ public class GDXCreateLobbyMenu implements Screen {
 
     @Override
     public void show() {
-        // Connect to server when screen is shown
+        // Use existing authenticated connection - no need to create a new one
         if (Main.isNetworkMode()) {
-            boolean connected = controller.connectToServer(Main.getServerIp(), Main.getServerPort());
-            if (connected) {
-                statusLabel.setText("Connected to server!");
+            // Check if we have an authenticated network service
+            com.example.main.service.NetworkService networkService = com.example.main.models.App.getInstance().getNetworkService();
+            if (networkService != null && networkService.isConnected() && networkService.isAuthenticated()) {
+                statusLabel.setText("Ready to create lobby!");
             } else {
-                statusLabel.setText("Failed to connect to server!");
+                statusLabel.setText("Not connected or authenticated!");
             }
         }
     }

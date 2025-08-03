@@ -5,6 +5,7 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.example.main.GDXmodels.DatabaseManager;
 import com.example.main.GDXviews.GDXLoginMenu;
 import com.example.main.GDXviews.GDXSignUpMenu;
+import com.example.main.controller.MainMenuController;
 import com.example.main.network.client.GameClient;
 import com.example.main.views.AppView;
 
@@ -14,12 +15,9 @@ public class Main extends Game {
     private static Main main;
     private static SpriteBatch batch;
     private static DatabaseManager databaseManager;
-<<<<<<< HEAD
-    
-=======
     private GameClient gameClient;
+    private static MainMenuController mainMenuController;
 
->>>>>>> main
     // Network configuration
     private static String serverIp = "localhost";
     private static int serverPort = 8080;
@@ -39,6 +37,7 @@ public class Main extends Game {
         main = this;
         batch = new SpriteBatch();
         databaseManager = new DatabaseManager();
+        mainMenuController = new MainMenuController();
         gameClient = new GameClient("localhost", 8080);
 
         if (isNetworkMode) {
@@ -73,31 +72,18 @@ public class Main extends Game {
     public static DatabaseManager getDatabaseManager() {
         return databaseManager;
     }
-<<<<<<< HEAD
-    
-=======
 
->>>>>>> main
+    public static MainMenuController getMainMenuController() {
+        return mainMenuController;
+    }
+
+
     // Network methods
     public static void setNetworkInfo(String ip, int port) {
         serverIp = ip;
         serverPort = port;
         isNetworkMode = true;
     }
-<<<<<<< HEAD
-    
-    public static String getServerIp() {
-        return serverIp;
-    }
-    
-    public static int getServerPort() {
-        return serverPort;
-    }
-    
-    public static boolean isNetworkMode() {
-        return isNetworkMode;
-    }
-=======
 
     public static String getServerIp() {
         return serverIp;
@@ -114,5 +100,4 @@ public class Main extends Game {
     public GameClient getGameClient() {
         return gameClient;
     }
->>>>>>> main
 }

@@ -18,6 +18,7 @@ import com.example.main.models.Result;
 import com.example.main.models.User;
 
 public class GDXLoginMenu implements Screen {
+    private com.example.main.service.NetworkService networkService;
     private Stage stage;
     private Skin skin;
     private TextField usernameField, passwordField;
@@ -95,7 +96,8 @@ public class GDXLoginMenu implements Screen {
             Result result = controller.login(username, password);
             messageLabel.setText(result.Message());
             if (result.isSuccessful()) {
-                Main.getInstance().setScreen(new GDXMainMenu());
+                System.out.println("Login successful, transitioning to main menu.");
+                Main.getInstance().setScreen(new GDXMainMenu(null)); // No network service in single player
             }
         }
     }
@@ -103,31 +105,23 @@ public class GDXLoginMenu implements Screen {
     private void handleNetworkLogin(String username, String password) {
         // In network mode, authenticate directly with server
         messageLabel.setText("Connecting to server...");
-        
+
         // Create network service and authenticate
-        com.example.main.service.NetworkService networkService = new com.example.main.service.NetworkService();
-        
+        this.networkService = new com.example.main.service.NetworkService();
+        com.example.main.models.App.getInstance().setNetworkService(this.networkService);
+
         // Connect to server
         boolean connected = networkService.connectToServer(Main.getServerIp(), Main.getServerPort());
         if (!connected) {
-            messageLabel.setText("Failed to connect to server. Please check server status.");
+            messageLabel.setText("Failed to connect to server.");
             return;
         }
-        
-        // Authenticate with server
-        boolean authenticated = networkService.authenticate(username, password);
-        if (authenticated) {
-            messageLabel.setText("Successfully connected to server!");
-            // Set the current user in App singleton
-            User authenticatedUser = networkService.getCurrentUser();
-            if (authenticatedUser != null) {
-                App.getInstance().setCurrentUser(authenticatedUser);
-            }
-            // Transition to network lobby or game screen
-            Main.getInstance().setScreen(new GDXMainMenu());
+
+        // Authenticate with server. The response will be handled by ClientMessageHandler.
+        if (networkService.authenticate(username, password)) {
+            messageLabel.setText("Login request sent. Waiting for server response...");
         } else {
-            messageLabel.setText("Server authentication failed. Please try again.");
-            // Don't proceed to main menu if authentication failed
+            messageLabel.setText("Failed to send login request.");
         }
     }
 

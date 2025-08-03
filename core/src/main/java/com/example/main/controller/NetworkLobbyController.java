@@ -1,20 +1,9 @@
 package com.example.main.controller;
 
-<<<<<<< HEAD
-import com.example.main.models.User;
-import com.example.main.models.App;
-import com.example.main.service.NetworkService;
-import com.example.main.network.common.Message;
-import com.example.main.network.common.MessageType;
-
-=======
->>>>>>> main
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-<<<<<<< HEAD
-=======
 import com.example.main.auth.AuthManager;
 import com.example.main.auth.AuthResult;
 import com.example.main.models.App;
@@ -23,7 +12,6 @@ import com.example.main.network.common.Message;
 import com.example.main.network.common.MessageType;
 import com.example.main.service.NetworkService;
 
->>>>>>> main
 /**
  * Controller for network lobby functionality
  */
@@ -42,8 +30,6 @@ public class NetworkLobbyController {
         if (App.getInstance().getCurrentUser() != null) {
             lobbyPlayers.add(App.getInstance().getCurrentUser().getUsername());
         }
-<<<<<<< HEAD
-=======
         
         // Set up controller callback for online users updates
         this.onlineUsersUpdateCallback = new OnlineUsersUpdateCallback() {
@@ -54,7 +40,36 @@ public class NetworkLobbyController {
                 onlineUsers.addAll(onlineUsers);
             }
         };
->>>>>>> main
+    }
+    
+    /**
+     * Constructor that accepts an existing NetworkService
+     * @param networkService The existing NetworkService to use
+     */
+    public NetworkLobbyController(NetworkService networkService) {
+        this.networkService = networkService;
+        this.onlineUsers = new ArrayList<>();
+        this.lobbyPlayers = new ArrayList<>();
+        
+        // Add current user to lobby
+        if (App.getInstance().getCurrentUser() != null) {
+            lobbyPlayers.add(App.getInstance().getCurrentUser().getUsername());
+        }
+        
+        // Set up controller callback for online users updates
+        this.onlineUsersUpdateCallback = new OnlineUsersUpdateCallback() {
+            @Override
+            public void onOnlineUsersUpdate(List<String> onlineUsers) {
+                // This will be called when we receive online users from server
+                onlineUsers.clear();
+                onlineUsers.addAll(onlineUsers);
+            }
+        };
+        
+        // Set this controller as the callback for the network service
+        if (networkService != null) {
+            networkService.setControllerCallback(this);
+        }
     }
     
     /**
@@ -64,16 +79,12 @@ public class NetworkLobbyController {
      * @return true if connection successful
      */
     public boolean connectToServer(String serverIp, int serverPort) {
-<<<<<<< HEAD
-        return networkService.connectToServer(serverIp, serverPort);
-=======
         boolean connected = networkService.connectToServer(serverIp, serverPort);
         if (connected) {
             // Set the controller callback for online users updates
             networkService.setControllerCallback(this);
         }
         return connected;
->>>>>>> main
     }
     
     /**
@@ -83,17 +94,6 @@ public class NetworkLobbyController {
      * @return true if authentication successful
      */
     public boolean authenticate(String username, String password) {
-<<<<<<< HEAD
-        boolean success = networkService.authenticate(username, password);
-        if (success) {
-            // Send lobby join message
-            HashMap<String, Object> joinData = new HashMap<>();
-            joinData.put("username", username);
-            joinData.put("action", "JOIN_LOBBY");
-            Message joinMessage = new Message(joinData, MessageType.PLAYER_ACTION);
-            networkService.sendMessage(joinMessage);
-        }
-=======
         // Authenticate directly with the server (not locally first)
         boolean success = networkService.authenticate(username, password);
         
@@ -111,13 +111,10 @@ public class NetworkLobbyController {
             System.err.println("Server authentication failed");
         }
         
->>>>>>> main
         return success;
     }
     
     /**
-<<<<<<< HEAD
-=======
      * Creates a new lobby
      * @return true if lobby created successfully
      */
@@ -127,6 +124,27 @@ public class NetworkLobbyController {
         Message joinMessage = new Message(joinData, MessageType.LOBBY_JOIN);
         networkService.sendMessage(joinMessage);
         return true;
+    }
+    
+    /**
+     * Handles successful lobby join on client side
+     * @param lobbyId The ID of the lobby that was joined
+     */
+    public void onLobbyJoinSuccess(String lobbyId) {
+        // If we created the lobby (first player), we're the host
+        if (lobbyPlayers.size() == 1 && App.getInstance().getCurrentUser() != null) {
+            String currentUsername = App.getInstance().getCurrentUser().getUsername();
+            if (lobbyPlayers.contains(currentUsername)) {
+                setHost(true);
+            }
+        }
+        
+        // Notify lobby creation callback if set
+        if (lobbyCreationCallback != null) {
+            // For now, we'll use a placeholder name; in a real implementation, we'd get this from the server
+            String lobbyName = "Lobby " + lobbyId.substring(0, 8);
+            lobbyCreationCallback.onLobbyCreationSuccess(lobbyId, lobbyName);
+        }
     }
     
     /**
@@ -188,21 +206,10 @@ public class NetworkLobbyController {
     }
     
     /**
->>>>>>> main
      * Gets the list of online users
      * @return List of online usernames
      */
     public List<String> getOnlineUsers() {
-<<<<<<< HEAD
-        // In a real implementation, this would be updated by server messages
-        // For now, return a static list
-        onlineUsers.clear();
-        onlineUsers.add("player1");
-        onlineUsers.add("player2");
-        onlineUsers.add("player3");
-        onlineUsers.add("player4");
-        return onlineUsers;
-=======
         // Request online users from server
         HashMap<String, Object> requestData = new HashMap<>();
         Message requestMessage = new Message(requestData, MessageType.REQUEST_ONLINE_USERS);
@@ -224,6 +231,9 @@ public class NetworkLobbyController {
             if (userObj instanceof com.example.main.models.User) {
                 com.example.main.models.User user = (com.example.main.models.User) userObj;
                 usernames.add(user.getUsername());
+            } else if (userObj instanceof String) {
+                // Already a username string
+                usernames.add((String) userObj);
             }
         }
         
@@ -248,8 +258,14 @@ public class NetworkLobbyController {
         void onInvitationReceived(String lobbyId, String inviterUsername);
     }
     
+    public interface LobbyCreationCallback {
+        void onLobbyCreationSuccess(String lobbyId, String lobbyName);
+        void onLobbyCreationFailed(String reason);
+    }
+    
     private OnlineUsersUpdateCallback onlineUsersUpdateCallback;
     private InvitationCallback invitationCallback;
+    private LobbyCreationCallback lobbyCreationCallback;
     
     /**
      * Sets the callback for online users updates
@@ -263,11 +279,14 @@ public class NetworkLobbyController {
         this.invitationCallback = callback;
     }
     
+    public void setLobbyCreationCallback(LobbyCreationCallback callback) {
+        this.lobbyCreationCallback = callback;
+    }
+    
     public void notifyInvitationReceived(String lobbyId, String inviterUsername) {
         if (invitationCallback != null) {
             invitationCallback.onInvitationReceived(lobbyId, inviterUsername);
         }
->>>>>>> main
     }
     
     /**
@@ -294,58 +313,17 @@ public class NetworkLobbyController {
             return false; // User already in lobby
         }
         
-<<<<<<< HEAD
-        // Send invitation message to server
-        HashMap<String, Object> inviteData = new HashMap<>();
-        inviteData.put("username", username);
-        inviteData.put("action", "INVITE_TO_LOBBY");
-        Message inviteMessage = new Message(inviteData, MessageType.PLAYER_ACTION);
-=======
         // For now, we'll need to get the client ID of the target user
         // This is a simplified implementation
         HashMap<String, Object> inviteData = new HashMap<>();
         inviteData.put("targetClientId", username); // This should be the actual client ID
         Message inviteMessage = new Message(inviteData, MessageType.LOBBY_INVITE);
->>>>>>> main
         networkService.sendMessage(inviteMessage);
         
         return true;
     }
     
     /**
-<<<<<<< HEAD
-     * Accepts an invitation to join a lobby
-     * @param hostUsername Username of the host
-     * @return true if accepted successfully
-     */
-    public boolean acceptInvitation(String hostUsername) {
-        // Send accept invitation message to server
-        HashMap<String, Object> acceptData = new HashMap<>();
-        acceptData.put("hostUsername", hostUsername);
-        acceptData.put("action", "ACCEPT_INVITATION");
-        Message acceptMessage = new Message(acceptData, MessageType.PLAYER_ACTION);
-        networkService.sendMessage(acceptMessage);
-        
-        return true;
-    }
-    
-    /**
-     * Declines an invitation to join a lobby
-     * @param hostUsername Username of the host
-     * @return true if declined successfully
-     */
-    public boolean declineInvitation(String hostUsername) {
-        // Send decline invitation message to server
-        HashMap<String, Object> declineData = new HashMap<>();
-        declineData.put("hostUsername", hostUsername);
-        declineData.put("action", "DECLINE_INVITATION");
-        Message declineMessage = new Message(declineData, MessageType.PLAYER_ACTION);
-        networkService.sendMessage(declineMessage);
-        
-        return true;
-    }
-    
-=======
      * Invites a player to the current lobby
      * @param playerUsername The username of the player to invite
      * @return true if invitation sent successfully
@@ -388,7 +366,6 @@ public class NetworkLobbyController {
         return false;
     }
     
->>>>>>> main
     /**
      * Starts the game (only works if you're the host and have 4 players)
      * @return true if game started successfully
@@ -404,13 +381,7 @@ public class NetworkLobbyController {
         
         // Send start game message to server
         HashMap<String, Object> startData = new HashMap<>();
-<<<<<<< HEAD
-        startData.put("action", "START_GAME");
-        startData.put("players", lobbyPlayers);
-        Message startMessage = new Message(startData, MessageType.PLAYER_ACTION);
-=======
         Message startMessage = new Message(startData, MessageType.LOBBY_START_GAME);
->>>>>>> main
         networkService.sendMessage(startMessage);
         
         return true;
@@ -418,29 +389,17 @@ public class NetworkLobbyController {
     
     /**
      * Leaves the current lobby
-<<<<<<< HEAD
-     */
-    public void leaveLobby() {
-        // Send leave lobby message to server
-        HashMap<String, Object> leaveData = new HashMap<>();
-        leaveData.put("action", "LEAVE_LOBBY");
-        Message leaveMessage = new Message(leaveData, MessageType.PLAYER_ACTION);
-=======
      * @return true if leave message sent successfully
      */
     public boolean leaveLobby() {
         // Send leave lobby message to server
         HashMap<String, Object> leaveData = new HashMap<>();
         Message leaveMessage = new Message(leaveData, MessageType.LOBBY_LEAVE);
->>>>>>> main
         networkService.sendMessage(leaveMessage);
         
         lobbyPlayers.clear();
         isHost = false;
-<<<<<<< HEAD
-=======
         return true;
->>>>>>> main
     }
     
     /**
@@ -461,18 +420,11 @@ public class NetworkLobbyController {
     
     /**
      * Checks if authenticated with server
-<<<<<<< HEAD
-     * @return true if authenticated
-     */
-    public boolean isAuthenticated() {
-        return networkService.isAuthenticated();
-=======
      * @return true if authenticated (always true for lobby operations)
      */
     public boolean isAuthenticated() {
         // No authentication required for lobby operations
         return true;
->>>>>>> main
     }
     
     /**

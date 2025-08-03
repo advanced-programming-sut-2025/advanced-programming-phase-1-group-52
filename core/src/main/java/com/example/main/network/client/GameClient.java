@@ -1,29 +1,19 @@
 package com.example.main.network.client;
 
-<<<<<<< HEAD
-=======
-import com.badlogic.gdx.utils.Json; // Make sure this import is here
->>>>>>> main
+import com.google.gson.Gson;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.HashMap;
-<<<<<<< HEAD
-=======
 import java.util.Map;
->>>>>>> main
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.example.main.models.Game;
 import com.example.main.models.User;
-<<<<<<< HEAD
-import com.example.main.network.NetworkConstants;
-=======
->>>>>>> main
 import com.example.main.network.common.Message;
 import com.example.main.network.common.MessageType;
 
@@ -41,73 +31,47 @@ public class GameClient {
     private final ExecutorService executorService;
     private User authenticatedUser;
     private Game currentGame;
-<<<<<<< HEAD
-    private final ClientMessageHandler messageHandler;
-    private final ClientNetworkListener networkListener;
-    
-=======
     private final ClientNetworkListener networkListener;
     private Object controllerCallback; // For GUI callbacks
+    private final Gson gson;
 
->>>>>>> main
     public GameClient(String host, int port) {
         this.host = host;
         this.port = port;
         this.connected = new AtomicBoolean(false);
         this.authenticated = new AtomicBoolean(false);
         this.executorService = Executors.newCachedThreadPool();
-<<<<<<< HEAD
-        this.messageHandler = new ClientMessageHandler(this);
         this.networkListener = new ClientNetworkListener(this);
-    }
-    
-=======
-        this.networkListener = new ClientNetworkListener(this);
+        this.gson = new Gson();
     }
 
->>>>>>> main
     public boolean connect() {
         try {
             socket = new Socket(host, port);
             out = new PrintWriter(socket.getOutputStream(), true);
             in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             connected.set(true);
-<<<<<<< HEAD
-            
-            System.out.println("Connected to server at " + host + ":" + port);
-            
-            // Start listening for messages from server
-            executorService.execute(networkListener);
-            
-=======
 
             System.out.println("Connected to server at " + host + ":" + port);
 
             // Start listening for messages from server
             executorService.execute(networkListener);
 
->>>>>>> main
             return true;
         } catch (IOException e) {
             System.err.println("Failed to connect to server: " + e.getMessage());
             return false;
         }
     }
-<<<<<<< HEAD
-    
-=======
+    public void setAuthenticated(boolean status) {
+        this.authenticated.set(status);
+    }
 
->>>>>>> main
     public boolean authenticate(String username, String password) {
         if (!connected.get()) {
             System.err.println("Not connected to server");
             return false;
         }
-<<<<<<< HEAD
-        
-=======
-
->>>>>>> main
         try {
             HashMap<String, Object> authData = new HashMap<>();
             authData.put("username", username);
@@ -115,18 +79,10 @@ public class GameClient {
             Message authMessage = new Message(authData, MessageType.AUTHENTICATION);
             System.out.println("Sending authentication message for user: " + username);
             sendMessage(authMessage);
-<<<<<<< HEAD
-            
-            // Wait for authentication response
-            // In a real implementation, you might want to use a callback or future
-            Thread.sleep(2000); // Increased wait time
-            
-=======
 
             // Wait for authentication response.
             Thread.sleep(3000);
 
->>>>>>> main
             boolean authResult = authenticated.get();
             System.out.println("Authentication result: " + authResult);
             return authResult;
@@ -135,62 +91,32 @@ public class GameClient {
             return false;
         }
     }
-<<<<<<< HEAD
-    
-    public void sendPlayerAction(String action, Object actionData) {
-        if (!authenticated.get()) {
-            System.err.println("Not authenticated");
-            return;
-        }
-        
-=======
 
     public void sendPlayerAction(String action, Object actionData) {
->>>>>>> main
         HashMap<String, Object> actionDataMap = new HashMap<>();
         actionDataMap.put("action", action);
         actionDataMap.put("actionData", actionData);
         Message actionMessage = new Message(actionDataMap, MessageType.PLAYER_ACTION);
         sendMessage(actionMessage);
     }
-<<<<<<< HEAD
-    
-    public void sendMessage(Message message) {
-        if (connected.get() && out != null) {
-            try {
-                // Use proper JSON serialization
-                com.badlogic.gdx.utils.Json json = new com.badlogic.gdx.utils.Json();
-                String messageJson = json.toJson(message);
-                out.println(messageJson);
-=======
 
     public void sendMessage(Message message) {
         if (connected.get() && out != null) {
             try {
-                com.badlogic.gdx.utils.Json json = new com.badlogic.gdx.utils.Json();
-                String messageJson = json.toJson(message);
+                String messageJson = gson.toJson(message);
                 out.println(messageJson);
                 out.flush();
->>>>>>> main
             } catch (Exception e) {
                 System.err.println("Error sending message: " + e.getMessage());
                 disconnect();
             }
         }
     }
-<<<<<<< HEAD
-    
-    public void disconnect() {
-        connected.set(false);
-        authenticated.set(false);
-        
-=======
 
     public void disconnect() {
         connected.set(false);
         authenticated.set(false);
 
->>>>>>> main
         try {
             if (out != null) out.close();
             if (in != null) in.close();
@@ -200,29 +126,6 @@ public class GameClient {
         } catch (IOException e) {
             System.err.println("Error closing connection: " + e.getMessage());
         }
-<<<<<<< HEAD
-        
-        executorService.shutdown();
-        System.out.println("Disconnected from server");
-    }
-    
-    public void handleMessage(Message message) {
-        messageHandler.handleMessage(message);
-    }
-    
-    public boolean isConnected() {
-        return connected.get();
-    }
-    
-    public boolean isAuthenticated() {
-        return authenticated.get();
-    }
-    
-    public User getAuthenticatedUser() {
-        return authenticatedUser;
-    }
-    
-=======
 
         executorService.shutdown();
         System.out.println("Disconnected from server");
@@ -283,58 +186,10 @@ public class GameClient {
         return authenticatedUser;
     }
 
->>>>>>> main
     public void setAuthenticatedUser(User user) {
         this.authenticatedUser = user;
         this.authenticated.set(user != null);
     }
-<<<<<<< HEAD
-    
-    public Game getCurrentGame() {
-        return currentGame;
-    }
-    
-    public void setCurrentGame(Game game) {
-        this.currentGame = game;
-    }
-    
-    public BufferedReader getInputStream() {
-        return in;
-    }
-    
-    public boolean isRunning() {
-        return connected.get();
-    }
-    
-    // Getters for testing
-    public String getHost() { return host; }
-    public int getPort() { return port; }
-    
-    public static void main(String[] args) {
-        GameClient client = new GameClient(NetworkConstants.DEFAULT_HOST, NetworkConstants.DEFAULT_PORT);
-        
-        if (client.connect()) {
-            // Test authentication with a valid user from assets/users.json
-            boolean authSuccess = client.authenticate("sanyar", "sanyar");
-            System.out.println("Authentication: " + (authSuccess ? "SUCCESS" : "FAILED"));
-            
-            if (authSuccess) {
-                // Test sending a player action
-                client.sendPlayerAction("MOVE", "UP");
-                
-                // Keep the client running for a while
-                try {
-                    Thread.sleep(5000);
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                }
-            }
-        }
-        
-        client.disconnect();
-    }
-} 
-=======
 
     public Game getCurrentGame() {
         return currentGame;
@@ -368,4 +223,3 @@ public class GameClient {
         System.out.println("GUI clients should use NetworkClientLauncher instead");
     }
 }
->>>>>>> main

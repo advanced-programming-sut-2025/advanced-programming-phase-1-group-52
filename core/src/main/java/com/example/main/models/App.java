@@ -12,6 +12,7 @@ public class App {
     private Menu currentMenu;
     private User currentUser;
     private Game currentGame;
+    private com.example.main.service.NetworkService networkService;
 
     private App() {
         games = new ArrayList<>();
@@ -58,6 +59,14 @@ public class App {
         this.currentGame = currentGame;
     }
 
+    public com.example.main.service.NetworkService getNetworkService() {
+        return networkService;
+    }
+
+    public void setNetworkService(com.example.main.service.NetworkService networkService) {
+        this.networkService = networkService;
+    }
+
     public List<User> users() {
         return AuthManager.getInstance().getAllUsers();
     }
@@ -71,3 +80,4 @@ public class App {
         // This method is kept for compatibility
     }
 }
+

@@ -17,10 +17,7 @@ import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.example.main.Main;
 import com.example.main.controller.NetworkLobbyController;
 import com.example.main.models.App;
-<<<<<<< HEAD
-=======
 import com.example.main.models.User;
->>>>>>> main
 
 public class GDXNetworkLobby implements Screen {
     private Stage stage;
@@ -32,10 +29,7 @@ public class GDXNetworkLobby implements Screen {
     private Table onlineUsersTable;
     private Table lobbyPlayersTable;
     private TextButton inviteButton;
-<<<<<<< HEAD
-=======
     private TextButton leaveLobbyButton;
->>>>>>> main
     private TextButton startGameButton;
     private TextButton backButton;
     private TextButton refreshButton;
@@ -43,11 +37,8 @@ public class GDXNetworkLobby implements Screen {
     private List<String> onlineUsers = new ArrayList<>();
     private List<String> lobbyPlayers = new ArrayList<>();
     private String selectedUser = null;
-<<<<<<< HEAD
-=======
     private String currentLobbyId = null;
     private boolean isAdmin = false;
->>>>>>> main
     
     public GDXNetworkLobby() {
         controller = new NetworkLobbyController();
@@ -55,8 +46,6 @@ public class GDXNetworkLobby implements Screen {
         Gdx.input.setInputProcessor(stage);
         skin = new Skin(Gdx.files.internal("uiskin.json"));
         
-<<<<<<< HEAD
-=======
         // Set up callback for online users updates
         controller.setOnlineUsersUpdateCallback(new NetworkLobbyController.OnlineUsersUpdateCallback() {
             @Override
@@ -84,7 +73,6 @@ public class GDXNetworkLobby implements Screen {
             }
         });
         
->>>>>>> main
         createUI();
         updateOnlineUsers();
     }
@@ -126,23 +114,16 @@ public class GDXNetworkLobby implements Screen {
         inviteButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-<<<<<<< HEAD
-                if (selectedUser != null) {
-                    inviteUser(selectedUser);
-=======
                 if (selectedUser != null && isAdmin) {
                     inviteUser(selectedUser);
                 } else if (!isAdmin) {
                     statusLabel.setText("Only the admin can invite players!");
                 } else {
                     statusLabel.setText("Please select a user to invite!");
->>>>>>> main
                 }
             }
         });
         
-<<<<<<< HEAD
-=======
         leaveLobbyButton = new TextButton("Leave Lobby", skin);
         leaveLobbyButton.addListener(new ClickListener() {
             @Override
@@ -151,20 +132,14 @@ public class GDXNetworkLobby implements Screen {
             }
         });
         
->>>>>>> main
         startGameButton = new TextButton("Start Game (4 Players Required)", skin);
         startGameButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-<<<<<<< HEAD
-                if (lobbyPlayers.size() >= 4) {
-                    startGame();
-=======
                 if (lobbyPlayers.size() >= 4 && isAdmin) {
                     startGame();
                 } else if (!isAdmin) {
                     statusLabel.setText("Only the admin can start the game!");
->>>>>>> main
                 } else {
                     statusLabel.setText("Need 4 players to start game!");
                 }
@@ -184,15 +159,12 @@ public class GDXNetworkLobby implements Screen {
             @Override
             public void clicked(InputEvent event, float x, float y) {
                 controller.disconnect();
-                Main.getInstance().setScreen(new GDXMainMenu());
+                Main.getInstance().setScreen(new GDXMainMenu(com.example.main.models.App.getInstance().getNetworkService()));
             }
         });
         
         buttonTable.add(inviteButton).pad(5);
-<<<<<<< HEAD
-=======
         buttonTable.add(leaveLobbyButton).pad(5);
->>>>>>> main
         buttonTable.add(startGameButton).pad(5);
         buttonTable.add(refreshButton).pad(5);
         buttonTable.add(backButton).pad(5);
@@ -205,10 +177,6 @@ public class GDXNetworkLobby implements Screen {
         onlineUsersTable.clear();
         onlineUsers.clear();
         
-<<<<<<< HEAD
-        // Get online users from controller
-        List<String> users = controller.getOnlineUsers();
-=======
         // Request online users from server via controller
         controller.getOnlineUsers();
         
@@ -224,7 +192,6 @@ public class GDXNetworkLobby implements Screen {
     public void updateOnlineUsersFromServer(List<String> users) {
         onlineUsersTable.clear();
         onlineUsers.clear();
->>>>>>> main
         onlineUsers.addAll(users);
         
         // Add users to table
@@ -287,8 +254,6 @@ public class GDXNetworkLobby implements Screen {
             statusLabel.setText("Failed to start game");
         }
     }
-<<<<<<< HEAD
-=======
 
     private void showInvitationDialog(String lobbyId, String inviterUsername) {
         GDXInvitationDialog dialog = new GDXInvitationDialog(
@@ -324,7 +289,6 @@ public class GDXNetworkLobby implements Screen {
             statusLabel.setText("Failed to leave lobby!");
         }
     }
->>>>>>> main
     
     @Override
     public void show() {
@@ -332,22 +296,8 @@ public class GDXNetworkLobby implements Screen {
         if (Main.isNetworkMode()) {
             boolean connected = controller.connectToServer(Main.getServerIp(), Main.getServerPort());
             if (connected) {
-<<<<<<< HEAD
-                String currentUsername = App.getInstance().getCurrentUser() != null ? App.getInstance().getCurrentUser().getUsername() : "Guest";
-                boolean authenticated = controller.authenticate(
-                    currentUsername,
-                    "password" // You'll need to implement proper password handling
-                );
-                if (authenticated) {
-                    statusLabel.setText("Connected and authenticated!");
-                    updateOnlineUsers();
-                } else {
-                    statusLabel.setText("Authentication failed!");
-                }
-=======
                 statusLabel.setText("Connected to server!");
                 updateOnlineUsers();
->>>>>>> main
             } else {
                 statusLabel.setText("Failed to connect to server!");
             }

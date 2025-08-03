@@ -1,10 +1,11 @@
 package com.example.main.service;
 
+import com.example.main.models.User;
+
 import java.util.HashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.example.main.models.Game;
-import com.example.main.models.User;
 import com.example.main.network.NetworkConstants;
 import com.example.main.network.client.GameClient;
 import com.example.main.network.common.Message;
@@ -14,10 +15,18 @@ import com.example.main.network.common.MessageType;
  * Service class that integrates network functionality with the game
  */
 public class NetworkService {
+    private User currentUser;
+
+    public User getCurrentUser() {
+        return currentUser;
+    }
+
+    public void setCurrentUser(User currentUser) {
+        this.currentUser = currentUser;
+    }
     private GameClient client;
     private final AtomicBoolean isConnected;
     private final AtomicBoolean isAuthenticated;
-    private User currentUser;
     private Game currentGame;
     
     public NetworkService() {
@@ -32,10 +41,23 @@ public class NetworkService {
      * @return true if connection successful
      */
     public boolean connectToServer(String host, int port) {
+        // If already connected, don't create a new connection
+        if (isConnected.get() && client != null) {
+            System.out.println("Already connected to server, reusing existing connection");
+            return true;
+        }
+        
+        System.out.println("Creating new connection to server at " + host + ":" + port);
+        
         try {
             client = new GameClient(host, port);
             boolean connected = client.connect();
             isConnected.set(connected);
+            if (connected) {
+                System.out.println("Successfully connected to server");
+            } else {
+                System.out.println("Failed to connect to server");
+            }
             return connected;
         } catch (Exception e) {
             System.err.println("Failed to connect to server: " + e.getMessage());
@@ -71,15 +93,7 @@ public class NetworkService {
      * @param actionData Action data
      */
     public void sendPlayerAction(String action, Object actionData) {
-<<<<<<< HEAD
-        if (!isAuthenticated.get()) {
-            System.err.println("Not authenticated");
-            return;
-        }
-        
-=======
         // No authentication required for player actions
->>>>>>> main
         client.sendPlayerAction(action, actionData);
     }
     
@@ -104,13 +118,7 @@ public class NetworkService {
         this.currentGame = game;
     }
     
-    /**
-     * Gets the current authenticated user
-     * @return Current user or null if not authenticated
-     */
-    public User getCurrentUser() {
-        return currentUser;
-    }
+
     
     /**
      * Gets the current game state
@@ -144,15 +152,12 @@ public class NetworkService {
         return client;
     }
     
-<<<<<<< HEAD
-=======
     public void setControllerCallback(Object callback) {
         if (client != null) {
             client.setControllerCallback(callback);
         }
     }
     
->>>>>>> main
     /**
      * Connects to the default server
      * @return true if connection successful
@@ -167,15 +172,7 @@ public class NetworkService {
      * @param data Message data
      */
     public void sendCustomMessage(String messageType, Object data) {
-<<<<<<< HEAD
-        if (!isAuthenticated.get()) {
-            System.err.println("Not authenticated");
-            return;
-        }
-        
-=======
         // No authentication required for custom messages
->>>>>>> main
         HashMap<String, Object> messageData = new HashMap<>();
         messageData.put("type", messageType);
         messageData.put("data", data);
@@ -188,15 +185,7 @@ public class NetworkService {
      * @param message Message to send
      */
     public void sendMessage(Message message) {
-<<<<<<< HEAD
-        if (!isAuthenticated.get()) {
-            System.err.println("Not authenticated");
-            return;
-        }
-        
-=======
         // No authentication required for sending messages
->>>>>>> main
         if (client != null) {
             client.sendMessage(message);
         }

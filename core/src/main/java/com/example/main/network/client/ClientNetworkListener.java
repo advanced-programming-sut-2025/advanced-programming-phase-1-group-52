@@ -2,26 +2,22 @@ package com.example.main.network.client;
 
 import java.io.BufferedReader;
 import java.io.IOException;
-<<<<<<< HEAD
-
-import com.badlogic.gdx.utils.Json;
-import com.example.main.network.common.Message;
-=======
 import java.util.HashMap;
 
-import com.badlogic.gdx.utils.Json;
+import com.google.gson.Gson;
 import com.example.main.network.common.Message;
 import com.example.main.network.common.MessageType;
->>>>>>> main
 
 /**
  * Listens for incoming messages from the server
  */
 public class ClientNetworkListener implements Runnable {
     private final GameClient client;
+    private final Gson gson;
     
     public ClientNetworkListener(GameClient client) {
         this.client = client;
+        this.gson = new Gson();
     }
     
     @Override
@@ -32,7 +28,7 @@ public class ClientNetworkListener implements Runnable {
             try {
                 String messageJson = in.readLine();
                 if (messageJson != null) {
-                    Message message = parseMessageFromJson(messageJson);
+                    Message message = gson.fromJson(messageJson, Message.class);
                     if (message != null) {
                         client.handleMessage(message);
                     } else {
@@ -61,11 +57,6 @@ public class ClientNetworkListener implements Runnable {
     
     private Message parseMessageFromJson(String messageJson) {
         try {
-<<<<<<< HEAD
-            Json json = new Json();
-            Message message = json.fromJson(Message.class, messageJson);
-            System.out.println("Client received message: " + message.getType());
-=======
             System.out.println("Parsing message JSON: " + messageJson);
             // Parse JSON manually to handle the format we're sending
             // Expected format: {"type":"AUTH_SUCCESS","body":{"username":"testuser","nickname":"Test User","email":"test@example.com"}}
@@ -116,15 +107,11 @@ public class ClientNetworkListener implements Runnable {
             
             System.out.println("Parsed body: " + body);
             Message message = new Message(body, type);
->>>>>>> main
             return message;
         } catch (Exception e) {
             System.err.println("Error parsing message JSON: " + e.getMessage());
             System.err.println("Message JSON: " + messageJson);
-<<<<<<< HEAD
-=======
             e.printStackTrace();
->>>>>>> main
             // Return null instead of a dummy message to avoid confusion
             return null;
         }

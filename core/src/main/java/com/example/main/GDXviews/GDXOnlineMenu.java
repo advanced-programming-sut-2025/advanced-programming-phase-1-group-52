@@ -12,13 +12,16 @@ import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.example.main.Main;
+import com.example.main.service.NetworkService;
 
 public class GDXOnlineMenu implements Screen {
     private Stage stage;
     private Skin skin;
     private Label titleLabel;
+    private NetworkService networkService;
 
-    public GDXOnlineMenu() {
+    public GDXOnlineMenu(NetworkService networkService) {
+        this.networkService = networkService;
         stage = new Stage(new ScreenViewport());
         Gdx.input.setInputProcessor(stage);
         skin = new Skin(Gdx.files.internal("uiskin.json"));
@@ -37,7 +40,7 @@ public class GDXOnlineMenu implements Screen {
         createLobbyButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                Main.getInstance().setScreen(new GDXCreateLobbyMenu());
+                Main.getInstance().setScreen(new GDXCreateLobbyMenu(networkService));
             }
         });
 
@@ -51,7 +54,7 @@ public class GDXOnlineMenu implements Screen {
         backButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                Main.getInstance().setScreen(new GDXMainMenu());
+                Main.getInstance().setScreen(new GDXMainMenu(com.example.main.models.App.getInstance().getNetworkService()));
             }
         });
 

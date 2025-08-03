@@ -6,15 +6,8 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.HashMap;
-<<<<<<< HEAD
-import java.util.UUID;
-
-import com.example.main.models.User;
-import com.example.main.network.common.Message;
-import com.example.main.network.common.MessageType;
-=======
 import java.util.List;
-import java.util.Map; // Import Map
+import java.util.Map;
 import java.util.UUID;
 
 import com.example.main.enums.player.Gender;
@@ -22,8 +15,7 @@ import com.example.main.enums.regex.SecurityQuestion;
 import com.example.main.models.User;
 import com.example.main.network.common.Message;
 import com.example.main.network.common.MessageType;
-import com.badlogic.gdx.utils.Json;
->>>>>>> main
+import com.google.gson.Gson;
 
 /**
  * Handles individual client connections on the server
@@ -36,35 +28,21 @@ public class ClientHandler implements Runnable {
     private final BufferedReader in;
     private boolean authenticated = false;
     private boolean running = true;
-<<<<<<< HEAD
-    
-=======
-    private final Json json;
+    private final Gson gson;
 
->>>>>>> main
     public ClientHandler(Socket socket, GameServer server) throws IOException {
         this.clientSocket = socket;
         this.server = server;
         this.clientId = UUID.randomUUID().toString();
         this.out = new PrintWriter(socket.getOutputStream(), true);
         this.in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-<<<<<<< HEAD
-    }
-    
-=======
-        this.json = new Json();
+        this.gson = new Gson();
     }
 
->>>>>>> main
     @Override
     public void run() {
         try {
             server.addClient(clientId, this);
-<<<<<<< HEAD
-            
-=======
-
->>>>>>> main
             String inputLine;
             while (running && (inputLine = in.readLine()) != null) {
                 handleMessage(inputLine);
@@ -75,39 +53,20 @@ public class ClientHandler implements Runnable {
             cleanup();
         }
     }
-<<<<<<< HEAD
-    
-=======
 
->>>>>>> main
     private void handleMessage(String messageJson) {
         try {
             // Parse the message JSON and create Message object
-            Message message = parseMessageFromJson(messageJson);
-<<<<<<< HEAD
-            
-=======
-
->>>>>>> main
+            Message message = gson.fromJson(messageJson, Message.class);
             if (message == null) {
                 System.err.println("Failed to parse message, skipping");
                 return;
             }
-<<<<<<< HEAD
-            
-=======
-
->>>>>>> main
             if (message.getType() == MessageType.ERROR) {
                 // Skip processing error messages that were created as fallbacks
                 System.err.println("Received error message, skipping processing");
                 return;
             }
-<<<<<<< HEAD
-            
-=======
-
->>>>>>> main
             switch (message.getType()) {
                 case AUTHENTICATION:
                     handleAuthentication(message);
@@ -121,8 +80,6 @@ public class ClientHandler implements Runnable {
                 case DISCONNECT:
                     handleDisconnect();
                     break;
-<<<<<<< HEAD
-=======
                 case LOBBY_JOIN:
                     handleLobbyJoin(message);
                     break;
@@ -150,7 +107,6 @@ public class ClientHandler implements Runnable {
                 case REGISTER:
                     handleRegister(message);
                     break;
->>>>>>> main
                 default:
                     System.out.println("Unknown message type: " + message.getType());
             }
@@ -159,24 +115,9 @@ public class ClientHandler implements Runnable {
             sendErrorMessage("Invalid message format");
         }
     }
-<<<<<<< HEAD
-    
-    private void handleAuthentication(Message message) {
-        try {
-            String username = message.getFromBody("username");
-            String password = message.getFromBody("password");
-            
-            if (server.authenticateUser(clientId, username, password)) {
-                authenticated = true;
-                try {
-                    sendAuthSuccessMessage(server.getAuthenticatedUser(clientId));
-                    System.out.println("Authentication successful for client: " + clientId);
-                    
-=======
 
     private void handleAuthentication(Message message) {
         try {
-            // *** THIS IS THE CORRECTED PART ***
             // When the client sends an AUTHENTICATION message, its body is a Map.
             // We need to cast the body to a Map to safely get the username and password.
             Map<String, Object> body = (Map<String, Object>) message.getBody();
@@ -190,11 +131,10 @@ public class ClientHandler implements Runnable {
                     sendAuthSuccessMessage(server.getAuthenticatedUser(clientId));
                     System.out.println("Authentication successful for client: " + clientId);
 
->>>>>>> main
                     // Check if we can start the game
-                    if (server.getAuthenticatedUsersCount() >= 1) {
+                    /* if (server.getAuthenticatedUsersCount() >= 1) {
                         server.startGame();
-                    }
+                    } */
                 } catch (Exception e) {
                     System.err.println("Error sending success message: " + e.getMessage());
                     // Don't send failure message if success message failed
@@ -208,18 +148,6 @@ public class ClientHandler implements Runnable {
             sendAuthFailedMessage("Authentication error");
         }
     }
-<<<<<<< HEAD
-    
-    private void handlePlayerAction(Message message) {
-        if (!authenticated) {
-            sendErrorMessage("Not authenticated");
-            return;
-        }
-        
-        try {
-            String action = message.getFromBody("action");
-            Object actionData = message.getFromBody("actionData");
-=======
 
     private void handlePlayerAction(Message message) {
         // No authentication required for player actions
@@ -228,99 +156,39 @@ public class ClientHandler implements Runnable {
             Map<String, Object> body = (Map<String, Object>) message.getBody();
             String action = (String) body.get("action");
             Object actionData = body.get("actionData");
->>>>>>> main
             server.handlePlayerAction(clientId, action, actionData);
         } catch (Exception e) {
             sendErrorMessage("Invalid action data");
         }
     }
-<<<<<<< HEAD
-    
-=======
 
->>>>>>> main
     private void handleHeartbeat() {
         // Simply acknowledge the heartbeat
         sendHeartbeatMessage();
     }
-<<<<<<< HEAD
-    
-=======
 
->>>>>>> main
     private void handleDisconnect() {
         System.out.println("Client " + clientId + " requested disconnect");
         disconnect();
     }
-<<<<<<< HEAD
-    
-    public void sendMessage(Message message) {
-        if (running && out != null) {
-            try {
-                // Use proper JSON serialization
-                com.badlogic.gdx.utils.Json json = new com.badlogic.gdx.utils.Json();
-                String messageJson = json.toJson(message);
-                out.println(messageJson);
-            } catch (Exception e) {
-                System.err.println("Error sending message to client " + clientId + ": " + e.getMessage());
-=======
 
     public void sendMessage(Message message) {
-        if (running && out != null) {
+        if (out != null) {
             try {
-                // Manually create a simple JSON string to avoid serialization issues
-                StringBuilder jsonBuilder = new StringBuilder();
-                jsonBuilder.append("{");
-                
-                // Add type
-                jsonBuilder.append("\"type\":\"").append(message.getType().toString()).append("\"");
-                
-                // Add body
-                jsonBuilder.append(",\"body\":{");
-                HashMap<String, Object> body = message.getBody();
-                boolean first = true;
-                for (java.util.Map.Entry<String, Object> entry : body.entrySet()) {
-                    if (!first) {
-                        jsonBuilder.append(",");
-                    }
-                    jsonBuilder.append("\"").append(entry.getKey()).append("\":\"");
-                    
-                    // Escape quotes in the value
-                    String value = entry.getValue() != null ? entry.getValue().toString() : "";
-                    jsonBuilder.append(value.replace("\"", "\\\""));
-                    jsonBuilder.append("\"");
-                    
-                    first = false;
-                }
-                jsonBuilder.append("}");
-                
-                jsonBuilder.append("}");
-                
-                String messageJson = jsonBuilder.toString();
+                String messageJson = gson.toJson(message);
                 out.println(messageJson);
             } catch (Exception e) {
                 System.err.println("Error sending message to client " + clientId + ": " + e.getMessage());
                 e.printStackTrace();
->>>>>>> main
                 disconnect();
             }
         }
     }
-<<<<<<< HEAD
-    
-=======
-
->>>>>>> main
     public void disconnect() {
         running = false;
         server.removeClient(clientId);
         cleanup();
     }
-<<<<<<< HEAD
-    
-=======
-
->>>>>>> main
     private void cleanup() {
         try {
             if (out != null) out.close();
@@ -332,36 +200,6 @@ public class ClientHandler implements Runnable {
             System.err.println("Error cleaning up client " + clientId + ": " + e.getMessage());
         }
     }
-<<<<<<< HEAD
-    
-    public String getClientId() {
-        return clientId;
-    }
-    
-    public boolean isAuthenticated() {
-        return authenticated;
-    }
-    
-    public boolean isRunning() {
-        return running;
-    }
-    
-    // Helper methods for creating messages
-    private Message parseMessageFromJson(String messageJson) {
-        try {
-            com.badlogic.gdx.utils.Json json = new com.badlogic.gdx.utils.Json();
-            Message message = json.fromJson(Message.class, messageJson);
-            System.out.println("Successfully parsed message: " + message.getType());
-            return message;
-        } catch (Exception e) {
-            System.err.println("Error parsing message JSON: " + e.getMessage());
-            System.err.println("Message JSON: " + messageJson);
-            // Return null instead of a dummy message to avoid confusion
-            return null;
-        }
-    }
-    
-=======
 
     public String getClientId() {
         return clientId;
@@ -378,7 +216,7 @@ public class ClientHandler implements Runnable {
     // Helper methods for creating messages
     private Message parseMessageFromJson(String messageJson) {
         try {
-            return json.fromJson(Message.class, messageJson);
+            return gson.fromJson(messageJson, Message.class);
         } catch (Exception e) {
             System.err.println("Error parsing message JSON: " + e.getMessage());
             System.err.println("Message JSON: " + messageJson);
@@ -386,56 +224,36 @@ public class ClientHandler implements Runnable {
         }
     }
 
->>>>>>> main
     private void sendErrorMessage(String error) {
         HashMap<String, Object> errorData = new HashMap<>();
         errorData.put("error", error);
         Message errorMessage = new Message(errorData, MessageType.ERROR);
         sendMessage(errorMessage);
     }
-<<<<<<< HEAD
-    
-    private void sendAuthSuccessMessage(User user) {
-        HashMap<String, Object> authData = new HashMap<>();
-        authData.put("user", user);
-        Message authMessage = new Message(authData, MessageType.AUTH_SUCCESS);
-        sendMessage(authMessage);
-    }
-    
-=======
 
     private void sendAuthSuccessMessage(User user) {
-        // Create a simple message structure to avoid serialization issues
+        // Manually create a HashMap to avoid Gson serialization issues with the User object
         HashMap<String, Object> body = new HashMap<>();
-        body.put("username", user.getUsername() != null ? user.getUsername() : "");
-        body.put("nickname", user.getNickname() != null ? user.getNickname() : "");
-        body.put("email", user.getEmail() != null ? user.getEmail() : "");
-        // Add other relevant user fields as needed
+        body.put("username", user.getUsername());
+        body.put("nickname", user.getNickname());
+        body.put("email", user.getEmail());
+
         Message authMessage = new Message(body, MessageType.AUTH_SUCCESS);
         sendMessage(authMessage);
     }
 
 
->>>>>>> main
     private void sendAuthFailedMessage(String reason) {
         HashMap<String, Object> authData = new HashMap<>();
         authData.put("reason", reason);
         Message authMessage = new Message(authData, MessageType.AUTH_FAILED);
         sendMessage(authMessage);
     }
-<<<<<<< HEAD
-    
-=======
-
->>>>>>> main
     private void sendHeartbeatMessage() {
         HashMap<String, Object> heartbeatData = new HashMap<>();
         Message heartbeatMessage = new Message(heartbeatData, MessageType.HEARTBEAT);
         sendMessage(heartbeatMessage);
     }
-<<<<<<< HEAD
-} 
-=======
 
     // Lobby handling methods
     private void handleLobbyJoin(Message message) {
@@ -443,21 +261,30 @@ public class ClientHandler implements Runnable {
         try {
             Map<String, Object> body = (Map<String, Object>) message.getBody();
             String lobbyId = (String) body.get("lobbyId");
+            System.out.println("Handling lobby join request for client " + clientId + ", lobbyId: " + lobbyId);
+            
             if (lobbyId == null) {
                 // Create new lobby
+                System.out.println("Creating new lobby for client " + clientId);
                 String newLobbyId = server.createLobby(clientId);
+                System.out.println("New lobby created with ID: " + newLobbyId);
                 sendLobbyJoinSuccess(newLobbyId);
             } else {
                 // Join existing lobby
+                System.out.println("Joining existing lobby: " + lobbyId);
                 if (server.joinLobby(clientId, lobbyId)) {
+                    System.out.println("Successfully joined lobby: " + lobbyId);
                     sendLobbyJoinSuccess(lobbyId);
                     broadcastLobbyUpdate(lobbyId);
                 } else {
+                    System.out.println("Failed to join lobby: " + lobbyId);
                     sendLobbyJoinFailed("Failed to join lobby");
                 }
             }
         } catch (Exception e) {
-            sendLobbyJoinFailed("Error joining lobby");
+            System.err.println("Exception in handleLobbyJoin for client " + clientId + ": " + e.getMessage());
+            e.printStackTrace();
+            sendLobbyJoinFailed("Error joining lobby: " + e.getMessage());
         }
     }
 
@@ -556,9 +383,10 @@ public class ClientHandler implements Runnable {
 
     // Lobby message sending methods
     private void sendLobbyJoinSuccess(String lobbyId) {
+        System.out.println("Sending lobby join success for lobby: " + lobbyId + " to client: " + clientId);
         HashMap<String, Object> data = new HashMap<>();
         data.put("lobbyId", lobbyId);
-        Message message = new Message(data, MessageType.LOBBY_JOIN);
+        Message message = new Message(data, MessageType.LOBBY_JOIN_SUCCESS);
         sendMessage(message);
     }
 
@@ -628,7 +456,25 @@ public class ClientHandler implements Runnable {
     private void handleRequestOnlineUsers() {
         List<User> onlineUsers = server.getOnlinePlayers();
         HashMap<String, Object> body = new HashMap<>();
-        body.put("users", onlineUsers);
+        body.put("onlineUsers", onlineUsers);
+        
+        // Convert users to a JSON array string representation
+        StringBuilder usersJson = new StringBuilder("[");
+        boolean first = true;
+        for (User user : onlineUsers) {
+            if (!first) {
+                usersJson.append(",");
+            }
+            usersJson.append("{");
+            usersJson.append("\"username\":\"").append(user.getUsername()).append("\",");
+            usersJson.append("\"nickname\":\"").append(user.getNickname()).append("\",");
+            usersJson.append("\"email\":\"").append(user.getEmail()).append("\"");
+            usersJson.append("}");
+            first = false;
+        }
+        usersJson.append("]");
+        
+        body.put("users", usersJson.toString());
         Message message = new Message(body, MessageType.ONLINE_USERS_UPDATE);
         sendMessage(message);
     }
@@ -680,4 +526,3 @@ public class ClientHandler implements Runnable {
         }
     }
 }
->>>>>>> main

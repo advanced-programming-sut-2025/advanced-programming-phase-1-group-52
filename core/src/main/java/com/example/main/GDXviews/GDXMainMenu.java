@@ -14,15 +14,18 @@ import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.example.main.Main;
 import com.example.main.controller.MainMenuController;
 import com.example.main.models.Result;
+import com.example.main.service.NetworkService;
 
 public class GDXMainMenu implements Screen {
     private Stage stage;
     private Skin skin;
     private MainMenuController controller;
     private Label welcomeLabel;
+    private NetworkService networkService;
 
-    public GDXMainMenu() {
-        controller = new MainMenuController();
+    public GDXMainMenu(NetworkService networkService) {
+                this.networkService = networkService;
+        controller = Main.getMainMenuController();
         stage = new Stage(new ScreenViewport());
         Gdx.input.setInputProcessor(stage);
         skin = new Skin(Gdx.files.internal("uiskin.json"));
@@ -34,11 +37,7 @@ public class GDXMainMenu implements Screen {
         welcomeLabel = new Label("Welcome, Guest", skin);
 
         TextButton preGameMenuButton = new TextButton("Go to PreGame Menu", skin);
-<<<<<<< HEAD
-        TextButton networkLobbyButton = new TextButton("Network Lobby", skin);
-=======
         TextButton networkLobbyButton = new TextButton("Play Online", skin);
->>>>>>> main
         TextButton profileMenuButton = new TextButton("Go to Profile Menu", skin);
         TextButton logoutButton = new TextButton("Logout", skin);
         TextButton exitButton = new TextButton("Exit", skin);
@@ -57,11 +56,7 @@ public class GDXMainMenu implements Screen {
             public void clicked(InputEvent event, float x, float y) {
                 Result result = controller.menuEnter("NetworkLobby");
                 System.out.println(result.Message());
-<<<<<<< HEAD
-                Main.getInstance().setScreen(new GDXNetworkLobby());
-=======
-                Main.getInstance().setScreen(new GDXOnlineMenu());
->>>>>>> main
+                Main.getInstance().setScreen(new GDXOnlineMenu(networkService));
             }
         });
 
@@ -101,16 +96,20 @@ public class GDXMainMenu implements Screen {
 
     @Override
     public void show() {
-        // Update welcome message with current user
-        String username = com.example.main.models.App.getInstance().getCurrentUser() != null ? 
-            com.example.main.models.App.getInstance().getCurrentUser().getUsername() : "Guest";
-        welcomeLabel.setText("Welcome, " + username);
+        // Update welcome message with current user from the global App singleton
+        com.example.main.models.User currentUser = com.example.main.models.App.getInstance().getCurrentUser();
+        if (currentUser != null && currentUser.getUsername() != null) {
+            welcomeLabel.setText("Welcome, " + currentUser.getUsername());
+        } else {
+            welcomeLabel.setText("Welcome, Guest");
+        }
     }
 
     @Override
     public void render(float delta) {
         Gdx.gl.glClearColor(0.15f, 0.15f, 0.2f, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+
         stage.act(delta);
         stage.draw();
     }
