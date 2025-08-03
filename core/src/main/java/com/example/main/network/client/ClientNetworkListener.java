@@ -2,9 +2,17 @@ package com.example.main.network.client;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+<<<<<<< HEAD
 
 import com.badlogic.gdx.utils.Json;
 import com.example.main.network.common.Message;
+=======
+import java.util.HashMap;
+
+import com.badlogic.gdx.utils.Json;
+import com.example.main.network.common.Message;
+import com.example.main.network.common.MessageType;
+>>>>>>> main
 
 /**
  * Listens for incoming messages from the server
@@ -53,13 +61,70 @@ public class ClientNetworkListener implements Runnable {
     
     private Message parseMessageFromJson(String messageJson) {
         try {
+<<<<<<< HEAD
             Json json = new Json();
             Message message = json.fromJson(Message.class, messageJson);
             System.out.println("Client received message: " + message.getType());
+=======
+            System.out.println("Parsing message JSON: " + messageJson);
+            // Parse JSON manually to handle the format we're sending
+            // Expected format: {"type":"AUTH_SUCCESS","body":{"username":"testuser","nickname":"Test User","email":"test@example.com"}}
+            
+            // Remove the outer braces
+            String innerJson = messageJson.substring(1, messageJson.length() - 1);
+            
+            // Split by the first occurrence of ","body": to separate type and body
+            int bodyIndex = innerJson.indexOf(",\"body\":");
+            String typePart = innerJson.substring(0, bodyIndex);
+            String bodyPart = innerJson.substring(bodyIndex + 8); // Skip ","body":
+            
+            // Extract type
+            String typeStr = typePart.split(":")[1].replace("\"", "");
+            System.out.println("Parsed type: " + typeStr);
+            MessageType type = MessageType.valueOf(typeStr);
+            
+            // Extract body (remove outer braces if present)
+            String bodyContent = bodyPart;
+            if (bodyContent.startsWith("{")) {
+                bodyContent = bodyContent.substring(1);
+            }
+            if (bodyContent.endsWith("}")) {
+                bodyContent = bodyContent.substring(0, bodyContent.length() - 1);
+            }
+            System.out.println("Parsed body content: " + bodyContent);
+            HashMap<String, Object> body = new HashMap<>();
+            
+            // Parse body key-value pairs
+            if (!bodyContent.isEmpty()) {
+                // Simple approach: split by "," and process each pair
+                String[] pairs = bodyContent.split(",\"");
+                for (String pair : pairs) {
+                    // Handle the first pair specially since it won't start with "
+                    String cleanPair = pair;
+                    if (!pair.startsWith("\"")) {
+                        cleanPair = "\"" + pair;
+                    }
+                    
+                    if (cleanPair.contains(":")) {
+                        int colonIndex = cleanPair.indexOf(":");
+                        String key = cleanPair.substring(0, colonIndex).replace("\"", "").trim();
+                        String value = cleanPair.substring(colonIndex + 1).replace("\"", "").trim();
+                        body.put(key, value);
+                    }
+                }
+            }
+            
+            System.out.println("Parsed body: " + body);
+            Message message = new Message(body, type);
+>>>>>>> main
             return message;
         } catch (Exception e) {
             System.err.println("Error parsing message JSON: " + e.getMessage());
             System.err.println("Message JSON: " + messageJson);
+<<<<<<< HEAD
+=======
+            e.printStackTrace();
+>>>>>>> main
             // Return null instead of a dummy message to avoid confusion
             return null;
         }

@@ -71,11 +71,15 @@ public class NetworkService {
      * @param actionData Action data
      */
     public void sendPlayerAction(String action, Object actionData) {
+<<<<<<< HEAD
         if (!isAuthenticated.get()) {
             System.err.println("Not authenticated");
             return;
         }
         
+=======
+        // No authentication required for player actions
+>>>>>>> main
         client.sendPlayerAction(action, actionData);
     }
     
@@ -140,6 +144,15 @@ public class NetworkService {
         return client;
     }
     
+<<<<<<< HEAD
+=======
+    public void setControllerCallback(Object callback) {
+        if (client != null) {
+            client.setControllerCallback(callback);
+        }
+    }
+    
+>>>>>>> main
     /**
      * Connects to the default server
      * @return true if connection successful
@@ -154,11 +167,15 @@ public class NetworkService {
      * @param data Message data
      */
     public void sendCustomMessage(String messageType, Object data) {
+<<<<<<< HEAD
         if (!isAuthenticated.get()) {
             System.err.println("Not authenticated");
             return;
         }
         
+=======
+        // No authentication required for custom messages
+>>>>>>> main
         HashMap<String, Object> messageData = new HashMap<>();
         messageData.put("type", messageType);
         messageData.put("data", data);
@@ -171,11 +188,15 @@ public class NetworkService {
      * @param message Message to send
      */
     public void sendMessage(Message message) {
+<<<<<<< HEAD
         if (!isAuthenticated.get()) {
             System.err.println("Not authenticated");
             return;
         }
         
+=======
+        // No authentication required for sending messages
+>>>>>>> main
         if (client != null) {
             client.sendMessage(message);
         }

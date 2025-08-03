@@ -1,23 +1,23 @@
 [
 {
 	class: com.example.main.models.User
-	username: radin
-	password: radin
-	nickname: rad
-	email: radin@gmail.com
-	gender: Male
-	securityQuestion: PetName
-	securityAnswer: nik
-}
-{
-	class: com.example.main.models.User
-	username: ali
-	password: r(*tv8BQ
-	nickname: alix
-	email: ali@gmail.com
+	username: mamad
+	password: mamad
+	nickname: mamy
+	email: mamad@gmail.com
 	gender: Male
 	securityQuestion: PetName
 	securityAnswer: dog
+}
+{
+	class: com.example.main.models.User
+	username: newuser
+	password: newpass
+	nickname: New User
+	email: new@example.com
+	gender: Male
+	securityQuestion: PetName
+	securityAnswer: default
 }
 {
 	class: com.example.main.models.User
@@ -31,13 +31,13 @@
 }
 {
 	class: com.example.main.models.User
-	username: mamad
-	password: mamad
-	nickname: mamy
-	email: mamad@gmail.com
+	username: test
+	password: Test123!
+	nickname: test
+	email: sanyar@gmail.com
 	gender: Male
 	securityQuestion: PetName
-	securityAnswer: dog
+	securityAnswer: pet
 }
 {
 	class: com.example.main.models.User
@@ -51,6 +51,24 @@
 }
 {
 	class: com.example.main.models.User
+	username: completelynewuser
+	password: completelynewpass
+	nickname: Completely New User
+	email: completelynew@example.com
+	gender: Male
+	securityQuestion: PetName
+	securityAnswer: default
+}
+{
+	class: com.example.main.models.User
+	username: testuser
+	password: testpass
+	nickname: Test User
+	email: test@example.com
+	gender: Male
+}
+{
+	class: com.example.main.models.User
 	username: girl
 	password: Girl123!
 	nickname: girl
@@ -58,5 +76,35 @@
 	gender: Female
 	securityQuestion: PetName
 	securityAnswer: pet
+}
+{
+	class: com.example.main.models.User
+	username: radin
+	password: radin
+	nickname: rad
+	email: radin@gmail.com
+	gender: Male
+	securityQuestion: PetName
+	securityAnswer: nik
+}
+{
+	class: com.example.main.models.User
+	username: testuser123
+	password: testpass123
+	nickname: Test User 123
+	email: test123@example.com
+	gender: Male
+	securityQuestion: PetName
+	securityAnswer: default
+}
+{
+	class: com.example.main.models.User
+	username: ali
+	password: r(*tv8BQ
+	nickname: alix
+	email: ali@gmail.com
+	gender: Male
+	securityQuestion: PetName
+	securityAnswer: dog
 }
 ]

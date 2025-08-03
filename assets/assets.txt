@@ -9306,10 +9306,16 @@ skin/04B_30__.fnt
 skin/NzSkin.atlas
 skin/NzSkin.json
 skin/NzSkin.png
+skin/font-export.fnt
+skin/font-subtitle-export.fnt
+skin/font-title-export.fnt
 skin/impact(1).fnt
 skin/impact(3).fnt
 skin/mac's Extended Minecraft Bold Italic.fnt
 skin/mac's Minecraft(1).fnt
+skin/pixthulhu-ui.atlas
+skin/pixthulhu-ui.json
+skin/pixthulhu-ui.png
 ui/templates/dialogs/controls.lml
 ui/templates/dialogs/edit.lml
 ui/templates/dialogs/inactive.lml

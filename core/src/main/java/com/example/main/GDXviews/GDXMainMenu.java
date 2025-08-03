@@ -34,7 +34,11 @@ public class GDXMainMenu implements Screen {
         welcomeLabel = new Label("Welcome, Guest", skin);
 
         TextButton preGameMenuButton = new TextButton("Go to PreGame Menu", skin);
+<<<<<<< HEAD
         TextButton networkLobbyButton = new TextButton("Network Lobby", skin);
+=======
+        TextButton networkLobbyButton = new TextButton("Play Online", skin);
+>>>>>>> main
         TextButton profileMenuButton = new TextButton("Go to Profile Menu", skin);
         TextButton logoutButton = new TextButton("Logout", skin);
         TextButton exitButton = new TextButton("Exit", skin);
@@ -53,7 +57,11 @@ public class GDXMainMenu implements Screen {
             public void clicked(InputEvent event, float x, float y) {
                 Result result = controller.menuEnter("NetworkLobby");
                 System.out.println(result.Message());
+<<<<<<< HEAD
                 Main.getInstance().setScreen(new GDXNetworkLobby());
+=======
+                Main.getInstance().setScreen(new GDXOnlineMenu());
+>>>>>>> main
             }
         });
 

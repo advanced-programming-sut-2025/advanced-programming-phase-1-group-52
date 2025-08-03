@@ -1,9 +1,9 @@
 package com.example.main.network.client;
 
 import java.util.HashMap;
+import java.util.Map;
 
 import com.example.main.models.Game;
-import com.example.main.models.User;
 import com.example.main.network.common.Message;
 import com.example.main.network.common.MessageType;
 
@@ -37,6 +37,42 @@ public class ClientMessageHandler {
             case ERROR:
                 handleError(message);
                 break;
+            case LOBBY_JOIN:
+                handleLobbyJoin(message);
+                break;
+            case LOBBY_LEAVE:
+                handleLobbyLeave(message);
+                break;
+            case LOBBY_INVITE:
+                handleLobbyInvite(message);
+                break;
+            case LOBBY_INVITE_ACCEPT:
+                handleLobbyInviteAccept(message);
+                break;
+            case LOBBY_INVITE_DECLINE:
+                handleLobbyInviteDecline(message);
+                break;
+            case LOBBY_INVITE_NOTIFICATION:
+                handleLobbyInviteNotification(message);
+                break;
+            case LOBBY_INVITE_RESPONSE:
+                handleLobbyInviteResponse(message);
+                break;
+            case LOBBY_ADMIN_CHANGE:
+                handleLobbyAdminChange(message);
+                break;
+            case LOBBY_PLAYERS_UPDATE:
+                handleLobbyPlayersUpdate(message);
+                break;
+            case LOBBY_READY:
+                handleLobbyReady(message);
+                break;
+            case LOBBY_START_GAME:
+                handleLobbyStartGame(message);
+                break;
+            case ONLINE_USERS_UPDATE:
+                handleOnlineUsersUpdate(message);
+                break;
             default:
                 handleCustomMessage(message);
         }
@@ -44,11 +80,41 @@ public class ClientMessageHandler {
     
     private void handleAuthSuccess(Message message) {
         try {
-            User user = message.getFromBody("user");
-            client.setAuthenticatedUser(user);
-            System.out.println("Authentication successful for user: " + user.getUsername());
+            System.out.println("Handling AUTH_SUCCESS message: " + message.getBody());
+            // Check if this is a registration success or authentication success
+            String regMessage = message.getFromBody("message");
+            if (regMessage != null && regMessage.equals("User registered successfully")) {
+                System.out.println("Registration successful: " + regMessage);
+                // For registration, we might want to automatically log in the user
+                // or redirect to login screen
+                return;
+            }
+            
+            // Handle authentication success
+            // The server sends individual user fields
+            String username = message.getFromBody("username");
+            String nickname = message.getFromBody("nickname");
+            String email = message.getFromBody("email");
+            
+            System.out.println("Parsed user data - Username: " + username + ", Nickname: " + nickname + ", Email: " + email);
+            
+            if (username != null) {
+                // Create a minimal user object for the client
+                com.example.main.models.User user = new com.example.main.models.User();
+                user.setUsername(username);
+                user.setNickname(nickname);
+                user.setEmail(email);
+                
+                System.out.println("Setting authenticated user: " + username);
+                client.setAuthenticatedUser(user);
+                System.out.println("Authentication successful for user: " + username);
+                System.out.println("Client authenticated user after setting: " + (client.getAuthenticatedUser() != null ? client.getAuthenticatedUser().getUsername() : "null"));
+            } else {
+                System.err.println("Username is null in authentication success message");
+            }
         } catch (Exception e) {
             System.err.println("Error parsing authentication success: " + e.getMessage());
+            e.printStackTrace();
         }
     }
     
@@ -112,5 +178,159 @@ public class ClientMessageHandler {
         HashMap<String, Object> heartbeatData = new HashMap<>();
         Message heartbeatMessage = new Message(heartbeatData, MessageType.HEARTBEAT);
         client.sendMessage(heartbeatMessage);
+    }
+    
+    // Lobby handling methods
+    private void handleLobbyJoin(Message message) {
+        try {
+            String lobbyId = message.getFromBody("lobbyId");
+            System.out.println("Joined lobby: " + lobbyId);
+            // You can add lobby state management here
+        } catch (Exception e) {
+            System.err.println("Error handling lobby join: " + e.getMessage());
+        }
+    }
+    
+    private void handleLobbyLeave(Message message) {
+        System.out.println("Left lobby");
+        // You can add lobby state management here
+    }
+    
+    private void handleLobbyInvite(Message message) {
+        try {
+            String lobbyId = message.getFromBody("lobbyId");
+            String inviterUsername = message.getFromBody("inviterUsername");
+            System.out.println("Invited to lobby by " + inviterUsername + " (ID: " + lobbyId + ")");
+            // You can show an invite dialog here
+        } catch (Exception e) {
+            System.err.println("Error handling lobby invite: " + e.getMessage());
+        }
+    }
+    
+    private void handleLobbyInviteAccept(Message message) {
+        System.out.println("Lobby invite accepted");
+        // You can add lobby state management here
+    }
+    
+    private void handleLobbyInviteDecline(Message message) {
+        System.out.println("Lobby invite declined");
+        // You can add lobby state management here
+    }
+    
+    private void handleLobbyInviteNotification(Message message) {
+        try {
+            String lobbyId = message.getFromBody("lobbyId");
+            String inviterUsername = message.getFromBody("inviterUsername");
+            System.out.println("Received lobby invite notification from " + inviterUsername + " (ID: " + lobbyId + ")");
+            
+            // Notify the controller about the invitation
+            if (client.getControllerCallback() instanceof com.example.main.controller.NetworkLobbyController) {
+                com.example.main.controller.NetworkLobbyController controller = 
+                    (com.example.main.controller.NetworkLobbyController) client.getControllerCallback();
+                controller.notifyInvitationReceived(lobbyId, inviterUsername);
+            }
+        } catch (Exception e) {
+            System.err.println("Error handling lobby invite notification: " + e.getMessage());
+        }
+    }
+    
+    private void handleLobbyInviteResponse(Message message) {
+        try {
+            String lobbyId = message.getFromBody("lobbyId");
+            String inviterUsername = message.getFromBody("inviterUsername");
+            boolean accepted = message.getFromBody("accepted");
+            System.out.println("Received lobby invite response from " + inviterUsername + " (ID: " + lobbyId + ") - Accepted: " + accepted);
+            // You can update the invite status in the UI
+        } catch (Exception e) {
+            System.err.println("Error handling lobby invite response: " + e.getMessage());
+        }
+    }
+    
+    private void handleLobbyAdminChange(Message message) {
+        try {
+            String lobbyId = message.getFromBody("lobbyId");
+            String newAdminUsername = message.getFromBody("newAdminUsername");
+            System.out.println("Lobby admin changed for lobby: " + lobbyId + " - New admin: " + newAdminUsername);
+            // You can update the lobby admin in the UI
+        } catch (Exception e) {
+            System.err.println("Error handling lobby admin change: " + e.getMessage());
+        }
+    }
+    
+    private void handleLobbyPlayersUpdate(Message message) {
+        try {
+            String lobbyId = message.getFromBody("lobbyId");
+            Map<String, Object> players = message.getFromBody("players");
+            Map<String, Boolean> playerReady = message.getFromBody("playerReady");
+            boolean canStart = message.getFromBody("canStart");
+            
+            System.out.println("Lobby update - Players: " + players.size() + ", Can start: " + canStart);
+            // You can update the lobby UI here
+        } catch (Exception e) {
+            System.err.println("Error handling lobby players update: " + e.getMessage());
+        }
+    }
+    
+    private void handleLobbyReady(Message message) {
+        try {
+            boolean ready = message.getFromBody("ready");
+            System.out.println("Ready status set to: " + ready);
+            // You can update the ready status UI here
+        } catch (Exception e) {
+            System.err.println("Error handling lobby ready: " + e.getMessage());
+        }
+    }
+    
+    private void handleLobbyStartGame(Message message) {
+        try {
+            String lobbyId = message.getFromBody("lobbyId");
+            System.out.println("Game starting for lobby: " + lobbyId);
+            // You can transition to the game here
+        } catch (Exception e) {
+            System.err.println("Error handling lobby start game: " + e.getMessage());
+        }
+    }
+    
+    private void handleOnlineUsersUpdate(Message message) {
+        try {
+            Object onlineUsersObj = message.getFromBody("onlineUsers");
+            System.out.println("Received online users update");
+            
+            java.util.List<Object> onlineUsers = null;
+            
+            // Handle both List and LibGDX Array
+            if (onlineUsersObj instanceof java.util.List) {
+                onlineUsers = (java.util.List<Object>) onlineUsersObj;
+                System.out.println("Online users count: " + onlineUsers.size());
+            } else if (onlineUsersObj instanceof com.badlogic.gdx.utils.Array) {
+                com.badlogic.gdx.utils.Array<?> array = (com.badlogic.gdx.utils.Array<?>) onlineUsersObj;
+                onlineUsers = new java.util.ArrayList<>();
+                for (int i = 0; i < array.size; i++) {
+                    onlineUsers.add(array.get(i));
+                }
+                System.out.println("Online users count: " + onlineUsers.size());
+            } else {
+                System.out.println("Unknown online users format: " + onlineUsersObj.getClass());
+                return;
+            }
+            
+            // Print users for debugging
+            for (Object userObj : onlineUsers) {
+                if (userObj instanceof com.example.main.models.User) {
+                    com.example.main.models.User user = (com.example.main.models.User) userObj;
+                    System.out.println("Online user: " + user.getUsername());
+                }
+            }
+            
+            // Update controller if available
+            Object callback = client.getControllerCallback();
+            if (callback instanceof com.example.main.controller.NetworkLobbyController) {
+                com.example.main.controller.NetworkLobbyController controller = 
+                    (com.example.main.controller.NetworkLobbyController) callback;
+                controller.updateOnlineUsersFromServer(onlineUsers);
+            }
+        } catch (Exception e) {
+            System.err.println("Error handling online users update: " + e.getMessage());
+        }
     }
 } 
