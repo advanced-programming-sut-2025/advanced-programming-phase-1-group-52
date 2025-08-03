@@ -148,6 +148,13 @@ public class GameClient {
                 ClientMessageHandler messageHandler2 = new ClientMessageHandler(this);
                 messageHandler2.handleMessage(message);
                 break;
+                
+            case LOBBY_JOIN_SUCCESS:
+                // Let ClientMessageHandler handle this
+                System.out.println("Received LOBBY_JOIN_SUCCESS message, passing to ClientMessageHandler");
+                ClientMessageHandler messageHandler3 = new ClientMessageHandler(this);
+                messageHandler3.handleMessage(message);
+                break;
 
             default:
                 System.out.println("Received message of type: " + message.getType());

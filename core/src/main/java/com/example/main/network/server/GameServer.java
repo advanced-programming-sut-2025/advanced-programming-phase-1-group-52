@@ -164,7 +164,9 @@ public class GameServer {
         }
         
         String lobbyId = UUID.randomUUID().toString();
-        Lobby lobby = new Lobby(lobbyId, hostClientId);
+        // This is a placeholder for a simple lobby, we need to decide what to do here.
+        // For now, let's create a default public lobby.
+        Lobby lobby = new Lobby(lobbyId, "Default Lobby", hostClientId, false, "", true);
         lobbies.put(lobbyId, lobby);
         
         // Add host to lobby
@@ -224,6 +226,23 @@ public class GameServer {
         return false;
     }
     
+    public Lobby createLobby(String lobbyName, User host, boolean isPrivate, String password, boolean isVisible) {
+        String lobbyId = java.util.UUID.randomUUID().toString();
+        Lobby lobby = new Lobby(lobbyId, lobbyName, host.getUsername(), isPrivate, password, isVisible);
+        lobby.setPrivate(isPrivate);
+        if (isPrivate) {
+            lobby.setPassword(password);
+        }
+        lobby.setVisible(isVisible);
+
+        lobbies.put(lobbyId, lobby);
+        // The host automatically joins the lobby they create
+        joinLobby(host.getClientId(), lobbyId);
+
+        System.out.println("Lobby created: " + lobbyName + " (ID: " + lobbyId + ") by " + host.getUsername());
+        return lobby;
+    }
+
     public Lobby getLobby(String lobbyId) {
         return lobbies.get(lobbyId);
     }

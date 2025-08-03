@@ -36,6 +36,9 @@ public class GDXCreateLobbyMenu implements Screen {
     public GDXCreateLobbyMenu(NetworkService networkService) {
         this.networkService = networkService;
         this.controller = new NetworkLobbyController(this.networkService);
+        
+        // Register the controller as callback so ClientMessageHandler can find it
+        this.networkService.setControllerCallback(this.controller);
         stage = new Stage(new ScreenViewport());
         Gdx.input.setInputProcessor(stage);
         skin = new Skin(Gdx.files.internal("uiskin.json"));
@@ -91,17 +94,21 @@ public class GDXCreateLobbyMenu implements Screen {
         controller.setLobbyCreationCallback(new NetworkLobbyController.LobbyCreationCallback() {
             @Override
             public void onLobbyCreationSuccess(String lobbyId, String lobbyName) {
+                System.out.println("DEBUG: GDXCreateLobbyMenu callback - onLobbyCreationSuccess called with lobbyId: " + lobbyId + ", lobbyName: " + lobbyName);
                 Gdx.app.postRunnable(new Runnable() {
                     @Override
                     public void run() {
+                        System.out.println("DEBUG: GDXCreateLobbyMenu - postRunnable executing, navigating to lobby screen");
                         // Navigate to the lobby screen
                         Main.getInstance().setScreen(new GDXLobbyScreen(lobbyId, lobbyName, true));
+                        System.out.println("DEBUG: GDXCreateLobbyMenu - screen set to GDXLobbyScreen");
                     }
                 });
             }
 
             @Override
             public void onLobbyCreationFailed(String reason) {
+                System.out.println("DEBUG: GDXCreateLobbyMenu callback - onLobbyCreationFailed called with reason: " + reason);
                 Gdx.app.postRunnable(new Runnable() {
                     @Override
                     public void run() {
@@ -151,29 +158,23 @@ public class GDXCreateLobbyMenu implements Screen {
 
         boolean isVisible = visibleLobbyCheckBox.isChecked();
         
-        // For now, we'll create a simple lobby without specific settings
-        // The server will generate the lobby ID and assign us as host
-        boolean success = controller.createLobby();
-        
-        if (success) {
-            statusLabel.setText("Creating lobby...");
-            // We'll navigate to the lobby screen when we receive the lobby join success message
-            // This is handled in the ClientMessageHandler and NetworkLobbyController
-        } else {
-            statusLabel.setText("Failed to create lobby!");
-        }
+        controller.createLobbyWithSettings(lobbyName, isPrivate, password, isVisible);
+        statusLabel.setText("Creating lobby...");
+        // The screen will transition upon receiving LOBBY_JOIN_SUCCESS from the server.
     }
 
     @Override
     public void show() {
-        // Use existing authenticated connection - no need to create a new one
+        // Use the same NetworkService instance that has our controller callback registered
         if (Main.isNetworkMode()) {
-            // Check if we have an authenticated network service
-            com.example.main.service.NetworkService networkService = com.example.main.models.App.getInstance().getNetworkService();
-            if (networkService != null && networkService.isConnected() && networkService.isAuthenticated()) {
+            // Check if our NetworkService is connected and authenticated
+            if (this.networkService != null && this.networkService.isConnected() && this.networkService.isAuthenticated()) {
                 statusLabel.setText("Ready to create lobby!");
+                System.out.println("DEBUG: GDXCreateLobbyMenu.show() - NetworkService is connected and authenticated");
+                System.out.println("DEBUG: Controller callback registered: " + (this.networkService.getClient().getControllerCallback() != null));
             } else {
                 statusLabel.setText("Not connected or authenticated!");
+                System.out.println("DEBUG: GDXCreateLobbyMenu.show() - NetworkService not connected or not authenticated");
             }
         }
     }

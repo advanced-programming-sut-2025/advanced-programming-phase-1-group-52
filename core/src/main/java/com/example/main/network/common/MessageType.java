@@ -24,6 +24,7 @@ public enum MessageType {
     LOBBY_ADMIN_CHANGE,
     LOBBY_PLAYERS_UPDATE,
     LOBBY_READY,
+    CREATE_LOBBY,
     LOBBY_START_GAME,
     // Online users messages
     REQUEST_ONLINE_USERS,

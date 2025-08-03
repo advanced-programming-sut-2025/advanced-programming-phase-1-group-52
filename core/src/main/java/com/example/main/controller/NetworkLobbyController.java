@@ -131,6 +131,10 @@ public class NetworkLobbyController {
      * @param lobbyId The ID of the lobby that was joined
      */
     public void onLobbyJoinSuccess(String lobbyId) {
+        System.out.println("DEBUG: NetworkLobbyController.onLobbyJoinSuccess called with lobbyId: " + lobbyId);
+        System.out.println("DEBUG: lobbyPlayers.size(): " + lobbyPlayers.size());
+        System.out.println("DEBUG: lobbyCreationCallback is null: " + (lobbyCreationCallback == null));
+        
         // If we created the lobby (first player), we're the host
         if (lobbyPlayers.size() == 1 && App.getInstance().getCurrentUser() != null) {
             String currentUsername = App.getInstance().getCurrentUser().getUsername();
@@ -141,9 +145,14 @@ public class NetworkLobbyController {
         
         // Notify lobby creation callback if set
         if (lobbyCreationCallback != null) {
+            System.out.println("DEBUG: Triggering lobby creation callback");
             // For now, we'll use a placeholder name; in a real implementation, we'd get this from the server
             String lobbyName = "Lobby " + lobbyId.substring(0, 8);
+            System.out.println("DEBUG: Calling lobbyCreationCallback.onLobbyCreationSuccess with lobbyId: " + lobbyId + ", lobbyName: " + lobbyName);
             lobbyCreationCallback.onLobbyCreationSuccess(lobbyId, lobbyName);
+            System.out.println("DEBUG: Lobby creation callback completed");
+        } else {
+            System.out.println("DEBUG: No lobby creation callback set - this might be the issue!");
         }
     }
     
@@ -277,6 +286,19 @@ public class NetworkLobbyController {
     
     public void setInvitationCallback(InvitationCallback callback) {
         this.invitationCallback = callback;
+    }
+    
+    public void createLobbyWithSettings(String lobbyName, boolean isPrivate, String password, boolean isVisible) {
+        if (networkService != null) {
+            java.util.HashMap<String, Object> lobbySettings = new java.util.HashMap<>();
+            lobbySettings.put("lobbyName", lobbyName);
+            lobbySettings.put("isPrivate", isPrivate);
+            lobbySettings.put("password", password);
+            lobbySettings.put("isVisible", isVisible);
+
+            com.example.main.network.common.Message message = new com.example.main.network.common.Message(lobbySettings, com.example.main.network.common.MessageType.CREATE_LOBBY);
+            networkService.sendMessage(message);
+        }
     }
     
     public void setLobbyCreationCallback(LobbyCreationCallback callback) {

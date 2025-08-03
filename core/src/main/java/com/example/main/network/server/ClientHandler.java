@@ -86,6 +86,9 @@ public class ClientHandler implements Runnable {
                 case LOBBY_LEAVE:
                     handleLobbyLeave();
                     break;
+                case CREATE_LOBBY:
+                    handleCreateLobby(message);
+                    break;
                 case LOBBY_INVITE:
                     handleLobbyInvite(message);
                     break;
@@ -126,9 +129,12 @@ public class ClientHandler implements Runnable {
 
             if (server.authenticateUser(clientId, username, password)) {
                 authenticated = true;
+                User user = server.getAuthenticatedUser(clientId);
+                if (user != null) {
+                    user.setClientId(clientId);
+                }
                 try {
-                    // This part was already correct. It sends a success message with the user's data.
-                    sendAuthSuccessMessage(server.getAuthenticatedUser(clientId));
+                    sendAuthSuccessMessage(user);
                     System.out.println("Authentication successful for client: " + clientId);
 
                     // Check if we can start the game
@@ -364,6 +370,34 @@ public class ClientHandler implements Runnable {
             }
         } catch (Exception e) {
             sendErrorMessage("Error setting ready status");
+        }
+    }
+
+    private void handleCreateLobby(Message message) {
+        try {
+            Map<String, Object> body = (Map<String, Object>) message.getBody();
+            String lobbyName = (String) body.get("lobbyName");
+            boolean isPrivate = (Boolean) body.get("isPrivate");
+            String password = (String) body.get("password");
+            boolean isVisible = (Boolean) body.get("isVisible");
+
+
+            User host = server.getAuthenticatedUser(clientId);
+            if (host == null) {
+                sendErrorMessage("Authentication required to create a lobby.");
+                return;
+            }
+
+            Lobby lobby = server.createLobby(lobbyName, host, isPrivate, password, isVisible);
+            if (lobby != null) {
+                sendLobbyJoinSuccess(lobby.getLobbyId());
+                broadcastLobbyUpdate(lobby.getLobbyId());
+            } else {
+                sendLobbyJoinFailed("Failed to create lobby.");
+            }
+        } catch (Exception e) {
+            System.err.println("Error creating lobby: " + e.getMessage());
+            sendLobbyJoinFailed("Error creating lobby.");
         }
     }
 

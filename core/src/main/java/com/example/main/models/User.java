@@ -13,7 +13,8 @@ public class User {
     public String email;
     public Gender gender;
     public SecurityQuestion securityQuestion;
-    public String securityAnswer;
+    private String securityAnswer;
+    private transient String clientId; // Transient to avoid being saved in users.json
     public int numPlayed = 0;
     public int highScore = 0;
 
@@ -98,5 +99,13 @@ public class User {
         if (highScore > this.highScore) {
             this.highScore = highScore;
         }
+    }
+
+    public String getClientId() {
+        return clientId;
+    }
+
+    public void setClientId(String clientId) {
+        this.clientId = clientId;
     }
 }

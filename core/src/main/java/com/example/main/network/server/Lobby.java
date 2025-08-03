@@ -10,23 +10,35 @@ import com.example.main.models.User;
 
 public class Lobby {
     private final String lobbyId;
+    private final String name;
     private final String hostId;
     private final Map<String, User> players;
-    private final Map<String, Boolean> playerReady;
+    private final Map<String, Boolean> playerReadyStatus;
+    private boolean isPrivate;
+    private String password;
+    private boolean isVisible;
     private final int maxPlayers;
     private boolean gameStarted;
     
-    public Lobby(String lobbyId, String hostId) {
+    public Lobby(String lobbyId, String name, String hostId, boolean isPrivate, String password, boolean isVisible) {
         this.lobbyId = lobbyId;
+        this.name = name;
         this.hostId = hostId;
         this.players = new ConcurrentHashMap<>();
-        this.playerReady = new ConcurrentHashMap<>();
+        this.playerReadyStatus = new ConcurrentHashMap<>();
+        this.isPrivate = isPrivate;
+        this.password = password;
+        this.isVisible = isVisible;
         this.maxPlayers = 4;
         this.gameStarted = false;
     }
     
     public String getLobbyId() {
         return lobbyId;
+    }
+
+    public String getName() {
+        return name;
     }
     
     public String getHostId() {
@@ -46,13 +58,13 @@ public class Lobby {
             return false;
         }
         players.put(clientId, user);
-        playerReady.put(clientId, false);
+        playerReadyStatus.put(clientId, false);
         return true;
     }
     
     public boolean removePlayer(String clientId) {
         User removed = players.remove(clientId);
-        playerReady.remove(clientId);
+        playerReadyStatus.remove(clientId);
         return removed != null;
     }
     
@@ -62,19 +74,19 @@ public class Lobby {
     
     public boolean setPlayerReady(String clientId, boolean ready) {
         if (players.containsKey(clientId)) {
-            playerReady.put(clientId, ready);
+            playerReadyStatus.put(clientId, ready);
             return true;
         }
         return false;
     }
     
     public boolean isPlayerReady(String clientId) {
-        return playerReady.getOrDefault(clientId, false);
+        return playerReadyStatus.getOrDefault(clientId, false);
     }
     
     public boolean allPlayersReady() {
         if (players.size() < 2) return false; // Need at least 2 players
-        return playerReady.values().stream().allMatch(ready -> ready);
+        return playerReadyStatus.values().stream().allMatch(ready -> ready);
     }
     
     public boolean canStartGame() {
@@ -96,6 +108,30 @@ public class Lobby {
     public boolean isGameStarted() {
         return gameStarted;
     }
+
+    public boolean isPrivate() {
+        return isPrivate;
+    }
+
+    public void setPrivate(boolean aPrivate) {
+        isPrivate = aPrivate;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    public boolean isVisible() {
+        return isVisible;
+    }
+
+    public void setVisible(boolean visible) {
+        isVisible = visible;
+    }
     
     public void setGameStarted(boolean gameStarted) {
         this.gameStarted = gameStarted;
@@ -111,6 +147,6 @@ public class Lobby {
     }
     
     public Map<String, Boolean> getPlayerReadyStatus() {
-        return new HashMap<>(playerReady);
+        return new HashMap<>(playerReadyStatus);
     }
 } 

@@ -329,13 +329,28 @@ public class ClientMessageHandler {
         try {
             System.out.println("Handling LOBBY_JOIN_SUCCESS message: " + message.getBody());
             String lobbyId = message.getFromBody("lobbyId");
+            System.out.println("DEBUG: Extracted lobbyId: " + lobbyId);
+            
             if (lobbyId != null) {
-                // The user who creates the lobby is the admin.
-                // We must use postRunnable to execute screen changes on the main GDX thread.
-                Gdx.app.postRunnable(() -> {
-                    Screen lobbyScreen = new GDXLobbyScreen(lobbyId, "Game Lobby", true);
-                    Main.getInstance().setScreen(lobbyScreen);
-                });
+                // Check if we have a controller callback
+                Object callback = client.getControllerCallback();
+                System.out.println("DEBUG: Controller callback type: " + (callback != null ? callback.getClass().getName() : "null"));
+                
+                // Notify the controller about successful lobby join
+                if (callback instanceof NetworkLobbyController) {
+                    System.out.println("DEBUG: Found NetworkLobbyController, calling onLobbyJoinSuccess");
+                    NetworkLobbyController controller = (NetworkLobbyController) callback;
+                    controller.onLobbyJoinSuccess(lobbyId);
+                    System.out.println("DEBUG: Called controller.onLobbyJoinSuccess");
+                } else {
+                    System.err.println("Controller callback is not NetworkLobbyController, using fallback");
+                    // Fallback: directly navigate to lobby screen if no controller callback
+                    Gdx.app.postRunnable(() -> {
+                        System.out.println("DEBUG: Fallback - navigating to lobby screen directly");
+                        Screen lobbyScreen = new GDXLobbyScreen(lobbyId, "Game Lobby", true);
+                        Main.getInstance().setScreen(lobbyScreen);
+                    });
+                }
             } else {
                 System.err.println("Lobby ID is null in LOBBY_JOIN_SUCCESS message");
             }
