@@ -80,18 +80,41 @@ public class ClientMessageHandler {
     
     private void handleAuthSuccess(Message message) {
         try {
-            String username = message.getFromBody("username");
+            System.out.println("Handling AUTH_SUCCESS message: " + message.getBody());
+            // Check if this is a registration success or authentication success
+            String regMessage = message.getFromBody("message");
+            if (regMessage != null && regMessage.equals("User registered successfully")) {
+                System.out.println("Registration successful: " + regMessage);
+                // For registration, we might want to automatically log in the user
+                // or redirect to login screen
+                return;
+            }
             
-            // Get the current user from App singleton to preserve password
-            com.example.main.models.User currentUser = com.example.main.models.App.getInstance().getCurrentUser();
-            if (currentUser != null && currentUser.getUsername().equals(username)) {
-                client.setAuthenticatedUser(currentUser);
+            // Handle authentication success
+            // The server sends individual user fields
+            String username = message.getFromBody("username");
+            String nickname = message.getFromBody("nickname");
+            String email = message.getFromBody("email");
+            
+            System.out.println("Parsed user data - Username: " + username + ", Nickname: " + nickname + ", Email: " + email);
+            
+            if (username != null) {
+                // Create a minimal user object for the client
+                com.example.main.models.User user = new com.example.main.models.User();
+                user.setUsername(username);
+                user.setNickname(nickname);
+                user.setEmail(email);
+                
+                System.out.println("Setting authenticated user: " + username);
+                client.setAuthenticatedUser(user);
                 System.out.println("Authentication successful for user: " + username);
+                System.out.println("Client authenticated user after setting: " + (client.getAuthenticatedUser() != null ? client.getAuthenticatedUser().getUsername() : "null"));
             } else {
-                System.err.println("User not found in local state: " + username);
+                System.err.println("Username is null in authentication success message");
             }
         } catch (Exception e) {
             System.err.println("Error parsing authentication success: " + e.getMessage());
+            e.printStackTrace();
         }
     }
     

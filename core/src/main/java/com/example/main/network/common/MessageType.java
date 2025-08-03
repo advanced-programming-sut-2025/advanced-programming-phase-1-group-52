@@ -11,6 +11,7 @@ public enum MessageType {
     HEARTBEAT,
     DISCONNECT,
     ERROR,
+    REGISTER,
     // Lobby messages
     LOBBY_JOIN,
     LOBBY_LEAVE,

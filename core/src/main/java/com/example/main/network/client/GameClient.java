@@ -133,31 +133,17 @@ public class GameClient {
 
         switch (message.getType()) {
             case AUTH_SUCCESS:
-                System.out.println("AUTH_SUCCESS message received.");
-                if (message.getBody() instanceof Map) {
-                    Map<String, Object> body = (Map<String, Object>) message.getBody();
-                    Object userData = body.get("user");
-
-                    if (userData != null) {
-                        Json json = new Json();
-                        // --- THIS IS THE CORRECTED LINE ---
-                        // Use fromJson to convert the JSON string back to a User object
-                        User loggedInUser = json.fromJson(User.class, json.toJson(userData));
-
-                        this.setAuthenticatedUser(loggedInUser);
-                        System.out.println("Authentication successful for: " + loggedInUser.getUsername());
-                        System.out.println("User details loaded. Email: " + loggedInUser.getEmail());
-                    } else {
-                        System.err.println("Error: AUTH_SUCCESS message did not contain user data.");
-                    }
-                } else {
-                    System.err.println("Error: AUTH_SUCCESS message body is not in the expected format.");
-                }
+                // Let ClientMessageHandler handle this
+                System.out.println("Received AUTH_SUCCESS message, passing to ClientMessageHandler");
+                ClientMessageHandler messageHandler = new ClientMessageHandler(this);
+                messageHandler.handleMessage(message);
                 break;
 
             case AUTH_FAILED:
-                System.out.println("Authentication failed. Check credentials.");
-                this.setAuthenticatedUser(null);
+                // Let ClientMessageHandler handle this
+                System.out.println("Received AUTH_FAILED message, passing to ClientMessageHandler");
+                ClientMessageHandler messageHandler2 = new ClientMessageHandler(this);
+                messageHandler2.handleMessage(message);
                 break;
 
             default:

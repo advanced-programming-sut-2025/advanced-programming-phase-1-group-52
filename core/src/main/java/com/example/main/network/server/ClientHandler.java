@@ -10,6 +10,8 @@ import java.util.List;
 import java.util.Map; // Import Map
 import java.util.UUID;
 
+import com.example.main.enums.player.Gender;
+import com.example.main.enums.regex.SecurityQuestion;
 import com.example.main.models.User;
 import com.example.main.network.common.Message;
 import com.example.main.network.common.MessageType;
@@ -106,6 +108,9 @@ public class ClientHandler implements Runnable {
                 case REQUEST_ONLINE_USERS:
                     handleRequestOnlineUsers();
                     break;
+                case REGISTER:
+                    handleRegister(message);
+                    break;
                 default:
                     System.out.println("Unknown message type: " + message.getType());
             }
@@ -175,11 +180,39 @@ public class ClientHandler implements Runnable {
     public void sendMessage(Message message) {
         if (running && out != null) {
             try {
-                // Use the LibGDX Json library to convert the whole message object to a string
-                String messageJson = json.toJson(message);
+                // Manually create a simple JSON string to avoid serialization issues
+                StringBuilder jsonBuilder = new StringBuilder();
+                jsonBuilder.append("{");
+                
+                // Add type
+                jsonBuilder.append("\"type\":\"").append(message.getType().toString()).append("\"");
+                
+                // Add body
+                jsonBuilder.append(",\"body\":{");
+                HashMap<String, Object> body = message.getBody();
+                boolean first = true;
+                for (java.util.Map.Entry<String, Object> entry : body.entrySet()) {
+                    if (!first) {
+                        jsonBuilder.append(",");
+                    }
+                    jsonBuilder.append("\"").append(entry.getKey()).append("\":\"");
+                    
+                    // Escape quotes in the value
+                    String value = entry.getValue() != null ? entry.getValue().toString() : "";
+                    jsonBuilder.append(value.replace("\"", "\\\""));
+                    jsonBuilder.append("\"");
+                    
+                    first = false;
+                }
+                jsonBuilder.append("}");
+                
+                jsonBuilder.append("}");
+                
+                String messageJson = jsonBuilder.toString();
                 out.println(messageJson);
             } catch (Exception e) {
                 System.err.println("Error sending message to client " + clientId + ": " + e.getMessage());
+                e.printStackTrace();
                 disconnect();
             }
         }
@@ -234,8 +267,12 @@ public class ClientHandler implements Runnable {
     }
 
     private void sendAuthSuccessMessage(User user) {
+        // Create a simple message structure to avoid serialization issues
         HashMap<String, Object> body = new HashMap<>();
-        body.put("user", user);
+        body.put("username", user.getUsername() != null ? user.getUsername() : "");
+        body.put("nickname", user.getNickname() != null ? user.getNickname() : "");
+        body.put("email", user.getEmail() != null ? user.getEmail() : "");
+        // Add other relevant user fields as needed
         Message authMessage = new Message(body, MessageType.AUTH_SUCCESS);
         sendMessage(authMessage);
     }
@@ -443,11 +480,57 @@ public class ClientHandler implements Runnable {
     }
 
     private void handleRequestOnlineUsers() {
-        // No authentication required for requesting online users
         List<User> onlineUsers = server.getOnlinePlayers();
-        HashMap<String, Object> data = new HashMap<>();
-        data.put("onlineUsers", onlineUsers);
-        Message message = new Message(data, MessageType.ONLINE_USERS_UPDATE);
+        HashMap<String, Object> body = new HashMap<>();
+        body.put("users", onlineUsers);
+        Message message = new Message(body, MessageType.ONLINE_USERS_UPDATE);
         sendMessage(message);
+    }
+
+    private void handleRegister(Message message) {
+        try {
+            Map<String, Object> body = (Map<String, Object>) message.getBody();
+            String username = (String) body.get("username");
+            String password = (String) body.get("password");
+            String nickname = (String) body.get("nickname");
+            String email = (String) body.get("email");
+            String genderStr = (String) body.get("gender");
+
+            // Validate input
+            if (username == null || password == null || nickname == null || email == null || genderStr == null) {
+                sendErrorMessage("Missing required fields for registration");
+                return;
+            }
+
+            // Check if user already exists
+            if (server.getAuthManager().userExists(username)) {
+                sendErrorMessage("Username already exists");
+                return;
+            }
+
+            // Create new user
+            Gender gender = Gender.valueOf(genderStr);
+            User newUser = new User(username, password, nickname, email, gender);
+            // Initialize security fields to avoid serialization issues
+            newUser.setSecurityQuestion(SecurityQuestion.PetName);
+            newUser.setSecurityAnswer("default");
+
+            // Register user
+            boolean success = server.getAuthManager().registerUser(newUser);
+
+            if (success) {
+                // Send success message
+                HashMap<String, Object> responseBody = new HashMap<>();
+                responseBody.put("message", "User registered successfully");
+                Message response = new Message(responseBody, MessageType.AUTH_SUCCESS);
+                sendMessage(response);
+                System.out.println("User registered successfully: " + username);
+            } else {
+                sendErrorMessage("Failed to register user");
+            }
+        } catch (Exception e) {
+            System.err.println("Error handling registration: " + e.getMessage());
+            sendErrorMessage("Registration failed: " + e.getMessage());
+        }
     }
 }

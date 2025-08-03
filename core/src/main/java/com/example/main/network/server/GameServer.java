@@ -370,7 +370,11 @@ public class GameServer {
     }
     
     public List<User> getAvailableUsers() {
-        return new ArrayList<>(availableUsers);
+        return availableUsers;
+    }
+    
+    public AuthManager getAuthManager() {
+        return AuthManager.getInstance();
     }
     
     public static void main(String[] args) {
