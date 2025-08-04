@@ -1,10 +1,11 @@
 package com.example.main.service;
 
+import com.example.main.models.User;
+
 import java.util.HashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.example.main.models.Game;
-import com.example.main.models.User;
 import com.example.main.network.NetworkConstants;
 import com.example.main.network.client.GameClient;
 import com.example.main.network.common.Message;
@@ -14,10 +15,18 @@ import com.example.main.network.common.MessageType;
  * Service class that integrates network functionality with the game
  */
 public class NetworkService {
+    private User currentUser;
+
+    public User getCurrentUser() {
+        return currentUser;
+    }
+
+    public void setCurrentUser(User currentUser) {
+        this.currentUser = currentUser;
+    }
     private GameClient client;
     private final AtomicBoolean isConnected;
     private final AtomicBoolean isAuthenticated;
-    private User currentUser;
     private Game currentGame;
     
     public NetworkService() {
@@ -32,10 +41,23 @@ public class NetworkService {
      * @return true if connection successful
      */
     public boolean connectToServer(String host, int port) {
+        // If already connected, don't create a new connection
+        if (isConnected.get() && client != null) {
+            System.out.println("Already connected to server, reusing existing connection");
+            return true;
+        }
+        
+        System.out.println("Creating new connection to server at " + host + ":" + port);
+        
         try {
             client = new GameClient(host, port);
             boolean connected = client.connect();
             isConnected.set(connected);
+            if (connected) {
+                System.out.println("Successfully connected to server");
+            } else {
+                System.out.println("Failed to connect to server");
+            }
             return connected;
         } catch (Exception e) {
             System.err.println("Failed to connect to server: " + e.getMessage());
@@ -96,13 +118,7 @@ public class NetworkService {
         this.currentGame = game;
     }
     
-    /**
-     * Gets the current authenticated user
-     * @return Current user or null if not authenticated
-     */
-    public User getCurrentUser() {
-        return currentUser;
-    }
+
     
     /**
      * Gets the current game state

@@ -14,6 +14,7 @@ public enum MessageType {
     REGISTER,
     // Lobby messages
     LOBBY_JOIN,
+    LOBBY_JOIN_SUCCESS,
     LOBBY_LEAVE,
     LOBBY_INVITE,
     LOBBY_INVITE_ACCEPT,
@@ -23,6 +24,7 @@ public enum MessageType {
     LOBBY_ADMIN_CHANGE,
     LOBBY_PLAYERS_UPDATE,
     LOBBY_READY,
+    CREATE_LOBBY,
     LOBBY_START_GAME,
     // Online users messages
     REQUEST_ONLINE_USERS,

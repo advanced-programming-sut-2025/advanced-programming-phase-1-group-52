@@ -1,8 +1,18 @@
 package com.example.main.network.client;
 
+import com.example.main.GDXviews.GDXMainMenu;
+
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Screen;
+import com.example.main.GDXviews.GDXLobbyScreen;
+import com.example.main.Main;
+import com.example.main.models.App;
+import com.example.main.controller.NetworkLobbyController;
+
 import java.util.HashMap;
 import java.util.Map;
 
+import com.example.main.models.User;
 import com.example.main.models.Game;
 import com.example.main.network.common.Message;
 import com.example.main.network.common.MessageType;
@@ -11,8 +21,7 @@ import com.example.main.network.common.MessageType;
  * Handles incoming messages from the server
  */
 public class ClientMessageHandler {
-    private final GameClient client;
-    
+    private GameClient client;
     public ClientMessageHandler(GameClient client) {
         this.client = client;
     }
@@ -39,6 +48,9 @@ public class ClientMessageHandler {
                 break;
             case LOBBY_JOIN:
                 handleLobbyJoin(message);
+                break;
+            case LOBBY_JOIN_SUCCESS:
+                handleLobbyJoinSuccess(message);
                 break;
             case LOBBY_LEAVE:
                 handleLobbyLeave(message);
@@ -97,18 +109,26 @@ public class ClientMessageHandler {
             String email = message.getFromBody("email");
             
             System.out.println("Parsed user data - Username: " + username + ", Nickname: " + nickname + ", Email: " + email);
+            client.setAuthenticated(true);
             
-            if (username != null) {
-                // Create a minimal user object for the client
-                com.example.main.models.User user = new com.example.main.models.User();
-                user.setUsername(username);
-                user.setNickname(nickname);
-                user.setEmail(email);
-                
-                System.out.println("Setting authenticated user: " + username);
-                client.setAuthenticatedUser(user);
-                System.out.println("Authentication successful for user: " + username);
-                System.out.println("Client authenticated user after setting: " + (client.getAuthenticatedUser() != null ? client.getAuthenticatedUser().getUsername() : "null"));
+            if (username != null && !username.isEmpty()) {
+                com.example.main.service.NetworkService networkService = com.example.main.models.App.getInstance().getNetworkService();
+                if (networkService != null) {
+                    User user = new User();
+                    user.setUsername(username);
+                    user.setNickname(nickname);
+                    user.setEmail(email);
+                    App.getInstance().setCurrentUser(user);
+                    networkService.setCurrentUser(user);
+                    System.out.println("Authenticated user set in App singleton: " + user.getUsername());
+
+                    // Switch to the main menu screen on the main GDX thread
+                    Gdx.app.postRunnable(() -> {
+                        Main.getInstance().setScreen(new GDXMainMenu(networkService));
+                    });
+                } else {
+                    System.err.println("NetworkService is null, cannot set authenticated user.");
+                }
             } else {
                 System.err.println("Username is null in authentication success message");
             }
@@ -183,11 +203,25 @@ public class ClientMessageHandler {
     // Lobby handling methods
     private void handleLobbyJoin(Message message) {
         try {
+            System.out.println("Handling lobby join success message: " + message.getBody());
             String lobbyId = message.getFromBody("lobbyId");
+            if (lobbyId == null || lobbyId.isEmpty()) {
+                System.err.println("Invalid lobbyId in lobby join message");
+                return;
+            }
+            
             System.out.println("Joined lobby: " + lobbyId);
-            // You can add lobby state management here
+            
+            // Notify the controller about successful lobby join
+            if (client.getControllerCallback() instanceof NetworkLobbyController) {
+                NetworkLobbyController controller = (NetworkLobbyController) client.getControllerCallback();
+                controller.onLobbyJoinSuccess(lobbyId);
+            } else {
+                System.err.println("Controller callback is not NetworkLobbyController");
+            }
         } catch (Exception e) {
             System.err.println("Error handling lobby join: " + e.getMessage());
+            e.printStackTrace();
         }
     }
     
@@ -291,36 +325,84 @@ public class ClientMessageHandler {
         }
     }
     
+        private void handleLobbyJoinSuccess(Message message) {
+        try {
+            System.out.println("Handling LOBBY_JOIN_SUCCESS message: " + message.getBody());
+            String lobbyId = message.getFromBody("lobbyId");
+            System.out.println("DEBUG: Extracted lobbyId: " + lobbyId);
+            
+            if (lobbyId != null) {
+                // Check if we have a controller callback
+                Object callback = client.getControllerCallback();
+                System.out.println("DEBUG: Controller callback type: " + (callback != null ? callback.getClass().getName() : "null"));
+                
+                // Notify the controller about successful lobby join
+                if (callback instanceof NetworkLobbyController) {
+                    System.out.println("DEBUG: Found NetworkLobbyController, calling onLobbyJoinSuccess");
+                    NetworkLobbyController controller = (NetworkLobbyController) callback;
+                    controller.onLobbyJoinSuccess(lobbyId);
+                    System.out.println("DEBUG: Called controller.onLobbyJoinSuccess");
+                } else {
+                    System.err.println("Controller callback is not NetworkLobbyController, using fallback");
+                    // Fallback: directly navigate to lobby screen if no controller callback
+                    Gdx.app.postRunnable(() -> {
+                        System.out.println("DEBUG: Fallback - navigating to lobby screen directly");
+                        Screen lobbyScreen = new GDXLobbyScreen(lobbyId, "Game Lobby", true);
+                        Main.getInstance().setScreen(lobbyScreen);
+                    });
+                }
+            } else {
+                System.err.println("Lobby ID is null in LOBBY_JOIN_SUCCESS message");
+            }
+        } catch (Exception e) {
+            System.err.println("Error handling LOBBY_JOIN_SUCCESS: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
     private void handleOnlineUsersUpdate(Message message) {
         try {
-            Object onlineUsersObj = message.getFromBody("onlineUsers");
-            System.out.println("Received online users update");
+            String usersJson = message.getFromBody("users");
+            System.out.println("Received online users update: " + usersJson);
             
-            java.util.List<Object> onlineUsers = null;
+            // Parse the JSON string to extract user information
+            java.util.List<Object> onlineUsers = new java.util.ArrayList<>();
             
-            // Handle both List and LibGDX Array
-            if (onlineUsersObj instanceof java.util.List) {
-                onlineUsers = (java.util.List<Object>) onlineUsersObj;
-                System.out.println("Online users count: " + onlineUsers.size());
-            } else if (onlineUsersObj instanceof com.badlogic.gdx.utils.Array) {
-                com.badlogic.gdx.utils.Array<?> array = (com.badlogic.gdx.utils.Array<?>) onlineUsersObj;
-                onlineUsers = new java.util.ArrayList<>();
-                for (int i = 0; i < array.size; i++) {
-                    onlineUsers.add(array.get(i));
+            // Simple JSON parsing - remove brackets and split by comma
+            if (usersJson != null && !usersJson.isEmpty() && !usersJson.equals("[]")) {
+                // Remove outer brackets
+                String innerJson = usersJson.substring(1, usersJson.length() - 1);
+                
+                // Split by "},{" to get individual user objects
+                String[] userStrings = innerJson.split("\\},\\{");
+                
+                for (int i = 0; i < userStrings.length; i++) {
+                    String userString = userStrings[i];
+                    // Fix brackets if needed
+                    if (i == 0 && !userString.startsWith("{")) {
+                        userString = "{" + userString;
+                    }
+                    if (i == userStrings.length - 1 && !userString.endsWith("}")) {
+                        userString = userString + "}";
+                    }
+                    
+                    // Extract username from the JSON string
+                    // This is a simple approach - in a real implementation you might want to use a proper JSON parser
+                    String username = "Unknown";
+                    if (userString.contains("\"username\":\"")) {
+                        int start = userString.indexOf("\"username\":\"") + 13; // length of ""username":""
+                        int end = userString.indexOf("\"", start);
+                        if (end > start) {
+                            username = userString.substring(start, end);
+                        }
+                    }
+                    
+                    System.out.println("Online user: " + username);
+                    onlineUsers.add(username);
                 }
-                System.out.println("Online users count: " + onlineUsers.size());
-            } else {
-                System.out.println("Unknown online users format: " + onlineUsersObj.getClass());
-                return;
             }
             
-            // Print users for debugging
-            for (Object userObj : onlineUsers) {
-                if (userObj instanceof com.example.main.models.User) {
-                    com.example.main.models.User user = (com.example.main.models.User) userObj;
-                    System.out.println("Online user: " + user.getUsername());
-                }
-            }
+            System.out.println("Online users count: " + onlineUsers.size());
             
             // Update controller if available
             Object callback = client.getControllerCallback();
@@ -331,6 +413,7 @@ public class ClientMessageHandler {
             }
         } catch (Exception e) {
             System.err.println("Error handling online users update: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 } 

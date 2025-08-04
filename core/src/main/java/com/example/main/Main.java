@@ -5,6 +5,7 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.example.main.GDXmodels.DatabaseManager;
 import com.example.main.GDXviews.GDXLoginMenu;
 import com.example.main.GDXviews.GDXSignUpMenu;
+import com.example.main.controller.MainMenuController;
 import com.example.main.network.client.GameClient;
 import com.example.main.views.AppView;
 
@@ -15,6 +16,7 @@ public class Main extends Game {
     private static SpriteBatch batch;
     private static DatabaseManager databaseManager;
     private GameClient gameClient;
+    private static MainMenuController mainMenuController;
 
     // Network configuration
     private static String serverIp = "localhost";
@@ -35,6 +37,7 @@ public class Main extends Game {
         main = this;
         batch = new SpriteBatch();
         databaseManager = new DatabaseManager();
+        mainMenuController = new MainMenuController();
         gameClient = new GameClient("localhost", 8080);
 
         if (isNetworkMode) {
@@ -69,6 +72,11 @@ public class Main extends Game {
     public static DatabaseManager getDatabaseManager() {
         return databaseManager;
     }
+
+    public static MainMenuController getMainMenuController() {
+        return mainMenuController;
+    }
+
 
     // Network methods
     public static void setNetworkInfo(String ip, int port) {

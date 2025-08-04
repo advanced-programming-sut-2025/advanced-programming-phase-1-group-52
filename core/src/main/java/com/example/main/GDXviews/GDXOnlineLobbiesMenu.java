@@ -70,7 +70,7 @@ public class GDXOnlineLobbiesMenu implements Screen {
         backButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                Main.getInstance().setScreen(new GDXOnlineMenu());
+                Main.getInstance().setScreen(new GDXOnlineMenu(com.example.main.models.App.getInstance().getNetworkService()));
             }
         });
 

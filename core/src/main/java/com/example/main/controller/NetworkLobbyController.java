@@ -43,6 +43,36 @@ public class NetworkLobbyController {
     }
     
     /**
+     * Constructor that accepts an existing NetworkService
+     * @param networkService The existing NetworkService to use
+     */
+    public NetworkLobbyController(NetworkService networkService) {
+        this.networkService = networkService;
+        this.onlineUsers = new ArrayList<>();
+        this.lobbyPlayers = new ArrayList<>();
+        
+        // Add current user to lobby
+        if (App.getInstance().getCurrentUser() != null) {
+            lobbyPlayers.add(App.getInstance().getCurrentUser().getUsername());
+        }
+        
+        // Set up controller callback for online users updates
+        this.onlineUsersUpdateCallback = new OnlineUsersUpdateCallback() {
+            @Override
+            public void onOnlineUsersUpdate(List<String> onlineUsers) {
+                // This will be called when we receive online users from server
+                onlineUsers.clear();
+                onlineUsers.addAll(onlineUsers);
+            }
+        };
+        
+        // Set this controller as the callback for the network service
+        if (networkService != null) {
+            networkService.setControllerCallback(this);
+        }
+    }
+    
+    /**
      * Connects to the game server
      * @param serverIp Server IP address
      * @param serverPort Server port
@@ -94,6 +124,36 @@ public class NetworkLobbyController {
         Message joinMessage = new Message(joinData, MessageType.LOBBY_JOIN);
         networkService.sendMessage(joinMessage);
         return true;
+    }
+    
+    /**
+     * Handles successful lobby join on client side
+     * @param lobbyId The ID of the lobby that was joined
+     */
+    public void onLobbyJoinSuccess(String lobbyId) {
+        System.out.println("DEBUG: NetworkLobbyController.onLobbyJoinSuccess called with lobbyId: " + lobbyId);
+        System.out.println("DEBUG: lobbyPlayers.size(): " + lobbyPlayers.size());
+        System.out.println("DEBUG: lobbyCreationCallback is null: " + (lobbyCreationCallback == null));
+        
+        // If we created the lobby (first player), we're the host
+        if (lobbyPlayers.size() == 1 && App.getInstance().getCurrentUser() != null) {
+            String currentUsername = App.getInstance().getCurrentUser().getUsername();
+            if (lobbyPlayers.contains(currentUsername)) {
+                setHost(true);
+            }
+        }
+        
+        // Notify lobby creation callback if set
+        if (lobbyCreationCallback != null) {
+            System.out.println("DEBUG: Triggering lobby creation callback");
+            // For now, we'll use a placeholder name; in a real implementation, we'd get this from the server
+            String lobbyName = "Lobby " + lobbyId.substring(0, 8);
+            System.out.println("DEBUG: Calling lobbyCreationCallback.onLobbyCreationSuccess with lobbyId: " + lobbyId + ", lobbyName: " + lobbyName);
+            lobbyCreationCallback.onLobbyCreationSuccess(lobbyId, lobbyName);
+            System.out.println("DEBUG: Lobby creation callback completed");
+        } else {
+            System.out.println("DEBUG: No lobby creation callback set - this might be the issue!");
+        }
     }
     
     /**
@@ -180,6 +240,9 @@ public class NetworkLobbyController {
             if (userObj instanceof com.example.main.models.User) {
                 com.example.main.models.User user = (com.example.main.models.User) userObj;
                 usernames.add(user.getUsername());
+            } else if (userObj instanceof String) {
+                // Already a username string
+                usernames.add((String) userObj);
             }
         }
         
@@ -204,8 +267,14 @@ public class NetworkLobbyController {
         void onInvitationReceived(String lobbyId, String inviterUsername);
     }
     
+    public interface LobbyCreationCallback {
+        void onLobbyCreationSuccess(String lobbyId, String lobbyName);
+        void onLobbyCreationFailed(String reason);
+    }
+    
     private OnlineUsersUpdateCallback onlineUsersUpdateCallback;
     private InvitationCallback invitationCallback;
+    private LobbyCreationCallback lobbyCreationCallback;
     
     /**
      * Sets the callback for online users updates
@@ -217,6 +286,23 @@ public class NetworkLobbyController {
     
     public void setInvitationCallback(InvitationCallback callback) {
         this.invitationCallback = callback;
+    }
+    
+    public void createLobbyWithSettings(String lobbyName, boolean isPrivate, String password, boolean isVisible) {
+        if (networkService != null) {
+            java.util.HashMap<String, Object> lobbySettings = new java.util.HashMap<>();
+            lobbySettings.put("lobbyName", lobbyName);
+            lobbySettings.put("isPrivate", isPrivate);
+            lobbySettings.put("password", password);
+            lobbySettings.put("isVisible", isVisible);
+
+            com.example.main.network.common.Message message = new com.example.main.network.common.Message(lobbySettings, com.example.main.network.common.MessageType.CREATE_LOBBY);
+            networkService.sendMessage(message);
+        }
+    }
+    
+    public void setLobbyCreationCallback(LobbyCreationCallback callback) {
+        this.lobbyCreationCallback = callback;
     }
     
     public void notifyInvitationReceived(String lobbyId, String inviterUsername) {

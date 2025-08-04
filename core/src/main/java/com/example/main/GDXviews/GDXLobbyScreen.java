@@ -99,7 +99,7 @@ public class GDXLobbyScreen implements Screen {
         backButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                Main.getInstance().setScreen(new GDXOnlineMenu());
+                Main.getInstance().setScreen(new GDXOnlineMenu(com.example.main.models.App.getInstance().getNetworkService()));
             }
         });
 
@@ -153,6 +153,9 @@ public class GDXLobbyScreen implements Screen {
             App.getInstance().getCurrentUser().getUsername() : "Unknown";
         lobbyPlayers.add(currentUsername);
         updatePlayersTable();
+        
+        // Update admin status based on controller
+        updateAdminStatus();
     }
 
     private void inviteSelectedPlayer() {
@@ -200,7 +203,7 @@ public class GDXLobbyScreen implements Screen {
         boolean success = controller.leaveLobby();
         if (success) {
             statusLabel.setText("Left lobby successfully!");
-            Main.getInstance().setScreen(new GDXOnlineMenu());
+            Main.getInstance().setScreen(new GDXOnlineMenu(com.example.main.models.App.getInstance().getNetworkService()));
         } else {
             statusLabel.setText("Failed to leave lobby!");
         }
@@ -308,13 +311,24 @@ public class GDXLobbyScreen implements Screen {
             }
         }
     }
-
+    
     private void updateOnlinePlayers() {
         // Get online players from controller
         List<String> onlineUsers = controller.getOnlineUsers();
         onlinePlayers.clear();
         onlinePlayers.addAll(onlineUsers);
         updateOnlinePlayersTable();
+    }
+    
+    private void updateAdminStatus() {
+        // Update admin status based on controller
+        isAdmin = controller.isHost();
+    }
+    
+    private void updateUIForAdminStatus() {
+        // Update UI elements based on admin status
+        // For example, enable/disable invite button, start game button, etc.
+        // This would be implemented based on the specific UI requirements
     }
     
     private void refreshOnlinePlayers() {
@@ -325,8 +339,8 @@ public class GDXLobbyScreen implements Screen {
 
     @Override
     public void render(float delta) {
-        Gdx.gl.glClearColor(0.2f, 0.2f, 0.25f, 1);
-        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+    Gdx.gl.glClearColor(0.2f, 0.2f, 0.25f, 1);
+    Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
         stage.act(delta);
         stage.draw();

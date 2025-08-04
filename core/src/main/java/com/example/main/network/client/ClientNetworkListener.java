@@ -4,7 +4,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.util.HashMap;
 
-import com.badlogic.gdx.utils.Json;
+import com.google.gson.Gson;
 import com.example.main.network.common.Message;
 import com.example.main.network.common.MessageType;
 
@@ -13,9 +13,11 @@ import com.example.main.network.common.MessageType;
  */
 public class ClientNetworkListener implements Runnable {
     private final GameClient client;
+    private final Gson gson;
     
     public ClientNetworkListener(GameClient client) {
         this.client = client;
+        this.gson = new Gson();
     }
     
     @Override
@@ -26,7 +28,7 @@ public class ClientNetworkListener implements Runnable {
             try {
                 String messageJson = in.readLine();
                 if (messageJson != null) {
-                    Message message = parseMessageFromJson(messageJson);
+                    Message message = gson.fromJson(messageJson, Message.class);
                     if (message != null) {
                         client.handleMessage(message);
                     } else {

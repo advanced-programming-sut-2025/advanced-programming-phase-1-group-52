@@ -1,6 +1,6 @@
 package com.example.main.network.client;
 
-import com.badlogic.gdx.utils.Json; // Make sure this import is here
+import com.google.gson.Gson;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -33,6 +33,7 @@ public class GameClient {
     private Game currentGame;
     private final ClientNetworkListener networkListener;
     private Object controllerCallback; // For GUI callbacks
+    private final Gson gson;
 
     public GameClient(String host, int port) {
         this.host = host;
@@ -41,6 +42,7 @@ public class GameClient {
         this.authenticated = new AtomicBoolean(false);
         this.executorService = Executors.newCachedThreadPool();
         this.networkListener = new ClientNetworkListener(this);
+        this.gson = new Gson();
     }
 
     public boolean connect() {
@@ -61,13 +63,15 @@ public class GameClient {
             return false;
         }
     }
+    public void setAuthenticated(boolean status) {
+        this.authenticated.set(status);
+    }
 
     public boolean authenticate(String username, String password) {
         if (!connected.get()) {
             System.err.println("Not connected to server");
             return false;
         }
-
         try {
             HashMap<String, Object> authData = new HashMap<>();
             authData.put("username", username);
@@ -99,8 +103,7 @@ public class GameClient {
     public void sendMessage(Message message) {
         if (connected.get() && out != null) {
             try {
-                com.badlogic.gdx.utils.Json json = new com.badlogic.gdx.utils.Json();
-                String messageJson = json.toJson(message);
+                String messageJson = gson.toJson(message);
                 out.println(messageJson);
                 out.flush();
             } catch (Exception e) {
@@ -144,6 +147,13 @@ public class GameClient {
                 System.out.println("Received AUTH_FAILED message, passing to ClientMessageHandler");
                 ClientMessageHandler messageHandler2 = new ClientMessageHandler(this);
                 messageHandler2.handleMessage(message);
+                break;
+                
+            case LOBBY_JOIN_SUCCESS:
+                // Let ClientMessageHandler handle this
+                System.out.println("Received LOBBY_JOIN_SUCCESS message, passing to ClientMessageHandler");
+                ClientMessageHandler messageHandler3 = new ClientMessageHandler(this);
+                messageHandler3.handleMessage(message);
                 break;
 
             default:

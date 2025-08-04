@@ -159,7 +159,7 @@ public class GDXNetworkLobby implements Screen {
             @Override
             public void clicked(InputEvent event, float x, float y) {
                 controller.disconnect();
-                Main.getInstance().setScreen(new GDXMainMenu());
+                Main.getInstance().setScreen(new GDXMainMenu(com.example.main.models.App.getInstance().getNetworkService()));
             }
         });
         
