@@ -34,6 +34,7 @@ public class GameClient {
     private final ClientNetworkListener networkListener;
     private Object controllerCallback; // For GUI callbacks
     private final Gson gson;
+    private final ClientMessageHandler messageHandler; // <-- Add this field
 
     public GameClient(String host, int port) {
         this.host = host;
@@ -43,6 +44,7 @@ public class GameClient {
         this.executorService = Executors.newCachedThreadPool();
         this.networkListener = new ClientNetworkListener(this);
         this.gson = new Gson();
+        this.messageHandler = new ClientMessageHandler(this); // <-- Instantiate it here
     }
 
     public boolean connect() {
@@ -63,6 +65,21 @@ public class GameClient {
             return false;
         }
     }
+
+    // =================================================================
+    // IMPORTANT: Replace the entire handleMessage method with this one
+    // =================================================================
+    public void handleMessage(Message message) {
+        if (message == null) {
+            return;
+        }
+        // Delegate all message handling to the single, dedicated message handler.
+        // This ensures that all message types are processed correctly.
+        messageHandler.handleMessage(message);
+    }
+    // =================================================================
+
+
     public void setAuthenticated(boolean status) {
         this.authenticated.set(status);
     }
@@ -131,37 +148,6 @@ public class GameClient {
         System.out.println("Disconnected from server");
     }
 
-    public void handleMessage(Message message) {
-        if (message == null) return;
-
-        switch (message.getType()) {
-            case AUTH_SUCCESS:
-                // Let ClientMessageHandler handle this
-                System.out.println("Received AUTH_SUCCESS message, passing to ClientMessageHandler");
-                ClientMessageHandler messageHandler = new ClientMessageHandler(this);
-                messageHandler.handleMessage(message);
-                break;
-
-            case AUTH_FAILED:
-                // Let ClientMessageHandler handle this
-                System.out.println("Received AUTH_FAILED message, passing to ClientMessageHandler");
-                ClientMessageHandler messageHandler2 = new ClientMessageHandler(this);
-                messageHandler2.handleMessage(message);
-                break;
-                
-            case LOBBY_JOIN_SUCCESS:
-                // Let ClientMessageHandler handle this
-                System.out.println("Received LOBBY_JOIN_SUCCESS message, passing to ClientMessageHandler");
-                ClientMessageHandler messageHandler3 = new ClientMessageHandler(this);
-                messageHandler3.handleMessage(message);
-                break;
-
-            default:
-                System.out.println("Received message of type: " + message.getType());
-                break;
-        }
-    }
-
     public void logout() {
         if (!connected.get()) {
             System.err.println("Cannot log out, not connected.");
@@ -170,15 +156,10 @@ public class GameClient {
 
         System.out.println("Logging out user: " + (authenticatedUser != null ? authenticatedUser.getUsername() : ""));
 
-        // 1. Send a DISCONNECT message to the server to let it know we're leaving.
         Message disconnectMessage = new Message(new HashMap<>(), MessageType.DISCONNECT);
         sendMessage(disconnectMessage);
 
-        // 2. Immediately clear the local authentication state. This is the crucial step.
         setAuthenticatedUser(null);
-
-        // 3. You can also fully disconnect the socket if logging out means closing the client.
-        // disconnect();
     }
 
     public boolean isConnected() {
