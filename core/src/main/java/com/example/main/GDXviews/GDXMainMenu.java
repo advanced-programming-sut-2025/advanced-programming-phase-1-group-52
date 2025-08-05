@@ -47,7 +47,7 @@ public class GDXMainMenu implements Screen {
             public void clicked(InputEvent event, float x, float y) {
                 Result result = controller.menuEnter("PreGameMenu");
                 System.out.println(result.Message());
-                Main.getInstance().setScreen(new GDXPreGameMenu());
+//                Main.getInstance().setScreen(new GDXPreGameMenu());
             }
         });
 

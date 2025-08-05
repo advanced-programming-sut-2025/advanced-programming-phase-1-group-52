@@ -6,6 +6,7 @@ import java.util.List;
 
 import com.example.main.auth.AuthManager;
 import com.example.main.auth.AuthResult;
+import com.example.main.enums.design.FarmThemes;
 import com.example.main.models.App;
 import com.example.main.models.User;
 import com.example.main.network.common.Message;
@@ -318,55 +319,14 @@ public class NetworkLobbyController {
         return lobbyPlayers;
     }
 
-//    public boolean inviteUser(String username) {
-//        if (lobbyPlayers.size() >= 4) {
-//            return false; // Lobby is full
-//        }
-//
-//        if (lobbyPlayers.contains(username)) {
-//            return false; // User already in lobby
-//        }
-//
-//        // For now, we'll need to get the client ID of the target user
-//        // This is a simplified implementation
-//        HashMap<String, Object> inviteData = new HashMap<>();
-//        inviteData.put("targetClientId", username); // This should be the actual client ID
-//        Message inviteMessage = new Message(inviteData, MessageType.LOBBY_INVITE);
-//        networkService.sendMessage(inviteMessage);
-//
-//        return true;
-//    }
+    public void submitFarmChoice(FarmThemes theme) {
+        System.out.println("[CONTROLLER LOG] Submitting farm choice to server: " + theme.name());
+        HashMap<String, Object> body = new HashMap<>();
+        body.put("farmTheme", theme.name()); // Send the name of the enum value as a string
+        Message message = new Message(body, MessageType.SUBMIT_FARM_CHOICE);
+        networkService.sendMessage(message);
+    }
 
-//    public boolean invitePlayer(String playerUsername) {
-//        HashMap<String, Object> inviteData = new HashMap<>();
-//        inviteData.put("targetUsername", playerUsername);
-//        Message inviteMessage = new Message(inviteData, MessageType.LOBBY_INVITE);
-//        networkService.sendMessage(inviteMessage);
-//        return true;
-//    }
-//
-//    public boolean acceptInvitation(String lobbyId, String inviterUsername) {
-//        HashMap<String, Object> acceptData = new HashMap<>();
-//        acceptData.put("lobbyId", lobbyId);
-//        acceptData.put("inviterUsername", inviterUsername);
-//        Message acceptMessage = new Message(acceptData, MessageType.LOBBY_INVITE_ACCEPT);
-//        networkService.sendMessage(acceptMessage);
-//        return true;
-//    }
-
-//    public boolean rejectInvitation(String lobbyId, String inviterUsername) {
-//        HashMap<String, Object> rejectData = new HashMap<>();
-//        rejectData.put("lobbyId", lobbyId);
-//        rejectData.put("inviterUsername", inviterUsername);
-//        Message rejectMessage = new Message(rejectData, MessageType.LOBBY_INVITE_DECLINE);
-//        networkService.sendMessage(rejectMessage);
-//        return true;
-//    }
-
-    /**
-     * Starts the game (only works if you're the host and have 4 players)
-     * @return true if game started successfully
-     */
     public void setHostStatus(boolean isHost) {
         this.isHost = isHost;
         System.out.println("[CONTROLLER LOG] Host status set to: " + this.isHost);
@@ -378,7 +338,6 @@ public class NetworkLobbyController {
             return false;
         }
 
-        // This check will now use the correctly updated list size.
         if (lobbyPlayers.size() < 2) {
             System.err.println("[CONTROLLER LOG] Start game failed: Not enough players. Required: 2, Found: " + lobbyPlayers.size());
             return false;

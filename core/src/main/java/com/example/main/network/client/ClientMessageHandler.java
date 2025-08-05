@@ -1,12 +1,9 @@
 package com.example.main.network.client;
 
-import com.example.main.GDXviews.GDXMainMenu;
+import com.example.main.GDXviews.*;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
-import com.example.main.GDXviews.GDXLobbyScreen;
-import com.example.main.GDXviews.GDXOnlineLobbiesMenu;
-import com.example.main.GDXviews.GDXOnlineMenu;
 import com.example.main.Main;
 import com.example.main.models.App;
 import com.example.main.controller.NetworkLobbyController;
@@ -68,21 +65,6 @@ public class ClientMessageHandler {
             case LOBBY_FIND_RESULT:
                 handleLobbyFindResult(message);
                 break;
-//            case LOBBY_INVITE:
-//                handleLobbyInvite(message);
-//                break;
-//            case LOBBY_INVITE_ACCEPT:
-//                handleLobbyInviteAccept(message);
-//                break;
-//            case LOBBY_INVITE_DECLINE:
-//                handleLobbyInviteDecline(message);
-//                break;
-//            case LOBBY_INVITE_NOTIFICATION:
-//                handleLobbyInviteNotification(message);
-//                break;
-//            case LOBBY_INVITE_RESPONSE:
-//                handleLobbyInviteResponse(message);
-//                break;
             case LOBBY_ADMIN_CHANGE:
                 handleLobbyAdminChange(message);
                 break;
@@ -100,6 +82,12 @@ public class ClientMessageHandler {
                 break;
             case AVAILABLE_LOBBIES_UPDATE:
                 handleAvailableLobbiesUpdate(message);
+                break;
+            case NAVIGATE_TO_PREGAME:
+                handleNavigateToPregame();
+                break;
+            case GAME_SETUP_COMPLETE:
+                handleGameSetupComplete();
                 break;
             default:
                 handleCustomMessage(message);
@@ -500,5 +488,28 @@ public class ClientMessageHandler {
                 Gdx.app.postRunnable(() -> lobbyMenu.showStatus("Lobby with that ID not found."));
             }
         }
+    }
+
+    private void handleNavigateToPregame() {
+        System.out.println("[CLIENT LOG] Received NAVIGATE_TO_PREGAME command from server.");
+        // Use postRunnable to ensure the screen change happens on the main LibGDX thread.
+        Gdx.app.postRunnable(() -> {
+            Main game = Main.getInstance();
+            // Switch to the pre-game menu, passing the required services.
+            game.setScreen(new GDXPreGameMenu(game, App.getInstance().getNetworkService()));
+        });
+    }
+
+    private void handleGameSetupComplete() {
+        System.out.println("[CLIENT LOG] Received GAME_SETUP_COMPLETE from server. Transitioning to game screen.");
+        Gdx.app.postRunnable(() -> {
+            Screen currentScreen = Main.getInstance().getScreen();
+            if (currentScreen instanceof GDXPreGameMenu) {
+                ((GDXPreGameMenu) currentScreen).onGameSetupComplete();
+            } else {
+                System.err.println("Received GAME_SETUP_COMPLETE but was not on the PreGameMenu screen!");
+                Main.getInstance().setScreen(new GDXGameScreen());
+            }
+        });
     }
 }

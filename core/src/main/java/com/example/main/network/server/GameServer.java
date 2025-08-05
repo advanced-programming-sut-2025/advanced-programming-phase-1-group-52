@@ -3,10 +3,7 @@ package com.example.main.network.server;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -14,7 +11,10 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.example.main.auth.AuthManager;
 import com.example.main.auth.AuthResult;
+import com.example.main.enums.design.FarmThemes;
 import com.example.main.models.Game;
+import com.example.main.models.GameMap;
+import com.example.main.models.Player;
 import com.example.main.models.User;
 import com.example.main.network.NetworkConstants;
 import com.example.main.network.common.Message;
@@ -35,6 +35,8 @@ public class GameServer {
     private final ConcurrentHashMap<String, String> usernameToClientId; // username -> clientId
     private Game game;
     private final List<User> availableUsers;
+    private final ConcurrentHashMap<String, ConcurrentHashMap<String, FarmThemes>> lobbyFarmChoices;
+    private final ConcurrentHashMap<String, Game> activeGames;
 
     public GameServer(int port) throws IOException {
         this.port = port;
@@ -47,6 +49,8 @@ public class GameServer {
         this.clientToLobby = new ConcurrentHashMap<>();
         this.usernameToClientId = new ConcurrentHashMap<>();
         this.availableUsers = new ArrayList<>();
+        this.lobbyFarmChoices = new ConcurrentHashMap<>();
+        this.activeGames = new ConcurrentHashMap<>();
 
         System.out.println("Game Server started on port " + port);
     }
@@ -424,6 +428,79 @@ public class GameServer {
 
     public AuthManager getAuthManager() {
         return AuthManager.getInstance();
+    }
+
+    public void handleFarmChoice(String clientId, String lobbyId, FarmThemes theme) {
+        Lobby lobby = lobbies.get(lobbyId);
+        if (lobby == null) return;
+
+        lobbyFarmChoices.putIfAbsent(lobbyId, new ConcurrentHashMap<>());
+        ConcurrentHashMap<String, FarmThemes> choices = lobbyFarmChoices.get(lobbyId);
+        choices.put(clientId, theme);
+
+        System.out.println("[SERVER LOG] Received farm choice '" + theme.name() + "' from client " + clientId + " for lobby " + lobbyId);
+
+        if (choices.size() == lobby.getPlayerCount()) {
+            System.out.println("[SERVER LOG] All players in lobby " + lobbyId + " have chosen their farms. Creating game...");
+
+            // --- Create the Game Instance ---
+            // Get the list of real players in a consistent order.
+            List<User> realPlayers = new ArrayList<>(lobby.getPlayers().values());
+            int realPlayerCount = realPlayers.size();
+
+            // Create a new list that will be padded with dummy users.
+            List<User> playersInOrder = new ArrayList<>(realPlayers);
+            while (playersInOrder.size() < 4) {
+                int slotNum = playersInOrder.size() + 1;
+                User dummyUser = new User("empty_slot_" + slotNum, "", "", "", null);
+                playersInOrder.add(dummyUser);
+            }
+
+            // Initialize Player objects for all users (real and dummy).
+            for (int i = 0; i < playersInOrder.size(); i++) {
+                User user = playersInOrder.get(i);
+                Player player = new Player(user.getUsername(), user.getGender());
+
+                // Only assign starting positions to real players.
+                if (i < realPlayerCount) {
+                    player.setOriginX(4 + (i % 2) * 80);
+                    player.setOriginY(4 + (i / 2) * 30);
+                    player.setCurrentX(player.originX());
+                    player.setCurrentY(player.originY());
+                }
+                user.setCurrentPlayer(player);
+            }
+
+            // Create the game with the full list of 4 users.
+            Game newGame = new Game(new ArrayList<>(playersInOrder));
+            newGame.setMainPlayer(playersInOrder.get(0));
+
+            // --- Create the GameMap ---
+            ArrayList<FarmThemes> themesInOrder = new ArrayList<>();
+
+            // **THE FIX IS HERE**: Iterate through the list of REAL players first.
+            for (User realUser : realPlayers) {
+                // Get the chosen theme for each real player. This is now safe.
+                FarmThemes chosenTheme = choices.get(realUser.getClientId());
+                themesInOrder.add(chosenTheme);
+            }
+
+            // Now, add default themes for the remaining empty slots.
+            while (themesInOrder.size() < 4) {
+                themesInOrder.add(FarmThemes.Neutral);
+            }
+
+            GameMap map = new GameMap(newGame.getPlayers(), themesInOrder);
+            newGame.setGameMap(map);
+
+            activeGames.put(lobbyId, newGame);
+            System.out.println("[SERVER LOG] Game created for lobby " + lobbyId + ". Notifying clients.");
+
+            Message completeMessage = new Message(new HashMap<>(), MessageType.GAME_SETUP_COMPLETE);
+            for (String playerId : lobby.getPlayerIds()) {
+                sendMessageToClient(playerId, completeMessage);
+            }
+        }
     }
 
     public static void main(String[] args) {
