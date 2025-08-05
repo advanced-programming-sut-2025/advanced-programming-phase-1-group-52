@@ -24,19 +24,19 @@ public class GDXCreateLobbyMenu implements Screen {
     private Skin skin;
     private Label titleLabel;
     private Label statusLabel;
-    
+
     private TextField lobbyNameField;
     private CheckBox privateLobbyCheckBox;
     private TextField passwordField;
     private CheckBox visibleLobbyCheckBox;
-    
+
     private NetworkLobbyController controller;
     private NetworkService networkService;
 
     public GDXCreateLobbyMenu(NetworkService networkService) {
         this.networkService = networkService;
         this.controller = new NetworkLobbyController(this.networkService);
-        
+
         // Register the controller as callback so ClientMessageHandler can find it
         this.networkService.setControllerCallback(this.controller);
         stage = new Stage(new ScreenViewport());
@@ -49,7 +49,7 @@ public class GDXCreateLobbyMenu implements Screen {
 
         titleLabel = new Label("Create Lobby", skin);
         titleLabel.setFontScale(1.5f);
-        
+
         statusLabel = new Label("", skin);
 
         // Lobby name input
@@ -60,7 +60,7 @@ public class GDXCreateLobbyMenu implements Screen {
         // Privacy settings
         Label privacyLabel = new Label("Privacy Settings:", skin);
         privateLobbyCheckBox = new CheckBox("Private Lobby", skin);
-        
+
         Label passwordLabel = new Label("Password (if private):", skin);
         passwordField = new TextField("", skin);
         passwordField.setMessageText("Enter password...");
@@ -100,7 +100,7 @@ public class GDXCreateLobbyMenu implements Screen {
                     public void run() {
                         System.out.println("DEBUG: GDXCreateLobbyMenu - postRunnable executing, navigating to lobby screen");
                         // Navigate to the lobby screen
-                        Main.getInstance().setScreen(new GDXLobbyScreen(lobbyId, lobbyName, true));
+                        Main.getInstance().setScreen(new GDXLobbyScreen(lobbyId, lobbyName));
                         System.out.println("DEBUG: GDXCreateLobbyMenu - screen set to GDXLobbyScreen");
                     }
                 });
@@ -121,21 +121,21 @@ public class GDXCreateLobbyMenu implements Screen {
         // Layout
         table.add(titleLabel).padBottom(20).row();
         table.add(statusLabel).padBottom(20).row();
-        
+
         // Lobby name section
         table.add(nameLabel).left().pad(5).row();
         table.add(lobbyNameField).width(300).pad(5).row();
-        
+
         // Privacy section
         table.add(privacyLabel).left().pad(5).row();
         table.add(privateLobbyCheckBox).left().pad(5).row();
         table.add(passwordLabel).left().pad(5).row();
         table.add(passwordField).width(300).pad(5).row();
-        
+
         // Visibility section
         table.add(visibilityLabel).left().pad(5).row();
         table.add(visibleLobbyCheckBox).left().pad(5).row();
-        
+
         // Buttons
         table.add(createButton).width(200).height(40).pad(10).row();
         table.add(backButton).width(200).height(40).pad(10).row();
@@ -150,14 +150,14 @@ public class GDXCreateLobbyMenu implements Screen {
 
         boolean isPrivate = privateLobbyCheckBox.isChecked();
         String password = passwordField.getText().trim();
-        
+
         if (isPrivate && password.isEmpty()) {
             statusLabel.setText("Please enter a password for private lobby!");
             return;
         }
 
         boolean isVisible = visibleLobbyCheckBox.isChecked();
-        
+
         controller.createLobbyWithSettings(lobbyName, isPrivate, password, isVisible);
         statusLabel.setText("Creating lobby...");
         // The screen will transition upon receiving LOBBY_JOIN_SUCCESS from the server.
@@ -206,4 +206,4 @@ public class GDXCreateLobbyMenu implements Screen {
     public void dispose() {
         stage.dispose();
     }
-} 
+}

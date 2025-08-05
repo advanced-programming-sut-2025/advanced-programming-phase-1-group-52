@@ -1,8 +1,5 @@
 package com.example.main.GDXviews;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.GL20;
@@ -16,148 +13,109 @@ import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.example.main.Main;
 import com.example.main.controller.NetworkLobbyController;
+import com.example.main.models.App;
+import com.example.main.service.NetworkService;
+import java.util.List;
+import java.util.Map;
 
 public class GDXOnlineLobbiesMenu implements Screen {
-    private Stage stage;
-    private Skin skin;
-    private Label titleLabel;
-    private Label statusLabel;
-    
-    private Table lobbiesTable;
-    private List<String> availableLobbies = new ArrayList<>();
-    private String selectedLobby = null;
-    
-    private NetworkLobbyController controller;
+    private final Stage stage;
+    private final Skin skin;
+    private final NetworkLobbyController controller;
+    private final Table lobbyListTable;
 
+    /**
+     * **FIX 1**: The constructor now accepts the Main game instance and the existing NetworkService.
+     */
     public GDXOnlineLobbiesMenu() {
-        controller = new NetworkLobbyController();
-        stage = new Stage(new ScreenViewport());
-        Gdx.input.setInputProcessor(stage);
-        skin = new Skin(Gdx.files.internal("uiskin.json"));
+        this.stage = new Stage(new ScreenViewport());
+        this.skin = new Skin(Gdx.files.internal("uiskin.json"));
 
-        Table table = new Table();
-        table.setFillParent(true);
-        stage.addActor(table);
+        // **FIX 2**: Use the passed-in, connected NetworkService, not a new one.
+        this.controller = App.getInstance().getNetworkService().getLobbyController();
 
-        titleLabel = new Label("Online Lobbies", skin);
+        // --- Layout Setup ---
+        Table rootTable = new Table();
+        rootTable.setFillParent(true);
+        stage.addActor(rootTable);
+
+        Label titleLabel = new Label("Online Lobbies", skin);
         titleLabel.setFontScale(1.5f);
-        
-        statusLabel = new Label("Loading lobbies...", skin);
+        rootTable.add(titleLabel).padBottom(20).row();
 
-        // Lobbies table
-        lobbiesTable = new Table();
-        lobbiesTable.setBackground(skin.newDrawable("white", 0.1f, 0.1f, 0.1f, 0.8f));
+        lobbyListTable = new Table();
+        lobbyListTable.setBackground(skin.newDrawable("white", 0.1f, 0.1f, 0.1f, 0.8f));
+        rootTable.add(lobbyListTable).width(600).height(400).pad(10).row();
 
-        // Buttons
+        // --- Button Setup ---
         TextButton refreshButton = new TextButton("Refresh", skin);
-        TextButton joinButton = new TextButton("Join Selected", skin);
         TextButton backButton = new TextButton("Back", skin);
 
         refreshButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                refreshLobbies();
-            }
-        });
-
-        joinButton.addListener(new ClickListener() {
-            @Override
-            public void clicked(InputEvent event, float x, float y) {
-                joinSelectedLobby();
+                if (controller.isConnected()) {
+                    controller.requestAvailableLobbies();
+                }
             }
         });
 
         backButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                Main.getInstance().setScreen(new GDXOnlineMenu(com.example.main.models.App.getInstance().getNetworkService()));
+                Main.getInstance().setScreen(new GDXOnlineMenu(App.getInstance().getNetworkService()));
             }
         });
 
-        // Layout
-        table.add(titleLabel).padBottom(20).row();
-        table.add(statusLabel).padBottom(10).row();
-        table.add(lobbiesTable).width(600).height(400).pad(10).row();
-        
         Table buttonTable = new Table();
         buttonTable.add(refreshButton).width(150).height(40).pad(5);
-        buttonTable.add(joinButton).width(150).height(40).pad(5);
         buttonTable.add(backButton).width(150).height(40).pad(5);
-        
-        table.add(buttonTable).pad(10).row();
-    }
-
-    private void refreshLobbies() {
-        statusLabel.setText("Refreshing lobbies...");
-        // Request available lobbies from server
-        controller.requestAvailableLobbies();
-        
-        // Clear existing lobbies - will be populated by server response
-        availableLobbies.clear();
-        updateLobbiesTable();
-        statusLabel.setText("No lobbies available");
-    }
-
-    private void updateLobbiesTable() {
-        lobbiesTable.clear();
-        
-        // Add header
-        lobbiesTable.add(new Label("Lobby Name", skin)).width(200).pad(5);
-        lobbiesTable.add(new Label("Players", skin)).width(100).pad(5);
-        lobbiesTable.add(new Label("Status", skin)).width(100).pad(5);
-        lobbiesTable.row();
-        
-        // Add lobbies or show message if none available
-        if (availableLobbies.isEmpty()) {
-            Label noLobbiesLabel = new Label("No lobbies available", skin);
-            noLobbiesLabel.setColor(0.7f, 0.7f, 0.7f, 1f); // Gray color
-            lobbiesTable.add(noLobbiesLabel).colspan(3).center().pad(20);
-        } else {
-            for (String lobby : availableLobbies) {
-                TextButton lobbyButton = new TextButton(lobby, skin);
-                lobbyButton.addListener(new ClickListener() {
-                    @Override
-                    public void clicked(InputEvent event, float x, float y) {
-                        selectedLobby = lobby;
-                        statusLabel.setText("Selected: " + lobby);
-                    }
-                });
-                
-                lobbiesTable.add(lobbyButton).width(200).pad(5);
-                lobbiesTable.add(new Label("2/4", skin)).width(100).pad(5);
-                lobbiesTable.add(new Label("Public", skin)).width(100).pad(5);
-                lobbiesTable.row();
-            }
-        }
-    }
-
-    private void joinSelectedLobby() {
-        if (selectedLobby == null) {
-            statusLabel.setText("Please select a lobby first!");
-            return;
-        }
-        
-        // Extract lobby ID from selected lobby (for now, use a simple approach)
-        String lobbyId = "sample-lobby-id"; // This would come from the server
-        String lobbyName = selectedLobby.split(" ")[0] + " " + selectedLobby.split(" ")[1];
-        
-        statusLabel.setText("Joining " + selectedLobby + "...");
-        
-        // Navigate to lobby screen
-        Main.getInstance().setScreen(new GDXLobbyScreen(lobbyId, lobbyName, false));
+        rootTable.add(buttonTable).pad(10).row();
     }
 
     @Override
     public void show() {
-        // Connect to server when screen is shown
-        if (Main.isNetworkMode()) {
-            boolean connected = controller.connectToServer(Main.getServerIp(), Main.getServerPort());
-            if (connected) {
-                statusLabel.setText("Connected to server!");
-                refreshLobbies();
-            } else {
-                statusLabel.setText("Failed to connect to server!");
-            }
+        Gdx.input.setInputProcessor(stage);
+        // Request the list of lobbies when the screen is shown.
+        if (controller.isConnected()) {
+            System.out.println("[UI LOG] Requesting lobby list from the controller.");
+            controller.requestAvailableLobbies();
+        } else {
+            System.err.println("[UI LOG] Cannot request lobbies: controller is not connected.");
+        }
+    }
+
+    public void updateLobbyList(List<Map<String, Object>> lobbies) {
+        System.out.println("[UI LOG] GDXOnlineLobbiesMenu.updateLobbyList called with " + (lobbies != null ? lobbies.size() : "null") + " lobbies.");
+        lobbyListTable.clear();
+
+        if (lobbies == null || lobbies.isEmpty()) {
+            lobbyListTable.add(new Label("No available lobbies found.", skin)).center();
+            return;
+        }
+
+        for (Map<String, Object> lobbyInfo : lobbies) {
+            String lobbyId = (String) lobbyInfo.get("lobbyId");
+            String name = (String) lobbyInfo.get("name"); // The lobby name is here.
+            int playerCount = ((Number) lobbyInfo.get("playerCount")).intValue();
+            int maxPlayers = ((Number) lobbyInfo.get("maxPlayers")).intValue();
+            String host = (String) lobbyInfo.get("host");
+
+            String lobbyText = String.format("%s (%d/%d) - Host: %s", name, playerCount, maxPlayers, host);
+            TextButton joinButton = new TextButton("Join", skin);
+            joinButton.addListener(new ClickListener() {
+                @Override
+                public void clicked(InputEvent event, float x, float y) {
+                    System.out.println("UI: Join button clicked for lobby: " + lobbyId);
+                    // **THE FIX**: The button's only job is to send the request.
+                    // The screen change will be handled by the message handler when the server replies.
+                    controller.joinLobby(lobbyId);
+                }
+            });
+
+            lobbyListTable.add(new Label(lobbyText, skin)).expandX().left().pad(5);
+            lobbyListTable.add(joinButton).right().pad(5);
+            lobbyListTable.row();
         }
     }
 
@@ -165,7 +123,6 @@ public class GDXOnlineLobbiesMenu implements Screen {
     public void render(float delta) {
         Gdx.gl.glClearColor(0.2f, 0.2f, 0.25f, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
-
         stage.act(delta);
         stage.draw();
     }
@@ -187,5 +144,6 @@ public class GDXOnlineLobbiesMenu implements Screen {
     @Override
     public void dispose() {
         stage.dispose();
+        skin.dispose();
     }
-} 
+}

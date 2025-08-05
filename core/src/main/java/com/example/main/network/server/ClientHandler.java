@@ -5,10 +5,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 import com.example.main.enums.player.Gender;
 import com.example.main.enums.regex.SecurityQuestion;
@@ -55,6 +52,9 @@ public class ClientHandler implements Runnable {
     }
 
     private void handleMessage(String messageJson) {
+        if(!messageJson.contains("{\"type\":\"HEARTBEAT\",\"body\":{}}")){
+            System.out.println("[SERVER LOG] Received message from client " + clientId + ": " + messageJson);
+        }
         try {
             // Parse the message JSON and create Message object
             Message message = gson.fromJson(messageJson, Message.class);
@@ -89,15 +89,15 @@ public class ClientHandler implements Runnable {
                 case CREATE_LOBBY:
                     handleCreateLobby(message);
                     break;
-                case LOBBY_INVITE:
-                    handleLobbyInvite(message);
-                    break;
-                case LOBBY_INVITE_ACCEPT:
-                    handleLobbyInviteAccept(message);
-                    break;
-                case LOBBY_INVITE_DECLINE:
-                    handleLobbyInviteDecline(message);
-                    break;
+//                case LOBBY_INVITE:
+//                    handleLobbyInvite(message);
+//                    break;
+//                case LOBBY_INVITE_ACCEPT:
+//                    handleLobbyInviteAccept(message);
+//                    break;
+//                case LOBBY_INVITE_DECLINE:
+//                    handleLobbyInviteDecline(message);
+//                    break;
                 case LOBBY_READY:
                     handleLobbyReady(message);
                     break;
@@ -109,6 +109,9 @@ public class ClientHandler implements Runnable {
                     break;
                 case REGISTER:
                     handleRegister(message);
+                    break;
+                case REQUEST_AVAILABLE_LOBBIES:
+                    handleRequestAvailableLobbies();
                     break;
                 default:
                     System.out.println("Unknown message type: " + message.getType());
@@ -261,34 +264,40 @@ public class ClientHandler implements Runnable {
         sendMessage(heartbeatMessage);
     }
 
-    // Lobby handling methods
     private void handleLobbyJoin(Message message) {
-        // No authentication required for lobby operations
         try {
+            // **FIX 1**: Check for authentication first.
+            User user = server.getAuthenticatedUser(clientId);
+            if (user == null) {
+                sendLobbyJoinFailed("You must be logged in to create or join a lobby.");
+                System.err.println("[SERVER LOG] Unauthenticated client " + clientId + " attempted to join/create a lobby.");
+                return;
+            }
+
             Map<String, Object> body = (Map<String, Object>) message.getBody();
             String lobbyId = (String) body.get("lobbyId");
-            System.out.println("Handling lobby join request for client " + clientId + ", lobbyId: " + lobbyId);
-            
+            System.out.println("[SERVER LOG] Handling lobby join request for client " + clientId + ", lobbyId: " + lobbyId);
+
             if (lobbyId == null) {
                 // Create new lobby
-                System.out.println("Creating new lobby for client " + clientId);
+                System.out.println("[SERVER LOG] Creating new lobby for client " + clientId);
                 String newLobbyId = server.createLobby(clientId);
-                System.out.println("New lobby created with ID: " + newLobbyId);
+                System.out.println("[SERVER LOG] New lobby created with ID: " + newLobbyId);
                 sendLobbyJoinSuccess(newLobbyId);
             } else {
                 // Join existing lobby
-                System.out.println("Joining existing lobby: " + lobbyId);
+                System.out.println("[SERVER LOG] Joining existing lobby: " + lobbyId);
                 if (server.joinLobby(clientId, lobbyId)) {
-                    System.out.println("Successfully joined lobby: " + lobbyId);
+                    System.out.println("[SERVER LOG] Successfully joined lobby: " + lobbyId);
                     sendLobbyJoinSuccess(lobbyId);
                     broadcastLobbyUpdate(lobbyId);
                 } else {
-                    System.out.println("Failed to join lobby: " + lobbyId);
+                    System.out.println("[SERVER LOG] Failed to join lobby: " + lobbyId);
                     sendLobbyJoinFailed("Failed to join lobby");
                 }
             }
         } catch (Exception e) {
-            System.err.println("Exception in handleLobbyJoin for client " + clientId + ": " + e.getMessage());
+            System.err.println("[SERVER LOG] Exception in handleLobbyJoin for client " + clientId + ": " + e.getMessage());
             e.printStackTrace();
             sendLobbyJoinFailed("Error joining lobby: " + e.getMessage());
         }
@@ -304,57 +313,57 @@ public class ClientHandler implements Runnable {
         }
     }
 
-    private void handleLobbyInvite(Message message) {
-        // No authentication required for lobby operations
-        try {
-            Map<String, Object> body = (Map<String, Object>) message.getBody();
-            String targetUsername = (String) body.get("targetUsername");
-            String lobbyId = server.getClientLobbyId(clientId);
-
-            if (lobbyId != null && targetUsername != null) {
-                Lobby lobby = server.getLobby(lobbyId);
-                if (lobby != null && lobby.getHostId().equals(clientId)) {
-                    // Get client ID by username
-                    String targetClientId = server.getClientIdByUsername(targetUsername);
-                    if (targetClientId != null) {
-                        // Send invite to target client
-                        sendLobbyInvite(targetClientId, lobbyId);
-                        System.out.println("Invitation sent from " + clientId + " to " + targetUsername + " (client: " + targetClientId + ")");
-                    } else {
-                        sendErrorMessage("User " + targetUsername + " is not online");
-                    }
-                } else {
-                    sendErrorMessage("You are not the host of this lobby");
-                }
-            } else {
-                sendErrorMessage("Invalid lobby or target user");
-            }
-        } catch (Exception e) {
-            System.err.println("Error handling lobby invite: " + e.getMessage());
-            sendErrorMessage("Error sending invite");
-        }
-    }
-
-    private void handleLobbyInviteAccept(Message message) {
-        // No authentication required for lobby operations
-        try {
-            Map<String, Object> body = (Map<String, Object>) message.getBody();
-            String lobbyId = (String) body.get("lobbyId");
-            if (server.joinLobby(clientId, lobbyId)) {
-                sendLobbyJoinSuccess(lobbyId);
-                broadcastLobbyUpdate(lobbyId);
-            } else {
-                sendLobbyJoinFailed("Failed to join lobby");
-            }
-        } catch (Exception e) {
-            sendLobbyJoinFailed("Error accepting invite");
-        }
-    }
-
-    private void handleLobbyInviteDecline(Message message) {
-        // Just acknowledge the decline
-        sendLobbyInviteDeclineAck();
-    }
+//    private void handleLobbyInvite(Message message) {
+//        // No authentication required for lobby operations
+//        try {
+//            Map<String, Object> body = (Map<String, Object>) message.getBody();
+//            String targetUsername = (String) body.get("targetUsername");
+//            String lobbyId = server.getClientLobbyId(clientId);
+//
+//            if (lobbyId != null && targetUsername != null) {
+//                Lobby lobby = server.getLobby(lobbyId);
+//                if (lobby != null && lobby.getHostId().equals(clientId)) {
+//                    // Get client ID by username
+//                    String targetClientId = server.getClientIdByUsername(targetUsername);
+//                    if (targetClientId != null) {
+//                        // Send invite to target client
+//                        sendLobbyInvite(targetClientId, lobbyId);
+//                        System.out.println("Invitation sent from " + clientId + " to " + targetUsername + " (client: " + targetClientId + ")");
+//                    } else {
+//                        sendErrorMessage("User " + targetUsername + " is not online");
+//                    }
+//                } else {
+//                    sendErrorMessage("You are not the host of this lobby");
+//                }
+//            } else {
+//                sendErrorMessage("Invalid lobby or target user");
+//            }
+//        } catch (Exception e) {
+//            System.err.println("Error handling lobby invite: " + e.getMessage());
+//            sendErrorMessage("Error sending invite");
+//        }
+//    }
+//
+//    private void handleLobbyInviteAccept(Message message) {
+//        // No authentication required for lobby operations
+//        try {
+//            Map<String, Object> body = (Map<String, Object>) message.getBody();
+//            String lobbyId = (String) body.get("lobbyId");
+//            if (server.joinLobby(clientId, lobbyId)) {
+//                sendLobbyJoinSuccess(lobbyId);
+//                broadcastLobbyUpdate(lobbyId);
+//            } else {
+//                sendLobbyJoinFailed("Failed to join lobby");
+//            }
+//        } catch (Exception e) {
+//            sendLobbyJoinFailed("Error accepting invite");
+//        }
+//    }
+//
+//    private void handleLobbyInviteDecline(Message message) {
+//        // Just acknowledge the decline
+//        sendLobbyInviteDeclineAck();
+//    }
 
     private void handleLobbyReady(Message message) {
         // No authentication required for lobby operations
@@ -415,14 +424,22 @@ public class ClientHandler implements Runnable {
         }
     }
 
-    // Lobby message sending methods
     private void sendLobbyJoinSuccess(String lobbyId) {
+        Lobby lobby = server.getLobby(lobbyId);
+        if (lobby == null) {
+            sendLobbyJoinFailed("Lobby not found after joining.");
+            return;
+        }
+
         System.out.println("Sending lobby join success for lobby: " + lobbyId + " to client: " + clientId);
         HashMap<String, Object> data = new HashMap<>();
         data.put("lobbyId", lobbyId);
+        data.put("lobbyName", lobby.getName()); // <-- Add the lobby name
+        data.put("isAdmin", lobby.getHostId().equals(this.clientId)); // <-- Tell the client if they are the admin
         Message message = new Message(data, MessageType.LOBBY_JOIN_SUCCESS);
         sendMessage(message);
     }
+
 
     private void sendLobbyJoinFailed(String reason) {
         HashMap<String, Object> data = new HashMap<>();
@@ -437,19 +454,19 @@ public class ClientHandler implements Runnable {
         sendMessage(message);
     }
 
-    private void sendLobbyInvite(String targetClientId, String lobbyId) {
-        HashMap<String, Object> data = new HashMap<>();
-        data.put("lobbyId", lobbyId);
-        data.put("inviterUsername", server.getAuthenticatedUser(clientId).getUsername());
-        Message message = new Message(data, MessageType.LOBBY_INVITE);
-        server.sendMessageToClient(targetClientId, message);
-    }
-
-    private void sendLobbyInviteDeclineAck() {
-        HashMap<String, Object> data = new HashMap<>();
-        Message message = new Message(data, MessageType.LOBBY_INVITE_DECLINE);
-        sendMessage(message);
-    }
+//    private void sendLobbyInvite(String targetClientId, String lobbyId) {
+//        HashMap<String, Object> data = new HashMap<>();
+//        data.put("lobbyId", lobbyId);
+//        data.put("inviterUsername", server.getAuthenticatedUser(clientId).getUsername());
+//        Message message = new Message(data, MessageType.LOBBY_INVITE);
+//        server.sendMessageToClient(targetClientId, message);
+//    }
+//
+//    private void sendLobbyInviteDeclineAck() {
+//        HashMap<String, Object> data = new HashMap<>();
+//        Message message = new Message(data, MessageType.LOBBY_INVITE_DECLINE);
+//        sendMessage(message);
+//    }
 
     private void sendLobbyReadySuccess(boolean ready) {
         HashMap<String, Object> data = new HashMap<>();
@@ -491,7 +508,7 @@ public class ClientHandler implements Runnable {
         List<User> onlineUsers = server.getOnlinePlayers();
         HashMap<String, Object> body = new HashMap<>();
         body.put("onlineUsers", onlineUsers);
-        
+
         // Convert users to a JSON array string representation
         StringBuilder usersJson = new StringBuilder("[");
         boolean first = true;
@@ -507,7 +524,7 @@ public class ClientHandler implements Runnable {
             first = false;
         }
         usersJson.append("]");
-        
+
         body.put("users", usersJson.toString());
         Message message = new Message(body, MessageType.ONLINE_USERS_UPDATE);
         sendMessage(message);
@@ -558,5 +575,29 @@ public class ClientHandler implements Runnable {
             System.err.println("Error handling registration: " + e.getMessage());
             sendErrorMessage("Registration failed: " + e.getMessage());
         }
+    }
+
+    private void handleRequestAvailableLobbies() {
+        System.out.println("[SERVER LOG] Handling REQUEST_AVAILABLE_LOBBIES from client: " + clientId); // Add this log
+        List<Lobby> allLobbies = server.getAllLobbies();
+        List<Map<String, Object>> visibleLobbies = new ArrayList<>();
+        for (Lobby lobby : allLobbies) {
+            if (lobby.isVisible()) {
+                Map<String, Object> lobbyInfo = new HashMap<>();
+                lobbyInfo.put("lobbyId", lobby.getLobbyId());
+                lobbyInfo.put("name", lobby.getName());
+                lobbyInfo.put("playerCount", lobby.getPlayerCount());
+                lobbyInfo.put("maxPlayers", lobby.getMaxPlayers());
+                lobbyInfo.put("host", lobby.getHostUsername());
+                visibleLobbies.add(lobbyInfo);
+            }
+        }
+
+        System.out.println("[SERVER LOG] Found " + visibleLobbies.size() + " visible lobbies to send."); // Add this log
+        HashMap<String, Object> body = new HashMap<>();
+        body.put("lobbies", visibleLobbies);
+        Message message = new Message(body, MessageType.AVAILABLE_LOBBIES_UPDATE);
+        sendMessage(message);
+        System.out.println("[SERVER LOG] Sent AVAILABLE_LOBBIES_UPDATE to client: " + clientId); // Add this log
     }
 }
