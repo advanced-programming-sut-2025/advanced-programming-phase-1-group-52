@@ -389,14 +389,14 @@ public class NetworkLobbyController {
     }
 
     public boolean startGame() {
-        // This check now uses the reliably updated 'isHost' flag.
         if (!isHost) {
             System.err.println("[CONTROLLER LOG] Start game failed: isHost is false.");
-            return false; // Only host can start game
+            return false;
         }
 
-        if (lobbyPlayers.size() < 2) { // Changed to 2 for easier testing
-            System.err.println("[CONTROLLER LOG] Start game failed: Not enough players.");
+        // This check will now use the correctly updated list size.
+        if (lobbyPlayers.size() < 2) {
+            System.err.println("[CONTROLLER LOG] Start game failed: Not enough players. Required: 2, Found: " + lobbyPlayers.size());
             return false;
         }
 
@@ -406,6 +406,14 @@ public class NetworkLobbyController {
         networkService.sendMessage(startMessage);
 
         return true;
+    }
+
+    public void updateLobbyPlayers(List<String> newPlayerNames) {
+        if (this.lobbyPlayers != null) {
+            this.lobbyPlayers.clear();
+            this.lobbyPlayers.addAll(newPlayerNames);
+            System.out.println("[CONTROLLER LOG] Internal lobbyPlayers list updated. Size is now: " + this.lobbyPlayers.size());
+        }
     }
 
     /**

@@ -303,8 +303,6 @@ public class ClientMessageHandler {
 
     private void handleLobbyPlayersUpdate(Message message) {
         try {
-            // The server sends a Map<String (clientId), User (as a Map)>.
-            // We need to extract the usernames from it.
             Map<String, Object> playersMap = message.getFromBody("players");
             if (playersMap == null) return;
 
@@ -319,10 +317,18 @@ public class ClientMessageHandler {
                 }
             }
 
-            // Get the current screen and update it if it's the lobby screen
+            // **THE FIX IS HERE**
+
+            // 1. Get the persistent controller instance.
+            NetworkLobbyController controller = App.getInstance().getNetworkService().getLobbyController();
+            if (controller != null) {
+                // 2. Update the controller's internal state.
+                controller.updateLobbyPlayers(playerNames);
+            }
+
+            // 3. Get the current screen and update the UI.
             Screen currentScreen = Main.getInstance().getScreen();
             if (currentScreen instanceof GDXLobbyScreen) {
-                // Use Gdx.app.postRunnable to ensure UI updates happen on the main render thread
                 Gdx.app.postRunnable(() -> {
                     ((GDXLobbyScreen) currentScreen).updatePlayerList(playerNames);
                 });
