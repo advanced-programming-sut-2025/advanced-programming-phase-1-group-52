@@ -14,6 +14,7 @@ public enum MessageType {
     REGISTER,
     // Lobby messages
     LOBBY_JOIN,
+    LOBBY_JOIN_FAILED,
     LOBBY_JOIN_SUCCESS,
     LOBBY_LEAVE,
     LOBBY_ADMIN_CHANGE,

@@ -183,10 +183,16 @@ public class GameServer {
         return lobbyId;
     }
 
-    public boolean joinLobby(String clientId, String lobbyId) {
+    public boolean joinLobby(String clientId, String lobbyId, String password) {
         Lobby lobby = lobbies.get(lobbyId);
         if (lobby == null || lobby.isFull()) {
             return false;
+        }
+
+        if (lobby.isPrivate()) {
+            if (password == null || !lobby.checkPassword(password)) {
+                return false; // Wrong password
+            }
         }
 
         User user = authenticatedUsers.get(clientId);
@@ -224,25 +230,15 @@ public class GameServer {
     }
 
     public Lobby createLobby(String lobbyName, User host, boolean isPrivate, String password, boolean isVisible) {
-        String lobbyId = java.util.UUID.randomUUID().toString();
-
-        // ** THE FIX IS HERE **
-        // The Lobby must be created with the host's unique Client ID, not their username.
+        String lobbyId = UUID.randomUUID().toString();
         Lobby lobby = new Lobby(lobbyId, lobbyName, host.getClientId(), isPrivate, password, isVisible);
-
-        lobby.setPrivate(isPrivate);
-        if (isPrivate) {
-            lobby.setPassword(password);
-        }
-        lobby.setVisible(isVisible);
-
         lobbies.put(lobbyId, lobby);
-        // The host automatically joins the lobby they create
-        joinLobby(host.getClientId(), lobbyId);
-
-        System.out.println("Lobby created: " + lobbyName + " (ID: " + lobbyId + ") by " + host.getUsername());
+        lobby.addPlayer(host.getClientId(), host);
+        clientToLobby.put(host.getClientId(), lobbyId);
+        System.out.println("Lobby created: " + lobbyName + " (Private: " + isPrivate + ")");
         return lobby;
     }
+
     public Lobby getLobby(String lobbyId) {
         return lobbies.get(lobbyId);
     }

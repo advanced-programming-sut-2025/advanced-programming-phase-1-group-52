@@ -265,41 +265,28 @@ public class ClientHandler implements Runnable {
     }
 
     private void handleLobbyJoin(Message message) {
-        try {
-            // **FIX 1**: Check for authentication first.
-            User user = server.getAuthenticatedUser(clientId);
-            if (user == null) {
-                sendLobbyJoinFailed("You must be logged in to create or join a lobby.");
-                System.err.println("[SERVER LOG] Unauthenticated client " + clientId + " attempted to join/create a lobby.");
-                return;
-            }
+        User user = server.getAuthenticatedUser(clientId);
+        if (user == null) {
+            sendLobbyJoinFailed("You must be logged in to join a lobby.");
+            return;
+        }
+        Map<String, Object> body = message.getBody();
+        String lobbyId = (String) body.get("lobbyId");
+        String password = (String) body.get("password");
 
-            Map<String, Object> body = (Map<String, Object>) message.getBody();
-            String lobbyId = (String) body.get("lobbyId");
-            System.out.println("[SERVER LOG] Handling lobby join request for client " + clientId + ", lobbyId: " + lobbyId);
-
-            if (lobbyId == null) {
-                // Create new lobby
-                System.out.println("[SERVER LOG] Creating new lobby for client " + clientId);
-                String newLobbyId = server.createLobby(clientId);
-                System.out.println("[SERVER LOG] New lobby created with ID: " + newLobbyId);
-                sendLobbyJoinSuccess(newLobbyId);
+        if (server.joinLobby(clientId, lobbyId, password)) {
+            Lobby lobby = server.getLobby(lobbyId);
+            sendLobbyJoinSuccess(lobbyId, lobby.getName(), false);
+            broadcastLobbyUpdate(lobbyId);
+        } else {
+            Lobby lobby = server.getLobby(lobbyId);
+            if (lobby != null && lobby.isPrivate()) {
+                sendLobbyJoinFailed("Incorrect password.");
+            } else if (lobby != null && lobby.isFull()) {
+                sendLobbyJoinFailed("Lobby is full.");
             } else {
-                // Join existing lobby
-                System.out.println("[SERVER LOG] Joining existing lobby: " + lobbyId);
-                if (server.joinLobby(clientId, lobbyId)) {
-                    System.out.println("[SERVER LOG] Successfully joined lobby: " + lobbyId);
-                    sendLobbyJoinSuccess(lobbyId);
-                    broadcastLobbyUpdate(lobbyId);
-                } else {
-                    System.out.println("[SERVER LOG] Failed to join lobby: " + lobbyId);
-                    sendLobbyJoinFailed("Failed to join lobby");
-                }
+                sendLobbyJoinFailed("Lobby does not exist.");
             }
-        } catch (Exception e) {
-            System.err.println("[SERVER LOG] Exception in handleLobbyJoin for client " + clientId + ": " + e.getMessage());
-            e.printStackTrace();
-            sendLobbyJoinFailed("Error joining lobby: " + e.getMessage());
         }
     }
 
@@ -383,30 +370,22 @@ public class ClientHandler implements Runnable {
     }
 
     private void handleCreateLobby(Message message) {
-        try {
-            Map<String, Object> body = (Map<String, Object>) message.getBody();
-            String lobbyName = (String) body.get("lobbyName");
-            boolean isPrivate = (Boolean) body.get("isPrivate");
-            String password = (String) body.get("password");
-            boolean isVisible = (Boolean) body.get("isVisible");
+        User host = server.getAuthenticatedUser(clientId);
+        if (host == null) {
+            sendErrorMessage("Authentication required to create a lobby.");
+            return;
+        }
+        Map<String, Object> body = message.getBody();
+        String lobbyName = (String) body.get("lobbyName");
+        boolean isPrivate = (Boolean) body.get("isPrivate");
+        String password = (String) body.get("password");
+        boolean isVisible = (Boolean) body.get("isVisible");
 
-
-            User host = server.getAuthenticatedUser(clientId);
-            if (host == null) {
-                sendErrorMessage("Authentication required to create a lobby.");
-                return;
-            }
-
-            Lobby lobby = server.createLobby(lobbyName, host, isPrivate, password, isVisible);
-            if (lobby != null) {
-                sendLobbyJoinSuccess(lobby.getLobbyId());
-                broadcastLobbyUpdate(lobby.getLobbyId());
-            } else {
-                sendLobbyJoinFailed("Failed to create lobby.");
-            }
-        } catch (Exception e) {
-            System.err.println("Error creating lobby: " + e.getMessage());
-            sendLobbyJoinFailed("Error creating lobby.");
+        Lobby lobby = server.createLobby(lobbyName, host, isPrivate, password, isVisible);
+        if (lobby != null) {
+            sendLobbyJoinSuccess(lobby.getLobbyId(), lobby.getName(), true);
+        } else {
+            sendLobbyJoinFailed("Failed to create lobby on server.");
         }
     }
 
@@ -422,30 +401,6 @@ public class ClientHandler implements Runnable {
                 sendErrorMessage("Cannot start game");
             }
         }
-    }
-
-    private void sendLobbyJoinSuccess(String lobbyId) {
-        Lobby lobby = server.getLobby(lobbyId);
-        if (lobby == null) {
-            sendLobbyJoinFailed("Lobby not found after joining.");
-            return;
-        }
-
-        System.out.println("Sending lobby join success for lobby: " + lobbyId + " to client: " + clientId);
-        HashMap<String, Object> data = new HashMap<>();
-        data.put("lobbyId", lobbyId);
-        data.put("lobbyName", lobby.getName()); // <-- Add the lobby name
-        data.put("isAdmin", lobby.getHostId().equals(this.clientId)); // <-- Tell the client if they are the admin
-        Message message = new Message(data, MessageType.LOBBY_JOIN_SUCCESS);
-        sendMessage(message);
-    }
-
-
-    private void sendLobbyJoinFailed(String reason) {
-        HashMap<String, Object> data = new HashMap<>();
-        data.put("reason", reason);
-        Message message = new Message(data, MessageType.ERROR);
-        sendMessage(message);
     }
 
     private void sendLobbyLeaveSuccess() {
@@ -578,7 +533,6 @@ public class ClientHandler implements Runnable {
     }
 
     private void handleRequestAvailableLobbies() {
-        System.out.println("[SERVER LOG] Handling REQUEST_AVAILABLE_LOBBIES from client: " + clientId); // Add this log
         List<Lobby> allLobbies = server.getAllLobbies();
         List<Map<String, Object>> visibleLobbies = new ArrayList<>();
         for (Lobby lobby : allLobbies) {
@@ -586,18 +540,29 @@ public class ClientHandler implements Runnable {
                 Map<String, Object> lobbyInfo = new HashMap<>();
                 lobbyInfo.put("lobbyId", lobby.getLobbyId());
                 lobbyInfo.put("name", lobby.getName());
+                lobbyInfo.put("isPrivate", lobby.isPrivate());
+
+                // **THE FIX**: Add the missing data that the client needs.
                 lobbyInfo.put("playerCount", lobby.getPlayerCount());
                 lobbyInfo.put("maxPlayers", lobby.getMaxPlayers());
                 lobbyInfo.put("host", lobby.getHostUsername());
+
                 visibleLobbies.add(lobbyInfo);
             }
         }
+        // This message now contains all the required information.
+        sendMessage(new Message(new HashMap<>() {{ put("lobbies", visibleLobbies); }}, MessageType.AVAILABLE_LOBBIES_UPDATE));
+    }
 
-        System.out.println("[SERVER LOG] Found " + visibleLobbies.size() + " visible lobbies to send."); // Add this log
-        HashMap<String, Object> body = new HashMap<>();
-        body.put("lobbies", visibleLobbies);
-        Message message = new Message(body, MessageType.AVAILABLE_LOBBIES_UPDATE);
-        sendMessage(message);
-        System.out.println("[SERVER LOG] Sent AVAILABLE_LOBBIES_UPDATE to client: " + clientId); // Add this log
+    private void sendLobbyJoinSuccess(String lobbyId, String lobbyName, boolean isAdmin) {
+        HashMap<String, Object> data = new HashMap<>();
+        data.put("lobbyId", lobbyId);
+        data.put("lobbyName", lobbyName);
+        data.put("isAdmin", isAdmin);
+        sendMessage(new Message(data, MessageType.LOBBY_JOIN_SUCCESS));
+    }
+
+    private void sendLobbyJoinFailed(String reason) {
+        sendMessage(new Message(new HashMap<>() {{ put("reason", reason); }}, MessageType.LOBBY_JOIN_FAILED));
     }
 }

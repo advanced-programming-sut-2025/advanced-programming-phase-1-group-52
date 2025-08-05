@@ -156,25 +156,14 @@ public class NetworkLobbyController {
         }
     }
 
-    /**
-     * Creates a lobby with specific settings
-     * @param lobbyId Unique lobby ID
-     * @param lobbyName Name of the lobby
-     * @param isPrivate Whether the lobby is private
-     * @param password Password for private lobbies
-     * @param isVisible Whether the lobby is visible to others
-     * @return true if lobby created successfully
-     */
-    public boolean createLobbyWithSettings(String lobbyId, String lobbyName, boolean isPrivate, String password, boolean isVisible) {
-        HashMap<String, Object> createData = new HashMap<>();
-        createData.put("lobbyId", lobbyId);
-        createData.put("lobbyName", lobbyName);
-        createData.put("isPrivate", isPrivate);
-        createData.put("password", password);
-        createData.put("isVisible", isVisible);
-        Message createMessage = new Message(createData, MessageType.LOBBY_JOIN);
-        networkService.sendMessage(createMessage);
-        return true;
+    public void createLobby(String lobbyName, boolean isPrivate, String password, boolean isVisible) {
+        HashMap<String, Object> lobbySettings = new HashMap<>();
+        lobbySettings.put("lobbyName", lobbyName);
+        lobbySettings.put("isPrivate", isPrivate);
+        lobbySettings.put("password", password);
+        lobbySettings.put("isVisible", isVisible);
+        Message message = new Message(lobbySettings, MessageType.CREATE_LOBBY);
+        networkService.sendMessage(message);
     }
 
     /**
@@ -187,11 +176,7 @@ public class NetworkLobbyController {
         networkService.sendMessage(requestMessage);
     }
 
-    /**
-     * Joins a lobby by ID
-     * @param lobbyId The lobby ID to join
-     * @return true if join message sent successfully
-     */
+
     public boolean joinLobby(String lobbyId) {
         HashMap<String, Object> joinData = new HashMap<>();
         joinData.put("lobbyId", lobbyId);
@@ -206,13 +191,14 @@ public class NetworkLobbyController {
      * @param password Password for private lobbies
      * @return true if join message sent successfully
      */
-    public boolean joinLobby(String lobbyId, String password) {
+    public void joinLobby(String lobbyId, String password) {
         HashMap<String, Object> joinData = new HashMap<>();
         joinData.put("lobbyId", lobbyId);
-        joinData.put("password", password);
+        if (password != null) {
+            joinData.put("password", password);
+        }
         Message joinMessage = new Message(joinData, MessageType.LOBBY_JOIN);
         networkService.sendMessage(joinMessage);
-        return true;
     }
 
     /**
@@ -358,12 +344,6 @@ public class NetworkLobbyController {
 //        return true;
 //    }
 
-    public boolean acceptInvitation(String hostUsername) {
-        // This method is for backward compatibility
-        // The new method signature is above
-        return false;
-    }
-
 //    public boolean rejectInvitation(String lobbyId, String inviterUsername) {
 //        HashMap<String, Object> rejectData = new HashMap<>();
 //        rejectData.put("lobbyId", lobbyId);
@@ -372,12 +352,6 @@ public class NetworkLobbyController {
 //        networkService.sendMessage(rejectMessage);
 //        return true;
 //    }
-
-    public boolean rejectInvitation(String hostUsername) {
-        // This method is for backward compatibility
-        // The new method signature is above
-        return false;
-    }
 
     /**
      * Starts the game (only works if you're the host and have 4 players)

@@ -62,6 +62,9 @@ public class ClientMessageHandler {
             case LOBBY_LEAVE:
                 handleLobbyLeave(message);
                 break;
+            case LOBBY_JOIN_FAILED:
+                handleLobbyJoinFailed(message);
+                break;
 //            case LOBBY_INVITE:
 //                handleLobbyInvite(message);
 //                break;
@@ -463,6 +466,18 @@ public class ClientMessageHandler {
         } catch (Exception e) {
             System.err.println("[CLIENT LOG] Error in handleAvailableLobbiesUpdate: " + e.getMessage());
             e.printStackTrace();
+        }
+    }
+
+    private void handleLobbyJoinFailed(Message message) {
+        String reason = message.getFromBody("reason");
+        System.err.println("Failed to join lobby: " + reason);
+
+        Screen currentScreen = Main.getInstance().getScreen();
+        if (currentScreen instanceof GDXOnlineLobbiesMenu) {
+            Gdx.app.postRunnable(() -> {
+                ((GDXOnlineLobbiesMenu) currentScreen).showStatus(reason);
+            });
         }
     }
 }

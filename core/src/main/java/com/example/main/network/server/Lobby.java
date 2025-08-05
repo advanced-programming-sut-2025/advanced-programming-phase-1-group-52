@@ -33,6 +33,13 @@ public class Lobby {
         this.gameStarted = false;
     }
 
+    public boolean checkPassword(String passwordAttempt) {
+        if (!this.isPrivate) {
+            return true; // Not private, no password needed
+        }
+        return this.password != null && this.password.equals(passwordAttempt);
+    }
+
     public String getLobbyId() {
         return lobbyId;
     }

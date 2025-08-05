@@ -5,10 +5,7 @@ import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
-import com.badlogic.gdx.scenes.scene2d.ui.Label;
-import com.badlogic.gdx.scenes.scene2d.ui.Skin;
-import com.badlogic.gdx.scenes.scene2d.ui.Table;
-import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
+import com.badlogic.gdx.scenes.scene2d.ui.*;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.example.main.Main;
@@ -23,34 +20,28 @@ public class GDXOnlineLobbiesMenu implements Screen {
     private final Skin skin;
     private final NetworkLobbyController controller;
     private final Table lobbyListTable;
+    private final Label statusLabel;
 
-    /**
-     * **FIX 1**: The constructor now accepts the Main game instance and the existing NetworkService.
-     */
     public GDXOnlineLobbiesMenu() {
         this.stage = new Stage(new ScreenViewport());
         this.skin = new Skin(Gdx.files.internal("uiskin.json"));
-
-        // **FIX 2**: Use the passed-in, connected NetworkService, not a new one.
         this.controller = App.getInstance().getNetworkService().getLobbyController();
 
-        // --- Layout Setup ---
         Table rootTable = new Table();
         rootTable.setFillParent(true);
         stage.addActor(rootTable);
 
         Label titleLabel = new Label("Online Lobbies", skin);
         titleLabel.setFontScale(1.5f);
-        rootTable.add(titleLabel).padBottom(20).row();
+        rootTable.add(titleLabel).padBottom(10).row();
+
+        statusLabel = new Label("Fetching lobbies...", skin);
+        rootTable.add(statusLabel).padBottom(10).row();
 
         lobbyListTable = new Table();
-        lobbyListTable.setBackground(skin.newDrawable("white", 0.1f, 0.1f, 0.1f, 0.8f));
-        rootTable.add(lobbyListTable).width(600).height(400).pad(10).row();
+        rootTable.add(lobbyListTable).expand().fill().minWidth(600).minHeight(400).pad(10).row();
 
-        // --- Button Setup ---
         TextButton refreshButton = new TextButton("Refresh", skin);
-        TextButton backButton = new TextButton("Back", skin);
-
         refreshButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
@@ -60,6 +51,7 @@ public class GDXOnlineLobbiesMenu implements Screen {
             }
         });
 
+        TextButton backButton = new TextButton("Back", skin);
         backButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
@@ -70,25 +62,19 @@ public class GDXOnlineLobbiesMenu implements Screen {
         Table buttonTable = new Table();
         buttonTable.add(refreshButton).width(150).height(40).pad(5);
         buttonTable.add(backButton).width(150).height(40).pad(5);
-        rootTable.add(buttonTable).pad(10).row();
+        rootTable.add(buttonTable).pad(10);
     }
 
     @Override
     public void show() {
         Gdx.input.setInputProcessor(stage);
-        // Request the list of lobbies when the screen is shown.
         if (controller.isConnected()) {
-            System.out.println("[UI LOG] Requesting lobby list from the controller.");
             controller.requestAvailableLobbies();
-        } else {
-            System.err.println("[UI LOG] Cannot request lobbies: controller is not connected.");
         }
     }
 
     public void updateLobbyList(List<Map<String, Object>> lobbies) {
-        System.out.println("[UI LOG] GDXOnlineLobbiesMenu.updateLobbyList called with " + (lobbies != null ? lobbies.size() : "null") + " lobbies.");
         lobbyListTable.clear();
-
         if (lobbies == null || lobbies.isEmpty()) {
             lobbyListTable.add(new Label("No available lobbies found.", skin)).center();
             return;
@@ -96,20 +82,23 @@ public class GDXOnlineLobbiesMenu implements Screen {
 
         for (Map<String, Object> lobbyInfo : lobbies) {
             String lobbyId = (String) lobbyInfo.get("lobbyId");
-            String name = (String) lobbyInfo.get("name"); // The lobby name is here.
-            int playerCount = ((Number) lobbyInfo.get("playerCount")).intValue();
-            int maxPlayers = ((Number) lobbyInfo.get("maxPlayers")).intValue();
-            String host = (String) lobbyInfo.get("host");
+            String name = (String) lobbyInfo.get("name");
+            // **FIX 1**: Read the 'isPrivate' status sent by the server.
+            boolean isPrivate = (Boolean) lobbyInfo.getOrDefault("isPrivate", false);
 
-            String lobbyText = String.format("%s (%d/%d) - Host: %s", name, playerCount, maxPlayers, host);
+            String lobbyText = String.format("%s %s", name, (isPrivate ? "(Private)" : ""));
+
             TextButton joinButton = new TextButton("Join", skin);
             joinButton.addListener(new ClickListener() {
                 @Override
                 public void clicked(InputEvent event, float x, float y) {
-                    System.out.println("UI: Join button clicked for lobby: " + lobbyId);
-                    // **THE FIX**: The button's only job is to send the request.
-                    // The screen change will be handled by the message handler when the server replies.
-                    controller.joinLobby(lobbyId);
+                    // **FIX 2**: Check if the lobby is private before joining.
+                    if (isPrivate) {
+                        showPasswordDialog(lobbyId);
+                    } else {
+                        // If public, join without a password.
+                        controller.joinLobby(lobbyId, null);
+                    }
                 }
             });
 
@@ -119,28 +108,64 @@ public class GDXOnlineLobbiesMenu implements Screen {
         }
     }
 
+    /**
+     * **FIX 3**: Add this method to create and show a password entry dialog.
+     */
+    private void showPasswordDialog(String lobbyId) {
+        Dialog dialog = new Dialog("Enter Password", skin);
+        TextField passwordField = new TextField("", skin);
+        passwordField.setMessageText("Password...");
+        passwordField.setPasswordMode(true);
+        passwordField.setPasswordCharacter('*');
+
+        dialog.text("This lobby is private. Please enter the password:");
+        dialog.getContentTable().row();
+        dialog.getContentTable().add(passwordField).width(250).pad(10);
+
+        TextButton okButton = new TextButton("Join", skin);
+        okButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                String password = passwordField.getText();
+                // Send the join request with the entered password.
+                controller.joinLobby(lobbyId, password);
+                dialog.hide();
+            }
+        });
+
+        TextButton cancelButton = new TextButton("Cancel", skin);
+        cancelButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                dialog.hide();
+            }
+        });
+
+        dialog.getButtonTable().add(okButton).pad(10);
+        dialog.getButtonTable().add(cancelButton).pad(10);
+        dialog.show(stage);
+    }
+
+    public void showStatus(String message) {
+        statusLabel.setText(message);
+    }
+
     @Override
     public void render(float delta) {
-        Gdx.gl.glClearColor(0.2f, 0.2f, 0.25f, 1);
+        Gdx.gl.glClearColor(0.2f, 0.2f, 0.2f, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
         stage.act(delta);
         stage.draw();
     }
 
     @Override
-    public void resize(int width, int height) {
-        stage.getViewport().update(width, height, true);
-    }
-
+    public void resize(int width, int height) { stage.getViewport().update(width, height, true); }
     @Override
     public void pause() {}
-
     @Override
     public void resume() {}
-
     @Override
     public void hide() {}
-
     @Override
     public void dispose() {
         stage.dispose();

@@ -161,6 +161,7 @@ public class GDXCreateLobbyMenu implements Screen {
         controller.createLobbyWithSettings(lobbyName, isPrivate, password, isVisible);
         statusLabel.setText("Creating lobby...");
         // The screen will transition upon receiving LOBBY_JOIN_SUCCESS from the server.
+        controller.createLobby(lobbyName, isPrivate, password, true);
     }
 
     @Override
