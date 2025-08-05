@@ -65,6 +65,9 @@ public class ClientMessageHandler {
             case LOBBY_JOIN_FAILED:
                 handleLobbyJoinFailed(message);
                 break;
+            case LOBBY_FIND_RESULT:
+                handleLobbyFindResult(message);
+                break;
 //            case LOBBY_INVITE:
 //                handleLobbyInvite(message);
 //                break;
@@ -478,6 +481,24 @@ public class ClientMessageHandler {
             Gdx.app.postRunnable(() -> {
                 ((GDXOnlineLobbiesMenu) currentScreen).showStatus(reason);
             });
+        }
+    }
+
+    private void handleLobbyFindResult(Message message) {
+        boolean found = message.getFromBody("found");
+        Screen currentScreen = Main.getInstance().getScreen();
+
+        if (currentScreen instanceof GDXOnlineLobbiesMenu) {
+            GDXOnlineLobbiesMenu lobbyMenu = (GDXOnlineLobbiesMenu) currentScreen;
+            if (found) {
+                String lobbyId = message.getFromBody("lobbyId");
+                boolean isPrivate = message.getFromBody("isPrivate");
+                // The screen will handle the next step (joining or showing password dialog)
+                Gdx.app.postRunnable(() -> lobbyMenu.handleFoundLobby(lobbyId, isPrivate));
+            } else {
+                // Tell the screen the lobby was not found
+                Gdx.app.postRunnable(() -> lobbyMenu.showStatus("Lobby with that ID not found."));
+            }
         }
     }
 }

@@ -201,6 +201,16 @@ public class NetworkLobbyController {
         networkService.sendMessage(joinMessage);
     }
 
+    public void findLobbyById(String lobbyId) {
+        if (lobbyId == null || lobbyId.trim().isEmpty()) {
+            return; // Don't send empty requests
+        }
+        HashMap<String, Object> body = new HashMap<>();
+        body.put("lobbyId", lobbyId);
+        Message message = new Message(body, MessageType.LOBBY_FIND_BY_ID);
+        networkService.sendMessage(message);
+    }
+
     /**
      * Gets the list of online users
      * @return List of online usernames

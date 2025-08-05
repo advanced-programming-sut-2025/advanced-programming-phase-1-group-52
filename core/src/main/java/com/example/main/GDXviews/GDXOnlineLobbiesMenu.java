@@ -31,17 +31,35 @@ public class GDXOnlineLobbiesMenu implements Screen {
         rootTable.setFillParent(true);
         stage.addActor(rootTable);
 
-        Label titleLabel = new Label("Online Lobbies", skin);
+        // --- Search Bar ---
+        rootTable.add(new Label("Find Lobby by ID:", skin)).padTop(20);
+        TextField searchField = new TextField("", skin);
+        searchField.setMessageText("Enter Lobby ID...");
+        rootTable.add(searchField).width(300).pad(5);
+        TextButton searchButton = new TextButton("Search", skin);
+        rootTable.add(searchButton).pad(5);
+        rootTable.row();
+
+        searchButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                statusLabel.setText("Searching for lobby...");
+                controller.findLobbyById(searchField.getText());
+            }
+        });
+
+        // --- Main UI ---
+        Label titleLabel = new Label("Public Lobbies", skin);
         titleLabel.setFontScale(1.5f);
-        rootTable.add(titleLabel).padBottom(10).row();
+        rootTable.add(titleLabel).padTop(20).colspan(3).row();
 
         statusLabel = new Label("Fetching lobbies...", skin);
-        rootTable.add(statusLabel).padBottom(10).row();
+        rootTable.add(statusLabel).padBottom(10).colspan(3).row();
 
         lobbyListTable = new Table();
-        rootTable.add(lobbyListTable).expand().fill().minWidth(600).minHeight(400).pad(10).row();
+        rootTable.add(lobbyListTable).expand().fill().minWidth(600).minHeight(300).colspan(3).row();
 
-        TextButton refreshButton = new TextButton("Refresh", skin);
+        TextButton refreshButton = new TextButton("Refresh List", skin);
         refreshButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
@@ -62,7 +80,7 @@ public class GDXOnlineLobbiesMenu implements Screen {
         Table buttonTable = new Table();
         buttonTable.add(refreshButton).width(150).height(40).pad(5);
         buttonTable.add(backButton).width(150).height(40).pad(5);
-        rootTable.add(buttonTable).pad(10);
+        rootTable.add(buttonTable).pad(10).colspan(3);
     }
 
     @Override
@@ -76,63 +94,52 @@ public class GDXOnlineLobbiesMenu implements Screen {
     public void updateLobbyList(List<Map<String, Object>> lobbies) {
         lobbyListTable.clear();
         if (lobbies == null || lobbies.isEmpty()) {
-            lobbyListTable.add(new Label("No available lobbies found.", skin)).center();
+            lobbyListTable.add(new Label("No public lobbies found.", skin)).center();
             return;
         }
-
         for (Map<String, Object> lobbyInfo : lobbies) {
             String lobbyId = (String) lobbyInfo.get("lobbyId");
             String name = (String) lobbyInfo.get("name");
-            // **FIX 1**: Read the 'isPrivate' status sent by the server.
             boolean isPrivate = (Boolean) lobbyInfo.getOrDefault("isPrivate", false);
-
             String lobbyText = String.format("%s %s", name, (isPrivate ? "(Private)" : ""));
-
             TextButton joinButton = new TextButton("Join", skin);
             joinButton.addListener(new ClickListener() {
                 @Override
                 public void clicked(InputEvent event, float x, float y) {
-                    // **FIX 2**: Check if the lobby is private before joining.
-                    if (isPrivate) {
-                        showPasswordDialog(lobbyId);
-                    } else {
-                        // If public, join without a password.
-                        controller.joinLobby(lobbyId, null);
-                    }
+                    handleFoundLobby(lobbyId, isPrivate);
                 }
             });
-
             lobbyListTable.add(new Label(lobbyText, skin)).expandX().left().pad(5);
             lobbyListTable.add(joinButton).right().pad(5);
             lobbyListTable.row();
         }
     }
 
-    /**
-     * **FIX 3**: Add this method to create and show a password entry dialog.
-     */
+    public void handleFoundLobby(String lobbyId, boolean isPrivate) {
+        if (isPrivate) {
+            showPasswordDialog(lobbyId);
+        } else {
+            controller.joinLobby(lobbyId, null);
+        }
+    }
+
     private void showPasswordDialog(String lobbyId) {
         Dialog dialog = new Dialog("Enter Password", skin);
         TextField passwordField = new TextField("", skin);
         passwordField.setMessageText("Password...");
         passwordField.setPasswordMode(true);
         passwordField.setPasswordCharacter('*');
-
         dialog.text("This lobby is private. Please enter the password:");
         dialog.getContentTable().row();
         dialog.getContentTable().add(passwordField).width(250).pad(10);
-
         TextButton okButton = new TextButton("Join", skin);
         okButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                String password = passwordField.getText();
-                // Send the join request with the entered password.
-                controller.joinLobby(lobbyId, password);
+                controller.joinLobby(lobbyId, passwordField.getText());
                 dialog.hide();
             }
         });
-
         TextButton cancelButton = new TextButton("Cancel", skin);
         cancelButton.addListener(new ClickListener() {
             @Override
@@ -140,7 +147,6 @@ public class GDXOnlineLobbiesMenu implements Screen {
                 dialog.hide();
             }
         });
-
         dialog.getButtonTable().add(okButton).pad(10);
         dialog.getButtonTable().add(cancelButton).pad(10);
         dialog.show(stage);

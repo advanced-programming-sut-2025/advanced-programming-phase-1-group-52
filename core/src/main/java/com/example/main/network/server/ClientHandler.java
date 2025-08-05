@@ -113,6 +113,9 @@ public class ClientHandler implements Runnable {
                 case REQUEST_AVAILABLE_LOBBIES:
                     handleRequestAvailableLobbies();
                     break;
+                case LOBBY_FIND_BY_ID:
+                    handleLobbyFindById(message);
+                    break;
                 default:
                     System.out.println("Unknown message type: " + message.getType());
             }
@@ -564,5 +567,23 @@ public class ClientHandler implements Runnable {
 
     private void sendLobbyJoinFailed(String reason) {
         sendMessage(new Message(new HashMap<>() {{ put("reason", reason); }}, MessageType.LOBBY_JOIN_FAILED));
+    }
+
+    private void handleLobbyFindById(Message message) {
+        String lobbyId = message.getFromBody("lobbyId");
+        Lobby lobby = server.getLobby(lobbyId);
+
+        HashMap<String, Object> body = new HashMap<>();
+        if (lobby != null) {
+            // Lobby found, send back its details
+            body.put("found", true);
+            body.put("lobbyId", lobby.getLobbyId());
+            body.put("name", lobby.getName());
+            body.put("isPrivate", lobby.isPrivate());
+        } else {
+            // Lobby not found
+            body.put("found", false);
+        }
+        sendMessage(new Message(body, MessageType.LOBBY_FIND_RESULT));
     }
 }
