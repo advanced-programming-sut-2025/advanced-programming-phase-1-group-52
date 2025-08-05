@@ -12,10 +12,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import com.example.main.auth.AuthManager;
 import com.example.main.auth.AuthResult;
 import com.example.main.enums.design.FarmThemes;
-import com.example.main.models.Game;
-import com.example.main.models.GameMap;
-import com.example.main.models.Player;
-import com.example.main.models.User;
+import com.example.main.models.*;
 import com.example.main.network.NetworkConstants;
 import com.example.main.network.common.Message;
 import com.example.main.network.common.MessageType;
@@ -441,65 +438,43 @@ public class GameServer {
         System.out.println("[SERVER LOG] Received farm choice '" + theme.name() + "' from client " + clientId + " for lobby " + lobbyId);
 
         if (choices.size() == lobby.getPlayerCount()) {
-            System.out.println("[SERVER LOG] All players in lobby " + lobbyId + " have chosen their farms. Creating game...");
+            System.out.println("[SERVER LOG] All players have chosen farms. Creating game state snapshot...");
 
-            // --- Create the Game Instance ---
-            // Get the list of real players in a consistent order.
             List<User> realPlayers = new ArrayList<>(lobby.getPlayers().values());
-            int realPlayerCount = realPlayers.size();
 
-            // Create a new list that will be padded with dummy users.
-            List<User> playersInOrder = new ArrayList<>(realPlayers);
-            while (playersInOrder.size() < 4) {
-                int slotNum = playersInOrder.size() + 1;
-                User dummyUser = new User("empty_slot_" + slotNum, "", "", "", null);
-                playersInOrder.add(dummyUser);
+            // --- Create the GameStateSnapshot ---
+            // 1. Create a list of simple PlayerSnapshots
+            List<GameStateSnapshot.PlayerSnapshot> playerSnapshots = new ArrayList<>();
+            for (User user : realPlayers) {
+                playerSnapshots.add(new GameStateSnapshot.PlayerSnapshot(user.getUsername(), user.getGender()));
             }
 
-            // Initialize Player objects for all users (real and dummy).
-            for (int i = 0; i < playersInOrder.size(); i++) {
-                User user = playersInOrder.get(i);
-                Player player = new Player(user.getUsername(), user.getGender());
-
-                // Only assign starting positions to real players.
-                if (i < realPlayerCount) {
-                    player.setOriginX(4 + (i % 2) * 80);
-                    player.setOriginY(4 + (i / 2) * 30);
-                    player.setCurrentX(player.originX());
-                    player.setCurrentY(player.originY());
-                }
-                user.setCurrentPlayer(player);
-            }
-
-            // Create the game with the full list of 4 users.
-            Game newGame = new Game(new ArrayList<>(playersInOrder));
-            newGame.setMainPlayer(playersInOrder.get(0));
-
-            // --- Create the GameMap ---
+            // 2. Create the ordered list of farm themes
             ArrayList<FarmThemes> themesInOrder = new ArrayList<>();
-
-            // **THE FIX IS HERE**: Iterate through the list of REAL players first.
-            for (User realUser : realPlayers) {
-                // Get the chosen theme for each real player. This is now safe.
-                FarmThemes chosenTheme = choices.get(realUser.getClientId());
-                themesInOrder.add(chosenTheme);
+            for (User user : realPlayers) {
+                themesInOrder.add(choices.get(user.getClientId()));
             }
 
-            // Now, add default themes for the remaining empty slots.
-            while (themesInOrder.size() < 4) {
-                themesInOrder.add(FarmThemes.Neutral);
-            }
+            // 3. Get the host's username
+            String hostUsername = lobby.getHostUsername();
 
-            GameMap map = new GameMap(newGame.getPlayers(), themesInOrder);
-            newGame.setGameMap(map);
+            // 4. Create the final snapshot object
+            GameStateSnapshot snapshot = new GameStateSnapshot(playerSnapshots, themesInOrder, hostUsername);
 
-            activeGames.put(lobbyId, newGame);
-            System.out.println("[SERVER LOG] Game created for lobby " + lobbyId + ". Notifying clients.");
+            // 5. Create the message containing the snapshot
+            HashMap<String, Object> body = new HashMap<>();
+            body.put("snapshot", snapshot);
+            Message initializeMessage = new Message(body, MessageType.INITIALIZE_GAME);
 
-            Message completeMessage = new Message(new HashMap<>(), MessageType.GAME_SETUP_COMPLETE);
+            System.out.println("[SERVER LOG] Game state snapshot created. Sending INITIALIZE_GAME to clients.");
+
+            // 6. Send the message to all players in the lobby
             for (String playerId : lobby.getPlayerIds()) {
-                sendMessageToClient(playerId, completeMessage);
+                sendMessageToClient(playerId, initializeMessage);
             }
+
+            // The server can now discard the farm choices for this lobby
+            lobbyFarmChoices.remove(lobbyId);
         }
     }
 

@@ -34,6 +34,7 @@ public enum MessageType {
     NAVIGATE_TO_PREGAME,  // Server -> Client: Tells all players in the lobby to switch to the pre-game screen.
     SUBMIT_FARM_CHOICE,   // Client -> Server: A player sends their chosen farm type.
     GAME_SETUP_COMPLETE,
+    INITIALIZE_GAME,
     PLAYER_MOVE,          // A message from a client to the server indicating they have moved.
     UPDATE_PLAYER_POSITIONS,
 }

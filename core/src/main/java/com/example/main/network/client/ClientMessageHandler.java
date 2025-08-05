@@ -5,7 +5,8 @@ import com.example.main.GDXviews.*;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
 import com.example.main.Main;
-import com.example.main.models.App;
+import com.example.main.enums.design.FarmThemes;
+import com.example.main.models.*;
 import com.example.main.controller.NetworkLobbyController;
 
 import java.util.ArrayList;
@@ -13,18 +14,22 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.example.main.models.User;
-import com.example.main.models.Game;
 import com.example.main.network.common.Message;
 import com.example.main.network.common.MessageType;
+import com.google.gson.Gson; // <-- Add this import
+import com.google.gson.reflect.TypeToken; // <-- Add this import
+import java.lang.reflect.Type; // <-- Add this import
 
 /**
  * Handles incoming messages from the server
  */
 public class ClientMessageHandler {
     private GameClient client;
+    private final Gson gson; // <-- Add a Gson instance
+
     public ClientMessageHandler(GameClient client) {
         this.client = client;
+        this.gson = new Gson();
     }
 
     public void handleMessage(Message message) {
@@ -88,6 +93,9 @@ public class ClientMessageHandler {
                 break;
             case GAME_SETUP_COMPLETE:
                 handleGameSetupComplete();
+                break;
+            case INITIALIZE_GAME:
+                handleInitializeGame(message);
                 break;
             default:
                 handleCustomMessage(message);
@@ -512,4 +520,72 @@ public class ClientMessageHandler {
             }
         });
     }
+
+    private void handleInitializeGame(Message message) {
+        System.out.println("[CLIENT LOG] Received INITIALIZE_GAME. Building game state...");
+        try {
+            // **THE FIX IS HERE**: Manually deserialize the snapshot from the generic map.
+            Object snapshotObject = message.getFromBody("snapshot");
+            String snapshotJson = gson.toJson(snapshotObject); // Convert the LinkedTreeMap to a JSON string
+            GameStateSnapshot snapshot = gson.fromJson(snapshotJson, GameStateSnapshot.class); // Deserialize the string into the correct object
+
+            if (snapshot == null) {
+                System.err.println("[CLIENT ERROR] GameStateSnapshot was null after deserialization.");
+                return;
+            }
+
+            // --- Reconstruct the Game object using the snapshot data ---
+            ArrayList<User> players = new ArrayList<>();
+            for (GameStateSnapshot.PlayerSnapshot ps : snapshot.getPlayers()) {
+                // Find the full User object from our local App instance
+                User user = App.getInstance().getUser(ps.getUsername());
+                if (user != null) {
+                    Player player = new Player(user.getUsername(), user.getGender());
+                    user.setCurrentPlayer(player);
+                    players.add(user);
+                }
+            }
+
+            // Pad with dummy users if the game requires a fixed size of 4
+            int realPlayerCount = players.size();
+            while (players.size() < 4) {
+                players.add(new User("empty_slot_" + (players.size() + 1), "", "", "", null));
+            }
+
+            // Assign starting positions to the real players
+            for (int i = 0; i < realPlayerCount; i++) {
+                Player player = players.get(i).currentPlayer();
+                player.setOriginX(4 + (i % 2) * 80);
+                player.setOriginY(4 + (i / 2) * 30);
+                player.setCurrentX(player.originX());
+                player.setCurrentY(player.originY());
+            }
+
+            Game newGame = new Game(players);
+            User hostUser = App.getInstance().getUser(snapshot.getHostUsername());
+            newGame.setMainPlayer(hostUser);
+
+            // Reconstruct the map
+            ArrayList<FarmThemes> themes = new ArrayList<>(snapshot.getFarmThemes());
+            while (themes.size() < 4) {
+                themes.add(FarmThemes.Neutral);
+            }
+            GameMap map = new GameMap(newGame.getPlayers(), themes);
+            newGame.setGameMap(map);
+
+            // This is the crucial step: set the newly created game as the current one
+            App.getInstance().setCurrentGame(newGame);
+            System.out.println("[CLIENT LOG] Current game has been set in App singleton.");
+
+            // Now, transition to the game screen
+            Gdx.app.postRunnable(() -> {
+                Main.getInstance().setScreen(new GDXGameScreen());
+            });
+
+        } catch (Exception e) {
+            System.err.println("[CLIENT ERROR] Failed to initialize game from snapshot: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
 }
