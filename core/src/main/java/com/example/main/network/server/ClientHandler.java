@@ -7,6 +7,7 @@ import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.*;
 
+import com.example.main.enums.design.FarmThemes;
 import com.example.main.enums.player.Gender;
 import com.example.main.enums.regex.SecurityQuestion;
 import com.example.main.models.User;
@@ -89,15 +90,6 @@ public class ClientHandler implements Runnable {
                 case CREATE_LOBBY:
                     handleCreateLobby(message);
                     break;
-//                case LOBBY_INVITE:
-//                    handleLobbyInvite(message);
-//                    break;
-//                case LOBBY_INVITE_ACCEPT:
-//                    handleLobbyInviteAccept(message);
-//                    break;
-//                case LOBBY_INVITE_DECLINE:
-//                    handleLobbyInviteDecline(message);
-//                    break;
                 case LOBBY_READY:
                     handleLobbyReady(message);
                     break;
@@ -115,6 +107,12 @@ public class ClientHandler implements Runnable {
                     break;
                 case LOBBY_FIND_BY_ID:
                     handleLobbyFindById(message);
+                    break;
+                case SUBMIT_FARM_CHOICE:
+                    handleFarmChoice(message);
+                    break;
+                case PLAYER_MOVE:
+                    handlePlayerMove(message);
                     break;
                 default:
                     System.out.println("Unknown message type: " + message.getType());
@@ -303,58 +301,6 @@ public class ClientHandler implements Runnable {
         }
     }
 
-//    private void handleLobbyInvite(Message message) {
-//        // No authentication required for lobby operations
-//        try {
-//            Map<String, Object> body = (Map<String, Object>) message.getBody();
-//            String targetUsername = (String) body.get("targetUsername");
-//            String lobbyId = server.getClientLobbyId(clientId);
-//
-//            if (lobbyId != null && targetUsername != null) {
-//                Lobby lobby = server.getLobby(lobbyId);
-//                if (lobby != null && lobby.getHostId().equals(clientId)) {
-//                    // Get client ID by username
-//                    String targetClientId = server.getClientIdByUsername(targetUsername);
-//                    if (targetClientId != null) {
-//                        // Send invite to target client
-//                        sendLobbyInvite(targetClientId, lobbyId);
-//                        System.out.println("Invitation sent from " + clientId + " to " + targetUsername + " (client: " + targetClientId + ")");
-//                    } else {
-//                        sendErrorMessage("User " + targetUsername + " is not online");
-//                    }
-//                } else {
-//                    sendErrorMessage("You are not the host of this lobby");
-//                }
-//            } else {
-//                sendErrorMessage("Invalid lobby or target user");
-//            }
-//        } catch (Exception e) {
-//            System.err.println("Error handling lobby invite: " + e.getMessage());
-//            sendErrorMessage("Error sending invite");
-//        }
-//    }
-//
-//    private void handleLobbyInviteAccept(Message message) {
-//        // No authentication required for lobby operations
-//        try {
-//            Map<String, Object> body = (Map<String, Object>) message.getBody();
-//            String lobbyId = (String) body.get("lobbyId");
-//            if (server.joinLobby(clientId, lobbyId)) {
-//                sendLobbyJoinSuccess(lobbyId);
-//                broadcastLobbyUpdate(lobbyId);
-//            } else {
-//                sendLobbyJoinFailed("Failed to join lobby");
-//            }
-//        } catch (Exception e) {
-//            sendLobbyJoinFailed("Error accepting invite");
-//        }
-//    }
-//
-//    private void handleLobbyInviteDecline(Message message) {
-//        // Just acknowledge the decline
-//        sendLobbyInviteDeclineAck();
-//    }
-
     private void handleLobbyReady(Message message) {
         // No authentication required for lobby operations
         try {
@@ -393,38 +339,33 @@ public class ClientHandler implements Runnable {
     }
 
     private void handleLobbyStartGame() {
-        // No authentication required for lobby operations
         String lobbyId = server.getClientLobbyId(clientId);
         if (lobbyId != null) {
             Lobby lobby = server.getLobby(lobbyId);
             if (lobby != null && lobby.getHostId().equals(clientId) && lobby.canStartGame()) {
                 lobby.setGameStarted(true);
-                broadcastLobbyStartGame(lobbyId);
+
+                // Create the message to tell clients to go to the pre-game screen.
+                Message navigateMessage = new Message(new HashMap<>(), MessageType.NAVIGATE_TO_PREGAME);
+                System.out.println("[SERVER LOG] Host " + clientId + " started lobby " + lobbyId + ". Sending NAVIGATE_TO_PREGAME to all players.");
+
+                // Send this message to every player in the lobby.
+                for (String playerId : lobby.getPlayerIds()) {
+                    server.sendMessageToClient(playerId, navigateMessage);
+                }
             } else {
-                sendErrorMessage("Cannot start game");
+                // This error message is now more accurate.
+                sendErrorMessage("Cannot start game. You must be the host and have at least 2 players.");
             }
         }
     }
+
 
     private void sendLobbyLeaveSuccess() {
         HashMap<String, Object> data = new HashMap<>();
         Message message = new Message(data, MessageType.LOBBY_LEAVE);
         sendMessage(message);
     }
-
-//    private void sendLobbyInvite(String targetClientId, String lobbyId) {
-//        HashMap<String, Object> data = new HashMap<>();
-//        data.put("lobbyId", lobbyId);
-//        data.put("inviterUsername", server.getAuthenticatedUser(clientId).getUsername());
-//        Message message = new Message(data, MessageType.LOBBY_INVITE);
-//        server.sendMessageToClient(targetClientId, message);
-//    }
-//
-//    private void sendLobbyInviteDeclineAck() {
-//        HashMap<String, Object> data = new HashMap<>();
-//        Message message = new Message(data, MessageType.LOBBY_INVITE_DECLINE);
-//        sendMessage(message);
-//    }
 
     private void sendLobbyReadySuccess(boolean ready) {
         HashMap<String, Object> data = new HashMap<>();
@@ -586,4 +527,36 @@ public class ClientHandler implements Runnable {
         }
         sendMessage(new Message(body, MessageType.LOBBY_FIND_RESULT));
     }
+
+    private void handleFarmChoice(Message message) {
+        String lobbyId = server.getClientLobbyId(clientId);
+        if (lobbyId != null) {
+            try {
+                // Extract the farm theme from the message body
+                String themeName = message.getFromBody("farmTheme");
+                FarmThemes theme = FarmThemes.valueOf(themeName);
+                // Pass the choice to the main server logic
+                server.handleFarmChoice(clientId, lobbyId, theme);
+            } catch (Exception e) {
+                System.err.println("[SERVER ERROR] Could not process farm choice from client " + clientId + ": " + e.getMessage());
+            }
+        }
+    }
+
+    private void handlePlayerMove(Message message) {
+        String lobbyId = server.getClientLobbyId(clientId);
+        if (lobbyId != null) {
+            try {
+                // Extract coordinates from the message. Gson deserializes numbers as Double.
+                int newX = ((Double) message.getFromBody("x")).intValue();
+                int newY = ((Double) message.getFromBody("y")).intValue();
+
+                // Pass the data to the main server for processing.
+                server.handlePlayerMove(lobbyId, clientId, newX, newY);
+            } catch (Exception e) {
+                System.err.println("[SERVER ERROR] Could not process PLAYER_MOVE message from client " + clientId + ": " + e.getMessage());
+            }
+        }
+    }
+
 }

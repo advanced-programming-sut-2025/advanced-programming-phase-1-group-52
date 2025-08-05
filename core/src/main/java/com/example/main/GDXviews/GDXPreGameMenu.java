@@ -3,154 +3,139 @@ package com.example.main.GDXviews;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
-import com.badlogic.gdx.scenes.scene2d.ui.SelectBox;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
-import com.badlogic.gdx.scenes.scene2d.ui.TextField;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.example.main.Main;
-import com.example.main.controller.PreGameMenuController;
-import com.example.main.models.App;
-import com.example.main.models.Result;
+import com.example.main.controller.NetworkLobbyController;
+import com.example.main.enums.design.FarmThemes;
+import com.example.main.service.NetworkService;
 
 public class GDXPreGameMenu implements Screen {
-    private Stage stage;
-    private Skin skin;
-    private PreGameMenuController controller;
 
-    private TextField username2Field, username3Field, username4Field;
-    private SelectBox<String> map1Select, map2Select, map3Select, map4Select;
-    private Label messageLabel;
-    private TextButton newGameButton, loadGameButton, backButton;
+    private final Main game;
+    private final Stage stage;
+    private final Skin skin;
+    private final NetworkLobbyController controller;
+    private final Label statusLabel;
+    private final TextButton confirmButton;
+    private final Table choicesTable;
 
-    public GDXPreGameMenu() {
-        controller = new PreGameMenuController();
-        stage = new Stage(new ScreenViewport());
-        Gdx.input.setInputProcessor(stage);
-        skin = new Skin(Gdx.files.internal("uiskin.json"));
+    private FarmThemes selectedTheme = null;
 
-        Table table = new Table();
-        table.setFillParent(true);
-        stage.addActor(table);
+    public GDXPreGameMenu(Main game, NetworkService networkService) {
+        this.game = game;
+        this.stage = new Stage(new ScreenViewport());
+        this.skin = new Skin(Gdx.files.internal("uiskin.json"));
+        this.controller = networkService.getLobbyController();
 
-        messageLabel = new Label("", skin);
+        Table rootTable = new Table();
+        rootTable.setFillParent(true);
+        stage.addActor(rootTable);
 
-        username2Field = new TextField("", skin);
-        username2Field.setMessageText("Player 2 Username");
+        Label titleLabel = new Label("Choose Your Farm", skin);
+        titleLabel.setFontScale(1.5f);
+        rootTable.add(titleLabel).padBottom(20).row();
 
-        username3Field = new TextField("", skin);
-        username3Field.setMessageText("Player 3 Username");
+        statusLabel = new Label("Select a farm type. This choice is permanent.", skin);
+        rootTable.add(statusLabel).padBottom(20).row();
 
-        username4Field = new TextField("", skin);
-        username4Field.setMessageText("Player 4 Username");
+        choicesTable = new Table();
+        rootTable.add(choicesTable).padBottom(20).row();
 
-        String[] mapOptions = {"Neutral", "Miner", "Fisher"};
-        map1Select = new SelectBox<>(skin);
-        map1Select.setItems(mapOptions);
-        map2Select = new SelectBox<>(skin);
-        map2Select.setItems(mapOptions);
-        map3Select = new SelectBox<>(skin);
-        map3Select.setItems(mapOptions);
-        map4Select = new SelectBox<>(skin);
-        map4Select.setItems(mapOptions);
+        // --- Farm Choice Buttons ---
+        TextButton neutralButton = new TextButton("Neutral Farm", skin);
+        TextButton minerButton = new TextButton("Miner's Farm", skin);
+        TextButton fisherButton = new TextButton("Fisher's Farm", skin);
 
-        newGameButton = new TextButton("Start New Game", skin);
-        loadGameButton = new TextButton("Load Game", skin);
-        backButton = new TextButton("Back to Main Menu", skin);
+        choicesTable.add(neutralButton).width(200).height(50).pad(10);
+        choicesTable.add(minerButton).width(200).height(50).pad(10);
+        choicesTable.add(fisherButton).width(200).height(50).pad(10);
 
-        newGameButton.addListener(new ClickListener() {
+        neutralButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                String user2 = username2Field.getText();
-                String user3 = username3Field.getText();
-                String user4 = username4Field.getText();
-                int map1 = map1Select.getSelectedIndex();
-                int map2 = map2Select.getSelectedIndex();
-                int map3 = map3Select.getSelectedIndex();
-                int map4 = map4Select.getSelectedIndex();
-                Result result = controller.startNewGame(user2, user3, user4, map1, map2, map3, map4);
-                messageLabel.setText(result.Message());
-                if (result.isSuccessful()) {
-                    Main.getInstance().setScreen(new GDXGameScreen());
+                selectTheme(FarmThemes.Neutral, "Neutral Farm");
+            }
+        });
+
+        minerButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                selectTheme(FarmThemes.Miner, "Miner's Farm");
+            }
+        });
+
+        fisherButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                selectTheme(FarmThemes.Fisher, "Fisher's Farm");
+            }
+        });
+
+        // --- Confirm Button ---
+        confirmButton = new TextButton("Confirm Selection", skin);
+        confirmButton.setDisabled(true); // Disabled until a choice is made
+        rootTable.add(confirmButton).width(250).height(50).padTop(20).row();
+
+        confirmButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                if (selectedTheme != null) {
+                    // This method will need to be created in the controller
+                    controller.submitFarmChoice(selectedTheme);
+                    confirmButton.setDisabled(true);
+                    statusLabel.setText("Choice submitted! Waiting for other players...");
                 }
             }
         });
+    }
 
-        loadGameButton.addListener(new ClickListener() {
-            @Override
-            public void clicked(InputEvent event, float x, float y) {
-                messageLabel.setText("Load Game feature is not implemented yet.");
-            }
-        });
+    private void selectTheme(FarmThemes theme, String themeName) {
+        this.selectedTheme = theme;
+        statusLabel.setText("You have selected: " + themeName);
+        confirmButton.setDisabled(false);
+        // Optionally disable choice buttons after one is clicked
+        for (Actor button : choicesTable.getChildren()) {
+            ((TextButton) button).setDisabled(true);
+        }
+    }
 
-        backButton.addListener(new ClickListener() {
-            @Override
-            public void clicked(InputEvent event, float x, float y) {
-                Main.getInstance().setScreen(new GDXMainMenu(com.example.main.models.App.getInstance().getNetworkService()));
-            }
-        });
-
-        // Layout
-        table.add(messageLabel).colspan(3).pad(10).center();
-        table.row();
-        table.add(new Label("Player 1 (You):", skin)).left();
-        String currentUsername = App.getInstance().getCurrentUser() != null ? App.getInstance().getCurrentUser().getUsername() : "Guest";
-        table.add(new Label(currentUsername, skin)).pad(5);
-        table.add(map1Select).width(150).pad(5);
-        table.row();
-        table.add(new Label("Player 2:", skin)).left();
-        table.add(username2Field).width(250).pad(5);
-        table.add(map2Select).width(150).pad(5);
-        table.row();
-        table.add(new Label("Player 3:", skin)).left();
-        table.add(username3Field).width(250).pad(5);
-        table.add(map3Select).width(150).pad(5);
-        table.row();
-        table.add(new Label("Player 4:", skin)).left();
-        table.add(username4Field).width(250).pad(5);
-        table.add(map4Select).width(150).pad(5);
-        table.row().padTop(20);
-        table.add(newGameButton).width(200).pad(10).colspan(3).center();
-        table.row();
-        table.add(loadGameButton).width(200).pad(10).colspan(3).center();
-        table.row();
-        table.add(backButton).colspan(3).center().pad(10);
+    /**
+     * This method will be called by the ClientMessageHandler when the game is ready to start.
+     */
+    public void onGameSetupComplete() {
+        // All players have made their choice, transition to the main game screen
+        game.setScreen(new GDXGameScreen());
     }
 
     @Override
     public void show() {
+        Gdx.input.setInputProcessor(stage);
     }
 
     @Override
     public void render(float delta) {
-        Gdx.gl.glClearColor(0.2f, 0.2f, 0.25f, 1);
+        Gdx.gl.glClearColor(0.2f, 0.2f, 0.2f, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
         stage.act(delta);
         stage.draw();
     }
 
     @Override
-    public void resize(int width, int height) {
-        stage.getViewport().update(width, height, true);
-    }
-
+    public void resize(int width, int height) { stage.getViewport().update(width, height, true); }
     @Override
-    public void pause() {
-    }
-
+    public void pause() {}
     @Override
-    public void resume() {
-    }
-
+    public void resume() {}
     @Override
-    public void hide() {
-    }
-
+    public void hide() {}
     @Override
     public void dispose() {
         stage.dispose();

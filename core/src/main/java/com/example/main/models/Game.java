@@ -63,10 +63,17 @@ public class Game {
         this.NPCs.add(new NPC(NPCType.Sebastian, realPlayers));
     }
 
-    /**
-     * Advances the game time by a specified number of minutes and triggers daily updates if a day passes.
-     * @param minutes The number of minutes to advance.
-     */
+    public Game(ArrayList<User> users, Map<String, Player> playerMap) {
+        this(users); // This calls the original constructor to do all the basic setup.
+
+        // Now, iterate through the game's list of users and assign the correct Player object.
+        for (User user : this.players) {
+            if (user != null && playerMap.containsKey(user.getUsername())) {
+                user.setCurrentPlayer(playerMap.get(user.getUsername()));
+            }
+        }
+    }
+
     public void advanceTimeByMinutes(int minutes) {
         int tensOfMinutesPassed = (this.time.getMinute() + minutes) / 10 - this.time.getMinute() / 10;
         int daysPassed = this.time.addMinutes(minutes);

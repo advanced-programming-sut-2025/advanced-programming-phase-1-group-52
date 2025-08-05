@@ -1,14 +1,12 @@
 package com.example.main.network.client;
 
-import com.example.main.GDXviews.GDXMainMenu;
+import com.example.main.GDXviews.*;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
-import com.example.main.GDXviews.GDXLobbyScreen;
-import com.example.main.GDXviews.GDXOnlineLobbiesMenu;
-import com.example.main.GDXviews.GDXOnlineMenu;
 import com.example.main.Main;
-import com.example.main.models.App;
+import com.example.main.enums.design.FarmThemes;
+import com.example.main.models.*;
 import com.example.main.controller.NetworkLobbyController;
 
 import java.util.ArrayList;
@@ -16,18 +14,22 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.example.main.models.User;
-import com.example.main.models.Game;
 import com.example.main.network.common.Message;
 import com.example.main.network.common.MessageType;
+import com.google.gson.Gson; // <-- Add this import
+import com.google.gson.reflect.TypeToken; // <-- Add this import
+import java.lang.reflect.Type; // <-- Add this import
 
 /**
  * Handles incoming messages from the server
  */
 public class ClientMessageHandler {
     private GameClient client;
+    private final Gson gson; // <-- Add a Gson instance
+
     public ClientMessageHandler(GameClient client) {
         this.client = client;
+        this.gson = new Gson();
     }
 
     public void handleMessage(Message message) {
@@ -68,21 +70,6 @@ public class ClientMessageHandler {
             case LOBBY_FIND_RESULT:
                 handleLobbyFindResult(message);
                 break;
-//            case LOBBY_INVITE:
-//                handleLobbyInvite(message);
-//                break;
-//            case LOBBY_INVITE_ACCEPT:
-//                handleLobbyInviteAccept(message);
-//                break;
-//            case LOBBY_INVITE_DECLINE:
-//                handleLobbyInviteDecline(message);
-//                break;
-//            case LOBBY_INVITE_NOTIFICATION:
-//                handleLobbyInviteNotification(message);
-//                break;
-//            case LOBBY_INVITE_RESPONSE:
-//                handleLobbyInviteResponse(message);
-//                break;
             case LOBBY_ADMIN_CHANGE:
                 handleLobbyAdminChange(message);
                 break;
@@ -100,6 +87,18 @@ public class ClientMessageHandler {
                 break;
             case AVAILABLE_LOBBIES_UPDATE:
                 handleAvailableLobbiesUpdate(message);
+                break;
+            case NAVIGATE_TO_PREGAME:
+                handleNavigateToPregame();
+                break;
+            case GAME_SETUP_COMPLETE:
+                handleGameSetupComplete();
+                break;
+            case INITIALIZE_GAME:
+                handleInitializeGame(message);
+                break;
+            case UPDATE_PLAYER_POSITIONS:
+                handleUpdatePlayerPositions(message);
                 break;
             default:
                 handleCustomMessage(message);
@@ -216,7 +215,6 @@ public class ClientMessageHandler {
         client.sendMessage(heartbeatMessage);
     }
 
-    // Lobby handling methods
     private void handleLobbyJoin(Message message) {
         try {
             System.out.println("Handling lobby join success message: " + message.getBody());
@@ -246,53 +244,30 @@ public class ClientMessageHandler {
         // You can add lobby state management here
     }
 
-    private void handleLobbyInvite(Message message) {
-        try {
-            String lobbyId = message.getFromBody("lobbyId");
-            String inviterUsername = message.getFromBody("inviterUsername");
-            System.out.println("Invited to lobby by " + inviterUsername + " (ID: " + lobbyId + ")");
-            // You can show an invite dialog here
-        } catch (Exception e) {
-            System.err.println("Error handling lobby invite: " + e.getMessage());
+    private void handleUpdatePlayerPositions(Message message) {
+        Game currentGame = App.getInstance().getCurrentGame();
+        if (currentGame == null) {
+            return;
         }
-    }
 
-    private void handleLobbyInviteAccept(Message message) {
-        System.out.println("Lobby invite accepted");
-        // You can add lobby state management here
-    }
-
-    private void handleLobbyInviteDecline(Message message) {
-        System.out.println("Lobby invite declined");
-        // You can add lobby state management here
-    }
-
-    private void handleLobbyInviteNotification(Message message) {
         try {
-            String lobbyId = message.getFromBody("lobbyId");
-            String inviterUsername = message.getFromBody("inviterUsername");
-            System.out.println("Received lobby invite notification from " + inviterUsername + " (ID: " + lobbyId + ")");
+            Map<String, Map<String, Double>> positions = message.getFromBody("positions");
 
-            // Notify the controller about the invitation
-            if (client.getControllerCallback() instanceof com.example.main.controller.NetworkLobbyController) {
-                com.example.main.controller.NetworkLobbyController controller =
-                    (com.example.main.controller.NetworkLobbyController) client.getControllerCallback();
-                controller.notifyInvitationReceived(lobbyId, inviterUsername);
+            for (Map.Entry<String, Map<String, Double>> entry : positions.entrySet()) {
+                String username = entry.getKey();
+                Map<String, Double> coords = entry.getValue();
+
+                User userToUpdate = currentGame.getUserByUsername(username);
+
+                if (userToUpdate != null && userToUpdate.currentPlayer() != null) {
+                    int newX = coords.get("x").intValue();
+                    int newY = coords.get("y").intValue();
+                    userToUpdate.currentPlayer().setCurrentX(newX);
+                    userToUpdate.currentPlayer().setCurrentY(newY);
+                }
             }
         } catch (Exception e) {
-            System.err.println("Error handling lobby invite notification: " + e.getMessage());
-        }
-    }
-
-    private void handleLobbyInviteResponse(Message message) {
-        try {
-            String lobbyId = message.getFromBody("lobbyId");
-            String inviterUsername = message.getFromBody("inviterUsername");
-            boolean accepted = message.getFromBody("accepted");
-            System.out.println("Received lobby invite response from " + inviterUsername + " (ID: " + lobbyId + ") - Accepted: " + accepted);
-            // You can update the invite status in the UI
-        } catch (Exception e) {
-            System.err.println("Error handling lobby invite response: " + e.getMessage());
+            System.err.println("[CLIENT ERROR] Failed to process player position update: " + e.getMessage());
         }
     }
 
@@ -501,4 +476,109 @@ public class ClientMessageHandler {
             }
         }
     }
+
+    private void handleNavigateToPregame() {
+        System.out.println("[CLIENT LOG] Received NAVIGATE_TO_PREGAME command from server.");
+        // Use postRunnable to ensure the screen change happens on the main LibGDX thread.
+        Gdx.app.postRunnable(() -> {
+            Main game = Main.getInstance();
+            // Switch to the pre-game menu, passing the required services.
+            game.setScreen(new GDXPreGameMenu(game, App.getInstance().getNetworkService()));
+        });
+    }
+
+    private void handleGameSetupComplete() {
+        System.out.println("[CLIENT LOG] Received GAME_SETUP_COMPLETE from server. Transitioning to game screen.");
+        Gdx.app.postRunnable(() -> {
+            Screen currentScreen = Main.getInstance().getScreen();
+            if (currentScreen instanceof GDXPreGameMenu) {
+                ((GDXPreGameMenu) currentScreen).onGameSetupComplete();
+            } else {
+                System.err.println("Received GAME_SETUP_COMPLETE but was not on the PreGameMenu screen!");
+                Main.getInstance().setScreen(new GDXGameScreen());
+            }
+        });
+    }
+
+    private void handleInitializeGame(Message message) {
+        System.out.println("[CLIENT LOG] Received INITIALIZE_GAME. Building game state...");
+        try {
+            Object snapshotObject = message.getFromBody("snapshot");
+            String snapshotJson = gson.toJson(snapshotObject);
+            GameStateSnapshot snapshot = gson.fromJson(snapshotJson, GameStateSnapshot.class);
+
+            if (snapshot == null) {
+                System.err.println("[CLIENT ERROR] GameStateSnapshot was null after deserialization.");
+                return;
+            }
+
+            ArrayList<User> usersForGame = new ArrayList<>();
+            int localPlayerIndex = -1;
+            String localUsername = App.getInstance().getCurrentUser().getUsername();
+
+            // **THE FIX IS HERE**: Create and assign Player objects in one loop.
+            for (GameStateSnapshot.PlayerSnapshot ps : snapshot.getPlayers()) {
+                User user = App.getInstance().getUser(ps.getUsername());
+                if (user != null) {
+                    // 1. Create the Player object for this user.
+                    Player player = new Player(user.getUsername(), user.getGender());
+
+                    // 2. Immediately assign it to the User object. This is the crucial step.
+                    user.setCurrentPlayer(player);
+
+                    // 3. Add the now-complete User object to the list for the game.
+                    usersForGame.add(user);
+
+                    if (ps.getUsername().equals(localUsername)) {
+                        localPlayerIndex = ps.getPlayerIndex();
+                    }
+                }
+            }
+
+            int realPlayerCount = usersForGame.size();
+            while (usersForGame.size() < 4) {
+                usersForGame.add(new User("empty_slot_" + (usersForGame.size() + 1), "", "", "", null));
+            }
+
+            // Assign starting positions to the real players.
+            for (int i = 0; i < realPlayerCount; i++) {
+                User user = usersForGame.get(i);
+                Player player = user.currentPlayer(); // Now this will not be null.
+                if (player != null) {
+                    player.setOriginX(4 + (i % 2) * 80);
+                    player.setOriginY(4 + (i / 2) * 30);
+                    player.setCurrentX(player.originX());
+                    player.setCurrentY(player.originY());
+                }
+            }
+
+            // Create the game using the list of fully initialized User objects.
+            Game newGame = new Game(usersForGame);
+
+            User hostUser = App.getInstance().getUser(snapshot.getHostUsername());
+            newGame.setMainPlayer(hostUser);
+
+            if (localPlayerIndex != -1) {
+                newGame.setCurrentUser(usersForGame.get(localPlayerIndex));
+                newGame.setCurrentPlayer(usersForGame.get(localPlayerIndex).currentPlayer());
+            }
+
+            ArrayList<FarmThemes> themes = new ArrayList<>(snapshot.getFarmThemes());
+            while (themes.size() < 4) { themes.add(FarmThemes.Neutral); }
+            GameMap map = new GameMap(newGame.getPlayers(), themes);
+            newGame.setGameMap(map);
+
+            App.getInstance().setCurrentGame(newGame);
+            System.out.println("[CLIENT LOG] Current game has been set. This client is Player " + (localPlayerIndex + 1));
+
+            Gdx.app.postRunnable(() -> {
+                Main.getInstance().setScreen(new GDXGameScreen());
+            });
+
+        } catch (Exception e) {
+            System.err.println("[CLIENT ERROR] Failed to initialize game from snapshot: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
 }
