@@ -435,46 +435,131 @@ public class GameServer {
         ConcurrentHashMap<String, FarmThemes> choices = lobbyFarmChoices.get(lobbyId);
         choices.put(clientId, theme);
 
-        System.out.println("[SERVER LOG] Received farm choice '" + theme.name() + "' from client " + clientId + " for lobby " + lobbyId);
-
         if (choices.size() == lobby.getPlayerCount()) {
-            System.out.println("[SERVER LOG] All players have chosen farms. Creating game state snapshot...");
+            System.out.println("[SERVER LOG] All players have chosen farms. Creating game...");
 
-            List<User> realPlayers = new ArrayList<>(lobby.getPlayers().values());
+            // --- Create the Game Instance using the helper method ---
+            Game newGame = createGameFromLobby(lobby, choices);
+            activeGames.put(lobbyId, newGame);
+            System.out.println("[SERVER LOG] Game instance created and stored for lobby " + lobbyId);
 
-            // --- Create the GameStateSnapshot ---
-            // 1. Create a list of simple PlayerSnapshots
-            List<GameStateSnapshot.PlayerSnapshot> playerSnapshots = new ArrayList<>();
-            for (User user : realPlayers) {
-                playerSnapshots.add(new GameStateSnapshot.PlayerSnapshot(user.getUsername(), user.getGender()));
-            }
-
-            // 2. Create the ordered list of farm themes
-            ArrayList<FarmThemes> themesInOrder = new ArrayList<>();
-            for (User user : realPlayers) {
-                themesInOrder.add(choices.get(user.getClientId()));
-            }
-
-            // 3. Get the host's username
-            String hostUsername = lobby.getHostUsername();
-
-            // 4. Create the final snapshot object
-            GameStateSnapshot snapshot = new GameStateSnapshot(playerSnapshots, themesInOrder, hostUsername);
-
-            // 5. Create the message containing the snapshot
+            // --- Create and Send the Snapshot using the helper method ---
+            GameStateSnapshot snapshot = createSnapshotFromGame(newGame, choices);
             HashMap<String, Object> body = new HashMap<>();
             body.put("snapshot", snapshot);
             Message initializeMessage = new Message(body, MessageType.INITIALIZE_GAME);
 
             System.out.println("[SERVER LOG] Game state snapshot created. Sending INITIALIZE_GAME to clients.");
-
-            // 6. Send the message to all players in the lobby
             for (String playerId : lobby.getPlayerIds()) {
                 sendMessageToClient(playerId, initializeMessage);
             }
-
-            // The server can now discard the farm choices for this lobby
             lobbyFarmChoices.remove(lobbyId);
+        }
+    }
+
+    /**
+     * Helper method to create a Game object from a lobby's final state.
+     */
+    private Game createGameFromLobby(Lobby lobby, Map<String, FarmThemes> choices) {
+        List<User> realPlayers = new ArrayList<>(lobby.getPlayers().values());
+        int realPlayerCount = realPlayers.size();
+        List<User> playersInOrder = new ArrayList<>(realPlayers);
+        while (playersInOrder.size() < 4) {
+            playersInOrder.add(new User("empty_slot_" + (playersInOrder.size() + 1), "", "", "", null));
+        }
+
+        for (int i = 0; i < realPlayerCount; i++) {
+            User user = playersInOrder.get(i);
+            Player player = new Player(user.getUsername(), user.getGender());
+            player.setOriginX(4 + (i % 2) * 80);
+            player.setOriginY(4 + (i / 2) * 30);
+            player.setCurrentX(player.originX());
+            player.setCurrentY(player.originY());
+            user.setCurrentPlayer(player);
+        }
+
+        Game newGame = new Game((ArrayList<User>) playersInOrder);
+        newGame.setMainPlayer(realPlayers.get(0));
+
+        ArrayList<FarmThemes> themesInOrder = new ArrayList<>();
+        for (User user : realPlayers) {
+            themesInOrder.add(choices.get(user.getClientId()));
+        }
+        while (themesInOrder.size() < 4) {
+            themesInOrder.add(FarmThemes.Neutral);
+        }
+
+        GameMap map = new GameMap(newGame.getPlayers(), themesInOrder);
+        newGame.setGameMap(map);
+        return newGame;
+    }
+
+    /**
+     * Helper method to create a lightweight snapshot from a Game object.
+     */
+    private GameStateSnapshot createSnapshotFromGame(Game game, Map<String, FarmThemes> choices) {
+        List<GameStateSnapshot.PlayerSnapshot> playerSnapshots = new ArrayList<>();
+        List<User> realPlayers = new ArrayList<>();
+        for (User user : game.getPlayers()) {
+            if (!user.getUsername().startsWith("empty_slot_")) {
+                realPlayers.add(user);
+            }
+        }
+        for (int i = 0; i < realPlayers.size(); i++) {
+            User user = realPlayers.get(i);
+            playerSnapshots.add(new GameStateSnapshot.PlayerSnapshot(user.getUsername(), user.getGender(), i));
+        }
+
+        List<FarmThemes> themes = new ArrayList<>();
+        for (User user : realPlayers) {
+            themes.add(choices.get(user.getClientId()));
+        }
+
+        return new GameStateSnapshot(playerSnapshots, themes, game.getMainPlayer().getUsername());
+    }
+
+    public void handlePlayerMove(String lobbyId, String clientId, int newX, int newY) {
+        // **THE FIX**: This lookup will now succeed because the game was stored.
+        Game game = activeGames.get(lobbyId);
+        if (game == null) {
+            System.err.println("[SERVER WARNING] Received move for a non-existent game: " + lobbyId);
+            return;
+        }
+
+        User movingUser = null;
+        for (User user : game.getPlayers()) {
+            if (user.getClientId() != null && user.getClientId().equals(clientId)) {
+                movingUser = user;
+                break;
+            }
+        }
+
+        if (movingUser != null && movingUser.currentPlayer() != null) {
+            movingUser.currentPlayer().setCurrentX(newX);
+            movingUser.currentPlayer().setCurrentY(newY);
+        } else {
+            return;
+        }
+
+        HashMap<String, HashMap<String, Integer>> playerPositions = new HashMap<>();
+        for (User user : game.getPlayers()) {
+            if (user.currentPlayer() != null && !user.getUsername().startsWith("empty_slot_")) {
+                HashMap<String, Integer> coords = new HashMap<>();
+                coords.put("x", user.currentPlayer().currentX());
+                coords.put("y", user.currentPlayer().currentY());
+                playerPositions.put(user.getUsername(), coords);
+            }
+        }
+
+        Message updateMessage = new Message(new HashMap<>() {{ put("positions", playerPositions); }}, MessageType.UPDATE_PLAYER_POSITIONS);
+
+        if (lobbyId != null) {
+            Lobby lobby = lobbies.get(lobbyId);
+            if (lobby != null) {
+                for (String playerClientId : lobby.getPlayerIds()) {
+                    sendMessageToClient(playerClientId, updateMessage);
+                }
+            }
         }
     }
 

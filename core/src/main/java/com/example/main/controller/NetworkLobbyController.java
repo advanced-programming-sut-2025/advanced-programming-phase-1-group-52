@@ -422,4 +422,12 @@ public class NetworkLobbyController {
     public NetworkService getNetworkService() {
         return networkService;
     }
+
+    public void sendPlayerMove(int x, int y) {
+        HashMap<String, Object> body = new HashMap<>();
+        body.put("x", x);
+        body.put("y", y);
+        Message message = new Message(body, MessageType.PLAYER_MOVE);
+        networkService.sendMessage(message);
+    }
 }

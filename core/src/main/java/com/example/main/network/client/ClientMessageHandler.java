@@ -97,6 +97,9 @@ public class ClientMessageHandler {
             case INITIALIZE_GAME:
                 handleInitializeGame(message);
                 break;
+            case UPDATE_PLAYER_POSITIONS:
+                handleUpdatePlayerPositions(message);
+                break;
             default:
                 handleCustomMessage(message);
         }
@@ -212,7 +215,6 @@ public class ClientMessageHandler {
         client.sendMessage(heartbeatMessage);
     }
 
-    // Lobby handling methods
     private void handleLobbyJoin(Message message) {
         try {
             System.out.println("Handling lobby join success message: " + message.getBody());
@@ -242,53 +244,30 @@ public class ClientMessageHandler {
         // You can add lobby state management here
     }
 
-    private void handleLobbyInvite(Message message) {
-        try {
-            String lobbyId = message.getFromBody("lobbyId");
-            String inviterUsername = message.getFromBody("inviterUsername");
-            System.out.println("Invited to lobby by " + inviterUsername + " (ID: " + lobbyId + ")");
-            // You can show an invite dialog here
-        } catch (Exception e) {
-            System.err.println("Error handling lobby invite: " + e.getMessage());
+    private void handleUpdatePlayerPositions(Message message) {
+        Game currentGame = App.getInstance().getCurrentGame();
+        if (currentGame == null) {
+            return;
         }
-    }
 
-    private void handleLobbyInviteAccept(Message message) {
-        System.out.println("Lobby invite accepted");
-        // You can add lobby state management here
-    }
-
-    private void handleLobbyInviteDecline(Message message) {
-        System.out.println("Lobby invite declined");
-        // You can add lobby state management here
-    }
-
-    private void handleLobbyInviteNotification(Message message) {
         try {
-            String lobbyId = message.getFromBody("lobbyId");
-            String inviterUsername = message.getFromBody("inviterUsername");
-            System.out.println("Received lobby invite notification from " + inviterUsername + " (ID: " + lobbyId + ")");
+            Map<String, Map<String, Double>> positions = message.getFromBody("positions");
 
-            // Notify the controller about the invitation
-            if (client.getControllerCallback() instanceof com.example.main.controller.NetworkLobbyController) {
-                com.example.main.controller.NetworkLobbyController controller =
-                    (com.example.main.controller.NetworkLobbyController) client.getControllerCallback();
-                controller.notifyInvitationReceived(lobbyId, inviterUsername);
+            for (Map.Entry<String, Map<String, Double>> entry : positions.entrySet()) {
+                String username = entry.getKey();
+                Map<String, Double> coords = entry.getValue();
+
+                User userToUpdate = currentGame.getUserByUsername(username);
+
+                if (userToUpdate != null && userToUpdate.currentPlayer() != null) {
+                    int newX = coords.get("x").intValue();
+                    int newY = coords.get("y").intValue();
+                    userToUpdate.currentPlayer().setCurrentX(newX);
+                    userToUpdate.currentPlayer().setCurrentY(newY);
+                }
             }
         } catch (Exception e) {
-            System.err.println("Error handling lobby invite notification: " + e.getMessage());
-        }
-    }
-
-    private void handleLobbyInviteResponse(Message message) {
-        try {
-            String lobbyId = message.getFromBody("lobbyId");
-            String inviterUsername = message.getFromBody("inviterUsername");
-            boolean accepted = message.getFromBody("accepted");
-            System.out.println("Received lobby invite response from " + inviterUsername + " (ID: " + lobbyId + ") - Accepted: " + accepted);
-            // You can update the invite status in the UI
-        } catch (Exception e) {
-            System.err.println("Error handling lobby invite response: " + e.getMessage());
+            System.err.println("[CLIENT ERROR] Failed to process player position update: " + e.getMessage());
         }
     }
 
@@ -524,60 +503,74 @@ public class ClientMessageHandler {
     private void handleInitializeGame(Message message) {
         System.out.println("[CLIENT LOG] Received INITIALIZE_GAME. Building game state...");
         try {
-            // **THE FIX IS HERE**: Manually deserialize the snapshot from the generic map.
             Object snapshotObject = message.getFromBody("snapshot");
-            String snapshotJson = gson.toJson(snapshotObject); // Convert the LinkedTreeMap to a JSON string
-            GameStateSnapshot snapshot = gson.fromJson(snapshotJson, GameStateSnapshot.class); // Deserialize the string into the correct object
+            String snapshotJson = gson.toJson(snapshotObject);
+            GameStateSnapshot snapshot = gson.fromJson(snapshotJson, GameStateSnapshot.class);
 
             if (snapshot == null) {
                 System.err.println("[CLIENT ERROR] GameStateSnapshot was null after deserialization.");
                 return;
             }
 
-            // --- Reconstruct the Game object using the snapshot data ---
-            ArrayList<User> players = new ArrayList<>();
+            ArrayList<User> usersForGame = new ArrayList<>();
+            int localPlayerIndex = -1;
+            String localUsername = App.getInstance().getCurrentUser().getUsername();
+
+            // **THE FIX IS HERE**: Create and assign Player objects in one loop.
             for (GameStateSnapshot.PlayerSnapshot ps : snapshot.getPlayers()) {
-                // Find the full User object from our local App instance
                 User user = App.getInstance().getUser(ps.getUsername());
                 if (user != null) {
+                    // 1. Create the Player object for this user.
                     Player player = new Player(user.getUsername(), user.getGender());
+
+                    // 2. Immediately assign it to the User object. This is the crucial step.
                     user.setCurrentPlayer(player);
-                    players.add(user);
+
+                    // 3. Add the now-complete User object to the list for the game.
+                    usersForGame.add(user);
+
+                    if (ps.getUsername().equals(localUsername)) {
+                        localPlayerIndex = ps.getPlayerIndex();
+                    }
                 }
             }
 
-            // Pad with dummy users if the game requires a fixed size of 4
-            int realPlayerCount = players.size();
-            while (players.size() < 4) {
-                players.add(new User("empty_slot_" + (players.size() + 1), "", "", "", null));
+            int realPlayerCount = usersForGame.size();
+            while (usersForGame.size() < 4) {
+                usersForGame.add(new User("empty_slot_" + (usersForGame.size() + 1), "", "", "", null));
             }
 
-            // Assign starting positions to the real players
+            // Assign starting positions to the real players.
             for (int i = 0; i < realPlayerCount; i++) {
-                Player player = players.get(i).currentPlayer();
-                player.setOriginX(4 + (i % 2) * 80);
-                player.setOriginY(4 + (i / 2) * 30);
-                player.setCurrentX(player.originX());
-                player.setCurrentY(player.originY());
+                User user = usersForGame.get(i);
+                Player player = user.currentPlayer(); // Now this will not be null.
+                if (player != null) {
+                    player.setOriginX(4 + (i % 2) * 80);
+                    player.setOriginY(4 + (i / 2) * 30);
+                    player.setCurrentX(player.originX());
+                    player.setCurrentY(player.originY());
+                }
             }
 
-            Game newGame = new Game(players);
+            // Create the game using the list of fully initialized User objects.
+            Game newGame = new Game(usersForGame);
+
             User hostUser = App.getInstance().getUser(snapshot.getHostUsername());
             newGame.setMainPlayer(hostUser);
 
-            // Reconstruct the map
-            ArrayList<FarmThemes> themes = new ArrayList<>(snapshot.getFarmThemes());
-            while (themes.size() < 4) {
-                themes.add(FarmThemes.Neutral);
+            if (localPlayerIndex != -1) {
+                newGame.setCurrentUser(usersForGame.get(localPlayerIndex));
+                newGame.setCurrentPlayer(usersForGame.get(localPlayerIndex).currentPlayer());
             }
+
+            ArrayList<FarmThemes> themes = new ArrayList<>(snapshot.getFarmThemes());
+            while (themes.size() < 4) { themes.add(FarmThemes.Neutral); }
             GameMap map = new GameMap(newGame.getPlayers(), themes);
             newGame.setGameMap(map);
 
-            // This is the crucial step: set the newly created game as the current one
             App.getInstance().setCurrentGame(newGame);
-            System.out.println("[CLIENT LOG] Current game has been set in App singleton.");
+            System.out.println("[CLIENT LOG] Current game has been set. This client is Player " + (localPlayerIndex + 1));
 
-            // Now, transition to the game screen
             Gdx.app.postRunnable(() -> {
                 Main.getInstance().setScreen(new GDXGameScreen());
             });

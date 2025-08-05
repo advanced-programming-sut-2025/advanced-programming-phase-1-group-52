@@ -22,6 +22,7 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
@@ -50,6 +51,7 @@ import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.example.main.GDXmodels.TextureManager;
 import com.example.main.Main;
 import com.example.main.controller.GameMenuController;
+import com.example.main.controller.NetworkLobbyController;
 import com.example.main.controller.StoreMenuController;
 import com.example.main.enums.design.NPCType;
 import com.example.main.enums.design.ShopType;
@@ -99,6 +101,7 @@ import com.example.main.models.item.PurchasedAnimal;
 import com.example.main.models.item.Seed;
 import com.example.main.models.item.Tool;
 import com.example.main.models.item.TrashCan;
+import com.example.main.service.NetworkService;
 
 public class GDXGameScreen implements Screen {
     private Stage stage;
@@ -110,7 +113,12 @@ public class GDXGameScreen implements Screen {
     private SpriteBatch spriteBatch;
     private OrthographicCamera camera;
     private OrthographicCamera hudCamera;
-    private com.badlogic.gdx.graphics.glutils.ShapeRenderer shapeRenderer;
+    private ShapeRenderer shapeRenderer;
+
+    private final NetworkLobbyController networkController;
+    private final Player localPlayer;
+    private int lastSentX = -1;
+    private int lastSentY = -1;
 
     private float cameraSpeed = 200f;
     private boolean cameraFollowsPlayer = true;
@@ -332,7 +340,7 @@ public class GDXGameScreen implements Screen {
 
     private Texture barnTexture;
     private Texture coopTexture;
-   
+
    private Texture trashCanTexture;
     private Texture copperTrashCanTexture;
     private Texture steelTrashCanTexture;
@@ -557,7 +565,7 @@ public class GDXGameScreen implements Screen {
     private String selectedPlayerForActions = null;
     private String friendshipResultMessage = "";
     private boolean friendshipResultSuccess = false;
-    
+
     // Chat room variables
     private TextField chatMessageField;
     private ScrollPane chatScrollPane;
@@ -567,7 +575,7 @@ public class GDXGameScreen implements Screen {
     private Map<String, Boolean> unreadTalkNotifications = new HashMap<>();
     // Add this for gift notifications
     private Map<String, Boolean> unreadGiftNotifications = new HashMap<>();
-    
+
     // Gift menu variables
     private Table giftMenuTable;
     private Table receivedGiftsTable;
@@ -576,20 +584,20 @@ public class GDXGameScreen implements Screen {
     private ScrollPane giftHistoryScrollPane;
     private TextField giftRatingField;
     private String selectedGiftId = null;
-    
+
     // Sell menu variables
     private boolean showSellMenu = false;
     private Table sellMenuTable;
     private ScrollPane sellMenuScrollPane;
     private String sellErrorMessage = "";
     private boolean showSellError = false;
-    
+
     // Send gift variables
     private Table sendGiftTable;
     private ScrollPane sendGiftScrollPane;
     private String giftErrorMessage = "";
     private boolean showGiftError = false;
-    
+
     // Marriage variables
     private String marriageErrorMessage = "";
     private boolean showMarriageError = false;
@@ -609,7 +617,7 @@ public class GDXGameScreen implements Screen {
         spriteBatch = new SpriteBatch();
         camera = new OrthographicCamera();
         hudCamera = new OrthographicCamera();
-        shapeRenderer = new com.badlogic.gdx.graphics.glutils.ShapeRenderer();
+        shapeRenderer = new ShapeRenderer();
 
         float worldWidth = MAP_WIDTH * TILE_SIZE;
         float worldHeight = MAP_HEIGHT * TILE_SIZE;
@@ -660,6 +668,12 @@ public class GDXGameScreen implements Screen {
         loadTextures();
         loadHudAssets();
         loadWeatherAssets();
+
+
+        NetworkService networkService = App.getInstance().getNetworkService();
+        this.networkController = networkService.getLobbyController();
+        this.game = App.getInstance().getCurrentGame();
+        this.localPlayer = game.getCurrentPlayer();
 
         game = App.getInstance().getCurrentGame();
         gameMap = game.getMap();
@@ -1076,7 +1090,7 @@ public class GDXGameScreen implements Screen {
             handleShepherdMode();
             return;
         }
-        
+
         if (showShopMenu) {
             if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
                 showShopMenu = false;
@@ -1091,7 +1105,7 @@ public class GDXGameScreen implements Screen {
         if (showAnimalMenu) {
             return;
         }
-        
+
         // If trade menu is open, only allow trade menu UI
         if (showTradeMenu) {
             return;
@@ -1207,7 +1221,7 @@ public class GDXGameScreen implements Screen {
         if (Gdx.input.isKeyJustPressed(Input.Keys.B)) {
             isCraftingMenuOpen = !isCraftingMenuOpen;
             if (isCraftingMenuOpen) {
-                showCraftingMenu(); 
+                showCraftingMenu();
                 Gdx.input.setInputProcessor(craftingStage);
             } else {
                 Gdx.input.setInputProcessor(multiplexer);
@@ -1396,6 +1410,11 @@ public class GDXGameScreen implements Screen {
                 playerMoving = false;
                 currentPlayer.reduceEnergy(10);
             }
+            if (localPlayer != null && (localPlayer.currentX() != lastSentX || localPlayer.currentY() != lastSentY)) {
+                networkController.sendPlayerMove(localPlayer.currentX(), localPlayer.currentY());
+                lastSentX = localPlayer.currentX();
+                lastSentY = localPlayer.currentY();
+            }
             return;
         }
 
@@ -1465,6 +1484,15 @@ public class GDXGameScreen implements Screen {
                 playerActionState = PlayerActionState.IDLE;
             }
             playerAnimationTime = 0f;
+        }
+
+        if (localPlayer != null && (localPlayer.currentX() != lastSentX || localPlayer.currentY() != lastSentY)) {
+            // The position is new, so send it to the server.
+            networkController.sendPlayerMove(localPlayer.currentX(), localPlayer.currentY());
+
+            // Update the last sent position to prevent sending redundant messages.
+            lastSentX = localPlayer.currentX();
+            lastSentY = localPlayer.currentY();
         }
     }
 
@@ -1964,7 +1992,7 @@ public class GDXGameScreen implements Screen {
     private void renderPlayer() {
         for (User user : game.getPlayers()) {
             Player player = user.getPlayer();
-            if (player == null) {
+            if (player == null || user.getUsername().startsWith("empty_slot_")) {
                 continue;
             }
 
@@ -1993,6 +2021,10 @@ public class GDXGameScreen implements Screen {
             float playerHeight = playerTexture.getHeight() * 2;
             float renderX = worldX + (TILE_SIZE - playerWidth) / 2f;
             float renderY = worldY;
+
+            if (!player.equals(localPlayer)) {
+                spriteBatch.setColor(1f, 1f, 1f, 0.8f);
+            }
 
             if (!player.equals(game.getCurrentPlayer())) {
                 spriteBatch.setColor(1f, 1f, 1f, 0.7f);
@@ -2156,10 +2188,10 @@ public class GDXGameScreen implements Screen {
                 continue;
             }
 
-            float trashCanWidth = TILE_SIZE; 
-            float trashCanHeight = TILE_SIZE; 
-            float renderX = worldX; 
-            float renderY = worldY; 
+            float trashCanWidth = TILE_SIZE;
+            float trashCanHeight = TILE_SIZE;
+            float renderX = worldX;
+            float renderY = worldY;
 
             spriteBatch.draw(trashCanTexture, renderX, renderY, trashCanWidth, trashCanHeight);
         }
@@ -2405,7 +2437,7 @@ public class GDXGameScreen implements Screen {
         );
 
         stage.addActor(npcMenuTable);
-        
+
         // Ensure the stage is the input processor for NPC menu
         Gdx.input.setInputProcessor(stage);
 
@@ -3277,7 +3309,7 @@ public class GDXGameScreen implements Screen {
 
                     if (tileType == TileType.House || tileType == TileType.Wall) {
                         renderMinimapHouseSprite(x, y, worldX, worldY, scale);
-                        
+
                         if (tileType == TileType.Wall) {
                             int npcIndex = getNPCIndexForHouse(x, y);
                             if (npcIndex != -1) {
@@ -3288,7 +3320,7 @@ public class GDXGameScreen implements Screen {
                             if (shopIndex != -1) {
                                 renderMinimapShopSprite(x, y, worldX, worldY, scale);
                             }
-                            
+
                             int housingIndex = getHousingIndex(x, y);
                             if (housingIndex != -1) {
                                 renderMinimapHousingSprite(x, y, worldX, worldY, scale);
@@ -3324,7 +3356,7 @@ public class GDXGameScreen implements Screen {
             } else {
                 spriteBatch.setColor(0f, 1f, 0f, 1f); // Green for other players
             }
-            spriteBatch.draw(ground1Texture, worldX + (TILE_SIZE * scale * 0.25f), worldY + (TILE_SIZE * scale * 0.25f), 
+            spriteBatch.draw(ground1Texture, worldX + (TILE_SIZE * scale * 0.25f), worldY + (TILE_SIZE * scale * 0.25f),
                            TILE_SIZE * scale * 0.5f, TILE_SIZE * scale * 0.5f);
             spriteBatch.setColor(1f, 1f, 1f, 1f);
         }
@@ -5449,7 +5481,7 @@ public class GDXGameScreen implements Screen {
         shopMenuTable.setBackground(backgroundDrawable);
 
         stage.addActor(shopMenuTable);
-        
+
         // Ensure the stage is the input processor for shop menu
         Gdx.input.setInputProcessor(stage);
 
@@ -6374,14 +6406,14 @@ public class GDXGameScreen implements Screen {
     private boolean handleTrashCanClick(int screenX, int screenY) {
         // Convert screen coordinates to world coordinates
         Vector3 worldCoords = camera.unproject(new Vector3(screenX, screenY, 0));
-        
+
         // Convert world coordinates to tile coordinates
         int tileX = (int) (worldCoords.x / TILE_SIZE);
         int tileY = (int) ((MAP_HEIGHT * TILE_SIZE - worldCoords.y) / TILE_SIZE);
-        
+
         Player currentPlayer = game.getCurrentPlayer();
         if (currentPlayer == null) return false;
-        
+
         // Check if click is on the current player's trash can
         if (currentPlayer.getTrashCanX() == tileX && currentPlayer.getTrashCanY() == tileY) {
             // Open the sell menu
@@ -6390,7 +6422,7 @@ public class GDXGameScreen implements Screen {
             Gdx.input.setInputProcessor(stage);
             return true;
         }
-        
+
         return false;
     }
 
@@ -7009,7 +7041,7 @@ public class GDXGameScreen implements Screen {
         // Get friendship details
         Player currentPlayer = game.getCurrentPlayer();
         Player targetPlayer = null;
-        
+
         // Find the target player
         for (User user : game.getPlayers()) {
             Player player = user.getPlayer();
@@ -7085,34 +7117,34 @@ public class GDXGameScreen implements Screen {
         chatMessagesTable.setBackground(new TextureRegionDrawable(menuBackgroundTexture));
         chatMessagesTable.left().top(); // Ensure messages are added left-to-right, top-to-bottom
         chatMessagesTable.defaults().expandX().fillX().pad(2);
-        
+
         // Load previous messages
         loadChatHistory();
-        
+
         // Create scroll pane for messages
         chatScrollPane = new ScrollPane(chatMessagesTable, skin);
         chatScrollPane.setScrollBarPositions(false, true);
         chatScrollPane.setFadeScrollBars(false);
         chatScrollPane.setScrollPercentY(1.0f); // Scroll to bottom
-        
+
         friendsMenuTable.add(chatScrollPane).colspan(2).fill().expand().pad(10).row();
 
         // Create input area
         Table inputTable = new Table();
-        
+
         chatMessageField = new TextField("", skin);
         chatMessageField.setMessageText("Type your message here...");
         chatMessageField.setMaxLength(200);
-        
+
         TextButton sendButton = new TextButton("Send", skin);
-        
+
         sendButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
                 sendChatMessage();
             }
         });
-        
+
         // Add enter key support
         chatMessageField.addListener(new InputListener() {
             @Override
@@ -7124,10 +7156,10 @@ public class GDXGameScreen implements Screen {
                 return false;
             }
         });
-        
+
         inputTable.add(chatMessageField).expandX().fillX().padRight(10);
         inputTable.add(sendButton).width(80);
-        
+
         friendsMenuTable.add(inputTable).colspan(2).fillX().pad(10).row();
 
         // Back and Close buttons
@@ -7162,17 +7194,17 @@ public class GDXGameScreen implements Screen {
 
         friendsMenuTable.add(backButton).size(200, 50).pad(10);
         friendsMenuTable.add(closeButton).size(200, 50).pad(10);
-        
+
         // Set focus to message field
         stage.setKeyboardFocus(chatMessageField);
     }
 
     private void loadChatHistory() {
         chatMessagesTable.clear();
-        
+
         Player currentPlayer = game.getCurrentPlayer();
         Player targetPlayer = null;
-        
+
         // Find the target player
         for (User user : game.getPlayers()) {
             Player player = user.getPlayer();
@@ -7181,12 +7213,12 @@ public class GDXGameScreen implements Screen {
                 break;
             }
         }
-        
+
         if (targetPlayer != null) {
             // Get talk history
             Result result = controller.talkHistory(selectedPlayerForActions);
             String history = result.Message();
-            
+
             if (history.contains("No conversation history")) {
                 Label noHistoryLabel = new Label("No previous messages", skin);
                 noHistoryLabel.setColor(Color.GRAY);
@@ -7234,7 +7266,7 @@ public class GDXGameScreen implements Screen {
                 }
             }
         }
-        
+
         // Scroll to bottom to show latest messages
         if (chatScrollPane != null) {
             chatScrollPane.setScrollPercentY(1.0f);
@@ -7276,7 +7308,7 @@ public class GDXGameScreen implements Screen {
             }
         }
     }
-    
+
     private void checkForNewGifts() {
         Player currentPlayer = game.getCurrentPlayer();
         if (currentPlayer == null) return;
@@ -7285,7 +7317,7 @@ public class GDXGameScreen implements Screen {
             if (player != null && !player.equals(currentPlayer)) {
                 Result result = controller.showGiftHistoryWith(player.getUsername());
                 String giftsText = result.Message();
-                
+
                 if (!giftsText.contains("No conversation history") && !giftsText.trim().isEmpty()) {
                     String[] giftBlocks = giftsText.split("------------------------");
                     if (giftBlocks.length > 0) {
@@ -7341,19 +7373,19 @@ public class GDXGameScreen implements Screen {
 
     private void createPlayerGiftMenu() {
         friendsMenuTable.clear();
-        
+
         // Title
         Label titleLabel = new Label("Gift Menu", skin);
         titleLabel.setFontScale(1.5f);
         friendsMenuTable.add(titleLabel).colspan(2).pad(20).row();
-        
+
         // Gift menu buttons
         TextButton sendGiftButton = new TextButton("Send Gift", skin);
         TextButton receivedGiftsButton = new TextButton("Received Gifts", skin);
         TextButton giftHistoryButton = new TextButton("Gift History", skin);
         TextButton backButton = new TextButton("Back", skin);
         TextButton closeButton = new TextButton("Close", skin);
-        
+
         // Add button listeners
         sendGiftButton.addListener(new ClickListener() {
             @Override
@@ -7364,7 +7396,7 @@ public class GDXGameScreen implements Screen {
                 createFriendsMenuUI();
             }
         });
-        
+
         receivedGiftsButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
@@ -7372,7 +7404,7 @@ public class GDXGameScreen implements Screen {
                 createFriendsMenuUI();
             }
         });
-        
+
         giftHistoryButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
@@ -7380,7 +7412,7 @@ public class GDXGameScreen implements Screen {
                 createFriendsMenuUI();
             }
         });
-        
+
         backButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
@@ -7388,7 +7420,7 @@ public class GDXGameScreen implements Screen {
                 createFriendsMenuUI();
             }
         });
-        
+
         closeButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
@@ -7404,7 +7436,7 @@ public class GDXGameScreen implements Screen {
                 Gdx.input.setInputProcessor(multiplexer);
             }
         });
-        
+
         // Add buttons to table
         friendsMenuTable.add(sendGiftButton).size(200, 50).pad(10);
         friendsMenuTable.add(receivedGiftsButton).size(200, 50).pad(10).row();
@@ -7415,20 +7447,20 @@ public class GDXGameScreen implements Screen {
 
     private void createReceivedGiftsMenu() {
         friendsMenuTable.clear();
-        
+
         // Title
         Label titleLabel = new Label("Received Gifts", skin);
         titleLabel.setFontScale(1.5f);
         friendsMenuTable.add(titleLabel).colspan(2).pad(20).row();
-        
+
         // Get received gifts
         Result result = controller.showGiftsList();
         String giftsText = result.Message();
-        
+
         // Create scrollable table for gifts
         receivedGiftsTable = new Table();
         receivedGiftsTable.defaults().expandX().fillX().pad(2);
-        
+
         if (giftsText.contains("No conversation history") || giftsText.trim().isEmpty()) {
             Label noGiftsLabel = new Label("No gifts received yet!", skin);
             noGiftsLabel.setColor(Color.GRAY);
@@ -7451,14 +7483,14 @@ public class GDXGameScreen implements Screen {
                 }
             }
         }
-        
+
         // Create scroll pane
         receivedGiftsScrollPane = new ScrollPane(receivedGiftsTable, skin);
         receivedGiftsScrollPane.setFadeScrollBars(false);
         receivedGiftsScrollPane.setScrollBarPositions(false, true);
-        
+
         friendsMenuTable.add(receivedGiftsScrollPane).size(600, 400).pad(10).row();
-        
+
         // Back button
         TextButton backButton = new TextButton("Back", skin);
         backButton.addListener(new ClickListener() {
@@ -7468,7 +7500,7 @@ public class GDXGameScreen implements Screen {
                 createFriendsMenuUI();
             }
         });
-        
+
         friendsMenuTable.add(backButton).size(200, 50).pad(10).row();
     }
 
@@ -7477,7 +7509,7 @@ public class GDXGameScreen implements Screen {
         Label giftLabel = new Label(giftInfo, skin);
         giftLabel.setWrap(true);
         giftLabel.setAlignment(Align.left);
-        
+
         // Check if gift is rated (rate = 0 means not rated)
         boolean unrated = false;
         for (String line : giftInfo.split("\n")) {
@@ -7486,11 +7518,11 @@ public class GDXGameScreen implements Screen {
                 break;
             }
         }
-        
+
         Table giftTable = new Table();
         giftTable.defaults().expandX().fillX().pad(2);
         giftTable.add(giftLabel).row();
-        
+
         if (unrated) {
             // Unique rating field and button for each gift
             final TextField ratingField = new TextField("", skin);
@@ -7525,20 +7557,20 @@ public class GDXGameScreen implements Screen {
 
     private void createGiftHistoryMenu() {
         friendsMenuTable.clear();
-        
+
         // Title
         Label titleLabel = new Label("Gift History with " + selectedPlayerForActions, skin);
         titleLabel.setFontScale(1.5f);
         friendsMenuTable.add(titleLabel).colspan(2).pad(20).row();
-        
+
         // Get gift history
         Result result = controller.showGiftHistoryWith(selectedPlayerForActions);
         String giftsText = result.Message();
-        
+
         // Create scrollable table for gifts
         giftHistoryTable = new Table();
         giftHistoryTable.defaults().expandX().fillX().pad(2);
-        
+
         if (giftsText.contains("No conversation history") || giftsText.trim().isEmpty()) {
             Label noGiftsLabel = new Label("No gift history with " + selectedPlayerForActions + "!", skin);
             noGiftsLabel.setColor(Color.GRAY);
@@ -7548,21 +7580,21 @@ public class GDXGameScreen implements Screen {
             String[] lines = giftsText.split("\n");
             for (String line : lines) {
                 if (line.trim().isEmpty()) continue;
-                
+
                 Label giftLabel = new Label(line, skin);
                 giftLabel.setWrap(true);
                 giftLabel.setAlignment(Align.left);
                 giftHistoryTable.add(giftLabel).row();
             }
         }
-        
+
         // Create scroll pane
         giftHistoryScrollPane = new ScrollPane(giftHistoryTable, skin);
         giftHistoryScrollPane.setFadeScrollBars(false);
         giftHistoryScrollPane.setScrollBarPositions(false, true);
-        
+
         friendsMenuTable.add(giftHistoryScrollPane).size(600, 400).pad(10).row();
-        
+
         // Back button
         TextButton backButton = new TextButton("Back", skin);
         backButton.addListener(new ClickListener() {
@@ -7572,33 +7604,33 @@ public class GDXGameScreen implements Screen {
                 createFriendsMenuUI();
             }
         });
-        
+
         friendsMenuTable.add(backButton).size(200, 50).pad(10).row();
     }
-    
+
     private void createSendGiftMenu() {
         friendsMenuTable.clear();
-        
+
         // Title
         Label titleLabel = new Label("Send Gift to " + selectedPlayerForActions, skin);
         titleLabel.setFontScale(1.5f);
         friendsMenuTable.add(titleLabel).colspan(2).pad(20).row();
-        
+
         // Error message display
         if (showGiftError && !giftErrorMessage.isEmpty()) {
             Label errorLabel = new Label(giftErrorMessage, skin);
             errorLabel.setColor(Color.RED);
             friendsMenuTable.add(errorLabel).colspan(2).pad(10).row();
         }
-        
+
         // Get inventory items
         Result result = controller.showInventoryItems();
         String inventoryText = result.Message();
-        
+
         // Create scrollable table for inventory items
         sendGiftTable = new Table();
         sendGiftTable.defaults().expandX().fillX().pad(2);
-        
+
         if (inventoryText.contains("You have no items") || inventoryText.trim().isEmpty()) {
             Label noItemsLabel = new Label("No items in inventory!", skin);
             noItemsLabel.setColor(Color.GRAY);
@@ -7608,26 +7640,26 @@ public class GDXGameScreen implements Screen {
             String[] lines = inventoryText.split("\n");
             for (String line : lines) {
                 if (line.trim().isEmpty()) continue;
-                
+
                 // Format: "ItemName xAmount"
                 String[] parts = line.split(" x");
                 if (parts.length == 2) {
                     String itemName = parts[0].trim();
                     int maxAmount = Integer.parseInt(parts[1].trim());
-                    
+
                     // Create row for this item
                     Table itemRow = new Table();
                     itemRow.defaults().expandX().fillX().pad(2);
-                    
+
                     // Item name and amount
                     Label itemLabel = new Label(itemName + " x" + maxAmount, skin);
                     itemRow.add(itemLabel).expandX().left().pad(5);
-                    
+
                     // Amount input field
                     TextField amountField = new TextField("1", skin);
                     amountField.setTextFieldFilter(new TextField.TextFieldFilter.DigitsOnlyFilter());
                     itemRow.add(amountField).size(80, 30).pad(5);
-                    
+
                     // Gift button
                     TextButton giftButton = new TextButton("Gift", skin);
                     giftButton.addListener(new ClickListener() {
@@ -7640,7 +7672,7 @@ public class GDXGameScreen implements Screen {
                                 createSendGiftMenu();
                                 return;
                             }
-                            
+
                             int amount;
                             try {
                                 amount = Integer.parseInt(amountText);
@@ -7650,21 +7682,21 @@ public class GDXGameScreen implements Screen {
                                 createSendGiftMenu();
                                 return;
                             }
-                            
+
                             if (amount <= 0) {
                                 giftErrorMessage = "Amount must be greater than 0";
                                 showGiftError = true;
                                 createSendGiftMenu();
                                 return;
                             }
-                            
+
                             if (amount > maxAmount) {
                                 giftErrorMessage = "You don't have enough " + itemName;
                                 showGiftError = true;
                                 createSendGiftMenu();
                                 return;
                             }
-                            
+
                             // Call giftPlayer method
                             Result giftResult = controller.giftPlayer(selectedPlayerForActions, itemName, String.valueOf(amount));
                             if (giftResult.isSuccessful()) {
@@ -7681,7 +7713,7 @@ public class GDXGameScreen implements Screen {
                                     friendsMenuTable = null;
                                 }
                                 Gdx.input.setInputProcessor(multiplexer);
-                                
+
                                 // Show success message
                                 generalMessageLabel.setText(giftResult.Message());
                                 generalMessageLabel.setVisible(true);
@@ -7695,20 +7727,20 @@ public class GDXGameScreen implements Screen {
                         }
                     });
                     itemRow.add(giftButton).size(80, 30).pad(5);
-                    
+
                     sendGiftTable.add(itemRow).row();
                 }
             }
         }
-        
+
         // Create scroll pane
         sendGiftScrollPane = new ScrollPane(sendGiftTable, skin);
         sendGiftScrollPane.setFadeScrollBars(false);
         sendGiftScrollPane.setScrollBarPositions(false, true);
-        
+
         // Add scroll pane to main table
         friendsMenuTable.add(sendGiftScrollPane).size(600, 400).pad(10).row();
-        
+
         // Back button
         TextButton backButton = new TextButton("Back", skin);
         backButton.addListener(new ClickListener() {
@@ -7720,10 +7752,10 @@ public class GDXGameScreen implements Screen {
                 createFriendsMenuUI();
             }
         });
-        
+
         friendsMenuTable.add(backButton).size(200, 50).pad(10).row();
     }
-    
+
     private void createSellMenuUI() {
         if (sellMenuTable != null) {
             sellMenuTable.remove();
@@ -7742,19 +7774,19 @@ public class GDXGameScreen implements Screen {
         Label titleLabel = new Label("Sell Items", skin);
         titleLabel.setFontScale(1.5f);
         sellMenuTable.add(titleLabel).colspan(2).pad(20).row();
-        
+
         if (showSellError && !sellErrorMessage.isEmpty()) {
             Label errorLabel = new Label(sellErrorMessage, skin);
             errorLabel.setColor(Color.RED);
             sellMenuTable.add(errorLabel).colspan(2).pad(10).row();
         }
-        
+
         Result result = controller.showInventoryItems();
         String inventoryText = result.Message();
-        
+
         Table itemsTable = new Table();
         itemsTable.defaults().expandX().fillX().pad(2);
-        
+
         if (inventoryText.contains("You have no items") || inventoryText.trim().isEmpty()) {
             Label noItemsLabel = new Label("No items in inventory!", skin);
             noItemsLabel.setColor(Color.GRAY);
@@ -7763,22 +7795,22 @@ public class GDXGameScreen implements Screen {
             String[] lines = inventoryText.split("\n");
             for (String line : lines) {
                 if (line.trim().isEmpty()) continue;
-                
+
                 String[] parts = line.split(" x");
                 if (parts.length == 2) {
                     String itemName = parts[0].trim();
                     int maxAmount = Integer.parseInt(parts[1].trim());
-                    
+
                     Table itemRow = new Table();
                     itemRow.defaults().expandX().fillX().pad(2);
-                    
+
                     Label itemLabel = new Label(itemName + " x" + maxAmount, skin);
                     itemRow.add(itemLabel).expandX().left().pad(5);
-                    
+
                     TextField amountField = new TextField("1", skin);
                     amountField.setTextFieldFilter(new TextField.TextFieldFilter.DigitsOnlyFilter());
                     itemRow.add(amountField).size(80, 30).pad(5);
-                    
+
                     TextButton sellButton = new TextButton("Sell", skin);
                     sellButton.addListener(new ClickListener() {
                         @Override
@@ -7790,7 +7822,7 @@ public class GDXGameScreen implements Screen {
                                 createSellMenuUI();
                                 return;
                             }
-                            
+
                             int amount;
                             try {
                                 amount = Integer.parseInt(amountText);
@@ -7800,21 +7832,21 @@ public class GDXGameScreen implements Screen {
                                 createSellMenuUI();
                                 return;
                             }
-                            
+
                             if (amount <= 0) {
                                 sellErrorMessage = "Amount must be greater than 0";
                                 showSellError = true;
                                 createSellMenuUI();
                                 return;
                             }
-                            
+
                             if (amount > maxAmount) {
                                 sellErrorMessage = "You don't have enough " + itemName;
                                 showSellError = true;
                                 createSellMenuUI();
                                 return;
                             }
-                            
+
                             Result sellResult = controller.sell(itemName, String.valueOf(amount));
                             if (sellResult.isSuccessful()) {
                                 showSellMenu = false;
@@ -7825,7 +7857,7 @@ public class GDXGameScreen implements Screen {
                                     sellMenuTable = null;
                                 }
                                 Gdx.input.setInputProcessor(multiplexer);
-                                
+
                                 generalMessageLabel.setText(sellResult.Message());
                                 generalMessageLabel.setVisible(true);
                                 generalMessageTimer = GENERAL_MESSAGE_DURATION;
@@ -7837,18 +7869,18 @@ public class GDXGameScreen implements Screen {
                         }
                     });
                     itemRow.add(sellButton).size(80, 30).pad(5);
-                    
+
                     itemsTable.add(itemRow).row();
                 }
             }
         }
-        
+
         sellMenuScrollPane = new ScrollPane(itemsTable, skin);
         sellMenuScrollPane.setFadeScrollBars(false);
         sellMenuScrollPane.setScrollBarPositions(false, true);
-        
+
         sellMenuTable.add(sellMenuScrollPane).size(600, 400).pad(10).row();
-        
+
         TextButton closeButton = new TextButton("Close", skin);
         closeButton.addListener(new ClickListener() {
             @Override
@@ -7863,28 +7895,28 @@ public class GDXGameScreen implements Screen {
                 Gdx.input.setInputProcessor(multiplexer);
             }
         });
-        
+
         sellMenuTable.add(closeButton).size(200, 50).pad(10).row();
     }
-    
+
     private void createMarriageMenu() {
         friendsMenuTable.clear();
-        
+
         Label titleLabel = new Label("Marriage Menu", skin);
         titleLabel.setFontScale(1.5f);
         friendsMenuTable.add(titleLabel).colspan(2).pad(20).row();
-        
+
         if (showMarriageError && !marriageErrorMessage.isEmpty()) {
             Label errorLabel = new Label(marriageErrorMessage, skin);
             errorLabel.setColor(Color.RED);
             friendsMenuTable.add(errorLabel).colspan(2).pad(10).row();
         }
-        
+
         TextButton askMarriageButton = new TextButton("Ask Marriage", skin);
         TextButton respondButton = new TextButton("Respond", skin);
         TextButton backButton = new TextButton("Back", skin);
         TextButton closeButton = new TextButton("Close", skin);
-        
+
         askMarriageButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
@@ -7905,7 +7937,7 @@ public class GDXGameScreen implements Screen {
                 }
             }
         });
-        
+
         respondButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
@@ -7913,7 +7945,7 @@ public class GDXGameScreen implements Screen {
                 createFriendsMenuUI();
             }
         });
-        
+
         backButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
@@ -7923,7 +7955,7 @@ public class GDXGameScreen implements Screen {
                 createFriendsMenuUI();
             }
         });
-        
+
         closeButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
@@ -7939,37 +7971,37 @@ public class GDXGameScreen implements Screen {
                 Gdx.input.setInputProcessor(multiplexer);
             }
         });
-        
+
         // Add buttons to table
         friendsMenuTable.add(askMarriageButton).size(200, 50).pad(10).row();
         friendsMenuTable.add(respondButton).size(200, 50).pad(10).row();
         friendsMenuTable.add(backButton).size(200, 50).pad(10).row();
         friendsMenuTable.add(closeButton).size(200, 50).pad(10).row();
     }
-    
+
     private void createMarriageRespondMenu() {
         friendsMenuTable.clear();
 
         Label titleLabel = new Label("Marriage Proposals", skin);
         titleLabel.setFontScale(1.5f);
         friendsMenuTable.add(titleLabel).colspan(2).pad(20).row();
-        
+
         Player currentPlayer = game.getCurrentPlayer();
         ArrayList<Notification> notifications = currentPlayer.getNotifications();
         boolean hasMarriageProposals = false;
-        
+
         for (Notification notification : notifications) {
             if (notification.getMessage().contains(" has proposed to you!")) {
                 hasMarriageProposals = true;
                 String proposerName = notification.sender().getUsername();
-                
+
                 Label proposalLabel = new Label(proposerName + " has proposed to you!", skin);
                 proposalLabel.setFontScale(1.2f);
                 friendsMenuTable.add(proposalLabel).colspan(2).pad(10).row();
-                
+
                 TextButton acceptButton = new TextButton("Accept", skin);
                 TextButton rejectButton = new TextButton("Reject", skin);
-                
+
                 acceptButton.addListener(new ClickListener() {
                     @Override
                     public void clicked(InputEvent event, float x, float y) {
@@ -7991,7 +8023,7 @@ public class GDXGameScreen implements Screen {
                         }
                     }
                 });
-                
+
                 rejectButton.addListener(new ClickListener() {
                     @Override
                     public void clicked(InputEvent event, float x, float y) {
@@ -8013,21 +8045,21 @@ public class GDXGameScreen implements Screen {
                         }
                     }
                 });
-                
+
                 friendsMenuTable.add(acceptButton).size(150, 40).pad(5);
                 friendsMenuTable.add(rejectButton).size(150, 40).pad(5).row();
             }
         }
-        
+
         if (!hasMarriageProposals) {
             Label messageLabel = new Label("No marriage proposals found.", skin);
             messageLabel.setAlignment(Align.center);
             friendsMenuTable.add(messageLabel).colspan(2).pad(20).row();
         }
-        
+
         TextButton backButton = new TextButton("Back", skin);
         TextButton closeButton = new TextButton("Close", skin);
-        
+
         backButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
@@ -8035,7 +8067,7 @@ public class GDXGameScreen implements Screen {
                 createFriendsMenuUI();
             }
         });
-        
+
         closeButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
@@ -8049,23 +8081,23 @@ public class GDXGameScreen implements Screen {
                 Gdx.input.setInputProcessor(multiplexer);
             }
         });
-        
+
         friendsMenuTable.add(backButton).size(200, 50).pad(10).row();
         friendsMenuTable.add(closeButton).size(200, 50).pad(10).row();
     }
-    
+
     private void removeMarriageProposalNotification(String proposerName) {
         Player currentPlayer = game.getCurrentPlayer();
         ArrayList<Notification> notifications = currentPlayer.getNotifications();
         notifications.removeIf(n -> n.sender() != null && n.sender().getUsername().equals(proposerName) && n.getMessage().contains(" has proposed to you!"));
     }
-    
+
     private void markGiftNotificationForReceiver(String receiverUsername) {
         if (!receiverUsername.equals(game.getCurrentPlayer().getUsername())) {
             unreadGiftNotifications.put(receiverUsername, true);
         }
     }
-  
+
     private void showTrashConfirmationDialog(Item item) {
         new Dialog("Confirm Deletion", skin, "dialog") {
             protected void result(Object object) {

@@ -37,16 +37,15 @@ public class GameStateSnapshot implements Serializable {
         return hostUsername;
     }
 
-    /**
-     * A nested static class to represent a player's initial state.
-     */
     public static class PlayerSnapshot implements Serializable {
         private String username;
         private Gender gender;
+        private int playerIndex; // <-- ADD THIS FIELD
 
-        public PlayerSnapshot(String username, Gender gender) {
+        public PlayerSnapshot(String username, Gender gender, int playerIndex) {
             this.username = username;
             this.gender = gender;
+            this.playerIndex = playerIndex; // <-- SET IN CONSTRUCTOR
         }
 
         public String getUsername() {
@@ -55,6 +54,10 @@ public class GameStateSnapshot implements Serializable {
 
         public Gender getGender() {
             return gender;
+        }
+
+        public int getPlayerIndex() { // <-- ADD THIS GETTER
+            return playerIndex;
         }
     }
 }

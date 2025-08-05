@@ -111,6 +111,9 @@ public class ClientHandler implements Runnable {
                 case SUBMIT_FARM_CHOICE:
                     handleFarmChoice(message);
                     break;
+                case PLAYER_MOVE:
+                    handlePlayerMove(message);
+                    break;
                 default:
                     System.out.println("Unknown message type: " + message.getType());
             }
@@ -539,4 +542,21 @@ public class ClientHandler implements Runnable {
             }
         }
     }
+
+    private void handlePlayerMove(Message message) {
+        String lobbyId = server.getClientLobbyId(clientId);
+        if (lobbyId != null) {
+            try {
+                // Extract coordinates from the message. Gson deserializes numbers as Double.
+                int newX = ((Double) message.getFromBody("x")).intValue();
+                int newY = ((Double) message.getFromBody("y")).intValue();
+
+                // Pass the data to the main server for processing.
+                server.handlePlayerMove(lobbyId, clientId, newX, newY);
+            } catch (Exception e) {
+                System.err.println("[SERVER ERROR] Could not process PLAYER_MOVE message from client " + clientId + ": " + e.getMessage());
+            }
+        }
+    }
+
 }
