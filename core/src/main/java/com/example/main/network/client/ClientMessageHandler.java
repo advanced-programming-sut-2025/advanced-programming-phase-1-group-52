@@ -16,6 +16,7 @@ import java.util.Map;
 
 import com.example.main.network.common.Message;
 import com.example.main.network.common.MessageType;
+import com.example.main.network.serialization.GsonAdapters;
 import com.google.gson.Gson; // <-- Add this import
 import com.google.gson.reflect.TypeToken; // <-- Add this import
 import java.lang.reflect.Type; // <-- Add this import
@@ -29,7 +30,7 @@ public class ClientMessageHandler {
 
     public ClientMessageHandler(GameClient client) {
         this.client = client;
-        this.gson = new Gson();
+        this.gson = GsonAdapters.getGsonInstance(); // Use the shared Gson instance
     }
 
     public void handleMessage(Message message) {
@@ -165,11 +166,13 @@ public class ClientMessageHandler {
 
     private void handleGameState(Message message) {
         try {
-            Game game = message.getFromBody("game");
+            // Use the new getFromBodyAs method to correctly deserialize the Game object
+            Game game = message.getFromBodyAs("game", Game.class);
             client.setCurrentGame(game);
             System.out.println("Received game state update");
         } catch (Exception e) {
             System.err.println("Error parsing game state: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 
@@ -503,80 +506,23 @@ public class ClientMessageHandler {
     private void handleInitializeGame(Message message) {
         System.out.println("[CLIENT LOG] Received INITIALIZE_GAME. Building game state...");
         try {
-            Object snapshotObject = message.getFromBody("snapshot");
-            String snapshotJson = gson.toJson(snapshotObject);
-            GameStateSnapshot snapshot = gson.fromJson(snapshotJson, GameStateSnapshot.class);
+            // Directly deserialize the Game object. The server should be sending the full Game.
+            Game newGame = message.getFromBodyAs("game", Game.class);
 
-            if (snapshot == null) {
-                System.err.println("[CLIENT ERROR] GameStateSnapshot was null after deserialization.");
+            if (newGame == null) {
+                System.err.println("[CLIENT ERROR] Game object was null after deserialization.");
                 return;
             }
 
-            ArrayList<User> usersForGame = new ArrayList<>();
-            int localPlayerIndex = -1;
-            String localUsername = App.getInstance().getCurrentUser().getUsername();
-
-            // **THE FIX IS HERE**: Create and assign Player objects in one loop.
-            for (GameStateSnapshot.PlayerSnapshot ps : snapshot.getPlayers()) {
-                User user = App.getInstance().getUser(ps.getUsername());
-                if (user != null) {
-                    // 1. Create the Player object for this user.
-                    Player player = new Player(user.getUsername(), user.getGender());
-
-                    // 2. Immediately assign it to the User object. This is the crucial step.
-                    user.setCurrentPlayer(player);
-
-                    // 3. Add the now-complete User object to the list for the game.
-                    usersForGame.add(user);
-
-                    if (ps.getUsername().equals(localUsername)) {
-                        localPlayerIndex = ps.getPlayerIndex();
-                    }
-                }
-            }
-
-            int realPlayerCount = usersForGame.size();
-            while (usersForGame.size() < 4) {
-                usersForGame.add(new User("empty_slot_" + (usersForGame.size() + 1), "", "", "", null));
-            }
-
-            // Assign starting positions to the real players.
-            for (int i = 0; i < realPlayerCount; i++) {
-                User user = usersForGame.get(i);
-                Player player = user.currentPlayer(); // Now this will not be null.
-                if (player != null) {
-                    player.setOriginX(4 + (i % 2) * 80);
-                    player.setOriginY(4 + (i / 2) * 30);
-                    player.setCurrentX(player.originX());
-                    player.setCurrentY(player.originY());
-                }
-            }
-
-            // Create the game using the list of fully initialized User objects.
-            Game newGame = new Game(usersForGame);
-
-            User hostUser = App.getInstance().getUser(snapshot.getHostUsername());
-            newGame.setMainPlayer(hostUser);
-
-            if (localPlayerIndex != -1) {
-                newGame.setCurrentUser(usersForGame.get(localPlayerIndex));
-                newGame.setCurrentPlayer(usersForGame.get(localPlayerIndex).currentPlayer());
-            }
-
-            ArrayList<FarmThemes> themes = new ArrayList<>(snapshot.getFarmThemes());
-            while (themes.size() < 4) { themes.add(FarmThemes.Neutral); }
-            GameMap map = new GameMap(newGame.getPlayers(), themes);
-            newGame.setGameMap(map);
-
             App.getInstance().setCurrentGame(newGame);
-            System.out.println("[CLIENT LOG] Current game has been set. This client is Player " + (localPlayerIndex + 1));
+            System.out.println("[CLIENT LOG] Current game has been set. This client is Player " + newGame.getCurrentUser().getUsername());
 
             Gdx.app.postRunnable(() -> {
                 Main.getInstance().setScreen(new GDXGameScreen());
             });
 
         } catch (Exception e) {
-            System.err.println("[CLIENT ERROR] Failed to initialize game from snapshot: " + e.getMessage());
+            System.err.println("[CLIENT ERROR] Failed to initialize game: " + e.getMessage());
             e.printStackTrace();
         }
     }

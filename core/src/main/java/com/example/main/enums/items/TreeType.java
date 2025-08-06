@@ -67,6 +67,8 @@ public enum TreeType implements ItemType {
     public int getTotalHarvestTime() { return totalHarvestTime; }
     public List<Integer> getStages() { return stages; }
 
+    public String getSeason() { return seasons.get(0).name(); }
+
     @Override
     public boolean isTool() { return false; }
 

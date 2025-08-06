@@ -13,6 +13,7 @@ import com.example.main.enums.regex.SecurityQuestion;
 import com.example.main.models.User;
 import com.example.main.network.common.Message;
 import com.example.main.network.common.MessageType;
+import com.example.main.network.serialization.GsonAdapters;
 import com.google.gson.Gson;
 
 /**
@@ -34,7 +35,7 @@ public class ClientHandler implements Runnable {
         this.clientId = UUID.randomUUID().toString();
         this.out = new PrintWriter(socket.getOutputStream(), true);
         this.in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-        this.gson = new Gson();
+        this.gson = GsonAdapters.getGsonInstance(); // Use the shared Gson instance
     }
 
     @Override

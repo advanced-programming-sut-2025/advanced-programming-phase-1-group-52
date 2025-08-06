@@ -11,6 +11,13 @@ public class ItemFactory {
     static {
         ITEM_CONSTRUCTORS.put(CropType.class, (type, number) -> new Crop((CropType) type, number));
         ITEM_CONSTRUCTORS.put(ForagingSeedType.class, (type, number) -> new Seed((ForagingSeedType) type, number));
+        ITEM_CONSTRUCTORS.put(ForagingCropType.class, (type, number) -> new Item((ForagingCropType) type, number) {
+            @Override
+            protected int calculateEnergyConsumption() {
+                // Implement or leave as default based on Item's contract
+                return 0; // Or specific logic for foraging crops
+            }
+        });
         ITEM_CONSTRUCTORS.put(MineralType.class, (type, number) -> new Mineral((MineralType) type, number));
         ITEM_CONSTRUCTORS.put(ToolType.class, (type, number) -> new Tool((ToolType) type, number));
         ITEM_CONSTRUCTORS.put(FishType.class, (type, number) -> new Fish((FishType) type, number));

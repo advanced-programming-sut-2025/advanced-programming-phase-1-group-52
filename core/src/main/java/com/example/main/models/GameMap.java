@@ -27,6 +27,7 @@ import com.example.main.models.item.Crop;
 import com.example.main.models.item.Fruit;
 import com.example.main.models.item.Mineral;
 import com.example.main.models.item.Seed;
+import com.example.main.models.item.ItemFactory;
 
 public class GameMap {
     private final Tile[][] tiles;
@@ -392,7 +393,7 @@ public class GameMap {
                     }
 
                     tiles[i][j] = new Tile(i, j, stoneType, owner);
-                    tiles[i][j].setItem(new Mineral(chosenMineral, 1));
+                    tiles[i][j].setItem(ItemFactory.createItemOrThrow(chosenMineral.getName(), 1));
                 }
             }
         }
@@ -685,9 +686,11 @@ public class GameMap {
             targetTile.setType(TileType.Tree);
             targetTile.setTree(new Tree(treeType));
 
-            Fruit treeGrowthTracker = new Fruit(treeType.getProduct(), 1);
-            treeGrowthTracker.setCurrentStage(1);
-            targetTile.setPlant(treeGrowthTracker);
+            // Remove this line, as Tree itself is now Growable
+            // Fruit treeGrowthTracker = new Fruit(treeType.getProduct(), 1);
+            // treeGrowthTracker.setCurrentStage(1);
+            // targetTile.setPlant(treeGrowthTracker);
+            targetTile.setPlant(new Tree(treeType)); // Set the Tree as the Growable on the tile
 
             this.tiles[x][y] = targetTile;
         }
@@ -717,12 +720,11 @@ public class GameMap {
 
             if (choice < 0.60) {
                 List<ForagingCropType> crops = Arrays.asList(ForagingCropType.values());
-                ForagingCropType cropType = crops.get(rand.nextInt(crops.size()));
+                ForagingCropType forageableType = crops.get(rand.nextInt(crops.size()));
 
-                targetTile.setType(TileType.Planted);
-                Crop crop = new Crop(cropType, 1);
-                crop.setReadyToHarvest(true);
-                targetTile.setPlant(crop);
+                // Forageable items are simply placed on the tile as an Item, not a growing plant
+                targetTile.setType(TileType.Earth); // Or keep existing type if appropriate, e.g., Grass
+                targetTile.setItem(ItemFactory.createItemOrThrow(forageableType.getName(), 1));
 
             } else {
                 List<ForagingSeedType> seeds = Arrays.stream(ForagingSeedType.values())

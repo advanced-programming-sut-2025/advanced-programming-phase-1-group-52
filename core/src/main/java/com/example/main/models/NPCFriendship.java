@@ -23,8 +23,16 @@ public class NPCFriendship {
         return friendshipLevel;
     }
 
+    public void setFriendshipLevel(int friendshipLevel) {
+        this.friendshipLevel = friendshipLevel;
+    }
+
     public int getFriendshipPoints() {
         return friendshipPoints;
+    }
+
+    public void setFriendshipPoints(int friendshipPoints) {
+        this.friendshipPoints = friendshipPoints;
     }
 
     public void addFriendshipPoints(int points) {

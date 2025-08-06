@@ -408,7 +408,7 @@ public class Game {
         this.tomorrowWeather = tomorrowWeather;
     }
 
-    public User getUrrentUser() {
+    public User getCurrentUser() {
         return currentUser;
     }
 

@@ -14,7 +14,8 @@ public enum FruitType implements ItemType{
     Pine_Tar("Pine tar", 50),
     Sap("Sap", 40),
     Common_Mushroom("Common mushroom", 10),
-    Mystic_Syrup("Mystic syrup", 50);
+    Mystic_Syrup("Mystic syrup", 50),
+    Hazelnut("Hazelnut", 100);
 
     private final String fruitName;
     private final int price;

@@ -7,6 +7,8 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.example.main.auth.AuthManager;
@@ -34,6 +36,7 @@ public class GameServer {
     private final List<User> availableUsers;
     private final ConcurrentHashMap<String, ConcurrentHashMap<String, FarmThemes>> lobbyFarmChoices;
     private final ConcurrentHashMap<String, Game> activeGames;
+    private final ScheduledExecutorService gameUpdateScheduler; // Added for game state updates
 
     public GameServer(int port) throws IOException {
         this.port = port;
@@ -48,6 +51,7 @@ public class GameServer {
         this.availableUsers = new ArrayList<>();
         this.lobbyFarmChoices = new ConcurrentHashMap<>();
         this.activeGames = new ConcurrentHashMap<>();
+        this.gameUpdateScheduler = Executors.newSingleThreadScheduledExecutor(); // Initialize scheduler
 
         System.out.println("Game Server started on port " + port);
     }
@@ -58,6 +62,9 @@ public class GameServer {
 
         // Start heartbeat thread
         startHeartbeatThread();
+
+        // Schedule game state updates
+        gameUpdateScheduler.scheduleAtFixedRate(this::broadcastActiveGameStates, 0, 100, TimeUnit.MILLISECONDS);
 
         while (running.get()) {
             try {
@@ -85,6 +92,7 @@ public class GameServer {
 
         // Shutdown executor service
         executorService.shutdown();
+        gameUpdateScheduler.shutdown(); // Shutdown game update scheduler
 
         try {
             serverSocket.close();
@@ -443,13 +451,12 @@ public class GameServer {
             activeGames.put(lobbyId, newGame);
             System.out.println("[SERVER LOG] Game instance created and stored for lobby " + lobbyId);
 
-            // --- Create and Send the Snapshot using the helper method ---
-            GameStateSnapshot snapshot = createSnapshotFromGame(newGame, choices);
+            // --- Send the Full Game object instead of a snapshot ---
             HashMap<String, Object> body = new HashMap<>();
-            body.put("snapshot", snapshot);
+            body.put("game", newGame);
             Message initializeMessage = new Message(body, MessageType.INITIALIZE_GAME);
 
-            System.out.println("[SERVER LOG] Game state snapshot created. Sending INITIALIZE_GAME to clients.");
+            System.out.println("[SERVER LOG] Full Game state created. Sending INITIALIZE_GAME to clients.");
             for (String playerId : lobby.getPlayerIds()) {
                 sendMessageToClient(playerId, initializeMessage);
             }
@@ -498,24 +505,9 @@ public class GameServer {
      * Helper method to create a lightweight snapshot from a Game object.
      */
     private GameStateSnapshot createSnapshotFromGame(Game game, Map<String, FarmThemes> choices) {
-        List<GameStateSnapshot.PlayerSnapshot> playerSnapshots = new ArrayList<>();
-        List<User> realPlayers = new ArrayList<>();
-        for (User user : game.getPlayers()) {
-            if (!user.getUsername().startsWith("empty_slot_")) {
-                realPlayers.add(user);
-            }
-        }
-        for (int i = 0; i < realPlayers.size(); i++) {
-            User user = realPlayers.get(i);
-            playerSnapshots.add(new GameStateSnapshot.PlayerSnapshot(user.getUsername(), user.getGender(), i));
-        }
-
-        List<FarmThemes> themes = new ArrayList<>();
-        for (User user : realPlayers) {
-            themes.add(choices.get(user.getClientId()));
-        }
-
-        return new GameStateSnapshot(playerSnapshots, themes, game.getMainPlayer().getUsername());
+        // This method is no longer needed as we will send the full Game object.
+        // Keeping it for reference or if it's used elsewhere for other purposes.
+        return null; // Or throw an UnsupportedOperationException
     }
 
     public void handlePlayerMove(String lobbyId, String clientId, int newX, int newY) {
@@ -559,6 +551,37 @@ public class GameServer {
                 for (String playerClientId : lobby.getPlayerIds()) {
                     sendMessageToClient(playerClientId, updateMessage);
                 }
+            }
+        }
+    }
+
+    /**
+     * Broadcasts the current state of all active games to their respective players.
+     */
+    private void broadcastActiveGameStates() {
+        for (Map.Entry<String, Game> entry : activeGames.entrySet()) {
+            String lobbyId = entry.getKey();
+            Game game = entry.getValue();
+
+            // Only broadcast if the game is considered 'active' or started.
+            // You might have a flag in Lobby or Game to indicate this.
+            // For now, we assume if it's in activeGames, it's active.
+            if (game == null) continue;
+
+            // Create a message with the current game state
+            HashMap<String, Object> gameData = new HashMap<>();
+            gameData.put("game", game);
+            Message gameStateMessage = new Message(gameData, MessageType.GAME_STATE);
+
+            Lobby lobby = lobbies.get(lobbyId);
+            if (lobby != null) {
+                for (String playerId : lobby.getPlayerIds()) {
+                    sendMessageToClient(playerId, gameStateMessage);
+                }
+            } else {
+                // If a lobby no longer exists for an active game, remove the game
+                activeGames.remove(lobbyId);
+                System.err.println("[SERVER WARNING] Removed game for non-existent lobby: " + lobbyId);
             }
         }
     }

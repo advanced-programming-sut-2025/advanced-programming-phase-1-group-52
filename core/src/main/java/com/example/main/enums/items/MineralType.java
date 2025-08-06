@@ -17,7 +17,7 @@ public enum MineralType implements ItemType {
     Copper("copper ore", "A common ore that can be smelted into bars.", 5),
     Iron("iron ore", "A fairly common ore that can be smelted into bars.", 10),
     Gold("gold ore", "A precious ore that can be smelted into bars.", 25),
-    Iridium("iridium ore", "An exotic ore with many curious properties. Can be smelted into bars.", 100),
+    Iridium("Iridium ore", "An exotic ore with many curious properties. Can be smelted into bars.", 100),
     Coal("coal", "A combustible rock that is useful for crafting and smelting.", 15),
     Copper_Ore("Copper ore", ".", 20),
     Iron_Ore("Iron ore", ".", 20),

@@ -5,7 +5,7 @@ import com.example.main.enums.items.ItemType;
 public abstract class Item {
     private String name;
     private int number;
-    protected ItemType itemType;
+    protected transient ItemType itemType;
     protected abstract int calculateEnergyConsumption();
 
     public Item(ItemType itemType, int number) {
