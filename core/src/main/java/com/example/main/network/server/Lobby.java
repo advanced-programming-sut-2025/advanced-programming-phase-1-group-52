@@ -33,6 +33,15 @@ public class Lobby {
         this.gameStarted = false;
     }
 
+    public boolean canStartGame() {
+        // The check for allPlayersReady() has been removed.
+        return players.size() >= 2 && players.size() <= maxPlayers;
+    }
+    public boolean allPlayersReady() {
+        if (players.size() < 2) return false;
+        return playerReadyStatus.values().stream().allMatch(ready -> ready);
+    }
+
     public boolean checkPassword(String passwordAttempt) {
         if (!this.isPrivate) {
             return true; // Not private, no password needed
@@ -89,15 +98,6 @@ public class Lobby {
 
     public boolean isPlayerReady(String clientId) {
         return playerReadyStatus.getOrDefault(clientId, false);
-    }
-
-    public boolean allPlayersReady() {
-        if (players.size() < 2) return false; // Need at least 2 players
-        return playerReadyStatus.values().stream().allMatch(ready -> ready);
-    }
-
-    public boolean canStartGame() {
-        return players.size() >= 2 && players.size() <= maxPlayers && allPlayersReady();
     }
 
     public boolean isFull() {
