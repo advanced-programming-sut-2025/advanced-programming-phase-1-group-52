@@ -872,30 +872,30 @@ public class GDXGameScreen implements Screen {
     }
 
     private void loadTextures() {
-        ground1Texture = new Texture("content/Cut/map_elements/ground1.png");
-        ground2Texture = new Texture("content/Cut/map_elements/ground2.png");
-        grass1Texture = new Texture("content/Cut/map_elements/grass1.png");
-        grass2Texture = new Texture("content/Cut/map_elements/grass2.png");
-        shoveledTexture = new Texture("content/Cut/map_elements/shoveled.png");
-        tree1Texture = new Texture("content/Cut/map_elements/tree1.png");
-        tree2Texture = new Texture("content/Cut/map_elements/tree2.png");
-        tree3Texture = new Texture("content/Cut/map_elements/tree3.png");
-        house1Texture = new Texture("content/Cut/map_elements/player_house1.png");
-        house2Texture = new Texture("content/Cut/map_elements/player_house2.png");
-        house3Texture = new Texture("content/Cut/map_elements/player_house3.png");
-        npcHouse1Texture = new Texture("content/Cut/map_elements/npc_house1.png");
-        npcHouse2Texture = new Texture("content/Cut/map_elements/npc_house2.png");
-        npcHouse3Texture = new Texture("content/Cut/map_elements/npc_house3.png");
-        npcHouse4Texture = new Texture("content/Cut/map_elements/npc_house4.png");
-        npcHouse5Texture = new Texture("content/Cut/map_elements/npc_house5.png");
-        bushTexture = new Texture("content/Cut/map_elements/bush.png");
-        stone1Texture = new Texture("content/Cut/map_elements/stone1.png");
-        stone2Texture = new Texture("content/Cut/map_elements/stone2.png");
-        copperStoneTexture = new Texture("content/Cut/map_elements/copper_stone.png");
-        ironStoneTexture = new Texture("content/Cut/map_elements/iron_stone.png");
-        goldStoneTexture = new Texture("content/Cut/map_elements/gold_stone.png");
-        iridiumStoneTexture = new Texture("content/Cut/map_elements/iridium_stone.png");
-        jewelStoneTexture = new Texture("content/Cut/map_elements/jewel_stone.png");
+        ground1Texture = textureManager.getTexture("ground1");
+        ground2Texture = textureManager.getTexture("ground2");
+        grass1Texture = textureManager.getTexture("grass1");
+        grass2Texture = textureManager.getTexture("grass2");
+        shoveledTexture = textureManager.getTexture("shoveled");
+        tree1Texture = textureManager.getTexture("tree1");
+        tree2Texture = textureManager.getTexture("tree2");
+        tree3Texture = textureManager.getTexture("tree3");
+        house1Texture = textureManager.getTexture("player_house1");
+        house2Texture = textureManager.getTexture("player_house2");
+        house3Texture = textureManager.getTexture("player_house3");
+        npcHouse1Texture = textureManager.getTexture("npc_house1");
+        npcHouse2Texture = textureManager.getTexture("npc_house2");
+        npcHouse3Texture = textureManager.getTexture("npc_house3");
+        npcHouse4Texture = textureManager.getTexture("npc_house4");
+        npcHouse5Texture = textureManager.getTexture("npc_house5");
+        bushTexture = textureManager.getTexture("bush");
+        stone1Texture = textureManager.getTexture("stone1");
+        stone2Texture = textureManager.getTexture("stone2");
+        copperStoneTexture = textureManager.getTexture("copper_stone");
+        ironStoneTexture = textureManager.getTexture("iron_stone");
+        goldStoneTexture = textureManager.getTexture("gold_stone");
+        iridiumStoneTexture = textureManager.getTexture("iridium_stone");
+        jewelStoneTexture = textureManager.getTexture("jewel_stone");
         crowTexture = textureManager.getTexture("Crow");
         eatingTexture = textureManager.getTexture("eating");
         maxEnergyBuffTexture = textureManager.getTexture("Max_Energy_Buff");
@@ -910,13 +910,13 @@ public class GDXGameScreen implements Screen {
         progressBarBg = textureManager.getTexture("fishing_progress_bar_background");
         progressBarFill = textureManager.getTexture("fishing_progress_bar_fill");
         try {
-            blacksmithTexture = new Texture("content/Cut/map_elements/blacksmith.png");
-            jojamartTexture = new Texture("content/Cut/map_elements/jojamart.png");
-            pierresShopTexture = new Texture("content/Cut/map_elements/pierres_shop.png");
-            carpentersShopTexture = new Texture("content/Cut/map_elements/carpenters_shop.png");
-            fishShopTexture = new Texture("content/Cut/map_elements/fish_shop.png");
-            ranchTexture = new Texture("content/Cut/map_elements/marines_ranch.png");
-            saloonTexture = new Texture("content/Cut/map_elements/stardrop_saloon.png");
+            blacksmithTexture = textureManager.getTexture("blacksmith");
+            jojamartTexture = textureManager.getTexture("jojamart");
+            pierresShopTexture = textureManager.getTexture("pierres_shop");
+            carpentersShopTexture = textureManager.getTexture("carpenters_shop");
+            fishShopTexture = textureManager.getTexture("fish_shop");
+            ranchTexture = textureManager.getTexture("marines_ranch");
+            saloonTexture = textureManager.getTexture("stardrop_saloon");
         } catch (Exception e) {
             blacksmithTexture = ground1Texture;
             jojamartTexture = ground1Texture;
@@ -927,34 +927,34 @@ public class GDXGameScreen implements Screen {
             saloonTexture = ground1Texture;
         }
 
-        lake1Texture = new Texture("content/Cut/map_elements/lake1.png");
-        lake2Texture = new Texture("content/Cut/map_elements/lake2.png");
-        lake3Texture = new Texture("content/Cut/map_elements/lake3.png");
+        lake1Texture = textureManager.getTexture("lake1");
+        lake2Texture = textureManager.getTexture("lake2");
+        lake3Texture = textureManager.getTexture("lake3");
 
-        barnTexture = new Texture("content/Cut/map_elements/Barn.png");
-        coopTexture = new Texture("content/Cut/map_elements/Coop.png");
+        barnTexture = textureManager.getTexture("Barn");
+        coopTexture = textureManager.getTexture("Coop");
 
         // Load trash can textures
-        trashCanTexture = new Texture("content/Cut/map_elements/Trash_Can.png");
-        copperTrashCanTexture = new Texture("content/Cut/map_elements/Trash_Can.png"); // Using same texture for now
-        steelTrashCanTexture = new Texture("content/Cut/map_elements/Trash_Can.png"); // Using same texture for now
-        goldTrashCanTexture = new Texture("content/Cut/map_elements/Trash_Can.png"); // Using same texture for now
-        iridiumTrashCanTexture = new Texture("content/Cut/map_elements/Trash_Can.png"); // Using same texture for now
+        trashCanTexture = textureManager.getTexture("Trash_Can");
+        copperTrashCanTexture = textureManager.getTexture("Trash_Can");
+        steelTrashCanTexture = textureManager.getTexture("Trash_Can");
+        goldTrashCanTexture = textureManager.getTexture("Trash_Can");
+        iridiumTrashCanTexture = textureManager.getTexture("Trash_Can");
 
-        maleIdleTexture = new Texture("content/Cut/player/male_idle.png");
-        maleDown1Texture = new Texture("content/Cut/player/male_down1.png");
-        maleDown2Texture = new Texture("content/Cut/player/male_down2.png");
-        maleUp1Texture = new Texture("content/Cut/player/male_up1.png");
-        maleUp2Texture = new Texture("content/Cut/player/male_up2.png");
-        maleLeft1Texture = new Texture("content/Cut/player/male_left1.png");
-        maleLeft2Texture = new Texture("content/Cut/player/male_left2.png");
-        maleRight1Texture = new Texture("content/Cut/player/male_right1.png");
-        maleRight2Texture = new Texture("content/Cut/player/male_right2.png");
+        maleIdleTexture = textureManager.getTexture("male_idle");
+        maleDown1Texture = textureManager.getTexture("male_down1");
+        maleDown2Texture = textureManager.getTexture("male_down2");
+        maleUp1Texture = textureManager.getTexture("male_up1");
+        maleUp2Texture = textureManager.getTexture("male_up2");
+        maleLeft1Texture = textureManager.getTexture("male_left1");
+        maleLeft2Texture = textureManager.getTexture("male_left2");
+        maleRight1Texture = textureManager.getTexture("male_right1");
+        maleRight2Texture = textureManager.getTexture("male_right2");
 
         maleHoeIdle1Texture = textureManager.getTexture("male_hoe_idle1");
         maleHoeIdle2Texture = textureManager.getTexture("male_hoe_idle2");
-        maleScytheIdle1Texture = textureManager.getTexture("male_scyhte_idle1"); // Note the typo fix from your list
-        maleScytheIdle2Texture = textureManager.getTexture("male_scyhte_idle2"); // Note the typo fix from your list
+        maleScytheIdle1Texture = textureManager.getTexture("male_scyhte_idle1");
+        maleScytheIdle2Texture = textureManager.getTexture("male_scyhte_idle2");
         maleWatercanIdle1Texture = textureManager.getTexture("male_watercan_idle1");
         maleWatercanIdle2Texture = textureManager.getTexture("male_watercan_idle2");
         malePlantingIdleTexture = textureManager.getTexture("male_planting_idle");
@@ -967,26 +967,26 @@ public class GDXGameScreen implements Screen {
         femaleWatercanIdle2Texture = textureManager.getTexture("male_watercan_idle2");
         femalePlantingIdleTexture = textureManager.getTexture("male_planting_idle");
 
-        femaleIdleTexture = new Texture("content/Cut/player/female_idle.png");
-        femaleDown1Texture = new Texture("content/Cut/player/female_down1.png");
-        femaleDown2Texture = new Texture("content/Cut/player/female_down2.png");
-        femaleUp1Texture = new Texture("content/Cut/player/female_up1.png");
-        femaleUp2Texture = new Texture("content/Cut/player/female_up2.png");
-        femaleLeft1Texture = new Texture("content/Cut/player/female_left1.png");
-        femaleLeft2Texture = new Texture("content/Cut/player/female_left2.png");
-        femaleRight1Texture = new Texture("content/Cut/player/female_right1.png");
-        femaleRight2Texture = new Texture("content/Cut/player/female_right2.png");
+        femaleIdleTexture = textureManager.getTexture("female_idle");
+        femaleDown1Texture = textureManager.getTexture("female_down1");
+        femaleDown2Texture = textureManager.getTexture("female_down2");
+        femaleUp1Texture = textureManager.getTexture("female_up1");
+        femaleUp2Texture = textureManager.getTexture("female_up2");
+        femaleLeft1Texture = textureManager.getTexture("female_left1");
+        femaleLeft2Texture = textureManager.getTexture("female_left2");
+        femaleRight1Texture = textureManager.getTexture("female_right1");
+        femaleRight2Texture = textureManager.getTexture("female_right2");
 
         // Load NPC textures
-        sebastianTexture = new Texture("content/Cut/NPC/sebastian.png");
-        abigailTexture = new Texture("content/Cut/NPC/abigail.png");
-        harveyTexture = new Texture("content/Cut/NPC/harvey.png");
-        liaTexture = new Texture("content/Cut/NPC/lia.png");
-        robinTexture = new Texture("content/Cut/NPC/robin.png");
+        sebastianTexture = textureManager.getTexture("sebastian");
+        abigailTexture = textureManager.getTexture("abigail");
+        harveyTexture = textureManager.getTexture("harvey");
+        liaTexture = textureManager.getTexture("lia");
+        robinTexture = textureManager.getTexture("robin");
 
         // Load NPC interaction textures
-        dialogBoxTexture = new Texture("content/Cut/map_elements/dialog_box.png");
-        menuBackgroundTexture = new Texture("content/Cut/menu_background.png");
+        dialogBoxTexture = textureManager.getTexture("dialog_box");
+        menuBackgroundTexture = textureManager.getTexture("menu_background");
 
         // Load animal textures
         loadAnimalTextures();
@@ -995,21 +995,14 @@ public class GDXGameScreen implements Screen {
     private void loadAnimalTextures() {
         // Load all animal textures from the animals directory
         for (AnimalType animalType : AnimalType.values()) {
-            String texturePath = "content/Cut/animals/" + animalType.name() + ".png";
-            try {
-                Texture animalTexture = new Texture(texturePath);
-                animalTextures.put(animalType, animalTexture);
-            } catch (Exception e) {
-                // If texture not found, use a default texture or skip
-                System.out.println("Warning: Could not load texture for " + animalType.name() + " at " + texturePath);
-            }
+            animalTextures.put(animalType, textureManager.getTexture(animalType.name()));
         }
     }
 
     private void loadWeatherAssets() {
         // Load the single images
-        rainTexture = new Texture("content/weather/rain1.png");
-        snowTexture = new Texture("content/weather/snow.png");
+        rainTexture = textureManager.getTexture("rain1");
+        snowTexture = textureManager.getTexture("snow");
 
         // Initialize rain particles
         rainParticles = new Array<>();
