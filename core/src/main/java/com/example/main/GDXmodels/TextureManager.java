@@ -1,11 +1,12 @@
 package com.example.main.GDXmodels;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.utils.GdxRuntimeException;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * Manages loading, storing, and retrieving all item and UI textures.
@@ -26,11 +27,12 @@ public class TextureManager {
             "Crafting", "Crops", "Fence", "Fertilizer", "Fish", "Foraging",
             "Gem", "Ingredient", "Mineral", "Recipe", "Resource", "Rock",
             "Tools", "Portraits", "Fishing_Pole", "Skill",
-            "Tools/Axe", "Tools/Hoe", "Tools/Pickaxe", "Tools/Trash_can", "Tools/Watering_Can", "Trees", "Tools_animation"
+            "Tools/Axe", "Tools/Hoe", "Tools/Pickaxe", "Tools/Trash_can", "Tools/Watering_Can", "Trees", "Tools_animation",
+            "Cut/map_elements", "Cut/player", "Cut/animals", "Cut/NPC", "weather"
         };
 
         for (String dir : assetDirs) {
-            recursivelyLoadTextures(Gdx.files.internal("content/" + dir));
+            recursivelyLoadTextures(Gdx.files.internal("assets/content/" + dir));
         }
         Gdx.app.log("TextureManager", "Finished loading " + textureMap.size() + " textures.");
     }
