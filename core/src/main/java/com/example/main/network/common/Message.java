@@ -38,14 +38,4 @@ public class Message {
 	public void putInBody(String fieldName, Object value) {
 		body.put(fieldName, value);
 	}
-
-	public int getIntFromBody(String fieldName) {
-		Object value = body.get(fieldName);
-		if (value instanceof Double) {
-			return ((Double) value).intValue();
-		} else if (value instanceof Integer) {
-			return (Integer) value;
-		}
-		return 0;
-	}
 }

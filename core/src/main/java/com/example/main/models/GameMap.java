@@ -1,5 +1,6 @@
 package com.example.main.models;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
@@ -28,8 +29,8 @@ import com.example.main.models.item.Fruit;
 import com.example.main.models.item.Mineral;
 import com.example.main.models.item.Seed;
 
-public class GameMap {
-    private final Tile[][] tiles;
+public class GameMap implements Serializable {
+    private Tile[][] tiles;
     private Weather currentWeather;
     private final ArrayList<Shop> shops;
     private final ArrayList<House> houses;
@@ -38,6 +39,7 @@ public class GameMap {
     private final ArrayList<Player> players;
     private final ArrayList<FarmThemes> themes;
 
+    // --- THIS IS THE CORRECTED CONSTRUCTOR ---
     public GameMap(ArrayList<User> users, ArrayList<FarmThemes> themes) {
         this.tiles = new Tile[90][60];
         this.currentWeather = Weather.Sunny;
@@ -48,213 +50,100 @@ public class GameMap {
         this.themes = themes;
         this.players = new ArrayList<>();
         for (User user : users) {
-            this.players.add(user.getPlayer());
-        }
-
-        generateBuilding(this.players, 0, TileType.House, 1, 8, 1, 8);
-        generateBuilding(this.players, 0, TileType.BrokenGreenHouse, 22, 29, 1, 7);
-        this.houses.add(new House(this.players.get(0), 1, 1));
-        this.greenHouses.add(new GreenHouse(this.players.get(0), 22, 1));
-
-        generateBuilding(this.players, 1, TileType.House, 81, 88, 1, 8);
-        generateBuilding(this.players, 1, TileType.BrokenGreenHouse, 61, 68, 1, 7);
-        this.houses.add(new House(this.players.get(1), 83, 1));
-        this.greenHouses.add(new GreenHouse(this.players.get(1), 61, 1));
-
-        generateBuilding(this.players, 2, TileType.House, 1, 8, 31, 38);
-        generateBuilding(this.players, 2, TileType.BrokenGreenHouse, 22, 29, 32, 38);
-        this.houses.add(new House(this.players.get(2), 1, 33));
-        this.greenHouses.add(new GreenHouse(this.players.get(2), 22, 32));
-
-        generateBuilding(this.players, 3, TileType.House, 81, 88, 31, 38);
-        generateBuilding(this.players, 3, TileType.BrokenGreenHouse, 61, 68, 32, 38);
-        this.houses.add(new House(this.players.get(3), 83, 33));
-        this.greenHouses.add(new GreenHouse(this.players.get(3), 61, 32));
-
-        generateFarm(this.players, themes);
-        generateBushBorders(this.players);
-
-        for (NPCType npc : NPCType.values()) {
-            generateBuilding(
-                null,
-                4,
-                TileType.NPCHouse,
-                npc.getHouseCornerX(),
-                npc.getHouseCornerX() + 4,
-                npc.getHouseCornerY(),
-                npc.getHouseCornerY() + 6
-            );
-
-            this.npcHouses.add(new NPCHouse(npc));
+            // This ensures we don't add null players from empty slots
+            if(user != null && user.getPlayer() != null) {
+                this.players.add(user.getPlayer());
+            }
         }
 
         Random rand = new Random();
-        int grassAmount = rand.nextInt(3);
 
-        for (int i = 0; i < grassAmount + 2; i++) {
-            int grassX = rand.nextInt(20) + 4;
-            int grassY = rand.nextInt(12) + 8;
-            int grassHeight = rand.nextInt(4) + 1;
-            
-            for (int j = grassY - grassHeight / 2; j < grassY + grassHeight / 2; j++) {
-                for (int k = grassX - rand.nextInt(2) - 1; k < grassX + rand.nextInt(2); k++) {
-                    tiles[k][j] = new Tile(k, j, TileType.Grass, players.get(0));
-                } 
+        // --- Player 1 Quadrant (Top-Left) ---
+        if (this.players.size() > 0) {
+            Player p1 = this.players.get(0);
+            generateBuilding(this.players, 0, TileType.House, 1, 8, 1, 8);
+            generateBuilding(this.players, 0, TileType.BrokenGreenHouse, 22, 29, 1, 7);
+            this.houses.add(new House(p1, 1, 1));
+            this.greenHouses.add(new GreenHouse(p1, 22, 1));
+
+            for (int i = 0; i < rand.nextInt(3) + 2; i++) {
+                generateGrassPatch(p1, 4, 8, 20, 12);
             }
+            generateQuadrantTiles(p1, 1, 1, 29, 29);
+            placeRandomForageables(p1, 1, 1, 29, 29);
+            placeRandomWildTrees(p1, 1, 1, 29, 29);
         }
 
-        grassAmount = rand.nextInt(3);
-        for (int i = 0; i < grassAmount + 2; i++) {
-            int grassX = rand.nextInt(20) + 64;
-            int grassY = rand.nextInt(12) + 8;
-            int grassHeight = rand.nextInt(4) + 1;
+        // --- Player 2 Quadrant (Top-Right) ---
+        if (this.players.size() > 1) {
+            Player p2 = this.players.get(1);
+            generateBuilding(this.players, 1, TileType.House, 81, 88, 1, 8);
+            generateBuilding(this.players, 1, TileType.BrokenGreenHouse, 61, 68, 1, 7);
+            this.houses.add(new House(p2, 83, 1));
+            this.greenHouses.add(new GreenHouse(p2, 61, 1));
 
-            for (int j = grassY - grassHeight / 2; j < grassY + grassHeight / 2; j++) {
-                for (int k = grassX - rand.nextInt(2) - 1; k < grassX + rand.nextInt(2); k++) {
-                    tiles[k][j] = new Tile(k, j, TileType.Grass, players.get(1));
-                }
+            for (int i = 0; i < rand.nextInt(3) + 2; i++) {
+                generateGrassPatch(p2, 64, 8, 20, 12);
             }
+            generateQuadrantTiles(p2, 61, 1, 89, 29);
+            placeRandomForageables(p2, 61, 1, 89, 29);
+            placeRandomWildTrees(p2, 61, 1, 89, 29);
         }
 
-        grassAmount = rand.nextInt(3);
-        for (int i = 0; i < grassAmount + 2; i++) {
-            int grassX = rand.nextInt(20) + 4;
-            int grassY = rand.nextInt(12) + 38;
-            int grassHeight = rand.nextInt(4) + 1;
+        // --- Player 3 Quadrant (Bottom-Left) ---
+        if (this.players.size() > 2) {
+            Player p3 = this.players.get(2);
+            generateBuilding(this.players, 2, TileType.House, 1, 8, 31, 38);
+            generateBuilding(this.players, 2, TileType.BrokenGreenHouse, 22, 29, 32, 38);
+            this.houses.add(new House(p3, 1, 33));
+            this.greenHouses.add(new GreenHouse(p3, 22, 32));
 
-            for (int j = grassY - grassHeight / 2; j < grassY + grassHeight / 2; j++) {
-                for (int k = grassX - rand.nextInt(2) - 1; k < grassX + rand.nextInt(2); k++) {
-                    tiles[k][j] = new Tile(k, j, TileType.Grass, players.get(2));
-                }
+            for (int i = 0; i < rand.nextInt(3) + 2; i++) {
+                generateGrassPatch(p3, 4, 38, 20, 12);
             }
+            generateQuadrantTiles(p3, 1, 31, 29, 59);
+            placeRandomForageables(p3, 1, 31, 29, 59);
+            placeRandomWildTrees(p3, 1, 31, 29, 59);
         }
 
-        grassAmount = rand.nextInt(3);
-        for (int i = 0; i < grassAmount + 2; i++) {
-            int grassX = rand.nextInt(20) + 64;
-            int grassY = rand.nextInt(12) + 38;
-            int grassHeight = rand.nextInt(4) + 1;
+        // --- Player 4 Quadrant (Bottom-Right) ---
+        if (this.players.size() > 3) {
+            Player p4 = this.players.get(3);
+            generateBuilding(this.players, 3, TileType.House, 81, 88, 31, 38);
+            generateBuilding(this.players, 3, TileType.BrokenGreenHouse, 61, 68, 32, 38);
+            this.houses.add(new House(p4, 83, 33));
+            this.greenHouses.add(new GreenHouse(p4, 61, 32));
 
-            for (int j = grassY - grassHeight / 2; j < grassY + grassHeight / 2; j++) {
-                for (int k = grassX - rand.nextInt(2) - 1; k < grassX + rand.nextInt(2); k++) {
-                    tiles[k][j] = new Tile(k, j, TileType.Grass, players.get(3));
-                }
+            for (int i = 0; i < rand.nextInt(3) + 2; i++) {
+                generateGrassPatch(p4, 64, 38, 20, 12);
             }
+            generateQuadrantTiles(p4, 61, 31, 89, 59);
+            placeRandomForageables(p4, 61, 31, 89, 59);
+            placeRandomWildTrees(p4, 61, 31, 89, 59);
         }
 
-        for (int i = 1; i < 29; i++) {
-            for (int j = 1; j < 29; j++) {
-                if (tiles[i][j] == null) {
-                    int tileProb = rand.nextInt(20);
-                    if (tileProb < 12) {
-                        tiles[i][j] = new Tile(i, j, TileType.Earth, players.get(0));
-                    }
-                    else if (tileProb < 13) {
-                        tiles[i][j] = new Tile(i, j, TileType.Stone, players.get(0));
-                    }
-                    else {
-                        tiles[i][j] = new Tile(i, j, TileType.Earth, players.get(0));
-                    }
-                }
-            }
-        }
-        
-        for (int i = 61; i < 89; i++) {
-            for (int j = 1; j < 29; j++) {
-                if (tiles[i][j] == null) {
-                    int tileProb = rand.nextInt(20);
-                    if (tileProb < 12) {
-                        tiles[i][j] = new Tile(i, j, TileType.Earth, players.get(1));
-                    }
-                    else if (tileProb < 13) {
-                        tiles[i][j] = new Tile(i, j, TileType.Stone, players.get(1));
-                    }
-                    else {
-                        tiles[i][j] = new Tile(i, j, TileType.Earth, players.get(1));
-                    }
-                }
-            }
-        }
+        // Generate farms and borders safely
+        generateFarm(this.players, themes);
+        generateBushBorders(this.players);
 
-        for (int i = 1; i < 29; i++) {
-            for (int j = 31; j < 59; j++) {
-                if (tiles[i][j] == null) {
-                    int tileProb = rand.nextInt(20);
-                    if (tileProb < 12) {
-                        tiles[i][j] = new Tile(i, j, TileType.Earth, players.get(2));
-                    }
-                    else if (tileProb < 13) {
-                        tiles[i][j] = new Tile(i, j, TileType.Stone, players.get(2));
-                    }
-                    else {
-                        tiles[i][j] = new Tile(i, j, TileType.Earth, players.get(2));
-                    }
-                }
-            }
-        }
-
-        for (int i = 61; i < 89; i++) {
-            for (int j = 31; j < 59; j++) {
-                if (tiles[i][j] == null) {
-                    int tileProb = rand.nextInt(20);
-                    if (tileProb < 12) {
-                        tiles[i][j] = new Tile(i, j, TileType.Earth, players.get(3));
-                    }
-                    else if (tileProb < 13) {
-                        tiles[i][j] = new Tile(i, j, TileType.Stone, players.get(3));
-                    }
-                    else {
-                        tiles[i][j] = new Tile(i, j, TileType.Earth, players.get(3));
-                    }
-                }
-            }
-        }
-
-        placeRandomForageables(this.players.get(0), 1, 1, 29, 29);
-        placeRandomWildTrees(this.players.get(0), 1, 1, 29, 29);
-        placeRandomForageables(this.players.get(1), 61, 1, 89, 29);
-        placeRandomWildTrees(this.players.get(1), 61, 1, 89, 29);
-        placeRandomForageables(this.players.get(2), 1, 31, 29, 59);
-        placeRandomWildTrees(this.players.get(2), 1, 31, 29, 59);
-        placeRandomForageables(this.players.get(3), 61, 31, 89, 59);
-        placeRandomWildTrees(this.players.get(3), 61, 31, 89, 59);
-
+        // Fill any remaining null tiles
         for (int i = 0; i < 90; i++) {
             for (int j = 0; j < 60; j++) {
                 if (tiles[i][j] == null) {
-                    if (i < 30 && j < 30) {
-                        tiles[i][j] = new Tile(i, j, TileType.Earth, players.get(0));
-                    }
-                    else if (i < 30 && j >= 30) {
-                        tiles[i][j] = new Tile(i, j, TileType.Earth, players.get(2));
-                    }
-                    else if (i >= 60 && j < 30) {
-                        tiles[i][j] = new Tile(i, j, TileType.Earth, players.get(1));
-                    }
-                    else if (i >= 60 && j >= 30) {
-                        tiles[i][j] = new Tile(i, j, TileType.Earth, players.get(3));
-                    }
-                    else {
-                        tiles[i][j] = new Tile(i, j, TileType.Earth, null);
-                    }
+                    tiles[i][j] = new Tile(i, j, TileType.Earth, null);
                 }
             }
         }
 
+        // Generate NPC and Shop buildings (These are player-neutral)
+        for (NPCType npc : NPCType.values()) {
+            generateBuilding(null, 4, TileType.NPCHouse, npc.getHouseCornerX(), npc.getHouseCornerX() + 4, npc.getHouseCornerY(), npc.getHouseCornerY() + 6);
+            this.npcHouses.add(new NPCHouse(npc));
+        }
         for (ShopType shopType : ShopType.values()) {
-            generateBuilding(
-                null,
-                4,
-                TileType.Shop,
-                shopType.getCornerX(),
-                shopType.getCornerX() + 7,
-                shopType.getCornerY(),
-                shopType.getCornerY() + 7
-            );
-
+            generateBuilding(null, 4, TileType.Shop, shopType.getCornerX(), shopType.getCornerX() + 7, shopType.getCornerY(), shopType.getCornerY() + 7);
             Shop shop = new Shop(shopType);
             this.shops.add(shop);
-
             for (int i = shopType.getCornerX(); i < shopType.getCornerX() + 7; i++) {
                 for (int j = shopType.getCornerY(); j < shopType.getCornerY() + 7; j++) {
                     tiles[i][j].setShop(shop);
@@ -263,10 +152,35 @@ public class GameMap {
         }
     }
 
-    public void setCurrentWeather(Weather currentWeather) {
-        this.currentWeather = currentWeather;
+    // --- I've created helper methods to reduce code duplication ---
+    private void generateGrassPatch(Player owner, int regionX, int regionY, int regionWidth, int regionHeight) {
+        Random rand = new Random();
+        int grassX = rand.nextInt(regionWidth) + regionX;
+        int grassY = rand.nextInt(regionHeight) + regionY;
+        int grassH = rand.nextInt(4) + 1;
+        for (int j = grassY - grassH / 2; j < grassY + grassH / 2; j++) {
+            for (int k = grassX - rand.nextInt(2) - 1; k < grassX + rand.nextInt(2); k++) {
+                if(inBounds(k, j)) tiles[k][j] = new Tile(k, j, TileType.Grass, owner);
+            }
+        }
     }
 
+    private void generateQuadrantTiles(Player owner, int xStart, int yStart, int xEnd, int yEnd) {
+        Random rand = new Random();
+        for (int i = xStart; i < xEnd; i++) {
+            for (int j = yStart; j < yEnd; j++) {
+                if (tiles[i][j] == null) {
+                    int tileProb = rand.nextInt(20);
+                    if (tileProb < 12) tiles[i][j] = new Tile(i, j, TileType.Earth, owner);
+                    else if (tileProb < 13) tiles[i][j] = new Tile(i, j, TileType.Stone, owner);
+                    else tiles[i][j] = new Tile(i, j, TileType.Earth, owner);
+                }
+            }
+        }
+    }
+
+    // --- All other methods remain the same ---
+    public void setCurrentWeather(Weather currentWeather) { this.currentWeather = currentWeather; }
     public void lightning(int playerIndex) {
         Random rand = new Random();
         switch (playerIndex) {
@@ -349,12 +263,9 @@ public class GameMap {
         ArrayList<Player> players, int playerIndex, TileType buildingType,
         int xStart, int xEnd, int yStart, int yEnd
     ) {
-        Player owner;
-        try {
+        Player owner = null;
+        if (players != null && players.size() > playerIndex) {
             owner = players.get(playerIndex);
-        }
-        catch (NullPointerException e) {
-            owner = null;
         }
 
         if (buildingType == TileType.Quarry) {
@@ -426,56 +337,57 @@ public class GameMap {
     }
 
     private void generateFarm(ArrayList<Player> players, ArrayList<FarmThemes> themes) {
-        switch (themes.get(0)) {
-            case Neutral -> {
-                generateBuilding(players, 0, TileType.Quarry, 1, 9, 24, 28);
-                generateLake(players.get(0), 23, 28, 24, 27);
-            }
-            case Miner -> generateBuilding(players, 0, TileType.Quarry, 1, 19, 24, 28);
-            case Fisher -> generateLake(players.get(0), 1, 19, 24, 27);
-            default -> {
-            }
-        }
-
-        switch (themes.get(1)) {
-            case Neutral -> {
-                generateBuilding(players, 1, TileType.Quarry, 61, 69, 24, 28);
-                generateLake(players.get(1), 83, 88, 24, 27);
-            }
-            case Miner -> generateBuilding(players, 1, TileType.Quarry, 61, 79, 24, 28);
-            case Fisher -> generateLake(players.get(1), 61, 79, 24, 27);
-            default -> {
+        if (themes.size() > 0 && players.size() > 0) {
+            switch (themes.get(0)) {
+                case Neutral -> {
+                    generateBuilding(players, 0, TileType.Quarry, 1, 9, 24, 28);
+                    generateLake(players.get(0), 23, 28, 24, 27);
+                }
+                case Miner -> generateBuilding(players, 0, TileType.Quarry, 1, 19, 24, 28);
+                case Fisher -> generateLake(players.get(0), 1, 19, 24, 27);
+                default -> {}
             }
         }
-
-        switch (themes.get(2)) {
-            case Neutral -> {
-                generateBuilding(players, 2, TileType.Quarry, 1, 9, 54, 58);
-                generateLake(players.get(2), 23, 28, 54, 57);
-            }
-            case Miner -> generateBuilding(players, 2, TileType.Quarry, 1, 19, 54, 58);
-            case Fisher -> generateLake(players.get(2), 1, 19, 54, 58);
-            default -> {
+        if (themes.size() > 1 && players.size() > 1) {
+            switch (themes.get(1)) {
+                case Neutral -> {
+                    generateBuilding(players, 1, TileType.Quarry, 61, 69, 24, 28);
+                    generateLake(players.get(1), 83, 88, 24, 27);
+                }
+                case Miner -> generateBuilding(players, 1, TileType.Quarry, 61, 79, 24, 28);
+                case Fisher -> generateLake(players.get(1), 61, 79, 24, 27);
+                default -> {}
             }
         }
-
-        switch (themes.get(3)) {
-            case Neutral -> {
-                generateBuilding(players, 3, TileType.Quarry, 61, 69, 54, 58);
-                generateLake(players.get(3), 83, 88, 54, 57);
+        if (themes.size() > 2 && players.size() > 2) {
+            switch (themes.get(2)) {
+                case Neutral -> {
+                    generateBuilding(players, 2, TileType.Quarry, 1, 9, 54, 58);
+                    generateLake(players.get(2), 23, 28, 54, 57);
+                }
+                case Miner -> generateBuilding(players, 2, TileType.Quarry, 1, 19, 54, 58);
+                case Fisher -> generateLake(players.get(2), 1, 19, 54, 58);
+                default -> {}
             }
-            case Miner -> generateBuilding(players, 3, TileType.Quarry, 61, 79, 54, 58);
-            case Fisher -> generateLake(players.get(3), 61, 79, 54, 58);
-            default -> {
+        }
+        if (themes.size() > 3 && players.size() > 3) {
+            switch (themes.get(3)) {
+                case Neutral -> {
+                    generateBuilding(players, 3, TileType.Quarry, 61, 69, 54, 58);
+                    generateLake(players.get(3), 83, 88, 54, 57);
+                }
+                case Miner -> generateBuilding(players, 3, TileType.Quarry, 61, 79, 54, 58);
+                case Fisher -> generateLake(players.get(3), 61, 79, 54, 58);
+                default -> {}
             }
         }
     }
 
     private void generateBushBorders(ArrayList<Player> players) {
-        generateBushBorderForArea(players.get(0), 0, 29, 0, 29);
-        generateBushBorderForArea(players.get(1), 60, 89, 0, 29);
-        generateBushBorderForArea(players.get(2), 0, 29, 30, 59);
-        generateBushBorderForArea(players.get(3), 60, 89, 30, 59);
+        if(players.size() > 0) generateBushBorderForArea(players.get(0), 0, 29, 0, 29);
+        if(players.size() > 1) generateBushBorderForArea(players.get(1), 60, 89, 0, 29);
+        if(players.size() > 2) generateBushBorderForArea(players.get(2), 0, 29, 30, 59);
+        if(players.size() > 3) generateBushBorderForArea(players.get(3), 60, 89, 30, 59);
     }
 
     private void generateBushBorderForArea(Player owner, int xStart, int xEnd, int yStart, int yEnd) {
@@ -512,13 +424,8 @@ public class GameMap {
         }
     }
 
-    public Tile[][] getTiles() {
-        return this.tiles;
-    }
-
-    public Tile getTile(int x, int y) {
-        return tiles[x][y];
-    }
+    public Tile[][] getTiles() { return this.tiles; }
+    public Tile getTile(int x, int y) { return tiles[x][y]; }
 
     public ArrayList<Tile> findWalkPath(int startX, int startY, int destX, int destY) {
         boolean[][] visited = new boolean[tiles.length][tiles[0].length];
@@ -769,5 +676,16 @@ public class GameMap {
                 case Miner -> generateBuilding(this.players, 3, TileType.Quarry, 61, 79, 54, 58);
             }
         }
+    }
+
+    public void setTiles(Tile[][] tiles) { this.tiles = tiles; }
+    public int getMapWidth() {
+        if (tiles == null || tiles.length == 0) return 0;
+        return tiles.length;
+    }
+
+    public int getMapHeight() {
+        if (tiles == null || tiles.length == 0 || tiles[0] == null) return 0;
+        return tiles[0].length;
     }
 }

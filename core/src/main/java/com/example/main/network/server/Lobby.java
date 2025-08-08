@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.example.main.models.User;
 
@@ -19,6 +20,7 @@ public class Lobby {
     private boolean isVisible;
     private final int maxPlayers;
     private boolean gameStarted;
+    private transient AtomicBoolean mapRequestSent = new AtomicBoolean(false);
 
     public Lobby(String lobbyId, String name, String hostId, boolean isPrivate, String password, boolean isVisible) {
         this.lobbyId = lobbyId;
@@ -155,5 +157,11 @@ public class Lobby {
 
     public Map<String, Boolean> getPlayerReadyStatus() {
         return new HashMap<>(playerReadyStatus);
+    }
+
+    public boolean hasMapRequestBeenSentAndSet() {
+        // This command atomically sets the value to 'true' and returns the PREVIOUS value.
+        // So, it will only return 'false' on the very first time it is called for this lobby.
+        return this.mapRequestSent.getAndSet(true);
     }
 }

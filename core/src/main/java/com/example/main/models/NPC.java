@@ -12,20 +12,24 @@ public class NPC {
     private final HashMap<Quest, Boolean> quests;
     private final ArrayList<NPCFriendship> friendships = new ArrayList<>();
 
+    // --- THIS IS THE CORRECTED CONSTRUCTOR ---
     public NPC(NPCType type, ArrayList<Player> players) {
         this.type = type;
         this.quests = new HashMap<>();
         for (Quest quest : this.type.getQuests()) {
             quests.put(quest, false);
         }
-        
+
         this.x = type.getHouseCornerX() + 1;
         this.y = type.getHouseCornerY() + 7;
 
-        friendships.add(new NPCFriendship(this, players.get(0)));
-        friendships.add(new NPCFriendship(this, players.get(1)));
-        friendships.add(new NPCFriendship(this, players.get(2)));
-        friendships.add(new NPCFriendship(this, players.get(3)));
+        if (players != null) {
+            for (Player player : players) {
+                if (player != null) { // A final safety check
+                    friendships.add(new NPCFriendship(this, player));
+                }
+            }
+        }
     }
 
     public NPCType getType() {

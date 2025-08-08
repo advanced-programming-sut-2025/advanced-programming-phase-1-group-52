@@ -2,7 +2,9 @@ package com.example.main.enums.design;
 
 import com.example.main.models.ANSI;
 
-public enum TileType {
+import java.io.Serializable;
+
+public enum TileType implements Serializable {
     Earth(true, ANSI.YELLOW + " " + ANSI.RESET),
     Grass(true, ANSI.GREEN + "^" + ANSI.RESET),
     Water(false, ANSI.BLUE + "~" + ANSI.RESET),

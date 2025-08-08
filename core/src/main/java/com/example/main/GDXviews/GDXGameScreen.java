@@ -53,10 +53,7 @@ import com.example.main.Main;
 import com.example.main.controller.GameMenuController;
 import com.example.main.controller.NetworkLobbyController;
 import com.example.main.controller.StoreMenuController;
-import com.example.main.enums.design.NPCType;
-import com.example.main.enums.design.ShopType;
-import com.example.main.enums.design.TileType;
-import com.example.main.enums.design.Weather;
+import com.example.main.enums.design.*;
 import com.example.main.enums.items.AnimalType;
 import com.example.main.enums.items.ArtisanProductType;
 import com.example.main.enums.items.CageType;
@@ -71,22 +68,11 @@ import static com.example.main.enums.player.Skills.Farming;
 import static com.example.main.enums.player.Skills.Fishing;
 import static com.example.main.enums.player.Skills.Foraging;
 import static com.example.main.enums.player.Skills.Mining;
-import com.example.main.models.ActiveBuff;
-import com.example.main.models.App;
-import com.example.main.models.Date;
-import com.example.main.models.FishingMinigame;
-import com.example.main.models.Friendship;
-import com.example.main.models.Game;
-import com.example.main.models.GameMap;
-import com.example.main.models.NPC;
-import com.example.main.models.NPCFriendship;
-import com.example.main.models.Notification;
-import com.example.main.models.Player;
-import com.example.main.models.Quest;
-import com.example.main.models.Result;
-import com.example.main.models.Tile;
-import com.example.main.models.Time;
-import com.example.main.models.User;
+
+import com.example.main.events.EventBus;
+import com.example.main.events.GameMapSyncEvent;
+import com.example.main.events.RequestMapSnapshotEvent;
+import com.example.main.models.*;
 import com.example.main.models.building.Housing;
 import com.example.main.models.item.CookingRecipe;
 import com.example.main.models.item.CraftingMachine;
@@ -101,6 +87,8 @@ import com.example.main.models.item.PurchasedAnimal;
 import com.example.main.models.item.Seed;
 import com.example.main.models.item.Tool;
 import com.example.main.models.item.TrashCan;
+import com.example.main.network.common.Message;
+import com.example.main.network.common.MessageType;
 import com.example.main.service.NetworkService;
 
 public class GDXGameScreen implements Screen {
@@ -602,13 +590,24 @@ public class GDXGameScreen implements Screen {
     private String marriageErrorMessage = "";
     private boolean showMarriageError = false;
     private String marriageProposer = null;
+    private Label loadingLabel; // NEW: To show loading status
 
     public GDXGameScreen() {
+        System.out.println("[GAMESCREEN] Constructor START");
         controller = new GameMenuController();
         shopController = new StoreMenuController();
         stage = new Stage(new ScreenViewport());
         Gdx.input.setInputProcessor(stage);
         skin = new Skin(Gdx.files.internal("uiskin.json"));
+
+        // --- SETUP LOADING LABEL ---
+        loadingLabel = new Label("Loading Map...", skin);
+        Table loadingTable = new Table();
+        loadingTable.setFillParent(true);
+        loadingTable.center();
+        loadingTable.add(loadingLabel);
+        stage.addActor(loadingTable);
+
         ProgressBar.ProgressBarStyle progressBarStyle = new ProgressBar.ProgressBarStyle();
         progressBarStyle.background = skin.newDrawable("white", Color.DARK_GRAY);
         progressBarStyle.knobBefore = skin.newDrawable("white", Color.GREEN);
@@ -621,20 +620,17 @@ public class GDXGameScreen implements Screen {
 
         float worldWidth = MAP_WIDTH * TILE_SIZE;
         float worldHeight = MAP_HEIGHT * TILE_SIZE;
-
         float screenWidth = Gdx.graphics.getWidth();
         float screenHeight = Gdx.graphics.getHeight();
 
         camera.setToOrtho(false, screenWidth, screenHeight);
         hudCamera.setToOrtho(false, screenWidth, screenHeight);
         camera.zoom = 0.85f;
-
         camera.position.set(worldWidth / 2f, worldHeight / 2f, 0);
         camera.update();
 
         generalMessageLabel = new Label("", skin);
         generalMessageLabel.setVisible(false);
-
         plantingPromptLabel = new Label("Double-click a seed to plant", skin);
         plantingPromptLabel.setColor(Color.LIME);
         plantingPromptLabel.setVisible(false);
@@ -669,18 +665,55 @@ public class GDXGameScreen implements Screen {
         loadHudAssets();
         loadWeatherAssets();
 
-
+        // --- START: CORRECTED MAP INITIALIZATION LOGIC ---
         NetworkService networkService = App.getInstance().getNetworkService();
         this.networkController = networkService.getLobbyController();
         this.game = App.getInstance().getCurrentGame();
-        this.localPlayer = game.getCurrentPlayer();
-
-        game = App.getInstance().getCurrentGame();
-        gameMap = game.getMap();
         controller.setGame(game);
-        controller.setMap(gameMap);
-        generateRandomMaps();
+        this.gameMap = null; // Start as null for everyone
+        this.localPlayer = game.getLocalPlayerUser().getPlayer();
+
         initializePlayerPosition();
+
+        // Determine if this client is the host
+        String myUsername = App.getInstance().getCurrentUser().getUsername();
+        String hostUsername = game.getMainPlayer().getUsername();
+
+        if (myUsername.equals(hostUsername)) {
+            // --- HOST LOGIC ---
+            // The host proactively generates the map and sends it to the server.
+            System.out.println("[GAMESCREEN - HOST] I am the host. Proactively generating and sending map.");
+
+            // 1. Create the GameMap object
+            ArrayList<FarmThemes> themes = new ArrayList<>();
+            for (User user : game.getPlayers()) {
+                if (!user.getUsername().startsWith("empty_slot_")) themes.add(user.getFarmTheme());
+            }
+            while (themes.size() < 4) themes.add(FarmThemes.Neutral);
+            GameMap newMasterMap = new GameMap(game.getPlayers(), themes);
+            game.setGameMap(newMasterMap);
+
+            // 2. Generate the random visual elements for the map
+            generateRandomMaps();
+
+            // 3. Create the blueprint snapshot
+            GameMapSnapshot snapshot = createMapSnapshot();
+
+            // 4. Send the snapshot to the server
+            Message mapMessage = new Message(new HashMap<>(), MessageType.SEND_GAME_MAP);
+            mapMessage.putInBody("gameMapSnapshot", snapshot);
+            networkService.getClient().sendMessage(mapMessage);
+
+            // 5. Finally, set the local map so the host can see it and hide the loading message
+            this.gameMap = newMasterMap;
+            this.loadingLabel.setVisible(false);
+
+        } else {
+            // --- GUEST LOGIC ---
+            // Guests do nothing but wait. The EventBus will notify them when the map arrives.
+            System.out.println("[GAMESCREEN - GUEST] I am a guest. Waiting for map from server.");
+        }
+        // --- END: CORRECTED MAP INITIALIZATION LOGIC ---
 
         inventoryStage = new Stage(new ScreenViewport());
         inventoryBackground = new Texture("content/Cut/menu_background.png");
@@ -711,8 +744,17 @@ public class GDXGameScreen implements Screen {
         multiplexer.addProcessor(machineUiStage);
         multiplexer.addProcessor(fishingStage);
         multiplexer.addProcessor(infoStage);
-       plantableItems = new ArrayList<>();
+        plantableItems = new ArrayList<>();
         Gdx.input.setInputProcessor(multiplexer);
+
+        // Subscribe to events so the GUEST client can receive the map.
+        subscribeToEvents();
+        System.out.println("[GAMESCREEN] Constructor END. Now listening for events.");
+    }
+
+    private void subscribeToEvents() {
+        EventBus.getInstance().subscribe(RequestMapSnapshotEvent.class, this::onHostNeedsToSendMap);
+        EventBus.getInstance().subscribe(GameMapSyncEvent.class, this::onGuestNeedsToBuildMap);
     }
 
     private void loadHudAssets() {
@@ -734,113 +776,116 @@ public class GDXGameScreen implements Screen {
 
     @Override
     public void render(float delta) {
-        if (eatingAnimationTimer > 0) {
-            eatingAnimationTimer -= delta;
-        }
-
-        if (game.isCrowAttackHappened()) {
-            triggerCrowAttackAnimation();
-            game.resetCrowAttackFlag();
-        }
-
-        if (actionTimer > 0) {
-            actionTimer -= delta;
-            if (actionTimer <= 0) {
-                playerActionState = PlayerActionState.IDLE;
-            }
-        }
-        handleInput(delta);
-        updateAnimalMovement(delta);
-        updateAnimations(delta);
-        updateFishingMinigame(delta);
-
-        if (!isInventoryOpen) {
-        updateTime(delta);
-        }
-
-        // Update general message timer
-        if (generalMessageTimer > 0) {
-            generalMessageTimer -= delta;
-            if (generalMessageTimer <= 0) {
-                generalMessageLabel.setVisible(false);
-            }
-        }
-
-        Player currentPlayer = game.getCurrentPlayer();
-        if (currentPlayer != null && !currentPlayer.getNotifications().isEmpty()) {
-            Notification notif = currentPlayer.getNotifications().get(0);
-            generalMessageLabel.setText(notif.getMessage());
-            generalMessageLabel.setColor(Color.CYAN); // Use a distinct color for notifications
-            generalMessageLabel.setVisible(true);
-            generalMessageTimer = GENERAL_MESSAGE_DURATION;
-        }
-
-        if (currentPlayer != null && currentPlayer.getCurrentTool() != null) {
-            // Get mouse position in screen coordinates
-            float mouseX = Gdx.input.getX();
-            float mouseY = Gdx.input.getY();
-
-            // Convert mouse position to world coordinates
-            com.badlogic.gdx.math.Vector3 mouseInWorld = camera.unproject(new com.badlogic.gdx.math.Vector3(mouseX, mouseY, 0));
-
-            // Get player's center position in world coordinates
-            float playerCenterX = (currentPlayer.currentX() * TILE_SIZE) + (TILE_SIZE / 2f);
-            float playerCenterY = ((MAP_HEIGHT - 1 - currentPlayer.currentY()) * TILE_SIZE) + (TILE_SIZE / 2f);
-
-            // Calculate the angle
-            float deltaX = mouseInWorld.x - playerCenterX;
-            float deltaY = mouseInWorld.y - playerCenterY;
-            toolRotation = com.badlogic.gdx.math.MathUtils.atan2(deltaY, deltaX) * com.badlogic.gdx.math.MathUtils.radiansToDegrees;
-        }
-
         Gdx.gl.glClearColor(0.2f, 0.3f, 0.3f, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+        if (gameMap != null) {
+            if (eatingAnimationTimer > 0) {
+                eatingAnimationTimer -= delta;
+            }
 
-        camera.update();
-        spriteBatch.setProjectionMatrix(camera.combined);
-        spriteBatch.begin();
-        renderMap();
-        renderGiantCrops();
-        renderAnimals();
-        renderMachinePlacement(spriteBatch);
-        spriteBatch.end();
+            if (game.isCrowAttackHappened()) {
+                triggerCrowAttackAnimation();
+                game.resetCrowAttackFlag();
+            }
 
-        // Render animations (after animals so they appear on top)
-        renderAnimations();
+            if (actionTimer > 0) {
+                actionTimer -= delta;
+                if (actionTimer <= 0) {
+                    playerActionState = PlayerActionState.IDLE;
+                }
+            }
+            handleInput(delta);
+            updateAnimalMovement(delta);
+            updateAnimations(delta);
+            updateFishingMinigame(delta);
 
-        renderWeather(delta);
-        renderDayNightOverlay();
-        renderCheatMenu(delta);
-        renderPlantingUI(delta);
+            if (!isInventoryOpen) {
+                updateTime(delta);
+            }
 
-        if (showMinimap) {
-            renderMinimap();
+            // Update general message timer
+            if (generalMessageTimer > 0) {
+                generalMessageTimer -= delta;
+                if (generalMessageTimer <= 0) {
+                    generalMessageLabel.setVisible(false);
+                }
+            }
+
+            Player currentPlayer = game.getCurrentPlayer();
+            if (currentPlayer != null && !currentPlayer.getNotifications().isEmpty()) {
+                Notification notif = currentPlayer.getNotifications().get(0);
+                generalMessageLabel.setText(notif.getMessage());
+                generalMessageLabel.setColor(Color.CYAN); // Use a distinct color for notifications
+                generalMessageLabel.setVisible(true);
+                generalMessageTimer = GENERAL_MESSAGE_DURATION;
+            }
+
+            if (currentPlayer != null && currentPlayer.getCurrentTool() != null) {
+                // Get mouse position in screen coordinates
+                float mouseX = Gdx.input.getX();
+                float mouseY = Gdx.input.getY();
+
+                // Convert mouse position to world coordinates
+                com.badlogic.gdx.math.Vector3 mouseInWorld = camera.unproject(new com.badlogic.gdx.math.Vector3(mouseX, mouseY, 0));
+
+                // Get player's center position in world coordinates
+                float playerCenterX = (currentPlayer.currentX() * TILE_SIZE) + (TILE_SIZE / 2f);
+                float playerCenterY = ((MAP_HEIGHT - 1 - currentPlayer.currentY()) * TILE_SIZE) + (TILE_SIZE / 2f);
+
+                // Calculate the angle
+                float deltaX = mouseInWorld.x - playerCenterX;
+                float deltaY = mouseInWorld.y - playerCenterY;
+                toolRotation = com.badlogic.gdx.math.MathUtils.atan2(deltaY, deltaX) * com.badlogic.gdx.math.MathUtils.radiansToDegrees;
+            }
+
+            Gdx.gl.glClearColor(0.2f, 0.3f, 0.3f, 1);
+            Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+
+            camera.update();
+            spriteBatch.setProjectionMatrix(camera.combined);
+            spriteBatch.begin();
+            renderMap();
+            renderGiantCrops();
+            renderAnimals();
+            renderMachinePlacement(spriteBatch);
+            spriteBatch.end();
+
+            // Render animations (after animals so they appear on top)
+            renderAnimations();
+
+            renderWeather(delta);
+            renderDayNightOverlay();
+            renderCheatMenu(delta);
+            renderPlantingUI(delta);
+
+            if (showMinimap) {
+                renderMinimap();
+            }
+
+            renderWeather(delta);
+            renderHud();
+            renderDayNightOverlay();
+            renderToolMenu(delta);
+            renderInventoryOverlay(delta);
+
+            // Render building placement preview
+            if (isBuildingPlacementMode && buildingPlacementTexture != null) {
+                renderBuildingPlacementPreview();
+            }
+
+            // Render shepherd mode UI
+            renderShepherdModeUI();
+            renderCrowAnimations(delta);
+            renderCraftingMenu(delta);
+            renderCookingMenu(delta);
+            renderCraftingCheatMenu(delta);
+            renderCookingCheatMenu(delta);
+            renderEatMenu(delta);
+            renderFriendsMenu(delta);
+            renderSellMenu(delta);
+            renderBuffs();
+            renderFishingMinigame();
         }
-
-        renderWeather(delta);
-        renderHud();
-        renderDayNightOverlay();
-        renderToolMenu(delta);
-        renderInventoryOverlay(delta);
-
-        // Render building placement preview
-        if (isBuildingPlacementMode && buildingPlacementTexture != null) {
-            renderBuildingPlacementPreview();
-        }
-
-        // Render shepherd mode UI
-        renderShepherdModeUI();
-        renderCrowAnimations(delta);
-        renderCraftingMenu(delta);
-        renderCookingMenu(delta);
-        renderCraftingCheatMenu(delta);
-        renderCookingCheatMenu(delta);
-        renderEatMenu(delta);
-        renderFriendsMenu(delta);
-        renderSellMenu(delta);
-        renderBuffs();
-        renderFishingMinigame();
-
         machineUiStage.act(delta);
         machineUiStage.draw();
 
@@ -1154,7 +1199,7 @@ public class GDXGameScreen implements Screen {
             return;
         }
 
-       com.badlogic.gdx.math.Vector3 mouseInWorld = camera.unproject(new com.badlogic.gdx.math.Vector3(Gdx.input.getX(), Gdx.input.getY(), 0));
+        com.badlogic.gdx.math.Vector3 mouseInWorld = camera.unproject(new com.badlogic.gdx.math.Vector3(Gdx.input.getX(), Gdx.input.getY(), 0));
         int targetTileX = (int) (mouseInWorld.x / TILE_SIZE);
         int targetTileY = MAP_HEIGHT - 1 - (int) (mouseInWorld.y / TILE_SIZE);
 
@@ -8147,4 +8192,131 @@ public class GDXGameScreen implements Screen {
             .key(Input.Keys.ESCAPE, false)
             .show(inventoryStage);
    }
+
+    private void onRequestMapSnapshot(RequestMapSnapshotEvent event) {
+        Gdx.app.postRunnable(() -> {
+            System.out.println("[GAMESCREEN] Event received. Creating and sending map snapshot.");
+            GameMapSnapshot snapshot = createMapSnapshot();
+
+            Message mapMessage = new Message(new HashMap<>(), MessageType.SEND_GAME_MAP);
+            mapMessage.putInBody("gameMapSnapshot", snapshot);
+
+            // Get network service from App to send the message
+            App.getInstance().getNetworkService().getClient().sendMessage(mapMessage);
+        });
+    }
+
+    /**
+     * Called by the EventBus when this client (a guest) receives the host's map.
+     */
+    private void onGameMapSync(GameMapSyncEvent event) {
+        Gdx.app.postRunnable(() -> {
+            System.out.println("[GAMESCREEN] Event received. Initializing map from snapshot.");
+            initializeMapFromSnapshot(event.getGameMapSnapshot());
+        });
+    }
+
+    private void onHostNeedsToSendMap(RequestMapSnapshotEvent event) {
+        Gdx.app.postRunnable(() -> {
+            System.out.println("[GAMESCREEN - HOST] Event received! Generating the master map...");
+
+            // 1. Create the GameMap object
+            ArrayList<FarmThemes> themes = new ArrayList<>();
+            for (User user : game.getPlayers()) {
+                if (!user.getUsername().startsWith("empty_slot_")) themes.add(user.getFarmTheme());
+            }
+            while (themes.size() < 4) themes.add(FarmThemes.Neutral);
+            GameMap newMasterMap = new GameMap(game.getPlayers(), themes);
+            game.setGameMap(newMasterMap);
+
+            // 2. Generate the random visual tile variants
+            generateRandomMaps();
+            System.out.println("[GAMESCREEN - HOST] Visuals generated.");
+
+            // 3. Create the blueprint snapshot from the final map
+            GameMapSnapshot snapshot = createMapSnapshot();
+            System.out.println("[GAMESCREEN - HOST] Snapshot created.");
+
+            // 4. Send the snapshot to the server
+            Message mapMessage = new Message(new HashMap<>(), MessageType.SEND_GAME_MAP);
+            mapMessage.putInBody("gameMapSnapshot", snapshot);
+            App.getInstance().getNetworkService().getClient().sendMessage(mapMessage);
+            System.out.println("[GAMESCREEN - HOST] Snapshot sent to server. Setting local map.");
+
+            // 5. Finally, set the local map so the host can see it.
+            this.gameMap = newMasterMap;
+            this.loadingLabel.setVisible(false); // Hide "Loading..." message
+        });
+    }
+
+    /**
+     * TRIGGERED ON GUEST CLIENTS.
+     * Builds the map from the host's blueprint.
+     */
+    private void onGuestNeedsToBuildMap(GameMapSyncEvent event) {
+        Gdx.app.postRunnable(() -> {
+            System.out.println("[GAMESCREEN - GUEST] Sync event received! Building map from snapshot...");
+            initializeMapFromSnapshot(event.getGameMapSnapshot());
+            System.out.println("[GAMESCREEN - GUEST] Map built successfully.");
+            this.loadingLabel.setVisible(false); // Hide "Loading..." message
+        });
+    }
+
+    public void initializeMapFromSnapshot(GameMapSnapshot snapshot) {
+        // ... (The corrected implementation from the previous response)
+        System.out.println("[GAMESCREEN] Initializing map from host's snapshot.");
+
+        int mapWidth = snapshot.tileTypes.length;
+        int mapHeight = snapshot.tileTypes[0].length;
+        Tile[][] newTiles = new Tile[mapWidth][mapHeight];
+        List<User> players = game.getPlayers();
+
+        for (int x = 0; x < mapWidth; x++) {
+            for (int y = 0; y < mapHeight; y++) {
+                Player owner = null;
+                if (x < mapWidth / 2 && y >= mapHeight / 2) { if (players.size() > 0) owner = players.get(0).getPlayer(); }
+                else if (x >= mapWidth / 2 && y >= mapHeight / 2) { if (players.size() > 1) owner = players.get(1).getPlayer(); }
+                else if (x < mapWidth / 2 && y < mapHeight / 2) { if (players.size() > 2) owner = players.get(2).getPlayer(); }
+                else { if (players.size() > 3) owner = players.get(3).getPlayer(); }
+
+                newTiles[x][y] = new Tile(x, y, snapshot.tileTypes[x][y], owner);
+            }
+        }
+
+        if (game.getMap() == null) {
+            game.setGameMap(new GameMap(game.getPlayers(), new ArrayList<>()));
+        }
+        game.getMap().setTiles(newTiles);
+
+        this.baseGroundMap = snapshot.baseGroundMap;
+        this.grassVariantMap = snapshot.grassVariantMap;
+        this.treeVariantMap = snapshot.treeVariantMap;
+        this.stoneVariantMap = snapshot.stoneVariantMap;
+        this.waterVariantMap = snapshot.waterVariantMap;
+        this.playerHouseVariants = snapshot.playerHouseVariants;
+        this.npcHouseVariants = snapshot.npcHouseVariants;
+
+        this.gameMap = game.getMap();
+    }
+
+    public GameMapSnapshot createMapSnapshot() {
+        // ... (The implementation from the previous response)
+        GameMapSnapshot snapshot = new GameMapSnapshot();
+        Tile[][] tiles = game.getMap().getTiles();
+        snapshot.tileTypes = new TileType[tiles.length][tiles[0].length];
+        for (int i = 0; i < tiles.length; i++) {
+            for (int j = 0; j < tiles[i].length; j++) {
+                snapshot.tileTypes[i][j] = tiles[i][j] != null ? tiles[i][j].getType() : TileType.Earth;
+            }
+        }
+        snapshot.baseGroundMap = this.baseGroundMap;
+        snapshot.grassVariantMap = this.grassVariantMap;
+        snapshot.treeVariantMap = this.treeVariantMap;
+        snapshot.stoneVariantMap = this.stoneVariantMap;
+        snapshot.waterVariantMap = this.waterVariantMap;
+        snapshot.playerHouseVariants = this.playerHouseVariants;
+        snapshot.npcHouseVariants = this.npcHouseVariants;
+        return snapshot;
+    }
+
 }

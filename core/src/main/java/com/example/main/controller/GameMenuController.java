@@ -10,6 +10,8 @@ import java.util.Random;
 import java.util.regex.Matcher;
 import java.util.stream.Collectors;
 
+import com.badlogic.gdx.Gdx;
+import com.example.main.GDXviews.GDXGameScreen;
 import com.example.main.enums.Menu;
 import com.example.main.enums.design.Direction;
 import com.example.main.enums.design.FarmThemes;
@@ -36,6 +38,9 @@ import com.example.main.enums.items.TreeType;
 import com.example.main.enums.player.Skills;
 import com.example.main.enums.regex.GameMenuCommands;
 import com.example.main.enums.regex.NPCDialogs;
+import com.example.main.events.EventBus;
+import com.example.main.events.GameMapSyncEvent;
+import com.example.main.events.PlayerDisconnectedEvent;
 import com.example.main.models.*;
 import com.example.main.models.building.House;
 import com.example.main.models.building.Housing;
@@ -47,6 +52,32 @@ public class GameMenuController {
     private GameMap map;
     private Food lastCookedFood = null;
     private FishingMinigame activeMinigame = null;
+
+    public GameMenuController() {
+        subscribeToEvents();
+    }
+
+    private void subscribeToEvents() {
+        EventBus.getInstance().subscribe(PlayerDisconnectedEvent.class, this::onPlayerDisconnected);
+    }
+
+    /**
+     * This method is called by the EventBus when a GameMapSyncEvent is published.
+     */
+    private void onPlayerDisconnected(PlayerDisconnectedEvent event) {
+        Gdx.app.postRunnable(() -> {
+            removePlayer(event.getUsername());
+        });
+    }
+
+    public void setGameMap(GameMap newMap) {
+        if (game != null) {
+            game.setGameMap(newMap);
+            System.out.println("[CONTROLLER] Game map has been successfully synchronized.");
+        } else {
+            System.err.println("[CONTROLLER] Game is null. Cannot sync map.");
+        }
+    }
 
     public void setGame(Game game) {
         this.game = game;
@@ -3102,9 +3133,12 @@ public class GameMenuController {
         return new Result(true, "Process cancelled.");
     }
 
-        public void removePlayer(String username) {
-            if (game != null) {
-                game.removePlayer(username);
-            }
+    public void removePlayer(String username) {
+        if (game != null) {
+            System.out.println("[CONTROLLER] Removing player: " + username);
+            game.removePlayer(username);
+        } else {
+            System.err.println("[CONTROLLER] Game is null. Cannot remove player.");
         }
+    }
 }

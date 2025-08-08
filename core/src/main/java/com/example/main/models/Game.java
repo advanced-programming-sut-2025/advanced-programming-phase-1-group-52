@@ -34,34 +34,53 @@ public class Game {
     private final ArrayList<NPC> NPCs = new ArrayList<>();
     private int switchCounter = 0;
     private boolean crowAttackHappened = false;
+    private transient User localPlayerUser;
 
+    // --- THIS IS THE CORRECTED CONSTRUCTOR ---
     public Game(ArrayList<User> players) {
         this.time = new Time();
         this.date = new Date();
         this.players = players;
-        this.currentPlayer = players.getFirst().getPlayer();
-        this.currentUser = players.getFirst();
+
+        // Safely set the current player and user to the first player in the list.
+        if (!players.isEmpty()) {
+            this.currentPlayer = players.get(0).getPlayer();
+            this.currentUser = players.get(0);
+        }
+
         this.todayWeather = Weather.Sunny;
         this.tomorrowWeather = Weather.Rainy;
 
-        this.friendships.add(new Friendship(players.get(0).getPlayer(), players.get(1).getPlayer()));
-        this.friendships.add(new Friendship(players.get(0).getPlayer(), players.get(2).getPlayer()));
-        this.friendships.add(new Friendship(players.get(0).getPlayer(), players.get(3).getPlayer()));
-        this.friendships.add(new Friendship(players.get(1).getPlayer(), players.get(2).getPlayer()));
-        this.friendships.add(new Friendship(players.get(1).getPlayer(), players.get(3).getPlayer()));
-        this.friendships.add(new Friendship(players.get(2).getPlayer(), players.get(3).getPlayer()));
+        // --- DYNAMIC FRIENDSHIP CREATION ---
+        // This nested loop creates a friendship between every unique pair of players,
+        // regardless of whether there are 2, 3, or 4 players. This is now safe.
+        for (int i = 0; i < players.size(); i++) {
+            for (int j = i + 1; j < players.size(); j++) {
+                User user1 = players.get(i);
+                User user2 = players.get(j);
+                if (user1 != null && user2 != null && user1.getPlayer() != null && user2.getPlayer() != null) {
+                    this.friendships.add(new Friendship(user1.getPlayer(), user2.getPlayer()));
+                }
+            }
+        }
+        // --- END OF CORRECTION ---
 
         ArrayList<Player> realPlayers = new ArrayList<>();
         for (User user : this.players) {
-            realPlayers.add(user.getPlayer());
+            // Ensure we don't add null players if the user object is just a placeholder
+            if (user != null && user.getPlayer() != null) {
+                realPlayers.add(user.getPlayer());
+            }
         }
 
+        // The rest of the constructor is safe.
         this.NPCs.add(new NPC(NPCType.Abigail, realPlayers));
         this.NPCs.add(new NPC(NPCType.Harvey, realPlayers));
         this.NPCs.add(new NPC(NPCType.Lia, realPlayers));
         this.NPCs.add(new NPC(NPCType.Robin, realPlayers));
         this.NPCs.add(new NPC(NPCType.Sebastian, realPlayers));
     }
+
 
     public Game(ArrayList<User> users, Map<String, Player> playerMap) {
         this(users); // This calls the original constructor to do all the basic setup.
@@ -74,6 +93,8 @@ public class Game {
         }
     }
 
+    // --- ALL OTHER METHODS IN YOUR CLASS REMAIN EXACTLY THE SAME ---
+    // (advanceTimeByMinutes, advanceDay, getFriendshipsByPlayer, etc.)
     public void advanceTimeByMinutes(int minutes) {
         int tensOfMinutesPassed = (this.time.getMinute() + minutes) / 10 - this.time.getMinute() / 10;
         int daysPassed = this.time.addMinutes(minutes);
@@ -642,5 +663,12 @@ public class Game {
         // Using removeIf for a cleaner and safer removal from the list
         players.removeIf(user -> user != null && username.equals(user.getUsername()));
     }
-}
 
+    public User getLocalPlayerUser() {
+        return localPlayerUser;
+    }
+
+    public void setLocalPlayerUser(User localPlayerUser) {
+        this.localPlayerUser = localPlayerUser;
+    }
+}

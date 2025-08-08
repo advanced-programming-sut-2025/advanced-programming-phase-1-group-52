@@ -35,6 +35,9 @@ public enum MessageType {
     SUBMIT_FARM_CHOICE,   // Client -> Server: A player sends their chosen farm type.
     GAME_SETUP_COMPLETE,
     INITIALIZE_GAME,
+    REQUEST_GAME_MAP, // Server -> Client (Host): Asks for the master copy of the map
+    SEND_GAME_MAP,    // Client (Host) -> Server: Contains the master GameMap
+    SYNC_GAME_MAP,
     PLAYER_MOVE,          // A message from a client to the server indicating they have moved.
     UPDATE_PLAYER_POSITIONS,
 }

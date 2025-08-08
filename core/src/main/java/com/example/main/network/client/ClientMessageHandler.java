@@ -5,7 +5,9 @@ import com.example.main.GDXviews.*;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
 import com.example.main.Main;
+import com.example.main.controller.GameMenuController;
 import com.example.main.enums.design.FarmThemes;
+import com.example.main.events.*;
 import com.example.main.models.*;
 import com.example.main.controller.NetworkLobbyController;
 
@@ -91,17 +93,17 @@ public class ClientMessageHandler {
             case NAVIGATE_TO_PREGAME:
                 handleNavigateToPregame();
                 break;
-            case GAME_SETUP_COMPLETE:
-                handleGameSetupComplete();
-                break;
             case INITIALIZE_GAME:
                 handleInitializeGame(message);
                 break;
-            case UPDATE_PLAYER_POSITIONS:
-                handleUpdatePlayerPositions(message);
-                break;
             case PLAYER_LEAVE: // <-- ADD THIS CASE
                 handlePlayerLeave(message);
+                break;
+            case REQUEST_GAME_MAP:
+                handleRequestGameMap(message);
+                break;
+            case SYNC_GAME_MAP:
+                handleSyncGameMap(message);
                 break;
             default:
                 handleCustomMessage(message);
@@ -485,98 +487,40 @@ public class ClientMessageHandler {
         // Use postRunnable to ensure the screen change happens on the main LibGDX thread.
         Gdx.app.postRunnable(() -> {
             Main game = Main.getInstance();
-            // Switch to the pre-game menu, passing the required services.
+            // This will correctly switch to the pre-game menu screen.
             game.setScreen(new GDXPreGameMenu(game, App.getInstance().getNetworkService()));
         });
     }
 
-    private void handleGameSetupComplete() {
-        System.out.println("[CLIENT LOG] Received GAME_SETUP_COMPLETE from server. Transitioning to game screen.");
-        Gdx.app.postRunnable(() -> {
-            Screen currentScreen = Main.getInstance().getScreen();
-            if (currentScreen instanceof GDXPreGameMenu) {
-                ((GDXPreGameMenu) currentScreen).onGameSetupComplete();
-            } else {
-                System.err.println("Received GAME_SETUP_COMPLETE but was not on the PreGameMenu screen!");
-                Main.getInstance().setScreen(new GDXGameScreen());
-            }
-        });
-    }
-
     private void handleInitializeGame(Message message) {
-        System.out.println("[CLIENT LOG] Received INITIALIZE_GAME. Building game state...");
         try {
-            Object snapshotObject = message.getFromBody("snapshot");
-            String snapshotJson = gson.toJson(snapshotObject);
-            GameStateSnapshot snapshot = gson.fromJson(snapshotJson, GameStateSnapshot.class);
+            System.out.println("[CLIENT LOG] Received INITIALIZE_GAME. Deserializing snapshot.");
+
+            // --- THIS IS THE CORRECTED LOGIC ---
+
+            // 1. Get the raw, generic object from the message body. At this point, it's a LinkedTreeMap.
+            Object rawSnapshotObject = message.getFromBody("snapshot");
+
+            // 2. Create a new Gson instance to perform a second, explicit conversion.
+            Gson gson = new Gson();
+
+            // 3. Convert the generic object into a specific GameStateSnapshot object.
+            // This is the standard and correct way to handle nested objects with Gson.
+            GameStateSnapshot snapshot = gson.fromJson(gson.toJson(rawSnapshotObject), GameStateSnapshot.class);
+
+            // --- END OF CORRECTION ---
 
             if (snapshot == null) {
-                System.err.println("[CLIENT ERROR] GameStateSnapshot was null after deserialization.");
+                System.err.println("[CLIENT ERROR] GameStateSnapshot was null after conversion.");
                 return;
             }
 
-            ArrayList<User> usersForGame = new ArrayList<>();
-            int localPlayerIndex = -1;
-            String localUsername = App.getInstance().getCurrentUser().getUsername();
-
-            // **THE FIX IS HERE**: Create and assign Player objects in one loop.
-            for (GameStateSnapshot.PlayerSnapshot ps : snapshot.getPlayers()) {
-                User user = App.getInstance().getUser(ps.getUsername());
-                if (user != null) {
-                    // 1. Create the Player object for this user.
-                    Player player = new Player(user.getUsername(), user.getGender());
-
-                    // 2. Immediately assign it to the User object. This is the crucial step.
-                    user.setCurrentPlayer(player);
-
-                    // 3. Add the now-complete User object to the list for the game.
-                    usersForGame.add(user);
-
-                    if (ps.getUsername().equals(localUsername)) {
-                        localPlayerIndex = ps.getPlayerIndex();
-                    }
-                }
-            }
-
-            int realPlayerCount = usersForGame.size();
-            while (usersForGame.size() < 4) {
-                usersForGame.add(new User("empty_slot_" + (usersForGame.size() + 1), "", "", "", null));
-            }
-
-            // Assign starting positions to the real players.
-            for (int i = 0; i < realPlayerCount; i++) {
-                User user = usersForGame.get(i);
-                Player player = user.currentPlayer(); // Now this will not be null.
-                if (player != null) {
-                    player.setOriginX(4 + (i % 2) * 80);
-                    player.setOriginY(4 + (i / 2) * 30);
-                    player.setCurrentX(player.originX());
-                    player.setCurrentY(player.originY());
-                }
-            }
-
-            // Create the game using the list of fully initialized User objects.
-            Game newGame = new Game(usersForGame);
-
-            User hostUser = App.getInstance().getUser(snapshot.getHostUsername());
-            newGame.setMainPlayer(hostUser);
-
-            if (localPlayerIndex != -1) {
-                newGame.setCurrentUser(usersForGame.get(localPlayerIndex));
-                newGame.setCurrentPlayer(usersForGame.get(localPlayerIndex).currentPlayer());
-            }
-
-            ArrayList<FarmThemes> themes = new ArrayList<>(snapshot.getFarmThemes());
-            while (themes.size() < 4) { themes.add(FarmThemes.Neutral); }
-            GameMap map = new GameMap(newGame.getPlayers(), themes);
-            newGame.setGameMap(map);
-
+            // The rest of the logic remains the same.
+            Game newGame = createGameFromSnapshot(snapshot);
             App.getInstance().setCurrentGame(newGame);
-            System.out.println("[CLIENT LOG] Current game has been set. This client is Player " + (localPlayerIndex + 1));
 
-            Gdx.app.postRunnable(() -> {
-                Main.getInstance().setScreen(new GDXGameScreen());
-            });
+            System.out.println("[CLIENT LOG] Game state created. Publishing navigation event.");
+            EventBus.getInstance().publish(new NavigateToGameScreenEvent());
 
         } catch (Exception e) {
             System.err.println("[CLIENT ERROR] Failed to initialize game from snapshot: " + e.getMessage());
@@ -588,18 +532,89 @@ public class ClientMessageHandler {
         try {
             String username = message.getFromBody("username");
             if (username != null) {
-                System.out.println("[CLIENT LOG] Player " + username + " has left the game.");
-                Game currentGame = App.getInstance().getCurrentGame();
-                if (currentGame != null) {
-                    // Use Gdx.app.postRunnable to ensure the game state is modified
-                    // on the main LibGDX thread, which is safe for rendering.
-                    Gdx.app.postRunnable(() -> {
-                        currentGame.removePlayer(username);
-                    });
-                }
+                System.out.println("[CLIENT LOG] Player " + username + " left. Publishing event.");
+                // Publish the event that the GameMenuController is listening for.
+                EventBus.getInstance().publish(new PlayerDisconnectedEvent(username));
             }
         } catch (Exception e) {
             System.err.println("[CLIENT ERROR] Failed to process PLAYER_LEAVE message: " + e.getMessage());
         }
+    }
+
+    private void handleRequestGameMap(Message message) {
+        System.out.println("[CLIENT LOG] Received REQUEST_GAME_MAP from server. Publishing local event.");
+        // The message handler's job is done. It just announces that the request happened.
+        EventBus.getInstance().publish(new RequestMapSnapshotEvent());
+    }
+
+    private void handleSyncGameMap(Message message) {
+        System.out.println("[CLIENT LOG] Received SYNC_GAME_MAP from server. Deserializing snapshot.");
+        try {
+            // --- THIS IS THE CORRECTED LOGIC ---
+
+            // 1. Get the raw object, which is a LinkedTreeMap.
+            Object rawSnapshotObject = message.getFromBody("gameMapSnapshot");
+
+            // 2. Create a new Gson instance to perform the explicit conversion.
+            Gson gson = new Gson();
+
+            // 3. Convert the generic map into our specific GameMapSnapshot object.
+            GameMapSnapshot snapshot = gson.fromJson(gson.toJson(rawSnapshotObject), GameMapSnapshot.class);
+
+            // --- END OF CORRECTION ---
+
+            if (snapshot != null) {
+                // Publish the event. The GDXGameScreen is listening for this.
+                System.out.println("[CLIENT LOG] Snapshot converted successfully. Publishing sync event.");
+                EventBus.getInstance().publish(new GameMapSyncEvent(snapshot));
+            } else {
+                System.err.println("[CLIENT ERROR] GameMapSnapshot was null after conversion on guest client.");
+            }
+        } catch (Exception e) {
+            System.err.println("[CLIENT ERROR] Failed to process SYNC_GAME_MAP message: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    private Game createGameFromSnapshot(GameStateSnapshot snapshot) {
+        ArrayList<User> playersInGame = new ArrayList<>();
+        User hostUser = null;
+        User thisClientUser = null; // A variable to hold our local user
+
+        // Get the username of the person running this instance of the game.
+        String myUsername = App.getInstance().getCurrentUser().getUsername();
+
+        for (GameStateSnapshot.PlayerSnapshot pSnap : snapshot.getPlayers()) {
+            // Create the User and Player objects for everyone in the match
+            User user = new User(pSnap.getUsername(), "", "", "", pSnap.getGender());
+            Player player = new Player(pSnap.getUsername(), pSnap.getGender());
+
+            int index = pSnap.getPlayerIndex();
+            player.setOriginX(4 + (index % 2) * 80);
+            player.setOriginY(4 + (index / 2) * 30);
+            player.setCurrentX(player.originX());
+            player.setCurrentY(player.originY());
+            user.setCurrentPlayer(player);
+            user.setFarmTheme(snapshot.getFarmThemes().get(index));
+            playersInGame.add(user);
+
+            // --- THIS IS THE FIX ---
+            // Check if the user we just created is the one playing on this machine.
+            if (user.getUsername().equals(myUsername)) {
+                thisClientUser = user; // If so, we've found ourself!
+            }
+            // --- END OF FIX ---
+
+            if (user.getUsername().equals(snapshot.getHostUsername())) {
+                hostUser = user;
+            }
+        }
+
+        // Create the main Game object
+        Game newGame = new Game(playersInGame);
+        newGame.setMainPlayer(hostUser); // Set the host (mainPlayer)
+        newGame.setLocalPlayerUser(thisClientUser); // Set THIS client's user
+
+        return newGame;
     }
 }

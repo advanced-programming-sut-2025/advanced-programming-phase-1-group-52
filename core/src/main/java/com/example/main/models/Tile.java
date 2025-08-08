@@ -8,8 +8,10 @@ import com.example.main.models.item.Item;
 import com.example.main.models.item.PlacedMachine;
 import com.example.main.models.item.Seed;
 
+import java.io.Serializable;
 
-public class Tile {
+
+public class Tile implements Serializable {
     private final int x;
     private final int y;
     private TileType type;
