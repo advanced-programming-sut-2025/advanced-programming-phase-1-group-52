@@ -2220,6 +2220,9 @@ public class GameMenuController {
     }
     public Result petAnimal(String name) {
         PurchasedAnimal animal = null;
+        if (game.getCurrentPlayer() == null || game.getCurrentPlayer().getHousings() == null) {
+            return new Result(false, "No housings available.");
+        }
         for (Housing housing : game.getCurrentPlayer().getHousings()) {
             for (PurchasedAnimal purchasedAnimal : housing.getOccupants()) {
                 if (purchasedAnimal.getName().equals(name)) animal = purchasedAnimal;
@@ -2241,6 +2244,9 @@ public class GameMenuController {
     public Result cheatSetAnimalFriendship(String name, String amountString) {
         int amount = Integer.parseInt(amountString);
         PurchasedAnimal animal = null;
+        if (game.getCurrentPlayer() == null || game.getCurrentPlayer().getHousings() == null) {
+            return new Result(false, "No housings available.");
+        }
         for (Housing housing : game.getCurrentPlayer().getHousings()) {
             for (PurchasedAnimal purchasedAnimal : housing.getOccupants()) {
                 if (purchasedAnimal.getName().equals(name)) animal = purchasedAnimal;
@@ -2257,6 +2263,9 @@ public class GameMenuController {
 
     public Result showAnimals() {
         StringBuilder stringBuilder = new StringBuilder();
+        if (game.getCurrentPlayer() == null || game.getCurrentPlayer().getHousings() == null) {
+            return new Result(false, "No housings available.");
+        }
         for (Housing housing : game.getCurrentPlayer().getHousings()) {
             for (PurchasedAnimal purchasedAnimal : housing.getOccupants()) {
                 stringBuilder.append(purchasedAnimal.toString());
@@ -2269,6 +2278,9 @@ public class GameMenuController {
     public Result shepherdAnimal(String name, String xString, String yString) {
         int x, y;
         PurchasedAnimal animal = null;
+        if (game.getCurrentPlayer() == null || game.getCurrentPlayer().getHousings() == null) {
+            return new Result(false, "No housings available.");
+        }
         for (Housing housing : game.getCurrentPlayer().getHousings()) {
             for (PurchasedAnimal purchasedAnimal : housing.getOccupants()) {
                 if (purchasedAnimal.getName().equals(name)) animal = purchasedAnimal;
@@ -2303,6 +2315,9 @@ public class GameMenuController {
 
     public Result feedHay(String name) {
         PurchasedAnimal animal = null;
+        if (game.getCurrentPlayer() == null || game.getCurrentPlayer().getHousings() == null) {
+            return new Result(false, "No housings available.");
+        }
         for (Housing housing : game.getCurrentPlayer().getHousings()) {
             for (PurchasedAnimal purchasedAnimal : housing.getOccupants()) {
                 if (purchasedAnimal.getName().equals(name)) animal = purchasedAnimal;
@@ -2695,6 +2710,9 @@ public class GameMenuController {
             int rootY = targetTile.getGiantCropRootY();
             Tile rootTile = game.getMap().getTile(rootX, rootY);
             Crop crop = (Crop) rootTile.getPlant();
+            if (!(crop.getCropType() instanceof CropType)) {
+                return new Result(false, "This giant plant is not a farm crop.");
+            }
             CropType cropType = (CropType) crop.getCropType();
 
             // Give a larger, random yield (e.g., 15-21)

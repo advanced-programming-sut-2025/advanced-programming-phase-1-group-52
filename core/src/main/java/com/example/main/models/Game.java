@@ -15,8 +15,6 @@ import com.example.main.enums.items.ItemType;
 import com.example.main.models.building.Housing;
 import com.example.main.models.item.Crop;
 import com.example.main.models.item.Fruit;
-import com.example.main.models.item.Good;
-import com.example.main.models.item.Item;
 import com.example.main.models.item.PurchasedAnimal;
 
 public class Game {
@@ -299,6 +297,9 @@ public class Game {
 
     public void handleFardaei() {
         for (User user : this.players) {
+            if (user == null || user.getPlayer() == null || user.getPlayer().getBankAccount() == null) {
+                continue;
+            }
             user.getPlayer().getBankAccount().depositFardaei();
         }
     }
@@ -322,7 +323,9 @@ public class Game {
     private void handlePlayersEnergy(){
         Player player;
         for(User user : players){
+            if (user == null) continue;
             player = user.currentPlayer();
+            if (player == null) continue;
             if(player.isFainted()){
                 player.setFainted(false);
                 player.setEnergy(150);
@@ -336,7 +339,9 @@ public class Game {
     private void handlePlayersCoordinateInMorning(){
         Player player;
         for(User user : players){
+            if (user == null) continue;
             player = user.currentPlayer();
+            if (player == null) continue;
             if(!player.isFainted()){
                 player.setCurrentX(player.originX());
                 player.setCurrentY(player.originY());
@@ -537,7 +542,9 @@ public class Game {
 
     public void handleAnimalProducts() {
         for (User user : this.players) {
+            if (user == null || user.getPlayer() == null) continue;
             Player player = user.getPlayer();
+            if (player.getHousings() == null) continue;
             for (Housing housing : player.getHousings()) {
                 for (PurchasedAnimal animal : housing.getOccupants()) {
                     if (animal.isFull()) {
@@ -599,7 +606,11 @@ public class Game {
                 if (topLeft == null || !(topLeft.getPlant() instanceof Crop)) continue;
 
                 Crop firstCrop = (Crop) topLeft.getPlant();
-                CropType cropType = (CropType) firstCrop.getCropType();
+                ItemType firstType = firstCrop.getCropType();
+                if (!(firstType instanceof CropType)) {
+                    continue; // Only actual farm crops can become giant
+                }
+                CropType cropType = (CropType) firstType;
 
                 if (!cropType.canBecomeGiant() || !firstCrop.isReadyToHarvest()) continue;
 
@@ -608,9 +619,9 @@ public class Game {
                 Tile bottomRight = tiles[x + 1][y + 1];
 
                 if (topRight != null && bottomLeft != null && bottomRight != null &&
-                    topRight.getPlant() instanceof Crop && ((Crop) topRight.getPlant()).getCropType() == cropType && ((Crop) topRight.getPlant()).isReadyToHarvest() &&
-                    bottomLeft.getPlant() instanceof Crop && ((Crop) bottomLeft.getPlant()).getCropType() == cropType && ((Crop) bottomLeft.getPlant()).isReadyToHarvest() &&
-                    bottomRight.getPlant() instanceof Crop && ((Crop) bottomRight.getPlant()).getCropType() == cropType && ((Crop) bottomRight.getPlant()).isReadyToHarvest()) {
+                    topRight.getPlant() instanceof Crop && ((Crop) topRight.getPlant()).getCropType() instanceof CropType && ((CropType) ((Crop) topRight.getPlant()).getCropType()) == cropType && ((Crop) topRight.getPlant()).isReadyToHarvest() &&
+                    bottomLeft.getPlant() instanceof Crop && ((Crop) bottomLeft.getPlant()).getCropType() instanceof CropType && ((CropType) ((Crop) bottomLeft.getPlant()).getCropType()) == cropType && ((Crop) bottomLeft.getPlant()).isReadyToHarvest() &&
+                    bottomRight.getPlant() instanceof Crop && ((Crop) bottomRight.getPlant()).getCropType() instanceof CropType && ((CropType) ((Crop) bottomRight.getPlant()).getCropType()) == cropType && ((Crop) bottomRight.getPlant()).isReadyToHarvest()) {
 
                     // 2. 5% chance to merge into a giant crop
                     if (rand.nextInt(100) < 5) {

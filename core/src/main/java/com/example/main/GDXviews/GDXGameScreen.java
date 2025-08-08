@@ -1454,7 +1454,7 @@ public class GDXGameScreen implements Screen {
         boolean leftPressed = Gdx.input.isKeyPressed(Input.Keys.A) || Gdx.input.isKeyPressed(Input.Keys.LEFT);
         boolean rightPressed = Gdx.input.isKeyPressed(Input.Keys.D) || Gdx.input.isKeyPressed(Input.Keys.RIGHT);
 
-        if (currentPlayer.isFainted() && (upPressed || downPressed || leftPressed || rightPressed)) {
+        if (currentPlayer != null && currentPlayer.isFainted() && (upPressed || downPressed || leftPressed || rightPressed)) {
             generalMessageLabel.setText("I'm too exhausted to move...");
             generalMessageLabel.setColor(Color.RED); // Set color to red for fainted message
             generalMessageLabel.setVisible(true);
@@ -2079,7 +2079,7 @@ public class GDXGameScreen implements Screen {
             }
             spriteBatch.setColor(1f, 1f, 1f, 1f);
 
-            if (player.isFainted()) {
+            if (player != null && player.isFainted()) {
                 hudFont.setColor(Color.WHITE);
                 float bobOffset = (float) (Math.sin(weatherStateTime * 4) * 5);
                 hudFont.draw(spriteBatch, "Z z Z", worldX + 8, worldY + 48 + bobOffset);
@@ -3128,6 +3128,7 @@ public class GDXGameScreen implements Screen {
         Player currentPlayer = game.getCurrentPlayer();
         if (currentPlayer == null) return;
 
+        if (currentPlayer.getHousings() == null) return;
         for (Housing housing : currentPlayer.getHousings()) {
             if (housing.getX() == tileX && housing.getY() == tileY) {
                 CageType cageType = housing.getType();
@@ -5378,6 +5379,7 @@ public class GDXGameScreen implements Screen {
 
                 if (tile != null && tile.isPartOfGiantCrop() && tile.getGiantCropRootX() == x && tile.getGiantCropRootY() == y) {
                     Crop crop = (Crop) tile.getPlant();
+                    if (!(crop.getCropType() instanceof CropType)) continue;
                     CropType cropType = (CropType) crop.getCropType();
                     int finalStage = cropType.getStages().size();
                     String textureKey = cropType.getEnumName() + "_Stage_" + finalStage;
@@ -5934,6 +5936,7 @@ public class GDXGameScreen implements Screen {
         Label housingLabel = new Label("Select Housing:", skin);
         housingLabel.setColor(Color.WHITE);
         Player player = game.getCurrentPlayer();
+        if (player == null || player.getHousings() == null) return;
         java.util.List<Housing> housings = player.getHousings();
         java.util.List<Housing> validHousings = new java.util.ArrayList<>();
         // Find required building type for this animal
