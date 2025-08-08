@@ -635,5 +635,12 @@ public class Game {
             }
         }
     }
+    public synchronized void removePlayer(String username) {
+        if (username == null) {
+            return; // or throw an exception
+        }
+        // Using removeIf for a cleaner and safer removal from the list
+        players.removeIf(user -> user != null && username.equals(user.getUsername()));
+    }
 }
 

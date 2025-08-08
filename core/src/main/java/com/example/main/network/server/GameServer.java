@@ -120,11 +120,45 @@ public class GameServer {
             AuthManager authManager = AuthManager.getInstance();
             authManager.logoutByUsername(user.getUsername());
             System.out.println("User logged out: " + user.getUsername());
-            // Broadcast online users update
+
+            // --- THIS IS THE NEW LOGIC ---
+            // Find which lobby (and therefore, game) the user was in.
+            String lobbyId = clientToLobby.remove(clientId);
+            if (lobbyId != null) {
+                Lobby lobby = lobbies.get(lobbyId);
+                if (lobby != null) {
+                    lobby.removePlayer(clientId);
+
+                    // Check if there's an active game associated with this lobby.
+                    Game activeGame = activeGames.get(lobbyId);
+                    if (activeGame != null) {
+                        // Update the server's version of the game state.
+                        activeGame.removePlayer(user.getUsername());
+
+                        // Create a PLAYER_LEAVE message to send to other clients.
+                        HashMap<String, Object> body = new HashMap<>();
+                        body.put("username", user.getUsername());
+                        Message leaveMessage = new Message(body, MessageType.PLAYER_LEAVE);
+
+                        // Send the message to all remaining players in the lobby.
+                        for (String remainingClientId : lobby.getPlayerIds()) {
+                            sendMessageToClient(remainingClientId, leaveMessage);
+                        }
+                    }
+
+                    // If the lobby is now empty, clean it up.
+                    if (lobby.getPlayerCount() == 0) {
+                        lobbies.remove(lobbyId);
+                        activeGames.remove(lobbyId); // Also remove the game instance
+                        System.out.println("Lobby " + lobbyId + " and its game have been removed.");
+                    }
+                }
+            }
+            // --- END OF NEW LOGIC ---
+
+            // This broadcast is for lobby screens, which is still needed.
             broadcastOnlineUsersUpdate();
         }
-
-        System.out.println("Client removed: " + clientId + " (Total: " + connectedClients.size() + ")");
     }
 
     public boolean authenticateUser(String clientId, String username, String password) {
@@ -581,4 +615,5 @@ public class GameServer {
             System.err.println("Failed to start server: " + e.getMessage());
         }
     }
+
 }

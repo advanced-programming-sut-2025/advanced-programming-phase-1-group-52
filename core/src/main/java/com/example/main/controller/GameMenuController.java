@@ -3101,4 +3101,10 @@ public class GameMenuController {
         machine.cancelProcessing();
         return new Result(true, "Process cancelled.");
     }
+
+        public void removePlayer(String username) {
+            if (game != null) {
+                game.removePlayer(username);
+            }
+        }
 }

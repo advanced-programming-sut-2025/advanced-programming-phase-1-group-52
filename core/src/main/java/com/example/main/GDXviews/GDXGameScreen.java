@@ -3264,6 +3264,47 @@ public class GDXGameScreen implements Screen {
         String weatherString = "Weather: " + game.getTodayWeather().name();
         hudFont.draw(spriteBatch, weatherString, 20, Gdx.graphics.getHeight() - 50);
 
+        float onlineUsersX = 20; // Moved to the right
+        float onlineUsersY = Gdx.graphics.getHeight() - 100; // Adjusted Y position
+        float backgroundWidth = 250;
+        float backgroundHeight = 0; // Will be calculated based on user count
+
+        int userCount = 0;
+        if (game != null && game.getPlayers() != null) {
+            for (User user : game.getPlayers()) {
+                if (user != null && user.getPlayer() != null && !user.getUsername().startsWith("empty_slot_")) {
+                    userCount++;
+                }
+            }
+        }
+        backgroundHeight = 40 + (userCount * 25); // Base height + height per user
+
+        spriteBatch.end(); // End sprite batch to draw shapes
+
+        Gdx.gl.glEnable(GL20.GL_BLEND);
+        Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
+        shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
+        shapeRenderer.setColor(0, 0, 0, 0.5f); // Black with 50% opacity
+        shapeRenderer.rect(onlineUsersX - 10, onlineUsersY - backgroundHeight + 20, backgroundWidth, backgroundHeight);
+        shapeRenderer.end();
+        Gdx.gl.glDisable(GL20.GL_BLEND);
+
+        spriteBatch.begin(); // Restart sprite batch for text
+
+// --- Draw Text ---
+        hudFont.setColor(Color.WHITE);
+        float textY = onlineUsersY;
+        hudFont.draw(spriteBatch, "Online Users:", onlineUsersX, textY);
+        textY -= 30;
+
+        if (game != null && game.getPlayers() != null) {
+            for (User user : game.getPlayers()) {
+                if (user != null && user.getPlayer() != null && !user.getUsername().startsWith("empty_slot_")) {
+                    hudFont.draw(spriteBatch, "- " + user.getUsername(), onlineUsersX, textY);
+                    textY -= 25;
+                }
+            }
+        }
         spriteBatch.end();
     }
 

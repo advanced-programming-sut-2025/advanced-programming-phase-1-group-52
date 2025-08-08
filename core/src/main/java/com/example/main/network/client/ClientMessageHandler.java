@@ -100,6 +100,9 @@ public class ClientMessageHandler {
             case UPDATE_PLAYER_POSITIONS:
                 handleUpdatePlayerPositions(message);
                 break;
+            case PLAYER_LEAVE: // <-- ADD THIS CASE
+                handlePlayerLeave(message);
+                break;
             default:
                 handleCustomMessage(message);
         }
@@ -581,4 +584,22 @@ public class ClientMessageHandler {
         }
     }
 
+    private void handlePlayerLeave(Message message) {
+        try {
+            String username = message.getFromBody("username");
+            if (username != null) {
+                System.out.println("[CLIENT LOG] Player " + username + " has left the game.");
+                Game currentGame = App.getInstance().getCurrentGame();
+                if (currentGame != null) {
+                    // Use Gdx.app.postRunnable to ensure the game state is modified
+                    // on the main LibGDX thread, which is safe for rendering.
+                    Gdx.app.postRunnable(() -> {
+                        currentGame.removePlayer(username);
+                    });
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("[CLIENT ERROR] Failed to process PLAYER_LEAVE message: " + e.getMessage());
+        }
+    }
 }
