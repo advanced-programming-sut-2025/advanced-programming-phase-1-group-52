@@ -742,28 +742,18 @@ public class ClientMessageHandler {
         try {
             String username = message.getFromBody("username");
             if (username != null) {
+                System.out.println("[CLIENT LOG] Player " + username + " has left the game.");
+                Game currentGame = App.getInstance().getCurrentGame();
+                if (currentGame != null) {
+                    // Use Gdx.app.postRunnable to ensure the game state is modified
+                    // on the main LibGDX thread, which is safe for rendering.
+                    Gdx.app.postRunnable(() -> {
+                        currentGame.removePlayer(username);
+                    });
+                }
                 System.out.println("[CLIENT LOG] Player " + username + " left. Publishing event.");
                 // Publish the event that the GameMenuController is listening for.
                 EventBus.getInstance().publish(new PlayerDisconnectedEvent(username));
-            // Assign starting positions to the real players and set trash can positions.
-            for (int i = 0; i < realPlayerCount; i++) {
-                User user = usersForGame.get(i);
-                Player player = user.currentPlayer(); // Now this will not be null.
-                if (player != null) {
-                    player.setOriginX(4 + (i % 2) * 80);
-                    player.setOriginY(4 + (i / 2) * 30);
-                    player.setCurrentX(player.originX());
-                    player.setCurrentY(player.originY());
-
-                    // Set trash can positions similar to local startNewGame mapping
-                    switch (i) {
-                        case 0 -> { player.setTrashCanX(9);  player.setTrashCanY(1); }
-                        case 1 -> { player.setTrashCanX(80); player.setTrashCanY(1); }
-                        case 2 -> { player.setTrashCanX(9);  player.setTrashCanY(31); }
-                        case 3 -> { player.setTrashCanX(80); player.setTrashCanY(31); }
-                        default -> { player.setTrashCanX(9); player.setTrashCanY(1); }
-                    }
-                }
             }
         } catch (Exception e) {
             System.err.println("[CLIENT ERROR] Failed to process PLAYER_LEAVE message: " + e.getMessage());
