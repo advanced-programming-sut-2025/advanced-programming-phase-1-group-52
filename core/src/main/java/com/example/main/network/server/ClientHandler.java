@@ -114,6 +114,9 @@ public class ClientHandler implements Runnable {
                 case PLAYER_MOVE:
                     handlePlayerMove(message);
                     break;
+                case SEND_GAME_MAP:
+                    server.handleSendGameMap(message, clientId);
+                    break;
                 default:
                     System.out.println("Unknown message type: " + message.getType());
             }

@@ -15,10 +15,13 @@ import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.example.main.Main;
 import com.example.main.controller.NetworkLobbyController;
 import com.example.main.enums.design.FarmThemes;
+import com.example.main.events.EventBus; // <-- 1. ADD IMPORT
+import com.example.main.events.NavigateToGameScreenEvent; // <-- 2. ADD IMPORT
 import com.example.main.service.NetworkService;
 
 public class GDXPreGameMenu implements Screen {
 
+    // The user's Main class is the com.badlogic.gdx.Game instance
     private final Main game;
     private final Stage stage;
     private final Skin skin;
@@ -49,7 +52,6 @@ public class GDXPreGameMenu implements Screen {
         choicesTable = new Table();
         rootTable.add(choicesTable).padBottom(20).row();
 
-        // --- Farm Choice Buttons ---
         TextButton neutralButton = new TextButton("Neutral Farm", skin);
         TextButton minerButton = new TextButton("Miner's Farm", skin);
         TextButton fisherButton = new TextButton("Fisher's Farm", skin);
@@ -79,21 +81,37 @@ public class GDXPreGameMenu implements Screen {
             }
         });
 
-        // --- Confirm Button ---
         confirmButton = new TextButton("Confirm Selection", skin);
-        confirmButton.setDisabled(true); // Disabled until a choice is made
+        confirmButton.setDisabled(true);
         rootTable.add(confirmButton).width(250).height(50).padTop(20).row();
 
         confirmButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
                 if (selectedTheme != null) {
-                    // This method will need to be created in the controller
                     controller.submitFarmChoice(selectedTheme);
                     confirmButton.setDisabled(true);
                     statusLabel.setText("Choice submitted! Waiting for other players...");
                 }
             }
+        });
+
+        // --- 3. ADD THIS METHOD CALL AT THE END OF THE CONSTRUCTOR ---
+        subscribeToEvents();
+    }
+
+    /**
+     * Subscribes this screen to listen for the NavigateToGameScreenEvent.
+     * When the event is received, it will trigger the screen change.
+     */
+    private void subscribeToEvents() {
+        EventBus.getInstance().subscribe(NavigateToGameScreenEvent.class, event -> {
+            // Use postRunnable to ensure the screen change happens on the main render thread
+            Gdx.app.postRunnable(() -> {
+                System.out.println("[GDXPreGameMenu] Navigation event received! Switching to GDXGameScreen.");
+                // Use the stored 'game' instance to switch to the new screen
+                game.setScreen(new GDXGameScreen());
+            });
         });
     }
 
@@ -101,19 +119,13 @@ public class GDXPreGameMenu implements Screen {
         this.selectedTheme = theme;
         statusLabel.setText("You have selected: " + themeName);
         confirmButton.setDisabled(false);
-        // Optionally disable choice buttons after one is clicked
         for (Actor button : choicesTable.getChildren()) {
             ((TextButton) button).setDisabled(true);
         }
     }
 
-    /**
-     * This method will be called by the ClientMessageHandler when the game is ready to start.
-     */
-    public void onGameSetupComplete() {
-        // All players have made their choice, transition to the main game screen
-        game.setScreen(new GDXGameScreen());
-    }
+    // --- 4. THE onGameSetupComplete() METHOD IS NO LONGER NEEDED AND CAN BE DELETED ---
+    // public void onGameSetupComplete() { ... }
 
     @Override
     public void show() {

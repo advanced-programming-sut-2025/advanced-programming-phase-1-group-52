@@ -1,5 +1,6 @@
 package com.example.main.models;
 
+import com.example.main.enums.design.FarmThemes; // <-- 1. IMPORT FARMTHEMES
 import com.example.main.enums.player.Gender;
 import com.example.main.enums.regex.SecurityQuestion;
 
@@ -14,7 +15,6 @@ public class User {
     public Gender gender;
     public SecurityQuestion securityQuestion;
     private String securityAnswer;
-    private transient String clientId; // Transient to avoid being saved in users.json
     public int numPlayed = 0;
     public int highScore = 0;
 
@@ -22,7 +22,8 @@ public class User {
     private transient HashMap<Game, Player> userPlayers = new HashMap<>();
     private transient Game userGame;
     private transient Player currentPlayer;
-
+    private transient String clientId;
+    private transient FarmThemes farmTheme; // <-- 2. ADD THE TRANSIENT FARMTHEME FIELD
 
     // No-argument constructor for JSON deserialization
     public User() {
@@ -40,6 +41,16 @@ public class User {
 
     // --- Getters and Setters ---
 
+    // --- 3. ADD GETTER AND SETTER FOR FARMTHEME ---
+    public FarmThemes getFarmTheme() {
+        return farmTheme;
+    }
+
+    public void setFarmTheme(FarmThemes farmTheme) {
+        this.farmTheme = farmTheme;
+    }
+
+    // --- (Rest of your existing getters and setters) ---
     public String getUsername() { return username; }
 
     public void setUsername(String username) { this.username = username; }

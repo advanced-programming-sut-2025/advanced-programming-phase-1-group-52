@@ -24,11 +24,13 @@ import com.example.main.models.User;
 import com.example.main.network.NetworkConstants;
 import com.example.main.network.common.Message;
 import com.example.main.network.common.MessageType;
+import com.google.gson.Gson;
 
 /**
  * Main game server that handles multiple client connections
  */
 public class GameServer {
+    // All your existing fields remain the same...
     private final int port;
     private final ServerSocket serverSocket;
     private final AtomicBoolean running;
@@ -43,7 +45,9 @@ public class GameServer {
     private final ConcurrentHashMap<String, ConcurrentHashMap<String, FarmThemes>> lobbyFarmChoices;
     private final ConcurrentHashMap<String, Game> activeGames;
 
+
     public GameServer(int port) throws IOException {
+        // Constructor remains the same
         this.port = port;
         this.serverSocket = new ServerSocket(port);
         this.running = new AtomicBoolean(false);
@@ -56,7 +60,6 @@ public class GameServer {
         this.availableUsers = new ArrayList<>();
         this.lobbyFarmChoices = new ConcurrentHashMap<>();
         this.activeGames = new ConcurrentHashMap<>();
-
         System.out.println("Game Server started on port " + port);
     }
 
@@ -128,11 +131,45 @@ public class GameServer {
             AuthManager authManager = AuthManager.getInstance();
             authManager.logoutByUsername(user.getUsername());
             System.out.println("User logged out: " + user.getUsername());
-            // Broadcast online users update
+
+            // --- THIS IS THE NEW LOGIC ---
+            // Find which lobby (and therefore, game) the user was in.
+            String lobbyId = clientToLobby.remove(clientId);
+            if (lobbyId != null) {
+                Lobby lobby = lobbies.get(lobbyId);
+                if (lobby != null) {
+                    lobby.removePlayer(clientId);
+
+                    // Check if there's an active game associated with this lobby.
+                    Game activeGame = activeGames.get(lobbyId);
+                    if (activeGame != null) {
+                        // Update the server's version of the game state.
+                        activeGame.removePlayer(user.getUsername());
+
+                        // Create a PLAYER_LEAVE message to send to other clients.
+                        HashMap<String, Object> body = new HashMap<>();
+                        body.put("username", user.getUsername());
+                        Message leaveMessage = new Message(body, MessageType.PLAYER_LEAVE);
+
+                        // Send the message to all remaining players in the lobby.
+                        for (String remainingClientId : lobby.getPlayerIds()) {
+                            sendMessageToClient(remainingClientId, leaveMessage);
+                        }
+                    }
+
+                    // If the lobby is now empty, clean it up.
+                    if (lobby.getPlayerCount() == 0) {
+                        lobbies.remove(lobbyId);
+                        activeGames.remove(lobbyId); // Also remove the game instance
+                        System.out.println("Lobby " + lobbyId + " and its game have been removed.");
+                    }
+                }
+            }
+            // --- END OF NEW LOGIC ---
+
+            // This broadcast is for lobby screens, which is still needed.
             broadcastOnlineUsersUpdate();
         }
-
-        System.out.println("Client removed: " + clientId + " (Total: " + connectedClients.size() + ")");
     }
 
     public boolean authenticateUser(String clientId, String username, String password) {
@@ -469,97 +506,6 @@ public class GameServer {
         return AuthManager.getInstance();
     }
 
-    public void handleFarmChoice(String clientId, String lobbyId, FarmThemes theme) {
-        Lobby lobby = lobbies.get(lobbyId);
-        if (lobby == null) return;
-
-        lobbyFarmChoices.putIfAbsent(lobbyId, new ConcurrentHashMap<>());
-        ConcurrentHashMap<String, FarmThemes> choices = lobbyFarmChoices.get(lobbyId);
-        choices.put(clientId, theme);
-
-        if (choices.size() == lobby.getPlayerCount()) {
-            System.out.println("[SERVER LOG] All players have chosen farms. Creating game...");
-
-            // --- Create the Game Instance using the helper method ---
-            Game newGame = createGameFromLobby(lobby, choices);
-            activeGames.put(lobbyId, newGame);
-            System.out.println("[SERVER LOG] Game instance created and stored for lobby " + lobbyId);
-
-            // --- Create and Send the Snapshot using the helper method ---
-            GameStateSnapshot snapshot = createSnapshotFromGame(newGame, choices);
-            HashMap<String, Object> body = new HashMap<>();
-            body.put("snapshot", snapshot);
-            Message initializeMessage = new Message(body, MessageType.INITIALIZE_GAME);
-
-            System.out.println("[SERVER LOG] Game state snapshot created. Sending INITIALIZE_GAME to clients.");
-            for (String playerId : lobby.getPlayerIds()) {
-                sendMessageToClient(playerId, initializeMessage);
-            }
-            lobbyFarmChoices.remove(lobbyId);
-        }
-    }
-
-    /**
-     * Helper method to create a Game object from a lobby's final state.
-     */
-    private Game createGameFromLobby(Lobby lobby, Map<String, FarmThemes> choices) {
-        List<User> realPlayers = new ArrayList<>(lobby.getPlayers().values());
-        int realPlayerCount = realPlayers.size();
-        List<User> playersInOrder = new ArrayList<>(realPlayers);
-        while (playersInOrder.size() < 4) {
-            playersInOrder.add(new User("empty_slot_" + (playersInOrder.size() + 1), "", "", "", null));
-        }
-
-        for (int i = 0; i < realPlayerCount; i++) {
-            User user = playersInOrder.get(i);
-            Player player = new Player(user.getUsername(), user.getGender());
-            player.setOriginX(4 + (i % 2) * 80);
-            player.setOriginY(4 + (i / 2) * 30);
-            player.setCurrentX(player.originX());
-            player.setCurrentY(player.originY());
-            user.setCurrentPlayer(player);
-        }
-
-        Game newGame = new Game((ArrayList<User>) playersInOrder);
-        newGame.setMainPlayer(realPlayers.get(0));
-
-        ArrayList<FarmThemes> themesInOrder = new ArrayList<>();
-        for (User user : realPlayers) {
-            themesInOrder.add(choices.get(user.getClientId()));
-        }
-        while (themesInOrder.size() < 4) {
-            themesInOrder.add(FarmThemes.Neutral);
-        }
-
-        GameMap map = new GameMap(newGame.getPlayers(), themesInOrder);
-        newGame.setGameMap(map);
-        return newGame;
-    }
-
-    /**
-     * Helper method to create a lightweight snapshot from a Game object.
-     */
-    private GameStateSnapshot createSnapshotFromGame(Game game, Map<String, FarmThemes> choices) {
-        List<GameStateSnapshot.PlayerSnapshot> playerSnapshots = new ArrayList<>();
-        List<User> realPlayers = new ArrayList<>();
-        for (User user : game.getPlayers()) {
-            if (!user.getUsername().startsWith("empty_slot_")) {
-                realPlayers.add(user);
-            }
-        }
-        for (int i = 0; i < realPlayers.size(); i++) {
-            User user = realPlayers.get(i);
-            playerSnapshots.add(new GameStateSnapshot.PlayerSnapshot(user.getUsername(), user.getGender(), i));
-        }
-
-        List<FarmThemes> themes = new ArrayList<>();
-        for (User user : realPlayers) {
-            themes.add(choices.get(user.getClientId()));
-        }
-
-        return new GameStateSnapshot(playerSnapshots, themes, game.getMainPlayer().getUsername());
-    }
-
     public void handlePlayerMove(String lobbyId, String clientId, int newX, int newY) {
         // **THE FIX**: This lookup will now succeed because the game was stored.
         Game game = activeGames.get(lobbyId);
@@ -602,6 +548,144 @@ public class GameServer {
                     sendMessageToClient(playerClientId, updateMessage);
                 }
             }
+        }
+    }
+
+    public void broadcastMessageToLobby(String lobbyId, Message message) {
+        Lobby lobby = lobbies.get(lobbyId);
+        if (lobby != null) {
+            for (String clientId : lobby.getPlayerIds()) {
+                sendMessageToClient(clientId, message);
+            }
+        } else {
+            System.err.println("[SERVER WARNING] Attempted to broadcast to a null lobby: " + lobbyId);
+        }
+    }
+
+    public void handleFarmChoice(String clientId, String lobbyId, FarmThemes theme) {
+        try {
+            Lobby lobby = lobbies.get(lobbyId);
+            if (lobby == null) return;
+            User user = authenticatedUsers.get(clientId);
+            if (user != null) user.setFarmTheme(theme);
+            lobbyFarmChoices.putIfAbsent(lobbyId, new ConcurrentHashMap<>());
+            ConcurrentHashMap<String, FarmThemes> choices = lobbyFarmChoices.get(lobbyId);
+            choices.put(clientId, theme);
+            if (choices.size() == lobby.getPlayerCount()) {
+                if (!lobby.hasMapRequestBeenSentAndSet()) {
+                    System.out.println("[SERVER LOG] All players have chosen. Sending INITIALIZE_GAME command.");
+                    Game newGame = createGameFromLobby(lobby, choices);
+                    activeGames.put(lobbyId, newGame);
+                    GameStateSnapshot snapshot = createSnapshotFromGame(newGame, choices);
+                    Message initializeMessage = new Message(new HashMap<>(), MessageType.INITIALIZE_GAME);
+                    initializeMessage.putInBody("snapshot", snapshot);
+                    broadcastMessageToLobby(lobbyId, initializeMessage);
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("[SERVER ERROR] Could not process farm choice from client " + clientId + ": " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    // --- THIS IS THE FINAL, CORRECTED METHOD ---
+    private Game createGameFromLobby(Lobby lobby, Map<String, FarmThemes> choices) {
+        // Step 1: Get ONLY the real players from the lobby.
+        ArrayList<User> realPlayers = new ArrayList<>(lobby.getPlayers().values());
+
+        // Step 2: Set up the Player object for each REAL user.
+        for (int i = 0; i < realPlayers.size(); i++) {
+            User user = realPlayers.get(i);
+            if (user.getPlayer() == null) {
+                Player player = new Player(user.getUsername(), user.getGender());
+                player.setOriginX(4 + (i % 2) * 80);
+                player.setOriginY(4 + (i / 2) * 30);
+                player.setCurrentX(player.originX());
+                player.setCurrentY(player.originY());
+                user.setCurrentPlayer(player);
+            }
+        }
+
+        // Step 3: CRITICAL FIX - Call the Game constructor with ONLY the list of real players.
+        Game newGame = new Game(realPlayers);
+        if (!realPlayers.isEmpty()) {
+            newGame.setMainPlayer(realPlayers.get(0));
+        }
+
+        // Step 4: For the visual GameMap, create a SEPARATE padded list.
+        List<User> playersForMapLayout = new ArrayList<>(realPlayers);
+        while (playersForMapLayout.size() < 4) {
+            playersForMapLayout.add(new User("empty_slot_" + playersForMapLayout.size(), "", "", "", null));
+        }
+
+        ArrayList<FarmThemes> themesForMapLayout = new ArrayList<>();
+        for (User user : realPlayers) {
+            themesForMapLayout.add(choices.get(user.getClientId()));
+        }
+        while (themesForMapLayout.size() < 4) {
+            themesForMapLayout.add(FarmThemes.Neutral);
+        }
+
+        GameMap map = new GameMap((ArrayList<User>) playersForMapLayout, themesForMapLayout);
+        newGame.setGameMap(map);
+
+        return newGame;
+    }
+
+    private GameStateSnapshot createSnapshotFromGame(Game game, Map<String, FarmThemes> choices) {
+        List<User> realPlayers = game.getPlayers();
+        List<GameStateSnapshot.PlayerSnapshot> playerSnapshots = new ArrayList<>();
+        List<FarmThemes> themes = new ArrayList<>();
+        for (int i = 0; i < realPlayers.size(); i++) {
+            User user = realPlayers.get(i);
+            if (user != null && !user.getUsername().startsWith("empty_slot_")) {
+                playerSnapshots.add(new GameStateSnapshot.PlayerSnapshot(user.getUsername(), user.getGender(), i));
+                themes.add(choices.get(user.getClientId()));
+            }
+        }
+        String hostUsername = (game.getMainPlayer() != null) ? game.getMainPlayer().getUsername() : "";
+        return new GameStateSnapshot(playerSnapshots, themes, hostUsername);
+    }
+
+    public void handleSendGameMap(Message message, String hostClientId) {
+        String lobbyId = clientToLobby.get(hostClientId);
+        if (lobbyId == null) return;
+
+        try {
+            // --- THIS IS THE CORRECTED LOGIC ---
+
+            // 1. Get the raw, generic object from the message. It's currently a LinkedTreeMap.
+            Object rawSnapshotObject = message.getFromBody("gameMapSnapshot");
+
+            // 2. Create a new Gson instance to perform the explicit conversion.
+            Gson gson = new Gson();
+
+            // 3. Convert the generic map into our specific GameMapSnapshot object.
+            GameMapSnapshot snapshot = gson.fromJson(gson.toJson(rawSnapshotObject), GameMapSnapshot.class);
+
+            // --- END OF CORRECTION ---
+
+            if (snapshot != null) {
+                System.out.println("[SERVER LOG] Received and converted host map snapshot. Forwarding to guests.");
+
+                Message syncMessage = new Message(new HashMap<>(), MessageType.SYNC_GAME_MAP);
+                syncMessage.putInBody("gameMapSnapshot", snapshot);
+
+                // Forward the validated snapshot to all OTHER players
+                Lobby lobby = lobbies.get(lobbyId);
+                if (lobby != null) {
+                    for (String otherPlayerId : lobby.getPlayerIds()) {
+                        if (!otherPlayerId.equals(hostClientId)) {
+                            sendMessageToClient(otherPlayerId, syncMessage);
+                        }
+                    }
+                }
+            } else {
+                System.err.println("[SERVER ERROR] GameMapSnapshot was null after conversion.");
+            }
+        } catch (Exception e) {
+            System.err.println("[SERVER ERROR] Failed to process game map snapshot: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 
