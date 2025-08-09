@@ -397,6 +397,20 @@ public class ClientMessageHandler {
                     }
                 });
             }
+            else if ("place_machine".equals(action) && actionData instanceof java.util.Map) {
+                @SuppressWarnings("unchecked")
+                java.util.Map<String, Object> map = (java.util.Map<String, Object>) actionData;
+                String senderUsername = (String) map.get("senderUsername");
+                String machineEnumName = (String) map.get("machineEnumName");
+                int tileX = ((Number) map.get("tileX")).intValue();
+                int tileY = ((Number) map.get("tileY")).intValue();
+                com.badlogic.gdx.Gdx.app.postRunnable(() -> {
+                    com.badlogic.gdx.Screen current = com.example.main.Main.getInstance().getScreen();
+                    if (current instanceof com.example.main.GDXviews.GDXGameScreen) {
+                        ((com.example.main.GDXviews.GDXGameScreen) current).applyRemotePlaceMachine(senderUsername, machineEnumName, tileX, tileY);
+                    }
+                });
+            }
             else if ("move_random_food_to_refrigerator".equals(action) && actionData instanceof java.util.Map) {
                 @SuppressWarnings("unchecked")
                 java.util.Map<String, Object> map = (java.util.Map<String, Object>) actionData;

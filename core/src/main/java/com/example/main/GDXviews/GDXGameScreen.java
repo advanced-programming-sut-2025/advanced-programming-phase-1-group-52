@@ -5118,6 +5118,16 @@ public class GDXGameScreen implements Screen {
             generalMessageTimer = GENERAL_MESSAGE_DURATION;
 
             if (result.isSuccessful()) {
+                // Broadcast placement to other clients
+                com.example.main.service.NetworkService ns = com.example.main.models.App.getInstance().getNetworkService();
+                if (ns != null && machineToPlace != null && machineToPlace.getItemType() != null) {
+                    java.util.HashMap<String, Object> data = new java.util.HashMap<>();
+                    data.put("senderUsername", game.getCurrentPlayer().getUsername());
+                    data.put("machineEnumName", machineToPlace.getItemType().getEnumName());
+                    data.put("tileX", tileX);
+                    data.put("tileY", tileY);
+                    ns.sendPlayerAction("place_machine", data);
+                }
                 isMachinePlacementMode = false;
                 machineToPlace = null;
                 machinePlacementTexture = null;
@@ -8005,6 +8015,34 @@ public class GDXGameScreen implements Screen {
             game.setCurrentUser(senderUser);
             game.setCurrentPlayer(senderPlayer);
             controller.finishArtisanProcessNow(machine);
+        } finally {
+            if (prevUser != null) game.setCurrentUser(prevUser);
+            if (prevPlayer != null) game.setCurrentPlayer(prevPlayer);
+        }
+    }
+
+    public void applyRemotePlaceMachine(String senderUsername, String machineEnumName, int tileX, int tileY) {
+        if (game == null || controller == null) return;
+        if (game.getMap() == null || !game.getMap().inBounds(tileX, tileY)) return;
+        User prevUser = game.getUrrentUser();
+        Player prevPlayer = game.getCurrentPlayer();
+        User senderUser = game.getUserByUsername(senderUsername);
+        Player senderPlayer = senderUser != null ? senderUser.getPlayer() : null;
+        if (senderUser == null || senderPlayer == null) return;
+        try {
+            game.setCurrentUser(senderUser);
+            game.setCurrentPlayer(senderPlayer);
+            // Construct a CraftingMachine instance from enum name and call controller.placeMachine
+            com.example.main.enums.items.ItemType maybeType = null;
+            try {
+                com.example.main.enums.items.CraftingMachineType t = com.example.main.enums.items.CraftingMachineType.valueOf(machineEnumName);
+                maybeType = t;
+            } catch (Exception ignored) {}
+            if (maybeType == null) return;
+            com.example.main.models.item.Item item = com.example.main.models.item.ItemFactory.createItemOrThrow(maybeType.getName(), 1);
+            if (!(item instanceof com.example.main.models.item.CraftingMachine)) return;
+            com.example.main.models.item.CraftingMachine machineToPlaceRemote = (com.example.main.models.item.CraftingMachine) item;
+            controller.placeMachine(machineToPlaceRemote, tileX, tileY);
         } finally {
             if (prevUser != null) game.setCurrentUser(prevUser);
             if (prevPlayer != null) game.setCurrentPlayer(prevPlayer);
