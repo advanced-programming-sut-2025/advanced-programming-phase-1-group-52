@@ -54,7 +54,11 @@ import com.example.main.Main;
 import com.example.main.controller.GameMenuController;
 import com.example.main.controller.NetworkLobbyController;
 import com.example.main.controller.StoreMenuController;
-import com.example.main.enums.design.*;
+import com.example.main.enums.design.FarmThemes;
+import com.example.main.enums.design.NPCType;
+import com.example.main.enums.design.ShopType;
+import com.example.main.enums.design.TileType;
+import com.example.main.enums.design.Weather;
 import com.example.main.enums.items.AnimalType;
 import com.example.main.enums.items.ArtisanProductType;
 import com.example.main.enums.items.CageType;
@@ -69,11 +73,27 @@ import static com.example.main.enums.player.Skills.Farming;
 import static com.example.main.enums.player.Skills.Fishing;
 import static com.example.main.enums.player.Skills.Foraging;
 import static com.example.main.enums.player.Skills.Mining;
-
 import com.example.main.events.EventBus;
 import com.example.main.events.GameMapSyncEvent;
 import com.example.main.events.RequestMapSnapshotEvent;
-import com.example.main.models.*;
+import com.example.main.models.ActiveBuff;
+import com.example.main.models.App;
+import com.example.main.models.Date;
+import com.example.main.models.FishingMinigame;
+import com.example.main.models.Friendship;
+import com.example.main.models.Game;
+import com.example.main.models.GameMap;
+import com.example.main.models.GameMapSnapshot;
+import com.example.main.models.NPC;
+import com.example.main.models.NPCFriendship;
+import com.example.main.models.Notification;
+import com.example.main.models.Player;
+import com.example.main.models.Quest;
+import com.example.main.models.Result;
+import com.example.main.models.Tile;
+import com.example.main.models.Time;
+import com.example.main.models.Tree;
+import com.example.main.models.User;
 import com.example.main.models.building.Housing;
 import com.example.main.models.item.CookingRecipe;
 import com.example.main.models.item.CraftingMachine;
@@ -277,6 +297,8 @@ public class GDXGameScreen implements Screen {
     private Texture machinePlacementTexture = null;
     private Stage machineUiStage;
     private PlacedMachine activeMachine = null;
+    private int activeMachineTileX = -1;
+    private int activeMachineTileY = -1;
 
     // Fishing Minigame Fields
     private boolean isFishingMinigameActive = false;
@@ -693,6 +715,8 @@ public class GDXGameScreen implements Screen {
             while (themes.size() < 4) themes.add(FarmThemes.Neutral);
             GameMap newMasterMap = new GameMap(game.getPlayers(), themes);
             game.setGameMap(newMasterMap);
+            // Ensure controller has a non-null map reference for gameplay logic (e.g., fishing)
+            controller.setMap(newMasterMap);
 
             // 2. Generate the random visual elements for the map
             generateRandomMaps();
@@ -707,6 +731,7 @@ public class GDXGameScreen implements Screen {
 
             // 5. Finally, set the local map so the host can see it and hide the loading message
             this.gameMap = newMasterMap;
+            controller.setMap(this.gameMap);
             this.loadingLabel.setVisible(false);
 
         } else {
@@ -3827,6 +3852,17 @@ public class GDXGameScreen implements Screen {
         background.setBackground(new TextureRegionDrawable(new TextureRegion(inventoryBackground)));
         mainCraftingContainer.add(background).width(Gdx.graphics.getWidth() * 0.7f).height(Gdx.graphics.getHeight() * 0.8f);
 
+        // Back button row
+        TextButton craftingBackButton = new TextButton("Back", skin);
+        craftingBackButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                isCraftingMenuOpen = false;
+                Gdx.input.setInputProcessor(multiplexer);
+            }
+        });
+        background.add(craftingBackButton).left().pad(8).row();
+
         craftingMenuContentTable = new Table();
         ScrollPane scrollPane = new ScrollPane(craftingMenuContentTable, skin);
         scrollPane.setFadeScrollBars(false);
@@ -3897,6 +3933,14 @@ public class GDXGameScreen implements Screen {
                                 isCraftingMenuOpen = false; // Close crafting menu
                                 Gdx.input.setInputProcessor(multiplexer);
                             }
+                            // Network sync
+                            com.example.main.service.NetworkService ns = com.example.main.models.App.getInstance().getNetworkService();
+                            if (ns != null) {
+                                java.util.HashMap<String, Object> data = new java.util.HashMap<>();
+                                data.put("senderUsername", game.getCurrentPlayer().getUsername());
+                                data.put("recipeName", recipeEnum.getName());
+                                ns.sendPlayerAction("craft_item", data);
+                            }
                         }
                         showCraftingMenu();
                         generalMessageLabel.setText(result.Message());
@@ -3939,6 +3983,17 @@ public class GDXGameScreen implements Screen {
         background.setBackground(new TextureRegionDrawable(new TextureRegion(inventoryBackground)));
         mainCookingContainer.add(background).width(Gdx.graphics.getWidth() * 0.8f).height(Gdx.graphics.getHeight() * 0.85f);
 
+        // Back button row
+        TextButton cookingBackButton = new TextButton("Back", skin);
+        cookingBackButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                isCookingMenuOpen = false;
+                Gdx.input.setInputProcessor(multiplexer);
+            }
+        });
+        background.add(cookingBackButton).left().pad(8).row();
+
         Table contentSplit = new Table();
         background.add(contentSplit).expand().fill().pad(15);
 
@@ -3971,6 +4026,14 @@ public class GDXGameScreen implements Screen {
                 generalMessageLabel.setText(result.Message());
                 generalMessageLabel.setVisible(true);
                 generalMessageTimer = GENERAL_MESSAGE_DURATION;
+                if (result.isSuccessful()) {
+                    com.example.main.service.NetworkService ns = com.example.main.models.App.getInstance().getNetworkService();
+                    if (ns != null) {
+                        java.util.HashMap<String, Object> data = new java.util.HashMap<>();
+                        data.put("senderUsername", game.getCurrentPlayer().getUsername());
+                        ns.sendPlayerAction("move_random_food_to_refrigerator", data);
+                    }
+                }
             }
         });
 
@@ -4023,6 +4086,16 @@ public class GDXGameScreen implements Screen {
                         if (result.isSuccessful()) {
                             // On success, show the placement dialog
                             showPlacementDialog(controller.getJustCookedFood());
+                            // Network sync
+                            com.example.main.service.NetworkService ns = com.example.main.models.App.getInstance().getNetworkService();
+                            if (ns != null) {
+                                java.util.HashMap<String, Object> data = new java.util.HashMap<>();
+                                data.put("senderUsername", game.getCurrentPlayer().getUsername());
+                                data.put("recipeName", recipeEnum.getDisplayName());
+                                data.put("senderX", game.getCurrentPlayer().currentX());
+                                data.put("senderY", game.getCurrentPlayer().currentY());
+                                ns.sendPlayerAction("cook_food", data);
+                            }
                         } else {
                             // On failure, show the detailed error message
                             generalMessageLabel.setText(result.Message());
@@ -4775,6 +4848,15 @@ public class GDXGameScreen implements Screen {
             public void clicked(InputEvent event, float x, float y) {
                 Result result = controller.cheatAddCraftingRecipe(cheatCraftingRecipeField.getText());
                 messageLabel.setText(result.Message());
+                if (result.isSuccessful()) {
+                    com.example.main.service.NetworkService ns = com.example.main.models.App.getInstance().getNetworkService();
+                    if (ns != null) {
+                        java.util.HashMap<String, Object> actionData = new java.util.HashMap<>();
+                        actionData.put("senderUsername", game.getCurrentPlayer().getUsername());
+                        actionData.put("recipeName", cheatCraftingRecipeField.getText());
+                        ns.sendPlayerAction("cheat_add_crafting_recipe", actionData);
+                    }
+                }
             }
         });
 
@@ -4816,6 +4898,15 @@ public class GDXGameScreen implements Screen {
             public void clicked(InputEvent event, float x, float y) {
                 Result result = controller.cheatAddCookingRecipe(cheatCookingRecipeField.getText());
                 messageLabel.setText(result.Message());
+                if (result.isSuccessful()) {
+                    com.example.main.service.NetworkService ns = com.example.main.models.App.getInstance().getNetworkService();
+                    if (ns != null) {
+                        java.util.HashMap<String, Object> actionData = new java.util.HashMap<>();
+                        actionData.put("senderUsername", game.getCurrentPlayer().getUsername());
+                        actionData.put("recipeName", cheatCookingRecipeField.getText());
+                        ns.sendPlayerAction("cheat_add_cooking_recipe", actionData);
+                    }
+                }
             }
         });
 
@@ -4896,6 +4987,17 @@ public class GDXGameScreen implements Screen {
                     generalMessageLabel.setText(result.Message());
                     generalMessageLabel.setVisible(true);
                     generalMessageTimer = GENERAL_MESSAGE_DURATION;
+
+                    // Send network sync
+                    if (result.isSuccessful()) {
+                        com.example.main.service.NetworkService ns = com.example.main.models.App.getInstance().getNetworkService();
+                        if (ns != null) {
+                            java.util.HashMap<String, Object> data = new java.util.HashMap<>();
+                            data.put("senderUsername", game.getCurrentPlayer().getUsername());
+                            data.put("foodName", foodToEat.getName());
+                            ns.sendPlayerAction("eat", data);
+                        }
+                    }
 
                     // Close menu
                     isEatMenuOpen = false;
@@ -5003,12 +5105,29 @@ public class GDXGameScreen implements Screen {
             int tileX = (int) (worldCoords.x / TILE_SIZE);
             int tileY = MAP_HEIGHT - 1 - (int) (worldCoords.y / TILE_SIZE);
 
+            if (game.getMap() == null) {
+                generalMessageLabel.setText("Map is still loading. Please wait.");
+                generalMessageLabel.setVisible(true);
+                generalMessageTimer = GENERAL_MESSAGE_DURATION;
+                return;
+            }
+
             Result result = controller.placeMachine(machineToPlace, tileX, tileY);
             generalMessageLabel.setText(result.Message());
             generalMessageLabel.setVisible(true);
             generalMessageTimer = GENERAL_MESSAGE_DURATION;
 
             if (result.isSuccessful()) {
+                // Broadcast placement to other clients
+                com.example.main.service.NetworkService ns = com.example.main.models.App.getInstance().getNetworkService();
+                if (ns != null && machineToPlace != null && machineToPlace.getItemType() != null) {
+                    java.util.HashMap<String, Object> data = new java.util.HashMap<>();
+                    data.put("senderUsername", game.getCurrentPlayer().getUsername());
+                    data.put("machineEnumName", machineToPlace.getItemType().getEnumName());
+                    data.put("tileX", tileX);
+                    data.put("tileY", tileY);
+                    ns.sendPlayerAction("place_machine", data);
+                }
                 isMachinePlacementMode = false;
                 machineToPlace = null;
                 machinePlacementTexture = null;
@@ -5033,6 +5152,8 @@ public class GDXGameScreen implements Screen {
                 Tile targetTile = gameMap.getTile(tileX, tileY);
                 if (targetTile.getPlacedMachine() != null) {
                     activeMachine = targetTile.getPlacedMachine();
+                    activeMachineTileX = tileX;
+                    activeMachineTileY = tileY;
                     showMachineUI();
                     Gdx.input.setInputProcessor(machineUiStage);
                 }
@@ -7727,6 +7848,224 @@ public class GDXGameScreen implements Screen {
         }
     }
 
+    public void applyRemoteCheatAddCraftingRecipe(String senderUsername, String recipeName) {
+        if (game == null || controller == null) return;
+        User prevUser = game.getUrrentUser();
+        Player prevPlayer = game.getCurrentPlayer();
+        User senderUser = game.getUserByUsername(senderUsername);
+        Player senderPlayer = senderUser != null ? senderUser.getPlayer() : null;
+        if (senderUser == null || senderPlayer == null) return;
+        try {
+            game.setCurrentUser(senderUser);
+            game.setCurrentPlayer(senderPlayer);
+            controller.cheatAddCraftingRecipe(recipeName);
+        } finally {
+            if (prevUser != null) game.setCurrentUser(prevUser);
+            if (prevPlayer != null) game.setCurrentPlayer(prevPlayer);
+        }
+    }
+
+    public void applyRemoteCheatAddCookingRecipe(String senderUsername, String recipeName) {
+        if (game == null || controller == null) return;
+        User prevUser = game.getUrrentUser();
+        Player prevPlayer = game.getCurrentPlayer();
+        User senderUser = game.getUserByUsername(senderUsername);
+        Player senderPlayer = senderUser != null ? senderUser.getPlayer() : null;
+        if (senderUser == null || senderPlayer == null) return;
+        try {
+            game.setCurrentUser(senderUser);
+            game.setCurrentPlayer(senderPlayer);
+            controller.cheatAddCookingRecipe(recipeName);
+        } finally {
+            if (prevUser != null) game.setCurrentUser(prevUser);
+            if (prevPlayer != null) game.setCurrentPlayer(prevPlayer);
+        }
+    }
+
+    public void applyRemoteCraftItem(String senderUsername, String recipeName) {
+        if (game == null || controller == null) return;
+        User prevUser = game.getUrrentUser();
+        Player prevPlayer = game.getCurrentPlayer();
+        User senderUser = game.getUserByUsername(senderUsername);
+        Player senderPlayer = senderUser != null ? senderUser.getPlayer() : null;
+        if (senderUser == null || senderPlayer == null) return;
+        try {
+            game.setCurrentUser(senderUser);
+            game.setCurrentPlayer(senderPlayer);
+            controller.craftItem(recipeName);
+        } finally {
+            if (prevUser != null) game.setCurrentUser(prevUser);
+            if (prevPlayer != null) game.setCurrentPlayer(prevPlayer);
+        }
+    }
+
+    public void applyRemoteCookFood(String senderUsername, String recipeName, Integer senderX, Integer senderY) {
+        if (game == null || controller == null) return;
+        User prevUser = game.getUrrentUser();
+        Player prevPlayer = game.getCurrentPlayer();
+        User senderUser = game.getUserByUsername(senderUsername);
+        Player senderPlayer = senderUser != null ? senderUser.getPlayer() : null;
+        if (senderUser == null || senderPlayer == null) return;
+        try {
+            game.setCurrentUser(senderUser);
+            game.setCurrentPlayer(senderPlayer);
+            if (senderX != null && senderY != null) { senderPlayer.setCurrentX(senderX); senderPlayer.setCurrentY(senderY); }
+            controller.cookFood(recipeName);
+        } finally {
+            if (prevUser != null) game.setCurrentUser(prevUser);
+            if (prevPlayer != null) game.setCurrentPlayer(prevPlayer);
+        }
+    }
+
+    public void applyRemoteEat(String senderUsername, String foodName) {
+        if (game == null || controller == null) return;
+        User prevUser = game.getUrrentUser();
+        Player prevPlayer = game.getCurrentPlayer();
+        User senderUser = game.getUserByUsername(senderUsername);
+        Player senderPlayer = senderUser != null ? senderUser.getPlayer() : null;
+        if (senderUser == null || senderPlayer == null) return;
+        try {
+            game.setCurrentUser(senderUser);
+            game.setCurrentPlayer(senderPlayer);
+            controller.eat(foodName);
+        } finally {
+            if (prevUser != null) game.setCurrentUser(prevUser);
+            if (prevPlayer != null) game.setCurrentPlayer(prevPlayer);
+        }
+    }
+
+    private PlacedMachine getPlacedMachineAt(int x, int y) {
+        if (game == null || game.getMap() == null) return null;
+        if (!game.getMap().inBounds(x, y)) return null;
+        Tile t = game.getMap().getTile(x, y);
+        return t != null ? t.getPlacedMachine() : null;
+    }
+
+    public void applyRemoteStartArtisanProcess(String senderUsername, int machineX, int machineY, String recipeEnumName) {
+        if (game == null || controller == null) return;
+        User prevUser = game.getUrrentUser();
+        Player prevPlayer = game.getCurrentPlayer();
+        User senderUser = game.getUserByUsername(senderUsername);
+        Player senderPlayer = senderUser != null ? senderUser.getPlayer() : null;
+        if (senderUser == null || senderPlayer == null) return;
+        PlacedMachine machine = getPlacedMachineAt(machineX, machineY);
+        if (machine == null) return;
+        try {
+            game.setCurrentUser(senderUser);
+            game.setCurrentPlayer(senderPlayer);
+            com.example.main.enums.items.ArtisanProductType recipe = null;
+            try { recipe = com.example.main.enums.items.ArtisanProductType.valueOf(recipeEnumName); } catch (Exception ignored) {}
+            if (recipe != null) {
+                controller.startArtisanProcess(machine, recipe);
+            }
+        } finally {
+            if (prevUser != null) game.setCurrentUser(prevUser);
+            if (prevPlayer != null) game.setCurrentPlayer(prevPlayer);
+        }
+    }
+
+    public void applyRemoteCancelArtisanProcess(String senderUsername, int machineX, int machineY) {
+        if (game == null || controller == null) return;
+        User prevUser = game.getUrrentUser();
+        Player prevPlayer = game.getCurrentPlayer();
+        User senderUser = game.getUserByUsername(senderUsername);
+        Player senderPlayer = senderUser != null ? senderUser.getPlayer() : null;
+        if (senderUser == null || senderPlayer == null) return;
+        PlacedMachine machine = getPlacedMachineAt(machineX, machineY);
+        if (machine == null) return;
+        try {
+            game.setCurrentUser(senderUser);
+            game.setCurrentPlayer(senderPlayer);
+            controller.cancelArtisanProcess(machine);
+        } finally {
+            if (prevUser != null) game.setCurrentUser(prevUser);
+            if (prevPlayer != null) game.setCurrentPlayer(prevPlayer);
+        }
+    }
+
+    public void applyRemoteCollectArtisanProduct(String senderUsername, int machineX, int machineY) {
+        if (game == null || controller == null) return;
+        User prevUser = game.getUrrentUser();
+        Player prevPlayer = game.getCurrentPlayer();
+        User senderUser = game.getUserByUsername(senderUsername);
+        Player senderPlayer = senderUser != null ? senderUser.getPlayer() : null;
+        if (senderUser == null || senderPlayer == null) return;
+        PlacedMachine machine = getPlacedMachineAt(machineX, machineY);
+        if (machine == null) return;
+        try {
+            game.setCurrentUser(senderUser);
+            game.setCurrentPlayer(senderPlayer);
+            controller.collectArtisanProduct(machine);
+        } finally {
+            if (prevUser != null) game.setCurrentUser(prevUser);
+            if (prevPlayer != null) game.setCurrentPlayer(prevPlayer);
+        }
+    }
+
+    public void applyRemoteFinishArtisanProcessNow(String senderUsername, int machineX, int machineY) {
+        if (game == null || controller == null) return;
+        User prevUser = game.getUrrentUser();
+        Player prevPlayer = game.getCurrentPlayer();
+        User senderUser = game.getUserByUsername(senderUsername);
+        Player senderPlayer = senderUser != null ? senderUser.getPlayer() : null;
+        if (senderUser == null || senderPlayer == null) return;
+        PlacedMachine machine = getPlacedMachineAt(machineX, machineY);
+        if (machine == null) return;
+        try {
+            game.setCurrentUser(senderUser);
+            game.setCurrentPlayer(senderPlayer);
+            controller.finishArtisanProcessNow(machine);
+        } finally {
+            if (prevUser != null) game.setCurrentUser(prevUser);
+            if (prevPlayer != null) game.setCurrentPlayer(prevPlayer);
+        }
+    }
+
+    public void applyRemotePlaceMachine(String senderUsername, String machineEnumName, int tileX, int tileY) {
+        if (game == null || controller == null) return;
+        if (game.getMap() == null || !game.getMap().inBounds(tileX, tileY)) return;
+        User prevUser = game.getUrrentUser();
+        Player prevPlayer = game.getCurrentPlayer();
+        User senderUser = game.getUserByUsername(senderUsername);
+        Player senderPlayer = senderUser != null ? senderUser.getPlayer() : null;
+        if (senderUser == null || senderPlayer == null) return;
+        try {
+            game.setCurrentUser(senderUser);
+            game.setCurrentPlayer(senderPlayer);
+            // Construct a CraftingMachine instance from enum name and call controller.placeMachine
+            com.example.main.enums.items.ItemType maybeType = null;
+            try {
+                com.example.main.enums.items.CraftingMachineType t = com.example.main.enums.items.CraftingMachineType.valueOf(machineEnumName);
+                maybeType = t;
+            } catch (Exception ignored) {}
+            if (maybeType == null) return;
+            com.example.main.models.item.Item item = com.example.main.models.item.ItemFactory.createItemOrThrow(maybeType.getName(), 1);
+            if (!(item instanceof com.example.main.models.item.CraftingMachine)) return;
+            com.example.main.models.item.CraftingMachine machineToPlaceRemote = (com.example.main.models.item.CraftingMachine) item;
+            controller.placeMachine(machineToPlaceRemote, tileX, tileY);
+        } finally {
+            if (prevUser != null) game.setCurrentUser(prevUser);
+            if (prevPlayer != null) game.setCurrentPlayer(prevPlayer);
+        }
+    }
+
+    public void applyRemoteMoveRandomFoodToRefrigerator(String senderUsername) {
+        if (game == null || controller == null) return;
+        User prevUser = game.getUrrentUser();
+        Player prevPlayer = game.getCurrentPlayer();
+        User senderUser = game.getUserByUsername(senderUsername);
+        Player senderPlayer = senderUser != null ? senderUser.getPlayer() : null;
+        if (senderUser == null || senderPlayer == null) return;
+        try {
+            game.setCurrentUser(senderUser);
+            game.setCurrentPlayer(senderPlayer);
+            controller.moveRandomFoodToRefrigerator();
+        } finally {
+            if (prevUser != null) game.setCurrentUser(prevUser);
+            if (prevPlayer != null) game.setCurrentPlayer(prevPlayer);
+        }
+    }
+
     public void applyRemoteHug(String senderUsername, String receiverUsername, Integer senderX, Integer senderY) {
         if (game == null || controller == null) return;
         User prevUser = game.getUrrentUser();
@@ -7779,11 +8118,8 @@ public class GDXGameScreen implements Screen {
         try {
             game.setCurrentUser(senderUser);
             game.setCurrentPlayer(senderPlayer);
-            if (senderX != null && senderY != null) {
-                senderPlayer.setCurrentX(senderX);
-                senderPlayer.setCurrentY(senderY);
-            }
-            controller.giftPlayer(receiverUsername, itemName, String.valueOf(amount));
+            // On remote clients, bypass proximity and sender inventory checks, and directly apply to receiver
+            controller.giftPlayerRemote(senderUsername, receiverUsername, itemName, String.valueOf(amount));
         } finally {
             if (prevUser != null) game.setCurrentUser(prevUser);
             if (prevPlayer != null) game.setCurrentPlayer(prevPlayer);
@@ -8689,6 +9025,10 @@ public class GDXGameScreen implements Screen {
         Gdx.app.postRunnable(() -> {
             System.out.println("[GAMESCREEN] Event received. Initializing map from snapshot.");
             initializeMapFromSnapshot(event.getGameMapSnapshot());
+            // After building the map from snapshot, wire it to controller for gameplay logic
+            if (game != null && game.getMap() != null) {
+                controller.setMap(game.getMap());
+            }
         });
     }
 
@@ -8773,6 +9113,79 @@ public class GDXGameScreen implements Screen {
         this.npcHouseVariants = snapshot.npcHouseVariants;
 
         this.gameMap = game.getMap();
+
+        // Rebuild interactive elements (shops, trees) that are not captured by snapshot tileTypes
+        rebuildInteractiveElementsAfterSnapshot();
+    }
+
+    private void rebuildInteractiveElementsAfterSnapshot() {
+        if (game == null || game.getMap() == null) return;
+        Tile[][] tiles = game.getMap().getTiles();
+        // Recreate Shop objects and assign to their tile regions
+        for (ShopType shopType : ShopType.values()) {
+            com.example.main.models.building.Shop shop = new com.example.main.models.building.Shop(shopType);
+            for (int i = shopType.getCornerX(); i < shopType.getCornerX() + 7; i++) {
+                for (int j = shopType.getCornerY(); j < shopType.getCornerY() + 7; j++) {
+                    if (i >= 0 && i < tiles.length && j >= 0 && j < tiles[0].length) {
+                        Tile t = tiles[i][j];
+                        if (t != null && t.getType() == TileType.Shop) {
+                            t.setShop(shop);
+                        }
+                    }
+                }
+            }
+        }
+
+        // Recreate wild trees and basic growth trackers from treeVariantMap where tile type is Tree
+        for (int x = 0; x < tiles.length; x++) {
+            for (int y = 0; y < tiles[0].length; y++) {
+                Tile t = tiles[x][y];
+                if (t == null) continue;
+                if (t.getType() == TileType.Tree && t.getTree() == null) {
+                    int variant = (treeVariantMap != null && x < treeVariantMap.length && y < treeVariantMap[0].length)
+                        ? treeVariantMap[x][y] : 0;
+                    TreeType treeType = switch (variant) {
+                        case 1 -> TreeType.Maple;
+                        case 2 -> TreeType.Pine;
+                        default -> TreeType.Oak;
+                    };
+                    t.setTree(new Tree(treeType));
+                    // Set a basic growth tracker so rendering/logic works
+                    Fruit growth = new Fruit(treeType.getProduct(), 1);
+                    growth.setCurrentStage(1);
+                    t.setPlant(growth);
+                }
+                // Recreate foraging crops on planted tiles (snapshot lacks plant object)
+                if (t.getType() == TileType.Planted && t.getPlant() == null) {
+                    com.example.main.enums.items.ForagingCropType[] all = com.example.main.enums.items.ForagingCropType.values();
+                    int idx = Math.abs((x * 31 + y * 17)) % all.length;
+                    com.example.main.enums.items.ForagingCropType cropType = all[idx];
+                    com.example.main.models.item.Crop crop = new com.example.main.models.item.Crop(cropType, 1);
+                    crop.setReadyToHarvest(true);
+                    t.setPlant(crop);
+                }
+                // Recreate foraging seeds on shoveled tiles where seed is missing
+                if (t.getType() == TileType.Shoveled && t.getSeed() == null) {
+                    com.example.main.enums.items.ForagingSeedType[] seeds = com.example.main.enums.items.ForagingSeedType.values();
+                    // Filter only foraging seeds
+                    com.example.main.enums.items.ForagingSeedType seedType = seeds[Math.abs((x * 13 + y * 7)) % seeds.length];
+                    if (seedType.isForaging()) {
+                        t.setSeed(new com.example.main.models.item.Seed(seedType, 1));
+                    }
+                }
+                // Recreate quarry minerals on stone tiles (functionality)
+                if (t.getItem() == null) {
+                    switch (t.getType()) {
+                        case CopperStone -> t.setItem(new com.example.main.models.item.Mineral(com.example.main.enums.items.MineralType.Copper_Ore, 1));
+                        case IronStone -> t.setItem(new com.example.main.models.item.Mineral(com.example.main.enums.items.MineralType.Iron_Ore, 1));
+                        case GoldStone -> t.setItem(new com.example.main.models.item.Mineral(com.example.main.enums.items.MineralType.Gold_Ore, 1));
+                        case IridiumStone -> t.setItem(new com.example.main.models.item.Mineral(com.example.main.enums.items.MineralType.Iridium_Ore, 1));
+                        case JewelStone -> t.setItem(new com.example.main.models.item.Mineral(com.example.main.enums.items.MineralType.Amethyst, 1));
+                        default -> {}
+                    }
+                }
+            }
+        }
     }
 
     public GameMapSnapshot createMapSnapshot() {
