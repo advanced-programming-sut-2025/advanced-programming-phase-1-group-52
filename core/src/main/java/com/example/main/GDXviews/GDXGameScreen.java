@@ -690,25 +690,24 @@ public class GDXGameScreen implements Screen {
                 if (!user.getUsername().startsWith("empty_slot_")) themes.add(user.getFarmTheme());
             }
             while (themes.size() < 4) themes.add(FarmThemes.Neutral);
-            GameMap newMasterMap = new GameMap(game.getPlayers(), themes);
+            ArrayList<User> paddedUsers = new ArrayList<>(game.getPlayers());
+            while(paddedUsers.size() < 4) {
+                paddedUsers.add(new User("empty_slot_" + paddedUsers.size(), "", "", "", null));
+            }
+            GameMap newMasterMap = new GameMap(paddedUsers, themes);
             game.setGameMap(newMasterMap);
 
-            // 2. Generate the random visual elements for the map
+            game.setGameMap(newMasterMap);
             generateRandomMaps();
-
-            // 3. Create the blueprint snapshot
             GameMapSnapshot snapshot = createMapSnapshot();
-
-            // 4. Send the snapshot to the server
             Message mapMessage = new Message(new HashMap<>(), MessageType.SEND_GAME_MAP);
             mapMessage.putInBody("gameMapSnapshot", snapshot);
             networkService.getClient().sendMessage(mapMessage);
-
-            // 5. Finally, set the local map so the host can see it and hide the loading message
             this.gameMap = newMasterMap;
-            this.loadingLabel.setVisible(false);
 
-        } else {
+            if(this.loadingLabel != null) this.loadingLabel.setVisible(false);
+        }
+        else {
             // --- GUEST LOGIC ---
             // Guests do nothing but wait. The EventBus will notify them when the map arrives.
             System.out.println("[GAMESCREEN - GUEST] I am a guest. Waiting for map from server.");
@@ -811,28 +810,18 @@ public class GDXGameScreen implements Screen {
                 }
             }
 
-            Player currentPlayer = game.getCurrentPlayer();
-            if (currentPlayer != null && !currentPlayer.getNotifications().isEmpty()) {
-                Notification notif = currentPlayer.getNotifications().get(0);
+            if (localPlayer != null && !localPlayer.getNotifications().isEmpty()) {
+                Notification notif = localPlayer.getNotifications().get(0);
                 generalMessageLabel.setText(notif.getMessage());
-                generalMessageLabel.setColor(Color.CYAN); // Use a distinct color for notifications
+                generalMessageLabel.setColor(Color.CYAN);
                 generalMessageLabel.setVisible(true);
                 generalMessageTimer = GENERAL_MESSAGE_DURATION;
             }
 
-            if (currentPlayer != null && currentPlayer.getCurrentTool() != null) {
-                // Get mouse position in screen coordinates
-                float mouseX = Gdx.input.getX();
-                float mouseY = Gdx.input.getY();
-
-                // Convert mouse position to world coordinates
-                com.badlogic.gdx.math.Vector3 mouseInWorld = camera.unproject(new com.badlogic.gdx.math.Vector3(mouseX, mouseY, 0));
-
-                // Get player's center position in world coordinates
-                float playerCenterX = (currentPlayer.currentX() * TILE_SIZE) + (TILE_SIZE / 2f);
-                float playerCenterY = ((MAP_HEIGHT - 1 - currentPlayer.currentY()) * TILE_SIZE) + (TILE_SIZE / 2f);
-
-                // Calculate the angle
+            if (localPlayer != null && localPlayer.getCurrentTool() != null) {
+                Vector3 mouseInWorld = camera.unproject(new Vector3(Gdx.input.getX(), Gdx.input.getY(), 0));
+                float playerCenterX = (localPlayer.currentX() * TILE_SIZE) + (TILE_SIZE / 2f);
+                float playerCenterY = ((MAP_HEIGHT - 1 - localPlayer.currentY()) * TILE_SIZE) + (TILE_SIZE / 2f);
                 float deltaX = mouseInWorld.x - playerCenterX;
                 float deltaY = mouseInWorld.y - playerCenterY;
                 toolRotation = com.badlogic.gdx.math.MathUtils.atan2(deltaY, deltaX) * com.badlogic.gdx.math.MathUtils.radiansToDegrees;
@@ -909,10 +898,9 @@ public class GDXGameScreen implements Screen {
             }
         }
 
-        Player currentPlayer = game.getCurrentPlayer();
-        if (currentPlayer != null) {
-            playerTargetX = currentPlayer.originX();
-            playerTargetY = currentPlayer.originY();
+        if (localPlayer != null) {
+            playerTargetX = localPlayer.originX();
+            playerTargetY = localPlayer.originY();
         }
     }
 
@@ -1195,11 +1183,11 @@ public class GDXGameScreen implements Screen {
 
         if (isInventoryOpen || isToolMenuOpen || isCheatMenuOpen || isPlantingSelectionOpen
             || isCraftingMenuOpen || isCookingMenuOpen || isCraftingCheatMenuOpen || isCookingCheatMenuOpen
-            || isEatMenuOpen || isInfoMenuOpen || isQuestMenuOpen || isJournalMenuOpen) {
+            || isEatMenuOpen || isInfoMenuOpen || isQuestMenuOpen || isJournalMenuOpen || showSellMenu) {
             return;
         }
 
-        com.badlogic.gdx.math.Vector3 mouseInWorld = camera.unproject(new com.badlogic.gdx.math.Vector3(Gdx.input.getX(), Gdx.input.getY(), 0));
+        Vector3 mouseInWorld = camera.unproject(new Vector3(Gdx.input.getX(), Gdx.input.getY(), 0));
         int targetTileX = (int) (mouseInWorld.x / TILE_SIZE);
         int targetTileY = MAP_HEIGHT - 1 - (int) (mouseInWorld.y / TILE_SIZE);
 
@@ -1220,7 +1208,7 @@ public class GDXGameScreen implements Screen {
         if (Gdx.input.isKeyJustPressed(Input.Keys.T)) {
             isToolMenuOpen = !isToolMenuOpen;
             if (isToolMenuOpen) {
-                playerTools = game.getCurrentPlayer().getTools();
+                playerTools = localPlayer.getTools();
                 currentToolIndex = 0;
                 updateToolMenuDisplay();
                 Gdx.input.setInputProcessor(toolMenuStage);
@@ -1267,7 +1255,7 @@ public class GDXGameScreen implements Screen {
         }
 
         if (Gdx.input.isKeyJustPressed(Input.Keys.C)) {
-            Player currentPlayer = game.getCurrentPlayer();
+            Player currentPlayer = localPlayer;
             Tile currentTile = gameMap.getTile(currentPlayer.currentX(), currentPlayer.currentY());
             if (currentTile.getType() == TileType.House) {
                 isCookingMenuOpen = !isCookingMenuOpen;
@@ -1306,11 +1294,6 @@ public class GDXGameScreen implements Screen {
             }
         }
 
-        if (isInventoryOpen || isToolMenuOpen || isCheatMenuOpen || isPlantingSelectionOpen
-            || isCraftingMenuOpen || isCookingMenuOpen || isCraftingCheatMenuOpen || isCookingCheatMenuOpen || isEatMenuOpen || showSellMenu) {
-            return;
-        }
-
         if (Gdx.input.isKeyJustPressed(Input.Keys.SPACE)) {
             if (targetTileX >= 0 && targetTileX < MAP_WIDTH && targetTileY >= 0 && targetTileY < MAP_HEIGHT) {
                 Tile hoveredTile = gameMap.getTiles()[targetTileX][targetTileY];
@@ -1323,8 +1306,8 @@ public class GDXGameScreen implements Screen {
 
         // --- MODIFIED ENTER KEY LOGIC ---
         if (Gdx.input.isKeyJustPressed(Input.Keys.ENTER)) {
-            if (controller != null && game.getCurrentPlayer() != null) {
-                Tool currentTool = game.getCurrentPlayer().getCurrentTool();
+            if (controller != null && localPlayer != null) {
+                Tool currentTool = localPlayer.getCurrentTool();
                 String message;
 
                 if (currentTool == null) {
@@ -1418,24 +1401,24 @@ public class GDXGameScreen implements Screen {
         }
 
         if (Gdx.input.isKeyJustPressed(Input.Keys.L)) {
-            if (controller != null && game != null) {
-                Player currentPlayer = game.getCurrentPlayer();
-                String x = String.valueOf(currentPlayer.currentX());
-                String y = String.valueOf(currentPlayer.currentY());
-                System.out.println(controller.cheatLightning(x, y).Message());
-                cheatLightningActive = true;
-                lightningDuration = 0.15f;
-            }
+            String x = String.valueOf(localPlayer.currentX());
+            String y = String.valueOf(localPlayer.currentY());
+            System.out.println(controller.cheatLightning(x, y).Message());
+            cheatLightningActive = true;
+            lightningDuration = 0.15f;
         }
 
+
         if(Gdx.input.isKeyJustPressed(Input.Keys.F1)){
-            controller.cheatSetEnergy(200);
+            HashMap<String, Object> cheatData = new HashMap<>();
+            cheatData.put("cheat", "setEnergy");
+            cheatData.put("value", 200);
+            networkController.getNetworkService().sendMessage(new Message(cheatData, MessageType.PLAYER_ACTION));
         }
     }
 
     private void handlePlayerMovement(float delta) {
-        Player currentPlayer = game.getCurrentPlayer();
-        if (currentPlayer == null) return;
+        if (localPlayer == null) return;
 
         playerAnimationTime += delta;
 
@@ -1443,15 +1426,10 @@ public class GDXGameScreen implements Screen {
             playerMoveProgress += PLAYER_MOVE_SPEED * delta;
             if (playerMoveProgress >= 1.0f) {
                 playerMoveProgress = 1.0f;
-                currentPlayer.setCurrentX(playerTargetX);
-                currentPlayer.setCurrentY(playerTargetY);
+                localPlayer.setCurrentX(playerTargetX);
+                localPlayer.setCurrentY(playerTargetY);
                 playerMoving = false;
-                currentPlayer.reduceEnergy(10);
-            }
-            if (localPlayer != null && (localPlayer.currentX() != lastSentX || localPlayer.currentY() != lastSentY)) {
                 networkController.sendPlayerMove(localPlayer.currentX(), localPlayer.currentY());
-                lastSentX = localPlayer.currentX();
-                lastSentY = localPlayer.currentY();
             }
             return;
         }
@@ -1461,16 +1439,16 @@ public class GDXGameScreen implements Screen {
         boolean leftPressed = Gdx.input.isKeyPressed(Input.Keys.A) || Gdx.input.isKeyPressed(Input.Keys.LEFT);
         boolean rightPressed = Gdx.input.isKeyPressed(Input.Keys.D) || Gdx.input.isKeyPressed(Input.Keys.RIGHT);
 
-        if (currentPlayer.isFainted() && (upPressed || downPressed || leftPressed || rightPressed)) {
+        if (localPlayer.isFainted() && (upPressed || downPressed || leftPressed || rightPressed)) {
             generalMessageLabel.setText("I'm too exhausted to move...");
-            generalMessageLabel.setColor(Color.RED); // Set color to red for fainted message
+            generalMessageLabel.setColor(Color.RED);
             generalMessageLabel.setVisible(true);
-            generalMessageTimer = GENERAL_MESSAGE_DURATION; // Use the general timer
+            generalMessageTimer = GENERAL_MESSAGE_DURATION;
             return;
         }
 
-        int newX = currentPlayer.currentX();
-        int newY = currentPlayer.currentY();
+        int newX = localPlayer.currentX();
+        int newY = localPlayer.currentY();
         PlayerDirection newDirection = playerDirection;
 
         if (upPressed && leftPressed) {
@@ -1505,15 +1483,18 @@ public class GDXGameScreen implements Screen {
 
         playerDirection = newDirection;
 
-        if (newX != currentPlayer.currentX() || newY != currentPlayer.currentY()) {
+        if (newX != localPlayer.currentX() || newY != localPlayer.currentY()) {
             if (newX >= 0 && newX < MAP_WIDTH && newY >= 0 && newY < MAP_HEIGHT) {
-                if (isPlayerWalkable(newX, newY, currentPlayer)) {
+                if (isPlayerWalkable(newX, newY, localPlayer)) {
                     playerTargetX = newX;
                     playerTargetY = newY;
                     playerMoving = true;
                     playerActionState = PlayerActionState.WALKING;
                     playerMoveProgress = 0f;
                     playerAnimationTime = 0f;
+
+                    // Immediately tell the server where we are going.
+                    networkController.sendPlayerMove(newX, newY);
                 }
             }
         } else {
@@ -1524,11 +1505,8 @@ public class GDXGameScreen implements Screen {
             playerAnimationTime = 0f;
         }
 
-        if (localPlayer != null && (localPlayer.currentX() != lastSentX || localPlayer.currentY() != lastSentY)) {
-            // The position is new, so send it to the server.
+        if (localPlayer.currentX() != lastSentX || localPlayer.currentY() != lastSentY) {
             networkController.sendPlayerMove(localPlayer.currentX(), localPlayer.currentY());
-
-            // Update the last sent position to prevent sending redundant messages.
             lastSentX = localPlayer.currentX();
             lastSentY = localPlayer.currentY();
         }
@@ -1564,23 +1542,23 @@ public class GDXGameScreen implements Screen {
     private boolean nKeyPressed = false;
 
     private void handleTurnSwitching() {
-        boolean nKeyCurrentlyPressed = Gdx.input.isKeyPressed(Input.Keys.N);
-
-        if (nKeyCurrentlyPressed && !nKeyPressed) {
-            controller.switchTurn();
-
-            cameraFollowsPlayer = true;
-
-            Player newCurrentPlayer = game.getCurrentPlayer();
-            if (newCurrentPlayer != null) {
-                updateCameraToFollowPlayer(newCurrentPlayer);
-            }
-
-            playerMoving = false;
-            playerMoveProgress = 0f;
-        }
-
-        nKeyPressed = nKeyCurrentlyPressed;
+//        boolean nKeyCurrentlyPressed = Gdx.input.isKeyPressed(Input.Keys.N);
+//
+//        if (nKeyCurrentlyPressed && !nKeyPressed) {
+//            controller.switchTurn();
+//
+//            cameraFollowsPlayer = true;
+//
+//            Player newCurrentPlayer = localPlayer;
+//            if (newCurrentPlayer != null) {
+//                updateCameraToFollowPlayer(newCurrentPlayer);
+//            }
+//
+//            playerMoving = false;
+//            playerMoveProgress = 0f;
+//        }
+//
+//        nKeyPressed = nKeyCurrentlyPressed;
     }
 
     private void handleBuildingPlacement() {
@@ -1655,7 +1633,7 @@ public class GDXGameScreen implements Screen {
             int tileY = (int) ((MAP_HEIGHT * TILE_SIZE - worldCoords.y) / TILE_SIZE);
 
             if (tileX >= 0 && tileX < MAP_WIDTH && tileY >= 0 && tileY < MAP_HEIGHT) {
-                Player currentPlayer = game.getCurrentPlayer();
+                Player currentPlayer = localPlayer;
                 if (currentPlayer != null && isAnimalWalkable(tileX, tileY, currentPlayer)) {
                     // Find the animal and set it to move to the target location
                     if (controller != null && animalToShepherd != null) {
@@ -1847,8 +1825,7 @@ public class GDXGameScreen implements Screen {
                 if (shopIndex < shopTypes.length) {
                     currentShopType = shopTypes[shopIndex];
 
-                    // Move player to the shop location for the shop controller to work
-                    Player currentPlayer = game.getCurrentPlayer();
+                    Player currentPlayer = localPlayer;
                     if (currentPlayer != null) {
                         // Set player position to the shop corner + 1 to be inside the shop area
                         // (the corner is a wall, so we need to be inside)
@@ -1867,44 +1844,46 @@ public class GDXGameScreen implements Screen {
     }
 
     private void handleCameraMovement(float delta) {
-        Player currentPlayer = game.getCurrentPlayer();
-
-        boolean manualControl = Gdx.input.isKeyPressed(Input.Keys.I) ||
-                               Gdx.input.isKeyPressed(Input.Keys.K) ||
-                               Gdx.input.isKeyPressed(Input.Keys.J) ||
-                               Gdx.input.isKeyPressed(Input.Keys.L);
-
-        if (manualControl) {
-            cameraFollowsPlayer = false;
-
-            float movement = cameraSpeed * delta;
-
-            if (Gdx.input.isKeyPressed(Input.Keys.I)) {
-                camera.position.y += movement;
-            }
-            if (Gdx.input.isKeyPressed(Input.Keys.K)) {
-                camera.position.y -= movement;
-            }
-            if (Gdx.input.isKeyPressed(Input.Keys.J)) {
-                camera.position.x -= movement;
-            }
-            if (Gdx.input.isKeyPressed(Input.Keys.L)) {
-                camera.position.x += movement;
-            }
-        } else if (currentPlayer != null) {
-            cameraFollowsPlayer = true;
-            updateCameraToFollowPlayer(currentPlayer);
+        if (cameraFollowsPlayer && localPlayer != null) {
+            updateCameraToFollowPlayer(localPlayer);
         }
+        else
+        {
+            boolean manualControl = Gdx.input.isKeyPressed(Input.Keys.I) ||
+                Gdx.input.isKeyPressed(Input.Keys.K) ||
+                Gdx.input.isKeyPressed(Input.Keys.J) ||
+                Gdx.input.isKeyPressed(Input.Keys.L);
 
-        if (Gdx.input.isKeyPressed(Input.Keys.Q)) {
-            camera.zoom += 0.02f;
-        }
-        if (Gdx.input.isKeyPressed(Input.Keys.E)) {
-            camera.zoom -= 0.02f;
-        }
+            if (manualControl) {
+                cameraFollowsPlayer = false;
 
+                float movement = cameraSpeed * delta;
+
+                if (Gdx.input.isKeyPressed(Input.Keys.I)) {
+                    camera.position.y += movement;
+                }
+                if (Gdx.input.isKeyPressed(Input.Keys.K)) {
+                    camera.position.y -= movement;
+                }
+                if (Gdx.input.isKeyPressed(Input.Keys.J)) {
+                    camera.position.x -= movement;
+                }
+                if (Gdx.input.isKeyPressed(Input.Keys.L)) {
+                    camera.position.x += movement;
+                }
+            } else if (localPlayer != null) {
+                cameraFollowsPlayer = true;
+                updateCameraToFollowPlayer(localPlayer);
+            }
+
+            if (Gdx.input.isKeyPressed(Input.Keys.Q)) {
+                camera.zoom += 0.02f;
+            }
+            if (Gdx.input.isKeyPressed(Input.Keys.E)) {
+                camera.zoom -= 0.02f;
+            }
+        }
         camera.zoom = Math.max(0.1f, Math.min(camera.zoom, 3.0f));
-
         constrainCameraToMapBounds();
     }
 
@@ -2034,12 +2013,13 @@ public class GDXGameScreen implements Screen {
                 continue;
             }
 
+            // --- Movement Interpolation (Already Correct) ---
+            // This smoothly renders the local player's movement between tiles.
             float playerX = player.currentX();
             float playerY = player.currentY();
-            Player currentPlayer = game.getCurrentPlayer();
-            if (player.equals(currentPlayer) && playerMoving && playerMoveProgress < 1.0f) {
-                float startX = player.currentX();
-                float startY = player.currentY();
+            if (player.equals(localPlayer) && playerMoving && playerMoveProgress < 1.0f) {
+                float startX = localPlayer.currentX();
+                float startY = localPlayer.currentY();
                 float endX = playerTargetX;
                 float endY = playerTargetY;
 
@@ -2054,36 +2034,45 @@ public class GDXGameScreen implements Screen {
             float worldX = playerX * TILE_SIZE;
             float worldY = (MAP_HEIGHT - 1 - playerY) * TILE_SIZE;
 
+            // --- Texture and Drawing (Already Correct) ---
             Texture playerTexture = getPlayerTexture(player);
             float playerWidth = playerTexture.getWidth() * 2;
             float playerHeight = playerTexture.getHeight() * 2;
             float renderX = worldX + (TILE_SIZE - playerWidth) / 2f;
             float renderY = worldY;
 
+            // --- Transparency for Other Players (Corrected) ---
+            // This single 'if' statement correctly handles making other players transparent.
+            // The old, redundant check for localPlayer has been removed.
             if (!player.equals(localPlayer)) {
                 spriteBatch.setColor(1f, 1f, 1f, 0.8f);
             }
 
-            if (!player.equals(game.getCurrentPlayer())) {
-                spriteBatch.setColor(1f, 1f, 1f, 0.7f);
-            }
             spriteBatch.draw(playerTexture, renderX, renderY, playerWidth, playerHeight);
-            if (player.equals(game.getCurrentPlayer()) && eatingAnimationTimer > 0 && eatingTexture != null) {
+
+            // Reset color to full opacity for the next player.
+            spriteBatch.setColor(1f, 1f, 1f, 1f);
+
+            // --- Eating Animation (Corrected) ---
+            // The eating animation should only show for the local player.
+            if (player.equals(localPlayer) && eatingAnimationTimer > 0 && eatingTexture != null) {
                 float bobOffset = (float) (Math.sin(eatingAnimationTimer * 12) * 4);
                 float animX = worldX + (TILE_SIZE / 2f) - (eatingTexture.getWidth() / 2f);
                 float animY = worldY + TILE_SIZE + bobOffset;
-                spriteBatch.draw(eatingTexture, animX, animY-35);
+                spriteBatch.draw(eatingTexture, animX, animY - 35);
             }
-            spriteBatch.setColor(1f, 1f, 1f, 1f);
 
+            // --- Fainted Animation (Logic was OK, but good to confirm) ---
             if (player.isFainted()) {
                 hudFont.setColor(Color.WHITE);
                 float bobOffset = (float) (Math.sin(weatherStateTime * 4) * 5);
                 hudFont.draw(spriteBatch, "Z z Z", worldX + 8, worldY + 48 + bobOffset);
-                if(player.getEnergy() > 0) player.setFainted(false);
+                if (player.getEnergy() > 0) player.setFainted(false);
             }
 
-            if (player.equals(game.getCurrentPlayer()) && player.getCurrentTool() != null && actionTimer <= 0) {
+            // --- Tool Rendering (Corrected) ---
+            // The equipped tool should only be rendered for the local player.
+            if (player.equals(localPlayer) && player.getCurrentTool() != null && actionTimer <= 0) {
                 Tool currentTool = player.getCurrentTool();
                 String key = generateTextureKey(currentTool);
                 Texture toolTexture = textureManager.getTexture(key);
@@ -2091,7 +2080,6 @@ public class GDXGameScreen implements Screen {
                 if (toolTexture != null) {
                     float toolWidth = toolTexture.getWidth() * 1.0f;
                     float toolHeight = toolTexture.getHeight() * 1.0f;
-
                     float toolX = (worldX + (TILE_SIZE / 2f)) - (toolWidth / 2f);
                     float toolY = (worldY + (TILE_SIZE / 2f)) - (toolHeight / 4f);
 
@@ -2108,60 +2096,58 @@ public class GDXGameScreen implements Screen {
         }
     }
 
-        private Texture getPlayerTexture(Player player) {
-            boolean isMale = player.getGender().name().equals("Male");
-            Player currentPlayer = game.getCurrentPlayer();
+    private Texture getPlayerTexture(Player player) {
+        boolean isMale = player.getGender().name().equals("Male");
 
-            // --- Action Animation Logic ---
-            if (player.equals(currentPlayer) && playerActionState != PlayerActionState.IDLE && playerActionState != PlayerActionState.WALKING) {
-                switch (playerActionState) {
-                    case WATERING:
-                        switch (playerDirection) {
-                            case UP: case UP_LEFT: case UP_RIGHT: return isMale ? maleWatercanIdle2Texture : femaleWatercanIdle1Texture;
-                            case LEFT: return isMale ? maleWatercanIdle2Texture : femaleWatercanIdle1Texture;
-                            case RIGHT: return isMale ? maleWatercanIdle2Texture : femaleWatercanIdle1Texture;
-                            default: return isMale ? maleWatercanIdle2Texture : femaleWatercanIdle1Texture;
-                        }
-                    case TILLING:
-                        switch (playerDirection) {
-                            case UP: case UP_LEFT: case UP_RIGHT: return isMale ? maleHoeIdle2Texture : femaleHoeIdle2Texture;
-                            case LEFT: return isMale ? maleHoeIdle2Texture : femaleHoeIdle2Texture;
-                            case RIGHT: return isMale ? maleHoeIdle2Texture : femaleHoeIdle2Texture;
-                            default: return isMale ? maleHoeIdle2Texture : femaleHoeIdle2Texture;
-                        }
-                    case HARVESTING:
-                        switch (playerDirection) {
-                            case UP: case UP_LEFT: case UP_RIGHT: return isMale ? maleScytheIdle2Texture : femaleScytheIdle2Texture;
-                            case LEFT: return isMale ? maleScytheIdle2Texture : femaleScytheIdle2Texture;
-                            case RIGHT: return isMale ? maleScytheIdle2Texture : femaleScytheIdle2Texture;
-                            default: return isMale ? maleScytheIdle2Texture : femaleScytheIdle2Texture;
-                        }
-                    case PLANTING:
-                        // Planting is often direction-agnostic, but you could add directions if you want
-                        return isMale ? malePlantingIdleTexture : femalePlantingIdleTexture;
-                }
-            }
-
-            // --- Original Idle/Walking Logic ---
-            if (!player.equals(currentPlayer) || !playerMoving) {
-                return isMale ? maleIdleTexture : femaleIdleTexture;
-            }
-
-            int animFrame = ((int) (playerAnimationTime / ANIMATION_SPEED)) % 2;
-
-            switch (playerDirection) {
-                case DOWN: case DOWN_LEFT: case DOWN_RIGHT:
-                    return isMale ? (animFrame == 0 ? maleDown1Texture : maleDown2Texture) : (animFrame == 0 ? femaleDown1Texture : femaleDown2Texture);
-                case UP: case UP_LEFT: case UP_RIGHT:
-                    return isMale ? (animFrame == 0 ? maleUp1Texture : maleUp2Texture) : (animFrame == 0 ? femaleUp1Texture : femaleUp2Texture);
-                case LEFT:
-                    return isMale ? (animFrame == 0 ? maleLeft1Texture : maleLeft2Texture) : (animFrame == 0 ? femaleLeft1Texture : femaleLeft2Texture);
-                case RIGHT:
-                    return isMale ? (animFrame == 0 ? maleRight1Texture : maleRight2Texture) : (animFrame == 0 ? femaleRight1Texture : femaleRight2Texture);
-                default:
-                    return isMale ? maleIdleTexture : femaleIdleTexture;
+        if (player.equals(localPlayer) && playerActionState != PlayerActionState.IDLE && playerActionState != PlayerActionState.WALKING) {
+            switch (playerActionState) {
+                case WATERING:
+                    switch (playerDirection) {
+                        case UP: case UP_LEFT: case UP_RIGHT: return isMale ? maleWatercanIdle2Texture : femaleWatercanIdle1Texture;
+                        case LEFT: return isMale ? maleWatercanIdle2Texture : femaleWatercanIdle1Texture;
+                        case RIGHT: return isMale ? maleWatercanIdle2Texture : femaleWatercanIdle1Texture;
+                        default: return isMale ? maleWatercanIdle2Texture : femaleWatercanIdle1Texture;
+                    }
+                case TILLING:
+                    switch (playerDirection) {
+                        case UP: case UP_LEFT: case UP_RIGHT: return isMale ? maleHoeIdle2Texture : femaleHoeIdle2Texture;
+                        case LEFT: return isMale ? maleHoeIdle2Texture : femaleHoeIdle2Texture;
+                        case RIGHT: return isMale ? maleHoeIdle2Texture : femaleHoeIdle2Texture;
+                        default: return isMale ? maleHoeIdle2Texture : femaleHoeIdle2Texture;
+                    }
+                case HARVESTING:
+                    switch (playerDirection) {
+                        case UP: case UP_LEFT: case UP_RIGHT: return isMale ? maleScytheIdle2Texture : femaleScytheIdle2Texture;
+                        case LEFT: return isMale ? maleScytheIdle2Texture : femaleScytheIdle2Texture;
+                        case RIGHT: return isMale ? maleScytheIdle2Texture : femaleScytheIdle2Texture;
+                        default: return isMale ? maleScytheIdle2Texture : femaleScytheIdle2Texture;
+                    }
+                case PLANTING:
+                    // Planting is often direction-agnostic, but you could add directions if you want
+                    return isMale ? malePlantingIdleTexture : femalePlantingIdleTexture;
             }
         }
+
+        // --- Original Idle/Walking Logic ---
+        if (!player.equals(localPlayer) || !playerMoving) {
+            return isMale ? maleIdleTexture : femaleIdleTexture;
+        }
+
+        int animFrame = ((int) (playerAnimationTime / ANIMATION_SPEED)) % 2;
+
+        switch (playerDirection) {
+            case DOWN: case DOWN_LEFT: case DOWN_RIGHT:
+                return isMale ? (animFrame == 0 ? maleDown1Texture : maleDown2Texture) : (animFrame == 0 ? femaleDown1Texture : femaleDown2Texture);
+            case UP: case UP_LEFT: case UP_RIGHT:
+                return isMale ? (animFrame == 0 ? maleUp1Texture : maleUp2Texture) : (animFrame == 0 ? femaleUp1Texture : femaleUp2Texture);
+            case LEFT:
+                return isMale ? (animFrame == 0 ? maleLeft1Texture : maleLeft2Texture) : (animFrame == 0 ? femaleLeft1Texture : femaleLeft2Texture);
+            case RIGHT:
+                return isMale ? (animFrame == 0 ? maleRight1Texture : maleRight2Texture) : (animFrame == 0 ? femaleRight1Texture : femaleRight2Texture);
+            default:
+                return isMale ? maleIdleTexture : femaleIdleTexture;
+        }
+    }
 
     private void renderNPCs() {
         ArrayList<NPC> npcs = game.getNPCs();
@@ -2272,11 +2258,10 @@ public class GDXGameScreen implements Screen {
 
     private void updateNearbyNPCs() {
         nearbyNPCs.clear();
-        Player currentPlayer = game.getCurrentPlayer();
-        if (currentPlayer == null) return;
+        if (localPlayer == null) return;
 
-        int playerX = currentPlayer.currentX();
-        int playerY = currentPlayer.currentY();
+        int playerX = localPlayer.currentX();
+        int playerY = localPlayer.currentY();
 
         ArrayList<NPC> npcs = game.getNPCs();
         if (npcs == null) return;
@@ -2567,7 +2552,7 @@ public class GDXGameScreen implements Screen {
         npcMenuTable.add(titleLabel).colspan(2).pad(20).row();
 
         // Get friendship information
-        NPCFriendship friendship = selectedNPC.getFriendShipWith(game.getCurrentPlayer());
+        NPCFriendship friendship = selectedNPC.getFriendShipWith(localPlayer);
         if (friendship != null) {
             Label friendshipLabel = new Label(friendship.toString(), skin);
             friendshipLabel.setFontScale(1.0f);
@@ -2759,7 +2744,7 @@ public class GDXGameScreen implements Screen {
 
         // Inventory grid (like main inventory, but items are buttons for gifting)
         Table itemsTable = new Table();
-        Player player = game.getCurrentPlayer();
+        Player player = localPlayer;
         ArrayList<Item> items = player.getInventory().getItems();
         int column = 0;
         final int ITEMS_PER_ROW = 4;
@@ -3112,7 +3097,7 @@ public class GDXGameScreen implements Screen {
     }
 
     private void renderHousingSprite(int tileX, int tileY, float worldX, float worldY) {
-        Player currentPlayer = game.getCurrentPlayer();
+        Player currentPlayer = localPlayer;
         if (currentPlayer == null) return;
 
         for (Housing housing : currentPlayer.getHousings()) {
@@ -3173,7 +3158,7 @@ public class GDXGameScreen implements Screen {
     }
 
     private int getHousingIndex(int x, int y) {
-        Player currentPlayer = game.getCurrentPlayer();
+        Player currentPlayer = localPlayer;
         if (currentPlayer == null) return -1;
 
         List<Housing> housings = currentPlayer.getHousings();
@@ -3291,11 +3276,10 @@ public class GDXGameScreen implements Screen {
         hudFont.draw(spriteBatch, timeString, clockX + 148, clockY + 120);
 
         // --- NEW: Draw the player's balance ---
-        Player player = game.getCurrentPlayer();
-        if (player != null) {
-            String balanceString = String.valueOf(player.getBankAccount().getBalance());
+        if (localPlayer != null) {
+            String balanceString = String.valueOf(localPlayer.getBankAccount().getBalance());
             balanceString += " | ";
-            String energyString = String.valueOf(player.getEnergy());
+            String energyString = String.valueOf(localPlayer.getEnergy());
             hudFont.draw(spriteBatch, balanceString, clockX + 110, clockY + 40);
             hudFont.draw(spriteBatch, energyString,clockX + 170, clockY + 40);
         }
@@ -3430,7 +3414,7 @@ public class GDXGameScreen implements Screen {
             float worldY = offsetY + ((MAP_HEIGHT - 1 - playerY) * TILE_SIZE * scale);
 
             // Draw player as a colored dot
-            if (player.equals(game.getCurrentPlayer())) {
+            if (player.equals(localPlayer)) {
                 spriteBatch.setColor(1f, 1f, 0f, 1f); // Yellow for current player
             } else {
                 spriteBatch.setColor(0f, 1f, 0f, 1f); // Green for other players
@@ -3777,7 +3761,7 @@ public class GDXGameScreen implements Screen {
 
     private void showCraftingMenu() {
         craftingMenuContentTable.clear();
-        Player currentPlayer = game.getCurrentPlayer();
+        Player currentPlayer = localPlayer;
         if (currentPlayer == null) return;
 
         ArrayList<CraftingRecipe> knownRecipes = currentPlayer.getCraftingRecipe();
@@ -3830,7 +3814,7 @@ public class GDXGameScreen implements Screen {
                     public void clicked(InputEvent event, float x, float y) {
                         Result result = controller.craftItem(recipeEnum.getName());
                         if (result.isSuccessful()) {
-                            Item craftedItem = game.getCurrentPlayer().getInventory().findItemByType(recipeEnum.getProduct());
+                            Item craftedItem = localPlayer.getInventory().findItemByType(recipeEnum.getProduct());
                             if (craftedItem instanceof CraftingMachine) {
                                 isMachinePlacementMode = true;
                                 machineToPlace = (CraftingMachine) craftedItem;
@@ -3867,8 +3851,6 @@ public class GDXGameScreen implements Screen {
         craftingStage.act(delta);
         craftingStage.draw();
     }
-
-    // In main/GDXviews/GDXGameScreen.java
 
     private void setupCookingUI() {
         Table mainCookingContainer = new Table();
@@ -3922,7 +3904,7 @@ public class GDXGameScreen implements Screen {
     }
 
     private void showCookingMenu() {
-        Player currentPlayer = game.getCurrentPlayer();
+        Player currentPlayer = localPlayer;
         if (currentPlayer == null) return;
 
         // --- Populate Recipe List ---
@@ -4206,8 +4188,7 @@ public class GDXGameScreen implements Screen {
         // A second table to hold the actual content on top of the background
         Table contentTable = new Table();
 
-        Player currentPlayer = game.getCurrentPlayer();
-        if (currentPlayer == null) return;
+        if (localPlayer == null) return;
 
         Table skillsTable = new Table();
         TooltipManager tooltipManager = new TooltipManager();
@@ -4234,13 +4215,13 @@ public class GDXGameScreen implements Screen {
             skillRow.add(new Label(skill.name(), skin)).width(100);
 
             ProgressBar progressBar = new ProgressBar(0, 100, 1, false, barStyle);
-            int currentExp = currentPlayer.getSkillExperience(skill);
+            int currentExp = localPlayer.getSkillExperience(skill);
             int expForNextLevel = skill.getExpForNextLevel();
             float progress = (expForNextLevel > 0) ? ((float)currentExp / expForNextLevel) * 100f : 0f;
             progressBar.setValue(progress);
 
             skillRow.add(progressBar).width(200).padRight(10);
-            skillRow.add(new Label("Level " + currentPlayer.getSkillLevel(skill), skin));
+            skillRow.add(new Label("Level " + localPlayer.getSkillLevel(skill), skin));
 
             skillsTable.add(skillRow).padBottom(10).row();
         }
@@ -4345,7 +4326,7 @@ public class GDXGameScreen implements Screen {
 
     private void updateInventoryGrid(Table table, boolean showOnlyPlantables) {
         table.clear();
-        Player currentPlayer = game.getCurrentPlayer();
+        Player currentPlayer = localPlayer;
         if (currentPlayer == null) return;
 
         ArrayList<Item> items = currentPlayer.getInventory().getItems();
@@ -4465,7 +4446,7 @@ public class GDXGameScreen implements Screen {
             public void clicked(InputEvent event, float x, float y) {
                 if (!playerTools.isEmpty()) {
                     Tool selectedTool = playerTools.get(currentToolIndex);
-                    game.getCurrentPlayer().setCurrentTool(selectedTool);
+                    localPlayer.setCurrentTool(selectedTool);
                     isToolMenuOpen = false;
                 }
             }
@@ -4475,7 +4456,7 @@ public class GDXGameScreen implements Screen {
         unequipButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                game.getCurrentPlayer().setCurrentTool(null); // Set the current tool to null
+                localPlayer.setCurrentTool(null); // Set the current tool to null
                 isToolMenuOpen = false; // Close menu
             }
         });
@@ -4659,7 +4640,7 @@ public class GDXGameScreen implements Screen {
     private void openPlantingMenu(Tile target) {
         plantableItems.clear();
         plantableItems.addAll(
-            game.getCurrentPlayer().getInventory().getItems().stream()
+            localPlayer.getInventory().getItems().stream()
                 .filter(item -> item instanceof Seed)
                 .collect(Collectors.toCollection(ArrayList::new))
         );
@@ -4854,7 +4835,7 @@ public class GDXGameScreen implements Screen {
 
     private void showEatMenu() {
         playerFoodItems.clear();
-        game.getCurrentPlayer().getInventory().getItems().stream()
+        localPlayer.getInventory().getItems().stream()
             .filter(item -> item instanceof Food)
             .forEach(item -> playerFoodItems.add((Food) item));
 
@@ -4887,7 +4868,7 @@ public class GDXGameScreen implements Screen {
     }
 
     private void renderBuffs() {
-        Player currentPlayer = game.getCurrentPlayer();
+        Player currentPlayer = localPlayer;
         if (currentPlayer == null || currentPlayer.getActiveBuffs().isEmpty()) {
             return;
         }
@@ -5099,8 +5080,8 @@ public class GDXGameScreen implements Screen {
             } else {
                 generalMessageLabel.setText("You caught a " + caughtFish.getName() + "!");
             }
-            game.getCurrentPlayer().getInventory().addItem(caughtFish);
-            game.getCurrentPlayer().catchFish();
+            localPlayer.getInventory().addItem(caughtFish);
+            localPlayer.catchFish();
         } else {
             generalMessageLabel.setText("The fish got away...");
         }
@@ -5921,7 +5902,7 @@ public class GDXGameScreen implements Screen {
         // Housing selection
         Label housingLabel = new Label("Select Housing:", skin);
         housingLabel.setColor(Color.WHITE);
-        Player player = game.getCurrentPlayer();
+        Player player = localPlayer;
         java.util.List<Housing> housings = player.getHousings();
         java.util.List<Housing> validHousings = new java.util.ArrayList<>();
         // Find required building type for this animal
@@ -6042,7 +6023,7 @@ public class GDXGameScreen implements Screen {
         // Check if click is on a housing
         int housingIndex = getHousingIndex(targetTileX, targetTileY);
         if (housingIndex != -1) {
-            Player currentPlayer = game.getCurrentPlayer();
+            Player currentPlayer = localPlayer;
             if (currentPlayer != null && housingIndex < currentPlayer.getHousings().size()) {
                 selectedHousing = currentPlayer.getHousings().get(housingIndex);
                 showHousingMenu = true;
@@ -6182,7 +6163,7 @@ public class GDXGameScreen implements Screen {
     }
 
     private int[] findReachablePositionAroundHousing(Housing housing) {
-        Player currentPlayer = game.getCurrentPlayer();
+        Player currentPlayer = localPlayer;
         if (currentPlayer == null) {
             return new int[]{housing.getX() + 2, housing.getY() + 2}; // Fallback position
         }
@@ -6244,7 +6225,7 @@ public class GDXGameScreen implements Screen {
     }
 
     private void renderAnimals() {
-        Player currentPlayer = game.getCurrentPlayer();
+        Player currentPlayer = localPlayer;
         if (currentPlayer == null) return;
 
         for (Housing housing : currentPlayer.getHousings()) {
@@ -6301,7 +6282,7 @@ public class GDXGameScreen implements Screen {
 
     private void updateAnimalMovement(float delta) {
         if (showAnimalMenu) return;
-        Player currentPlayer = game.getCurrentPlayer();
+        Player currentPlayer = localPlayer;
         if (currentPlayer == null) return;
 
         animalMovementTimer += delta;
@@ -6354,7 +6335,7 @@ public class GDXGameScreen implements Screen {
                 continue;
             }
 
-            if (isAnimalWalkable(targetX, targetY, game.getCurrentPlayer())) {
+            if (isAnimalWalkable(targetX, targetY, localPlayer)) {
                 int stepX = currentX;
                 int stepY = currentY;
 
@@ -6364,7 +6345,7 @@ public class GDXGameScreen implements Screen {
                 if (targetY > currentY) stepY++;
                 else if (targetY < currentY) stepY--;
 
-                if (isAnimalWalkable(stepX, stepY, game.getCurrentPlayer())) {
+                if (isAnimalWalkable(stepX, stepY, localPlayer)) {
                     animal.setTargetX(stepX);
                     animal.setTargetY(stepY);
                     animal.setMoving(true);
@@ -6404,7 +6385,7 @@ public class GDXGameScreen implements Screen {
 
                 if (newX < 0 || newX >= MAP_WIDTH || newY < 0 || newY >= MAP_HEIGHT) continue;
 
-                if (!isAnimalWalkable(newX, newY, game.getCurrentPlayer())) continue;
+                if (!isAnimalWalkable(newX, newY, localPlayer)) continue;
 
                 int newG = current.g + 1;
                 PathNode neighbor = allNodes.get(key);
@@ -6460,7 +6441,7 @@ public class GDXGameScreen implements Screen {
     }
 
     private boolean handleAnimalClick(int screenX, int screenY) {
-        Player currentPlayer = game.getCurrentPlayer();
+        Player currentPlayer = localPlayer;
         if (currentPlayer == null) return false;
         com.badlogic.gdx.math.Vector3 mouseInWorld = camera.unproject(new com.badlogic.gdx.math.Vector3(screenX, screenY, 0));
         float mx = mouseInWorld.x;
@@ -6490,7 +6471,7 @@ public class GDXGameScreen implements Screen {
         int tileX = (int) (worldCoords.x / TILE_SIZE);
         int tileY = (int) ((MAP_HEIGHT * TILE_SIZE - worldCoords.y) / TILE_SIZE);
 
-        Player currentPlayer = game.getCurrentPlayer();
+        Player currentPlayer = localPlayer;
         if (currentPlayer == null) return false;
 
         // Check if click is on the current player's trash can
@@ -6590,7 +6571,7 @@ public class GDXGameScreen implements Screen {
             public void clicked(InputEvent event, float x, float y) {
                 if (controller != null && selectedAnimal != null) {
                     controller.sellAnimal(selectedAnimal.getName());
-                    Player currentPlayer = game.getCurrentPlayer();
+                    Player currentPlayer = localPlayer;
                     if (currentPlayer != null) {
                         for (Housing housing : currentPlayer.getHousings()) {
                             for (Iterator<PurchasedAnimal> it = housing.getOccupants().iterator(); it.hasNext(); ) {
@@ -6794,7 +6775,7 @@ public class GDXGameScreen implements Screen {
     }
 
     private void showPlacementDialog(Food food) {
-        Player player = game.getCurrentPlayer();
+        Player player = localPlayer;
         Dialog dialog = new Dialog("Choose Destination", skin, "dialog") {
             protected void result(Object object) {
                 if (object instanceof String) {
@@ -6882,7 +6863,7 @@ public class GDXGameScreen implements Screen {
         titleLabel.setFontScale(1.5f);
         friendsMenuTable.add(titleLabel).colspan(2).pad(20).row();
         // Get other players (excluding current player)
-        Player currentPlayer = game.getCurrentPlayer();
+        Player currentPlayer = localPlayer;
         ArrayList<Player> otherPlayers = new ArrayList<>();
         for (User user : game.getPlayers()) {
             Player player = user.getPlayer();
@@ -7118,7 +7099,7 @@ public class GDXGameScreen implements Screen {
         friendsMenuTable.add(titleLabel).colspan(2).pad(20).row();
 
         // Get friendship details
-        Player currentPlayer = game.getCurrentPlayer();
+        Player currentPlayer = localPlayer;
         Player targetPlayer = null;
 
         // Find the target player
@@ -7281,7 +7262,7 @@ public class GDXGameScreen implements Screen {
     private void loadChatHistory() {
         chatMessagesTable.clear();
 
-        Player currentPlayer = game.getCurrentPlayer();
+        Player currentPlayer = localPlayer;
         Player targetPlayer = null;
 
         // Find the target player
@@ -7353,7 +7334,7 @@ public class GDXGameScreen implements Screen {
     }
 
     private void checkForNewMessages() {
-        Player currentPlayer = game.getCurrentPlayer();
+        Player currentPlayer = localPlayer;
         if (currentPlayer == null) return;
         for (User user : game.getPlayers()) {
             Player player = user.getPlayer();
@@ -7389,7 +7370,7 @@ public class GDXGameScreen implements Screen {
     }
 
     private void checkForNewGifts() {
-        Player currentPlayer = game.getCurrentPlayer();
+        Player currentPlayer = localPlayer;
         if (currentPlayer == null) return;
         for (User user : game.getPlayers()) {
             Player player = user.getPlayer();
@@ -7436,7 +7417,7 @@ public class GDXGameScreen implements Screen {
             Result result = controller.talk(selectedPlayerForActions, message);
             if (result.isSuccessful()) {
                 // Only mark as unread for the receiver, not the sender
-                if (!selectedPlayerForActions.equals(game.getCurrentPlayer().getUsername())) {
+                if (!selectedPlayerForActions.equals(localPlayer.getUsername())) {
                     unreadTalkNotifications.put(selectedPlayerForActions, true);
                 }
                 chatMessageField.setText("");
@@ -8065,7 +8046,7 @@ public class GDXGameScreen implements Screen {
         titleLabel.setFontScale(1.5f);
         friendsMenuTable.add(titleLabel).colspan(2).pad(20).row();
 
-        Player currentPlayer = game.getCurrentPlayer();
+        Player currentPlayer = localPlayer;
         ArrayList<Notification> notifications = currentPlayer.getNotifications();
         boolean hasMarriageProposals = false;
 
@@ -8166,13 +8147,13 @@ public class GDXGameScreen implements Screen {
     }
 
     private void removeMarriageProposalNotification(String proposerName) {
-        Player currentPlayer = game.getCurrentPlayer();
+        Player currentPlayer = localPlayer;
         ArrayList<Notification> notifications = currentPlayer.getNotifications();
         notifications.removeIf(n -> n.sender() != null && n.sender().getUsername().equals(proposerName) && n.getMessage().contains(" has proposed to you!"));
     }
 
     private void markGiftNotificationForReceiver(String receiverUsername) {
-        if (!receiverUsername.equals(game.getCurrentPlayer().getUsername())) {
+        if (!receiverUsername.equals(localPlayer.getUsername())) {
             unreadGiftNotifications.put(receiverUsername, true);
         }
     }
