@@ -3,7 +3,11 @@ package com.example.main.network.server;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -12,7 +16,11 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import com.example.main.auth.AuthManager;
 import com.example.main.auth.AuthResult;
 import com.example.main.enums.design.FarmThemes;
-import com.example.main.models.*;
+import com.example.main.models.Game;
+import com.example.main.models.GameMap;
+import com.example.main.models.GameStateSnapshot;
+import com.example.main.models.Player;
+import com.example.main.models.User;
 import com.example.main.network.NetworkConstants;
 import com.example.main.network.common.Message;
 import com.example.main.network.common.MessageType;
@@ -372,19 +380,53 @@ public class GameServer {
     }
 
     public void handlePlayerAction(String clientId, String action, Object actionData) {
-        // Handle player actions and update game state
+        // Handle player actions and forward to appropriate recipients
         User user = getAuthenticatedUser(clientId);
-        if (user != null && game != null) {
-            // Process the action and update game state
-            // This would integrate with your existing game logic
+        if (user == null) {
+            return;
+        }
 
-            // Broadcast the action to other players
-            java.util.HashMap<String, Object> messageData = new java.util.HashMap<>();
-            messageData.put("action", action);
-            messageData.put("actionData", actionData);
-            messageData.put("senderId", clientId);
-            Message actionMessage = new Message(messageData, MessageType.PLAYER_ACTION);
+        java.util.HashMap<String, Object> messageData = new java.util.HashMap<>();
+        messageData.put("action", action);
+        messageData.put("actionData", actionData);
+        messageData.put("senderId", clientId);
+        Message actionMessage = new Message(messageData, MessageType.PLAYER_ACTION);
+
+        // Prefer lobby-scoped routing
+        String lobbyId = clientToLobby.get(clientId);
+
+        // Special-case: private talk -> route to receiver if online
+        if ("talk".equals(action) && actionData instanceof Map) {
+            try {
+                @SuppressWarnings("unchecked")
+                Map<String, Object> map = (Map<String, Object>) actionData;
+                Object receiverObj = map.get("receiverUsername");
+                if (receiverObj instanceof String receiverUsername) {
+                    String receiverClientId = getClientIdByUsername(receiverUsername);
+                    if (receiverClientId != null) {
+                        sendMessageToClient(receiverClientId, actionMessage);
+                        return;
+                    }
+                }
+            } catch (Exception ignored) {
+            }
+        }
+
+        // Fallback: broadcast to others in the same lobby if available, else to all others
+        if (lobbyId != null) {
+            sendMessageToLobbyOthers(lobbyId, actionMessage, clientId);
+        } else {
             broadcastMessageToOthers(actionMessage, clientId);
+        }
+    }
+
+    private void sendMessageToLobbyOthers(String lobbyId, Message message, String excludeClientId) {
+        Lobby lobby = lobbies.get(lobbyId);
+        if (lobby == null) return;
+        for (String otherClientId : lobby.getPlayerIds()) {
+            if (!otherClientId.equals(excludeClientId)) {
+                sendMessageToClient(otherClientId, message);
+            }
         }
     }
 

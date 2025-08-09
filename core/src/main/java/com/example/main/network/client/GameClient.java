@@ -1,13 +1,11 @@
 package com.example.main.network.client;
 
-import com.google.gson.Gson;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.HashMap;
-import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -16,6 +14,7 @@ import com.example.main.models.Game;
 import com.example.main.models.User;
 import com.example.main.network.common.Message;
 import com.example.main.network.common.MessageType;
+import com.google.gson.Gson;
 
 /**
  * Game client that connects to the server and handles network communication
@@ -110,10 +109,10 @@ public class GameClient {
     }
 
     public void sendPlayerAction(String action, Object actionData) {
-        HashMap<String, Object> actionDataMap = new HashMap<>();
-        actionDataMap.put("action", action);
-        actionDataMap.put("actionData", actionData);
-        Message actionMessage = new Message(actionDataMap, MessageType.PLAYER_ACTION);
+        HashMap<String, Object> body = new HashMap<>();
+        body.put("action", action);
+        body.put("actionData", actionData);
+        Message actionMessage = new Message(body, MessageType.PLAYER_ACTION);
         sendMessage(actionMessage);
     }
 
