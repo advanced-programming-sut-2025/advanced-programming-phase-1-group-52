@@ -28,11 +28,24 @@ public class TextureManager {
             "Gem", "Ingredient", "Mineral", "Recipe", "Resource", "Rock",
             "Tools", "Portraits", "Fishing_Pole", "Skill",
             "Tools/Axe", "Tools/Hoe", "Tools/Pickaxe", "Tools/Trash_can", "Tools/Watering_Can", "Trees", "Tools_animation",
-            "Cut/map_elements", "Cut/player", "Cut/animals", "Cut/NPC", "weather"
+            // Include the entire Cut directory to load top-level UI textures like menu_background.png
+            "Cut", "Cut/map_elements", "Cut/player", "Cut/animals", "Cut/NPC", "weather"
         };
 
         for (String dir : assetDirs) {
-            recursivelyLoadTextures(Gdx.files.internal("assets/content/" + dir));
+            // Try multiple potential roots to be robust across launchers/builds
+            String[] roots = new String[] {
+                "content/" + dir,            // Standard LibGDX assets root
+                dir,                           // In case assets were flattened
+                "assets/content/" + dir       // Fallback if someone passed absolute-ish paths
+            };
+            for (String root : roots) {
+                try {
+                    recursivelyLoadTextures(Gdx.files.internal(root));
+                } catch (Exception ignored) {
+                    // Ignore; we'll try the next root
+                }
+            }
         }
         Gdx.app.log("TextureManager", "Finished loading " + textureMap.size() + " textures.");
     }

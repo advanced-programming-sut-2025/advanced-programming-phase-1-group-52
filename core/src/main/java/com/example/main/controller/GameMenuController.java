@@ -42,9 +42,44 @@ import com.example.main.events.EventBus;
 import com.example.main.events.GameMapSyncEvent;
 import com.example.main.events.PlayerDisconnectedEvent;
 import com.example.main.models.*;
+import com.example.main.models.ActiveBuff;
+import com.example.main.models.App;
+import com.example.main.models.Date;
+import com.example.main.models.FishingMinigame;
+import com.example.main.models.Friendship;
+import com.example.main.models.Game;
+import com.example.main.models.GameMap;
+import com.example.main.models.Gift;
+import com.example.main.models.NPC;
+import com.example.main.models.Player;
+import com.example.main.models.Quest;
+import com.example.main.models.Result;
+import com.example.main.models.Talk;
+import com.example.main.models.Tile;
+import com.example.main.models.Time;
+import com.example.main.models.Tree;
+import com.example.main.models.User;
 import com.example.main.models.building.House;
 import com.example.main.models.building.Housing;
-import com.example.main.models.item.*;
+import com.example.main.models.item.AnimalProduct;
+import com.example.main.models.item.CookingRecipe;
+import com.example.main.models.item.CraftingMachine;
+import com.example.main.models.item.CraftingRecipe;
+import com.example.main.models.item.Crop;
+import com.example.main.models.item.Fish;
+import com.example.main.models.item.Food;
+import com.example.main.models.item.Fruit;
+import com.example.main.models.item.Good;
+import com.example.main.models.item.Item;
+import com.example.main.models.item.ItemFactory;
+import com.example.main.models.item.Material;
+import com.example.main.models.item.Mineral;
+import com.example.main.models.item.PlacedMachine;
+import com.example.main.models.item.PurchasedAnimal;
+import com.example.main.models.item.Seed;
+import com.example.main.models.item.Tool;
+import com.example.main.models.item.TrashCan;
+import com.example.main.models.item.WateringCan;
 
 
 public class GameMenuController {
@@ -809,6 +844,34 @@ public class GameMenuController {
         }
 
         return new Result(true, game.getCurrentPlayer().getUsername() + " sent a message to " + player.getUsername() + ":\n" + message);
+    }
+
+    // Remote synchronization variant: applies the same effect without proximity checks
+    public Result talkRemote(String senderUsername, String receiverUsername, String message) {
+        User senderUser = game.getUserByUsername(senderUsername);
+        User receiverUser = game.getUserByUsername(receiverUsername);
+        if (senderUser == null || receiverUser == null || senderUser.getPlayer() == null || receiverUser.getPlayer() == null) {
+            return new Result(false, "Player not found!");
+        }
+
+        Player sender = senderUser.getPlayer();
+        Player receiver = receiverUser.getPlayer();
+
+        Talk talk = new Talk(sender, receiver, message);
+        sender.addTalk(talk);
+        receiver.addTalk(talk);
+
+        Friendship friendship = game.getFriendshipByPlayers(sender, receiver);
+        if (friendship != null) {
+            friendship.addFriendshipPoints(10);
+        }
+
+        if (receiver.equals(sender.getSpouse())) {
+            receiver.addEnergy(50);
+            sender.addEnergy(50);
+        }
+
+        return new Result(true, sender.getUsername() + " sent a message to " + receiver.getUsername() + ":\n" + message);
     }
 
     public Result talkHistory(String username) {
@@ -2189,6 +2252,9 @@ public class GameMenuController {
     }
     public Result petAnimal(String name) {
         PurchasedAnimal animal = null;
+        if (game.getCurrentPlayer() == null || game.getCurrentPlayer().getHousings() == null) {
+            return new Result(false, "No housings available.");
+        }
         for (Housing housing : game.getCurrentPlayer().getHousings()) {
             for (PurchasedAnimal purchasedAnimal : housing.getOccupants()) {
                 if (purchasedAnimal.getName().equals(name)) animal = purchasedAnimal;
@@ -2210,6 +2276,9 @@ public class GameMenuController {
     public Result cheatSetAnimalFriendship(String name, String amountString) {
         int amount = Integer.parseInt(amountString);
         PurchasedAnimal animal = null;
+        if (game.getCurrentPlayer() == null || game.getCurrentPlayer().getHousings() == null) {
+            return new Result(false, "No housings available.");
+        }
         for (Housing housing : game.getCurrentPlayer().getHousings()) {
             for (PurchasedAnimal purchasedAnimal : housing.getOccupants()) {
                 if (purchasedAnimal.getName().equals(name)) animal = purchasedAnimal;
@@ -2226,6 +2295,9 @@ public class GameMenuController {
 
     public Result showAnimals() {
         StringBuilder stringBuilder = new StringBuilder();
+        if (game.getCurrentPlayer() == null || game.getCurrentPlayer().getHousings() == null) {
+            return new Result(false, "No housings available.");
+        }
         for (Housing housing : game.getCurrentPlayer().getHousings()) {
             for (PurchasedAnimal purchasedAnimal : housing.getOccupants()) {
                 stringBuilder.append(purchasedAnimal.toString());
@@ -2238,6 +2310,9 @@ public class GameMenuController {
     public Result shepherdAnimal(String name, String xString, String yString) {
         int x, y;
         PurchasedAnimal animal = null;
+        if (game.getCurrentPlayer() == null || game.getCurrentPlayer().getHousings() == null) {
+            return new Result(false, "No housings available.");
+        }
         for (Housing housing : game.getCurrentPlayer().getHousings()) {
             for (PurchasedAnimal purchasedAnimal : housing.getOccupants()) {
                 if (purchasedAnimal.getName().equals(name)) animal = purchasedAnimal;
@@ -2272,6 +2347,9 @@ public class GameMenuController {
 
     public Result feedHay(String name) {
         PurchasedAnimal animal = null;
+        if (game.getCurrentPlayer() == null || game.getCurrentPlayer().getHousings() == null) {
+            return new Result(false, "No housings available.");
+        }
         for (Housing housing : game.getCurrentPlayer().getHousings()) {
             for (PurchasedAnimal purchasedAnimal : housing.getOccupants()) {
                 if (purchasedAnimal.getName().equals(name)) animal = purchasedAnimal;
@@ -2664,6 +2742,9 @@ public class GameMenuController {
             int rootY = targetTile.getGiantCropRootY();
             Tile rootTile = game.getMap().getTile(rootX, rootY);
             Crop crop = (Crop) rootTile.getPlant();
+            if (!(crop.getCropType() instanceof CropType)) {
+                return new Result(false, "This giant plant is not a farm crop.");
+            }
             CropType cropType = (CropType) crop.getCropType();
 
             // Give a larger, random yield (e.g., 15-21)
