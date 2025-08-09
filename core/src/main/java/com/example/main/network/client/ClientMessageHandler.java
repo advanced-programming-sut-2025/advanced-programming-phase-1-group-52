@@ -1,15 +1,5 @@
 package com.example.main.network.client;
 
-import com.example.main.GDXviews.*;
-
-import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.Screen;
-import com.example.main.Main;
-import com.example.main.controller.GameMenuController;
-import com.example.main.enums.design.FarmThemes;
-import com.example.main.events.*;
-import com.example.main.models.*;
-import com.example.main.controller.NetworkLobbyController;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -17,22 +7,25 @@ import java.util.Map;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
-import com.example.main.GDXviews.GDXGameScreen;
 import com.example.main.GDXviews.GDXLobbyScreen;
 import com.example.main.GDXviews.GDXMainMenu;
 import com.example.main.GDXviews.GDXOnlineLobbiesMenu;
 import com.example.main.GDXviews.GDXPreGameMenu;
 import com.example.main.Main;
 import com.example.main.controller.NetworkLobbyController;
-import com.example.main.enums.design.FarmThemes; // <-- Add this import
-import com.example.main.models.App; // <-- Add this import
-import com.example.main.models.Game; // <-- Add this import
-import com.example.main.models.GameMap;
+import com.example.main.events.EventBus;
+import com.example.main.events.GameMapSyncEvent;
+import com.example.main.events.NavigateToGameScreenEvent;
+import com.example.main.events.PlayerDisconnectedEvent;
+import com.example.main.events.RequestMapSnapshotEvent;
+import com.example.main.models.App;
+import com.example.main.models.Game;
+import com.example.main.models.GameMapSnapshot;
 import com.example.main.models.GameStateSnapshot;
 import com.example.main.models.Player;
-import com.example.main.models.User;
-import com.example.main.network.common.Message;
-import com.example.main.network.common.MessageType;
+import com.example.main.models.User; // <-- Add this import
+import com.example.main.network.common.Message; // <-- Add this import
+import com.example.main.network.common.MessageType; // <-- Add this import
 import com.google.gson.Gson;
 
 /**
@@ -96,6 +89,9 @@ public class ClientMessageHandler {
                 break;
             case LOBBY_START_GAME:
                 handleLobbyStartGame(message);
+                break;
+            case UPDATE_PLAYER_POSITIONS:
+                handleUpdatePlayerPositions(message);
                 break;
             case ONLINE_USERS_UPDATE:
                 handleOnlineUsersUpdate(message);
@@ -283,6 +279,132 @@ public class ClientMessageHandler {
                     com.badlogic.gdx.Screen current = com.example.main.Main.getInstance().getScreen();
                     if (current instanceof com.example.main.GDXviews.GDXGameScreen) {
                         ((com.example.main.GDXviews.GDXGameScreen) current).applyRemoteCheatAddItem(senderUsername, itemName, quantity);
+                    }
+                });
+            }
+            else if ("cheat_add_crafting_recipe".equals(action) && actionData instanceof java.util.Map) {
+                @SuppressWarnings("unchecked")
+                java.util.Map<String, Object> map = (java.util.Map<String, Object>) actionData;
+                String senderUsername = (String) map.get("senderUsername");
+                String recipeName = (String) map.get("recipeName");
+                com.badlogic.gdx.Gdx.app.postRunnable(() -> {
+                    com.badlogic.gdx.Screen current = com.example.main.Main.getInstance().getScreen();
+                    if (current instanceof com.example.main.GDXviews.GDXGameScreen) {
+                        ((com.example.main.GDXviews.GDXGameScreen) current).applyRemoteCheatAddCraftingRecipe(senderUsername, recipeName);
+                    }
+                });
+            }
+            else if ("cheat_add_cooking_recipe".equals(action) && actionData instanceof java.util.Map) {
+                @SuppressWarnings("unchecked")
+                java.util.Map<String, Object> map = (java.util.Map<String, Object>) actionData;
+                String senderUsername = (String) map.get("senderUsername");
+                String recipeName = (String) map.get("recipeName");
+                com.badlogic.gdx.Gdx.app.postRunnable(() -> {
+                    com.badlogic.gdx.Screen current = com.example.main.Main.getInstance().getScreen();
+                    if (current instanceof com.example.main.GDXviews.GDXGameScreen) {
+                        ((com.example.main.GDXviews.GDXGameScreen) current).applyRemoteCheatAddCookingRecipe(senderUsername, recipeName);
+                    }
+                });
+            }
+            else if ("craft_item".equals(action) && actionData instanceof java.util.Map) {
+                @SuppressWarnings("unchecked")
+                java.util.Map<String, Object> map = (java.util.Map<String, Object>) actionData;
+                String senderUsername = (String) map.get("senderUsername");
+                String recipeName = (String) map.get("recipeName");
+                com.badlogic.gdx.Gdx.app.postRunnable(() -> {
+                    com.badlogic.gdx.Screen current = com.example.main.Main.getInstance().getScreen();
+                    if (current instanceof com.example.main.GDXviews.GDXGameScreen) {
+                        ((com.example.main.GDXviews.GDXGameScreen) current).applyRemoteCraftItem(senderUsername, recipeName);
+                    }
+                });
+            }
+            else if ("cook_food".equals(action) && actionData instanceof java.util.Map) {
+                @SuppressWarnings("unchecked")
+                java.util.Map<String, Object> map = (java.util.Map<String, Object>) actionData;
+                String senderUsername = (String) map.get("senderUsername");
+                String recipeName = (String) map.get("recipeName");
+                Integer senderX = map.get("senderX") != null ? ((Number) map.get("senderX")).intValue() : null;
+                Integer senderY = map.get("senderY") != null ? ((Number) map.get("senderY")).intValue() : null;
+                com.badlogic.gdx.Gdx.app.postRunnable(() -> {
+                    com.badlogic.gdx.Screen current = com.example.main.Main.getInstance().getScreen();
+                    if (current instanceof com.example.main.GDXviews.GDXGameScreen) {
+                        ((com.example.main.GDXviews.GDXGameScreen) current).applyRemoteCookFood(senderUsername, recipeName, senderX, senderY);
+                    }
+                });
+            }
+            else if ("eat".equals(action) && actionData instanceof java.util.Map) {
+                @SuppressWarnings("unchecked")
+                java.util.Map<String, Object> map = (java.util.Map<String, Object>) actionData;
+                String senderUsername = (String) map.get("senderUsername");
+                String foodName = (String) map.get("foodName");
+                com.badlogic.gdx.Gdx.app.postRunnable(() -> {
+                    com.badlogic.gdx.Screen current = com.example.main.Main.getInstance().getScreen();
+                    if (current instanceof com.example.main.GDXviews.GDXGameScreen) {
+                        ((com.example.main.GDXviews.GDXGameScreen) current).applyRemoteEat(senderUsername, foodName);
+                    }
+                });
+            }
+            else if ("start_artisan_process".equals(action) && actionData instanceof java.util.Map) {
+                @SuppressWarnings("unchecked")
+                java.util.Map<String, Object> map = (java.util.Map<String, Object>) actionData;
+                String senderUsername = (String) map.get("senderUsername");
+                int machineX = ((Number) map.get("machineX")).intValue();
+                int machineY = ((Number) map.get("machineY")).intValue();
+                String recipeEnumName = (String) map.get("recipeEnumName");
+                com.badlogic.gdx.Gdx.app.postRunnable(() -> {
+                    com.badlogic.gdx.Screen current = com.example.main.Main.getInstance().getScreen();
+                    if (current instanceof com.example.main.GDXviews.GDXGameScreen) {
+                        ((com.example.main.GDXviews.GDXGameScreen) current).applyRemoteStartArtisanProcess(senderUsername, machineX, machineY, recipeEnumName);
+                    }
+                });
+            }
+            else if ("cancel_artisan_process".equals(action) && actionData instanceof java.util.Map) {
+                @SuppressWarnings("unchecked")
+                java.util.Map<String, Object> map = (java.util.Map<String, Object>) actionData;
+                String senderUsername = (String) map.get("senderUsername");
+                int machineX = ((Number) map.get("machineX")).intValue();
+                int machineY = ((Number) map.get("machineY")).intValue();
+                com.badlogic.gdx.Gdx.app.postRunnable(() -> {
+                    com.badlogic.gdx.Screen current = com.example.main.Main.getInstance().getScreen();
+                    if (current instanceof com.example.main.GDXviews.GDXGameScreen) {
+                        ((com.example.main.GDXviews.GDXGameScreen) current).applyRemoteCancelArtisanProcess(senderUsername, machineX, machineY);
+                    }
+                });
+            }
+            else if ("collect_artisan_product".equals(action) && actionData instanceof java.util.Map) {
+                @SuppressWarnings("unchecked")
+                java.util.Map<String, Object> map = (java.util.Map<String, Object>) actionData;
+                String senderUsername = (String) map.get("senderUsername");
+                int machineX = ((Number) map.get("machineX")).intValue();
+                int machineY = ((Number) map.get("machineY")).intValue();
+                com.badlogic.gdx.Gdx.app.postRunnable(() -> {
+                    com.badlogic.gdx.Screen current = com.example.main.Main.getInstance().getScreen();
+                    if (current instanceof com.example.main.GDXviews.GDXGameScreen) {
+                        ((com.example.main.GDXviews.GDXGameScreen) current).applyRemoteCollectArtisanProduct(senderUsername, machineX, machineY);
+                    }
+                });
+            }
+            else if ("finish_artisan_process_now".equals(action) && actionData instanceof java.util.Map) {
+                @SuppressWarnings("unchecked")
+                java.util.Map<String, Object> map = (java.util.Map<String, Object>) actionData;
+                String senderUsername = (String) map.get("senderUsername");
+                int machineX = ((Number) map.get("machineX")).intValue();
+                int machineY = ((Number) map.get("machineY")).intValue();
+                com.badlogic.gdx.Gdx.app.postRunnable(() -> {
+                    com.badlogic.gdx.Screen current = com.example.main.Main.getInstance().getScreen();
+                    if (current instanceof com.example.main.GDXviews.GDXGameScreen) {
+                        ((com.example.main.GDXviews.GDXGameScreen) current).applyRemoteFinishArtisanProcessNow(senderUsername, machineX, machineY);
+                    }
+                });
+            }
+            else if ("move_random_food_to_refrigerator".equals(action) && actionData instanceof java.util.Map) {
+                @SuppressWarnings("unchecked")
+                java.util.Map<String, Object> map = (java.util.Map<String, Object>) actionData;
+                String senderUsername = (String) map.get("senderUsername");
+                com.badlogic.gdx.Gdx.app.postRunnable(() -> {
+                    com.badlogic.gdx.Screen current = com.example.main.Main.getInstance().getScreen();
+                    if (current instanceof com.example.main.GDXviews.GDXGameScreen) {
+                        ((com.example.main.GDXviews.GDXGameScreen) current).applyRemoteMoveRandomFoodToRefrigerator(senderUsername);
                     }
                 });
             }
@@ -833,6 +955,12 @@ public class ClientMessageHandler {
         Game newGame = new Game(playersInGame);
         newGame.setMainPlayer(hostUser); // Set the host (mainPlayer)
         newGame.setLocalPlayerUser(thisClientUser); // Set THIS client's user
+
+        // CRITICAL: Set the current user/player on this client to the local player
+        if (thisClientUser != null && thisClientUser.currentPlayer() != null) {
+            newGame.setCurrentUser(thisClientUser);
+            newGame.setCurrentPlayer(thisClientUser.currentPlayer());
+        }
 
         return newGame;
     }

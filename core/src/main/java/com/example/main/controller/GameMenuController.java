@@ -11,7 +11,6 @@ import java.util.regex.Matcher;
 import java.util.stream.Collectors;
 
 import com.badlogic.gdx.Gdx;
-import com.example.main.GDXviews.GDXGameScreen;
 import com.example.main.enums.Menu;
 import com.example.main.enums.design.Direction;
 import com.example.main.enums.design.FarmThemes;
@@ -39,9 +38,7 @@ import com.example.main.enums.player.Skills;
 import com.example.main.enums.regex.GameMenuCommands;
 import com.example.main.enums.regex.NPCDialogs;
 import com.example.main.events.EventBus;
-import com.example.main.events.GameMapSyncEvent;
 import com.example.main.events.PlayerDisconnectedEvent;
-import com.example.main.models.*;
 import com.example.main.models.ActiveBuff;
 import com.example.main.models.App;
 import com.example.main.models.Date;
@@ -996,6 +993,11 @@ public class GameMenuController {
                 TrashCan newTrashCan = new TrashCan(trashCan.getTrashCanType(), itemAmount);
                 receiver.getInventory().addItem(newTrashCan);
             }
+            case Good good -> {
+                game.getCurrentPlayer().getInventory().removeItem(good.getClass(), itemAmount);
+                Good newGood = new Good(good.getProductType(), itemAmount);
+                receiver.getInventory().addItem(newGood);
+            }
             default -> {
                 return new Result(false, "Item is not giftable!");
             }
@@ -1010,6 +1012,41 @@ public class GameMenuController {
         receiver.addGift(gift);
         receiver.addNotif(game.getCurrentPlayer(), game.getCurrentPlayer().getUsername() + " has gifted something to you!");
         return new Result(true, "You gifted " + itemName + " to " + username);
+    }
+
+    // Remote variant used by receiving clients to apply the gift without local proximity/inventory checks
+    public Result giftPlayerRemote(String senderUsername, String receiverUsername, String itemName, String itemAmountStr) {
+        User senderUser = game.getUserByUsername(senderUsername);
+        User receiverUser = game.getUserByUsername(receiverUsername);
+        if (senderUser == null || receiverUser == null || receiverUser.getPlayer() == null) {
+            return new Result(false, "Player not found!");
+        }
+        Player receiver = receiverUser.getPlayer();
+
+        int itemAmount;
+        try {
+            itemAmount = Integer.parseInt(itemAmountStr);
+        } catch (NumberFormatException e) {
+            return new Result(false, "Invalid item amount");
+        }
+        if (itemAmount <= 0) {
+            return new Result(false, "Invalid item amount");
+        }
+
+        try {
+            Item giftedItem = ItemFactory.createItemOrThrow(itemName, itemAmount);
+            receiver.getInventory().addItem(giftedItem);
+        } catch (IllegalArgumentException ex) {
+            return new Result(false, "Item '" + itemName + "' doesn't exist");
+        }
+
+        Friendship friendship = game.getFriendshipByPlayers(senderUser.getPlayer(), receiver);
+        if (friendship != null) {
+            friendship.addFriendshipPoints(5);
+        }
+
+        receiver.addNotif(senderUser.getPlayer(), senderUsername + " has gifted something to you!");
+        return new Result(true, "Gift delivered to " + receiverUsername + ": " + itemName + " x" + itemAmount);
     }
 
     public Result rateGift(String idString, String rateString) {
@@ -1738,6 +1775,13 @@ public class GameMenuController {
         if (fishingPole == null) {
             return new Result(false, "No fishing pole found");
         }
+        // Ensure map reference is initialized
+        if (map == null && game != null) {
+            map = game.getMap();
+        }
+        if (map == null) {
+            return new Result(false, "Map not loaded yet.");
+        }
         Tile currentTile = map.getTile(player.currentX(), player.currentY());
         if (!isAdjacentToWater(currentTile)) {
             return new Result(false, "You must be next to water to fish.");
@@ -2042,6 +2086,10 @@ public class GameMenuController {
     }
 
     private boolean isAdjacentToWater(Tile tile) {
+        if (map == null && game != null) {
+            map = game.getMap();
+        }
+        if (map == null) return false;
         Tile[][] tiles = map.getTiles();
         int x = tile.getX();
         int y = tile.getY();
@@ -3135,6 +3183,12 @@ public class GameMenuController {
     }
 
     public Result placeMachine(CraftingMachine machine, int tileX, int tileY) {
+        if (map == null) {
+            map = game != null ? game.getMap() : null;
+        }
+        if (map == null) {
+            return new Result(false, "Map is still loading. Please wait.");
+        }
         if (!map.inBounds(tileX, tileY)) {
             return new Result(false, "Cannot place outside the farm.");
         }
