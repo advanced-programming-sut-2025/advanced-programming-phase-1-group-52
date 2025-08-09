@@ -18,6 +18,7 @@ import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
@@ -987,6 +988,19 @@ public class GDXGameScreen implements Screen {
         // Load NPC interaction textures
         dialogBoxTexture = textureManager.getTexture("dialog_box");
         menuBackgroundTexture = textureManager.getTexture("menu_background");
+        if (menuBackgroundTexture == null) {
+            // Fallback: direct file load if the manager missed it
+            try {
+                menuBackgroundTexture = new Texture(Gdx.files.internal("content/Cut/menu_background.png"));
+            } catch (Exception e) {
+                // Last resort: use a 1x1 white texture to avoid crashes
+                Pixmap pm = new Pixmap(1, 1, Pixmap.Format.RGBA8888);
+                pm.setColor(Color.WHITE);
+                pm.fill();
+                menuBackgroundTexture = new Texture(pm);
+                pm.dispose();
+            }
+        }
 
         // Load animal textures
         loadAnimalTextures();
@@ -1002,7 +1016,31 @@ public class GDXGameScreen implements Screen {
     private void loadWeatherAssets() {
         // Load the single images
         rainTexture = textureManager.getTexture("rain1");
+        if (rainTexture == null) {
+            try {
+                rainTexture = new Texture(Gdx.files.internal("content/weather/rain1.png"));
+            } catch (Exception ignored) {
+                // last resort placeholder
+                Pixmap pm = new Pixmap(2, 2, Pixmap.Format.RGBA8888);
+                pm.setColor(Color.WHITE);
+                pm.fill();
+                rainTexture = new Texture(pm);
+                pm.dispose();
+            }
+        }
+
         snowTexture = textureManager.getTexture("snow");
+        if (snowTexture == null) {
+            try {
+                snowTexture = new Texture(Gdx.files.internal("content/weather/snow.png"));
+            } catch (Exception ignored) {
+                Pixmap pm = new Pixmap(2, 2, Pixmap.Format.RGBA8888);
+                pm.setColor(Color.WHITE);
+                pm.fill();
+                snowTexture = new Texture(pm);
+                pm.dispose();
+            }
+        }
 
         // Initialize rain particles
         rainParticles = new Array<>();
@@ -1416,7 +1454,7 @@ public class GDXGameScreen implements Screen {
         boolean leftPressed = Gdx.input.isKeyPressed(Input.Keys.A) || Gdx.input.isKeyPressed(Input.Keys.LEFT);
         boolean rightPressed = Gdx.input.isKeyPressed(Input.Keys.D) || Gdx.input.isKeyPressed(Input.Keys.RIGHT);
 
-        if (currentPlayer.isFainted() && (upPressed || downPressed || leftPressed || rightPressed)) {
+        if (currentPlayer != null && currentPlayer.isFainted() && (upPressed || downPressed || leftPressed || rightPressed)) {
             generalMessageLabel.setText("I'm too exhausted to move...");
             generalMessageLabel.setColor(Color.RED); // Set color to red for fainted message
             generalMessageLabel.setVisible(true);
@@ -1560,6 +1598,16 @@ public class GDXGameScreen implements Screen {
             Result result = shopController.buildBarnOrCoop(buildingToPlace, String.valueOf(tileX), String.valueOf(tileY));
 
             if (result.isSuccessful()) {
+                // Broadcast building placement to other clients
+                com.example.main.service.NetworkService ns = com.example.main.models.App.getInstance().getNetworkService();
+                if (ns != null) {
+                    java.util.HashMap<String, Object> actionData = new java.util.HashMap<>();
+                    actionData.put("senderUsername", game.getCurrentPlayer().getUsername());
+                    actionData.put("buildingKey", buildingToPlace);
+                    actionData.put("x", tileX);
+                    actionData.put("y", tileY);
+                    ns.sendPlayerAction("build_barn_or_coop", actionData);
+                }
                 // Building placed successfully
                 generalMessageLabel.setText(result.Message());
                 generalMessageLabel.setColor(Color.GREEN);
@@ -2031,7 +2079,7 @@ public class GDXGameScreen implements Screen {
             }
             spriteBatch.setColor(1f, 1f, 1f, 1f);
 
-            if (player.isFainted()) {
+            if (player != null && player.isFainted()) {
                 hudFont.setColor(Color.WHITE);
                 float bobOffset = (float) (Math.sin(weatherStateTime * 4) * 5);
                 hudFont.draw(spriteBatch, "Z z Z", worldX + 8, worldY + 48 + bobOffset);
@@ -2621,6 +2669,16 @@ public class GDXGameScreen implements Screen {
 
                                 // Store result message
                                 questResultMessage = result.Message();
+                                if (result.isSuccessful()) {
+                                    // Broadcast quest completion with actor and id
+                                    com.example.main.service.NetworkService ns = com.example.main.models.App.getInstance().getNetworkService();
+                                    if (ns != null) {
+                                        java.util.HashMap<String, Object> actionData = new java.util.HashMap<>();
+                                        actionData.put("senderUsername", game.getCurrentPlayer().getUsername());
+                                        actionData.put("questId", quest.getId());
+                                        ns.sendPlayerAction("finish_quest", actionData);
+                                    }
+                                }
                                 questResultSuccess = result.isSuccessful();
 
                                 // Refresh the quest menu to show updated status
@@ -3070,6 +3128,7 @@ public class GDXGameScreen implements Screen {
         Player currentPlayer = game.getCurrentPlayer();
         if (currentPlayer == null) return;
 
+        if (currentPlayer.getHousings() == null) return;
         for (Housing housing : currentPlayer.getHousings()) {
             if (housing.getX() == tileX && housing.getY() == tileY) {
                 CageType cageType = housing.getType();
@@ -4461,6 +4520,22 @@ public class GDXGameScreen implements Screen {
                 String quantityStr = cheatItemQuantityField.getText();
                 Result result = controller.cheatAddItem(itemName, quantityStr);
                 cheatMessageLabel.setText(result.Message());
+                if (result.isSuccessful()) {
+                    // Broadcast cheat add item to other clients
+                    com.example.main.service.NetworkService ns = com.example.main.models.App.getInstance().getNetworkService();
+                    if (ns != null) {
+                        try {
+                            int qty = Integer.parseInt(quantityStr);
+                            java.util.HashMap<String, Object> actionData = new java.util.HashMap<>();
+                            actionData.put("senderUsername", game.getCurrentPlayer().getUsername());
+                            actionData.put("itemName", itemName);
+                            actionData.put("quantity", qty);
+                            ns.sendPlayerAction("cheat_add_item", actionData);
+                        } catch (NumberFormatException ignored) {
+                            // ignore malformed quantity in broadcast
+                        }
+                    }
+                }
             }
         });
 
@@ -5304,6 +5379,7 @@ public class GDXGameScreen implements Screen {
 
                 if (tile != null && tile.isPartOfGiantCrop() && tile.getGiantCropRootX() == x && tile.getGiantCropRootY() == y) {
                     Crop crop = (Crop) tile.getPlant();
+                    if (!(crop.getCropType() instanceof CropType)) continue;
                     CropType cropType = (CropType) crop.getCropType();
                     int finalStage = cropType.getStages().size();
                     String textureKey = cropType.getEnumName() + "_Stage_" + finalStage;
@@ -5740,12 +5816,36 @@ public class GDXGameScreen implements Screen {
                                     Result purchaseResult = shopController.purchase(productName, String.valueOf(amount));
                                     shopResultMessage = purchaseResult.Message();
                                     shopResultSuccess = purchaseResult.isSuccessful();
+                                    if (shopResultSuccess) {
+                                        com.example.main.service.NetworkService ns = com.example.main.models.App.getInstance().getNetworkService();
+                                        if (ns != null) {
+                                            java.util.HashMap<String, Object> actionData = new java.util.HashMap<>();
+                                            actionData.put("senderUsername", game.getCurrentPlayer().getUsername());
+                                            actionData.put("name", productName);
+                                            actionData.put("amount", amount);
+                                            actionData.put("shopX", game.getCurrentPlayer().currentX());
+                                            actionData.put("shopY", game.getCurrentPlayer().currentY());
+                                            ns.sendPlayerAction("purchase", actionData);
+                                        }
+                                    }
                                     createShopMenuUI();
                                 } else {
                                     // Handle normal purchase
                                     Result purchaseResult = shopController.purchase(productName, String.valueOf(amount));
                                     shopResultMessage = purchaseResult.Message();
                                     shopResultSuccess = purchaseResult.isSuccessful();
+                                    if (shopResultSuccess) {
+                                        com.example.main.service.NetworkService ns = com.example.main.models.App.getInstance().getNetworkService();
+                                        if (ns != null) {
+                                            java.util.HashMap<String, Object> actionData = new java.util.HashMap<>();
+                                            actionData.put("senderUsername", game.getCurrentPlayer().getUsername());
+                                            actionData.put("name", productName);
+                                            actionData.put("amount", amount);
+                                            actionData.put("shopX", game.getCurrentPlayer().currentX());
+                                            actionData.put("shopY", game.getCurrentPlayer().currentY());
+                                            ns.sendPlayerAction("purchase", actionData);
+                                        }
+                                    }
                                     createShopMenuUI();
                                 }
                             }
@@ -5836,6 +5936,7 @@ public class GDXGameScreen implements Screen {
         Label housingLabel = new Label("Select Housing:", skin);
         housingLabel.setColor(Color.WHITE);
         Player player = game.getCurrentPlayer();
+        if (player == null || player.getHousings() == null) return;
         java.util.List<Housing> housings = player.getHousings();
         java.util.List<Housing> validHousings = new java.util.ArrayList<>();
         // Find required building type for this animal
@@ -5925,6 +6026,16 @@ public class GDXGameScreen implements Screen {
                 shopResultMessage = result.Message();
                 shopResultSuccess = result.isSuccessful();
                 if (shopResultSuccess) {
+                    // Broadcast animal purchase
+                    com.example.main.service.NetworkService ns = com.example.main.models.App.getInstance().getNetworkService();
+                    if (ns != null) {
+                        java.util.HashMap<String, Object> actionData = new java.util.HashMap<>();
+                        actionData.put("senderUsername", game.getCurrentPlayer().getUsername());
+                        actionData.put("animalKey", animalKey);
+                        actionData.put("housingId", Integer.parseInt(housingId));
+                        actionData.put("givenName", animalName);
+                        ns.sendPlayerAction("buy_animal", actionData);
+                    }
                     // Show the animal purchase page again for the same animal, with updated housing list
                     showAnimalPurchasePage(animalKey);
                 } else {
@@ -6916,6 +7027,15 @@ public class GDXGameScreen implements Screen {
             public void clicked(InputEvent event, float x, float y) {
                 Result result = controller.hug(selectedPlayerForActions);
                 if (result.isSuccessful()) {
+                    com.example.main.service.NetworkService ns = com.example.main.models.App.getInstance().getNetworkService();
+                    if (ns != null) {
+                        java.util.HashMap<String, Object> actionData = new java.util.HashMap<>();
+                        actionData.put("senderUsername", game.getCurrentPlayer().getUsername());
+                        actionData.put("receiverUsername", selectedPlayerForActions);
+                        actionData.put("senderX", game.getCurrentPlayer().currentX());
+                        actionData.put("senderY", game.getCurrentPlayer().currentY());
+                        ns.sendPlayerAction("hug", actionData);
+                    }
                     // Close menu on success
                     showFriendsMenu = false;
                     currentFriendsMenuState = FriendsMenuState.MAIN_MENU;
@@ -6939,6 +7059,15 @@ public class GDXGameScreen implements Screen {
             public void clicked(InputEvent event, float x, float y) {
                 Result result = controller.flowerSomeone(selectedPlayerForActions);
                 if (result.isSuccessful()) {
+                    com.example.main.service.NetworkService ns = com.example.main.models.App.getInstance().getNetworkService();
+                    if (ns != null) {
+                        java.util.HashMap<String, Object> actionData = new java.util.HashMap<>();
+                        actionData.put("senderUsername", game.getCurrentPlayer().getUsername());
+                        actionData.put("receiverUsername", selectedPlayerForActions);
+                        actionData.put("senderX", game.getCurrentPlayer().currentX());
+                        actionData.put("senderY", game.getCurrentPlayer().currentY());
+                        ns.sendPlayerAction("flower_someone", actionData);
+                    }
                     // Close menu on success
                     showFriendsMenu = false;
                     currentFriendsMenuState = FriendsMenuState.MAIN_MENU;
@@ -7349,6 +7478,15 @@ public class GDXGameScreen implements Screen {
         if (!message.isEmpty()) {
             Result result = controller.talk(selectedPlayerForActions, message);
             if (result.isSuccessful()) {
+                // Broadcast this talk action to other clients so they can apply the same method/state
+                com.example.main.service.NetworkService ns = com.example.main.models.App.getInstance().getNetworkService();
+                if (ns != null) {
+                    java.util.HashMap<String, Object> actionData = new java.util.HashMap<>();
+                    actionData.put("senderUsername", game.getCurrentPlayer().getUsername());
+                    actionData.put("receiverUsername", selectedPlayerForActions);
+                    actionData.put("message", message);
+                    ns.sendPlayerAction("talk", actionData);
+                }
                 // Only mark as unread for the receiver, not the sender
                 if (!selectedPlayerForActions.equals(game.getCurrentPlayer().getUsername())) {
                     unreadTalkNotifications.put(selectedPlayerForActions, true);
@@ -7361,6 +7499,284 @@ public class GDXGameScreen implements Screen {
                 friendshipResultSuccess = false;
                 createChatRoomMenu();
             }
+        }
+    }
+
+    public void applyRemoteTalk(String senderUsername, String receiverUsername, String message) {
+        if (game == null || controller == null) {
+            return;
+        }
+
+        // Preserve current context
+        User previousUser = game.getUrrentUser();
+        Player previousPlayer = game.getCurrentPlayer();
+
+        User senderUser = game.getUserByUsername(senderUsername);
+        Player senderPlayer = senderUser != null ? senderUser.getPlayer() : null;
+
+        if (senderUser == null || senderPlayer == null) {
+            return;
+        }
+
+        try {
+            // Apply the same state as on the sender's client
+            game.setCurrentUser(senderUser);
+            game.setCurrentPlayer(senderPlayer);
+            // Use remote variant to avoid local proximity checks
+            controller.talkRemote(senderUsername, receiverUsername, message);
+
+            // Update local notifications/UI for the receiver side
+            String localUsername = localPlayer != null ? localPlayer.getUsername() : (game.getCurrentPlayer() != null ? game.getCurrentPlayer().getUsername() : null);
+            if (localUsername != null && localUsername.equals(receiverUsername)) {
+                boolean chatOpenWithSender = (currentFriendsMenuState == FriendsMenuState.CHAT_ROOM)
+                        && senderUsername.equals(selectedPlayerForActions);
+                if (chatOpenWithSender) {
+                    unreadTalkNotifications.put(senderUsername, false);
+                    loadChatHistory();
+                    if (chatScrollPane != null) {
+                        chatScrollPane.setScrollPercentY(1.0f);
+                    }
+                } else {
+                    unreadTalkNotifications.put(senderUsername, true);
+                }
+            }
+        } finally {
+            // Restore previous context
+            if (previousUser != null) game.setCurrentUser(previousUser);
+            if (previousPlayer != null) game.setCurrentPlayer(previousPlayer);
+        }
+    }
+
+    public void applyRemoteBuildBarnOrCoop(String senderUsername, String buildingKey, int x, int y) {
+        if (game == null || shopController == null) return;
+        User previousUser = game.getUrrentUser();
+        Player previousPlayer = game.getCurrentPlayer();
+        User senderUser = game.getUserByUsername(senderUsername);
+        Player senderPlayer = senderUser != null ? senderUser.getPlayer() : null;
+        if (senderUser == null || senderPlayer == null) return;
+        try {
+            game.setCurrentUser(senderUser);
+            game.setCurrentPlayer(senderPlayer);
+            shopController.buildBarnOrCoop(buildingKey, String.valueOf(x), String.valueOf(y));
+        } finally {
+            if (previousUser != null) game.setCurrentUser(previousUser);
+            if (previousPlayer != null) game.setCurrentPlayer(previousPlayer);
+        }
+    }
+
+    public void applyRemotePurchase(String senderUsername, String name, int amount, Integer shopX, Integer shopY) {
+        if (game == null || shopController == null) return;
+        User previousUser = game.getUrrentUser();
+        Player previousPlayer = game.getCurrentPlayer();
+        User senderUser = game.getUserByUsername(senderUsername);
+        Player senderPlayer = senderUser != null ? senderUser.getPlayer() : null;
+        if (senderUser == null || senderPlayer == null) return;
+        try {
+            game.setCurrentUser(senderUser);
+            game.setCurrentPlayer(senderPlayer);
+            // Ensure the sender is considered to be at the purchasing shop tile for this application
+            if (shopX != null && shopY != null && senderPlayer != null) {
+                senderPlayer.setCurrentX(shopX);
+                senderPlayer.setCurrentY(shopY);
+            }
+            shopController.purchase(name, String.valueOf(amount));
+        } finally {
+            if (previousUser != null) game.setCurrentUser(previousUser);
+            if (previousPlayer != null) game.setCurrentPlayer(previousPlayer);
+        }
+    }
+
+    public void applyRemoteBuyAnimal(String senderUsername, String animalKey, int housingId, String givenName) {
+        if (game == null || shopController == null) return;
+        User previousUser = game.getUrrentUser();
+        Player previousPlayer = game.getCurrentPlayer();
+        User senderUser = game.getUserByUsername(senderUsername);
+        Player senderPlayer = senderUser != null ? senderUser.getPlayer() : null;
+        if (senderUser == null || senderPlayer == null) return;
+        try {
+            game.setCurrentUser(senderUser);
+            game.setCurrentPlayer(senderPlayer);
+            shopController.buyAnimal(animalKey, String.valueOf(housingId), givenName);
+        } finally {
+            if (previousUser != null) game.setCurrentUser(previousUser);
+            if (previousPlayer != null) game.setCurrentPlayer(previousPlayer);
+        }
+    }
+
+    public void applyRemoteSell(String senderUsername, String itemName, int amount, Integer x, Integer y) {
+        if (game == null || controller == null) return;
+        User previousUser = game.getUrrentUser();
+        Player previousPlayer = game.getCurrentPlayer();
+        User senderUser = game.getUserByUsername(senderUsername);
+        Player senderPlayer = senderUser != null ? senderUser.getPlayer() : null;
+        if (senderUser == null || senderPlayer == null) return;
+        try {
+            game.setCurrentUser(senderUser);
+            game.setCurrentPlayer(senderPlayer);
+            if (x != null && y != null) {
+                senderPlayer.setCurrentX(x);
+                senderPlayer.setCurrentY(y);
+            }
+            controller.sell(itemName, String.valueOf(amount));
+        } finally {
+            if (previousUser != null) game.setCurrentUser(previousUser);
+            if (previousPlayer != null) game.setCurrentPlayer(previousPlayer);
+        }
+    }
+
+    public void applyRemoteCheatAddItem(String senderUsername, String itemName, int quantity) {
+        if (game == null || controller == null) return;
+        User previousUser = game.getUrrentUser();
+        Player previousPlayer = game.getCurrentPlayer();
+        User senderUser = game.getUserByUsername(senderUsername);
+        Player senderPlayer = senderUser != null ? senderUser.getPlayer() : null;
+        if (senderUser == null || senderPlayer == null) return;
+        try {
+            game.setCurrentUser(senderUser);
+            game.setCurrentPlayer(senderPlayer);
+            controller.cheatAddItem(itemName, String.valueOf(quantity));
+        } finally {
+            if (previousUser != null) game.setCurrentUser(previousUser);
+            if (previousPlayer != null) game.setCurrentPlayer(previousPlayer);
+        }
+    }
+
+    public void applyRemoteHug(String senderUsername, String receiverUsername, Integer senderX, Integer senderY) {
+        if (game == null || controller == null) return;
+        User prevUser = game.getUrrentUser();
+        Player prevPlayer = game.getCurrentPlayer();
+        User senderUser = game.getUserByUsername(senderUsername);
+        Player senderPlayer = senderUser != null ? senderUser.getPlayer() : null;
+        if (senderUser == null || senderPlayer == null) return;
+        try {
+            game.setCurrentUser(senderUser);
+            game.setCurrentPlayer(senderPlayer);
+            if (senderX != null && senderY != null) {
+                senderPlayer.setCurrentX(senderX);
+                senderPlayer.setCurrentY(senderY);
+            }
+            controller.hug(receiverUsername);
+        } finally {
+            if (prevUser != null) game.setCurrentUser(prevUser);
+            if (prevPlayer != null) game.setCurrentPlayer(prevPlayer);
+        }
+    }
+
+    public void applyRemoteFlower(String senderUsername, String receiverUsername, Integer senderX, Integer senderY) {
+        if (game == null || controller == null) return;
+        User prevUser = game.getUrrentUser();
+        Player prevPlayer = game.getCurrentPlayer();
+        User senderUser = game.getUserByUsername(senderUsername);
+        Player senderPlayer = senderUser != null ? senderUser.getPlayer() : null;
+        if (senderUser == null || senderPlayer == null) return;
+        try {
+            game.setCurrentUser(senderUser);
+            game.setCurrentPlayer(senderPlayer);
+            if (senderX != null && senderY != null) {
+                senderPlayer.setCurrentX(senderX);
+                senderPlayer.setCurrentY(senderY);
+            }
+            controller.flowerSomeone(receiverUsername);
+        } finally {
+            if (prevUser != null) game.setCurrentUser(prevUser);
+            if (prevPlayer != null) game.setCurrentPlayer(prevPlayer);
+        }
+    }
+
+    public void applyRemoteGift(String senderUsername, String receiverUsername, String itemName, int amount, Integer senderX, Integer senderY) {
+        if (game == null || controller == null) return;
+        User prevUser = game.getUrrentUser();
+        Player prevPlayer = game.getCurrentPlayer();
+        User senderUser = game.getUserByUsername(senderUsername);
+        Player senderPlayer = senderUser != null ? senderUser.getPlayer() : null;
+        if (senderUser == null || senderPlayer == null) return;
+        try {
+            game.setCurrentUser(senderUser);
+            game.setCurrentPlayer(senderPlayer);
+            if (senderX != null && senderY != null) {
+                senderPlayer.setCurrentX(senderX);
+                senderPlayer.setCurrentY(senderY);
+            }
+            controller.giftPlayer(receiverUsername, itemName, String.valueOf(amount));
+        } finally {
+            if (prevUser != null) game.setCurrentUser(prevUser);
+            if (prevPlayer != null) game.setCurrentPlayer(prevPlayer);
+        }
+    }
+
+    public void applyRemoteRateGift(String senderUsername, String giftId, int rate) {
+        if (game == null || controller == null) return;
+        User prevUser = game.getUrrentUser();
+        Player prevPlayer = game.getCurrentPlayer();
+        User senderUser = game.getUserByUsername(senderUsername);
+        Player senderPlayer = senderUser != null ? senderUser.getPlayer() : null;
+        if (senderUser == null || senderPlayer == null) return;
+        try {
+            game.setCurrentUser(senderUser);
+            game.setCurrentPlayer(senderPlayer);
+            controller.rateGift(giftId, String.valueOf(rate));
+            // Optionally refresh UI if on gifts screen
+            if (currentFriendsMenuState == FriendsMenuState.RECEIVED_GIFTS) {
+                createFriendsMenuUI();
+            }
+        } finally {
+            if (prevUser != null) game.setCurrentUser(prevUser);
+            if (prevPlayer != null) game.setCurrentPlayer(prevPlayer);
+        }
+    }
+
+    public void applyRemoteAskMarriage(String senderUsername, String receiverUsername, Integer senderX, Integer senderY) {
+        if (game == null || controller == null) return;
+        User prevUser = game.getUrrentUser();
+        Player prevPlayer = game.getCurrentPlayer();
+        User senderUser = game.getUserByUsername(senderUsername);
+        Player senderPlayer = senderUser != null ? senderUser.getPlayer() : null;
+        if (senderUser == null || senderPlayer == null) return;
+        try {
+            game.setCurrentUser(senderUser);
+            game.setCurrentPlayer(senderPlayer);
+            if (senderX != null && senderY != null) {
+                senderPlayer.setCurrentX(senderX);
+                senderPlayer.setCurrentY(senderY);
+            }
+            controller.askMarriage(receiverUsername);
+        } finally {
+            if (prevUser != null) game.setCurrentUser(prevUser);
+            if (prevPlayer != null) game.setCurrentPlayer(prevPlayer);
+        }
+    }
+
+    public void applyRemoteRespondMarriage(String senderUsername, String proposerUsername, String response) {
+        if (game == null || controller == null) return;
+        User prevUser = game.getUrrentUser();
+        Player prevPlayer = game.getCurrentPlayer();
+        User senderUser = game.getUserByUsername(senderUsername);
+        Player senderPlayer = senderUser != null ? senderUser.getPlayer() : null;
+        if (senderUser == null || senderPlayer == null) return;
+        try {
+            game.setCurrentUser(senderUser);
+            game.setCurrentPlayer(senderPlayer);
+            controller.respondToMarriage(response, proposerUsername);
+        } finally {
+            if (prevUser != null) game.setCurrentUser(prevUser);
+            if (prevPlayer != null) game.setCurrentPlayer(prevPlayer);
+        }
+    }
+
+    public void applyRemoteFinishQuest(String senderUsername, int questId) {
+        if (game == null || controller == null) return;
+        User prevUser = game.getUrrentUser();
+        Player prevPlayer = game.getCurrentPlayer();
+        User senderUser = game.getUserByUsername(senderUsername);
+        Player senderPlayer = senderUser != null ? senderUser.getPlayer() : null;
+        if (senderUser == null || senderPlayer == null) return;
+        try {
+            game.setCurrentUser(senderUser);
+            game.setCurrentPlayer(senderPlayer);
+            controller.finishQuest(String.valueOf(questId));
+        } finally {
+            if (prevUser != null) game.setCurrentUser(prevUser);
+            if (prevPlayer != null) game.setCurrentPlayer(prevPlayer);
         }
     }
 
@@ -7530,6 +7946,15 @@ public class GDXGameScreen implements Screen {
                     if (!rating.isEmpty()) {
                         Result result = controller.rateGift(finalGiftId, rating);
                         if (result.isSuccessful()) {
+                            // Broadcast rate gift
+                            com.example.main.service.NetworkService ns = com.example.main.models.App.getInstance().getNetworkService();
+                            if (ns != null) {
+                                java.util.HashMap<String, Object> actionData = new java.util.HashMap<>();
+                                actionData.put("senderUsername", game.getCurrentPlayer().getUsername());
+                                actionData.put("giftId", finalGiftId);
+                                actionData.put("rate", Integer.parseInt(rating));
+                                ns.sendPlayerAction("rate_gift", actionData);
+                            }
                             // Refresh the received gifts menu
                             currentFriendsMenuState = FriendsMenuState.RECEIVED_GIFTS;
                             createFriendsMenuUI();
@@ -7693,6 +8118,18 @@ public class GDXGameScreen implements Screen {
                             // Call giftPlayer method
                             Result giftResult = controller.giftPlayer(selectedPlayerForActions, itemName, String.valueOf(amount));
                             if (giftResult.isSuccessful()) {
+                                // Broadcast gift action
+                                com.example.main.service.NetworkService ns = com.example.main.models.App.getInstance().getNetworkService();
+                                if (ns != null) {
+                                    java.util.HashMap<String, Object> actionData = new java.util.HashMap<>();
+                                    actionData.put("senderUsername", game.getCurrentPlayer().getUsername());
+                                    actionData.put("receiverUsername", selectedPlayerForActions);
+                                    actionData.put("itemName", itemName);
+                                    actionData.put("amount", amount);
+                                    actionData.put("senderX", game.getCurrentPlayer().currentX());
+                                    actionData.put("senderY", game.getCurrentPlayer().currentY());
+                                    ns.sendPlayerAction("gift_player", actionData);
+                                }
                                 // Close friends menu on success
                                 showFriendsMenu = false;
                                 currentFriendsMenuState = FriendsMenuState.MAIN_MENU;
@@ -7842,6 +8279,17 @@ public class GDXGameScreen implements Screen {
 
                             Result sellResult = controller.sell(itemName, String.valueOf(amount));
                             if (sellResult.isSuccessful()) {
+                                // Broadcast sell action to other clients
+                                com.example.main.service.NetworkService ns = com.example.main.models.App.getInstance().getNetworkService();
+                                if (ns != null) {
+                                    java.util.HashMap<String, Object> actionData = new java.util.HashMap<>();
+                                    actionData.put("senderUsername", game.getCurrentPlayer().getUsername());
+                                    actionData.put("itemName", itemName);
+                                    actionData.put("amount", amount);
+                                    actionData.put("x", game.getCurrentPlayer().currentX());
+                                    actionData.put("y", game.getCurrentPlayer().currentY());
+                                    ns.sendPlayerAction("sell", actionData);
+                                }
                                 showSellMenu = false;
                                 sellErrorMessage = "";
                                 showSellError = false;
@@ -7915,6 +8363,16 @@ public class GDXGameScreen implements Screen {
             public void clicked(InputEvent event, float x, float y) {
                 Result result = controller.askMarriage(selectedPlayerForActions);
                 if (result.isSuccessful()) {
+                    // Broadcast ask marriage
+                    com.example.main.service.NetworkService ns = com.example.main.models.App.getInstance().getNetworkService();
+                    if (ns != null) {
+                        java.util.HashMap<String, Object> actionData = new java.util.HashMap<>();
+                        actionData.put("senderUsername", game.getCurrentPlayer().getUsername());
+                        actionData.put("receiverUsername", selectedPlayerForActions);
+                        actionData.put("senderX", game.getCurrentPlayer().currentX());
+                        actionData.put("senderY", game.getCurrentPlayer().currentY());
+                        ns.sendPlayerAction("ask_marriage", actionData);
+                    }
                     showFriendsMenu = false;
                     currentFriendsMenuState = FriendsMenuState.MAIN_MENU;
                     selectedPlayerForActions = null;
@@ -8000,6 +8458,15 @@ public class GDXGameScreen implements Screen {
                     public void clicked(InputEvent event, float x, float y) {
                         Result result = controller.respondToMarriage("accept", proposerName);
                         if (result.isSuccessful()) {
+                            // Broadcast accept
+                            com.example.main.service.NetworkService ns = com.example.main.models.App.getInstance().getNetworkService();
+                            if (ns != null) {
+                                java.util.HashMap<String, Object> actionData = new java.util.HashMap<>();
+                                actionData.put("senderUsername", game.getCurrentPlayer().getUsername());
+                                actionData.put("proposerUsername", proposerName);
+                                actionData.put("response", "accept");
+                                ns.sendPlayerAction("respond_marriage", actionData);
+                            }
                             removeMarriageProposalNotification(proposerName);
                             showFriendsMenu = false;
                             currentFriendsMenuState = FriendsMenuState.MAIN_MENU;
@@ -8022,6 +8489,15 @@ public class GDXGameScreen implements Screen {
                     public void clicked(InputEvent event, float x, float y) {
                         Result result = controller.respondToMarriage("reject", proposerName);
                         if (result.isSuccessful()) {
+                            // Broadcast reject
+                            com.example.main.service.NetworkService ns = com.example.main.models.App.getInstance().getNetworkService();
+                            if (ns != null) {
+                                java.util.HashMap<String, Object> actionData = new java.util.HashMap<>();
+                                actionData.put("senderUsername", game.getCurrentPlayer().getUsername());
+                                actionData.put("proposerUsername", proposerName);
+                                actionData.put("response", "reject");
+                                ns.sendPlayerAction("respond_marriage", actionData);
+                            }
                             removeMarriageProposalNotification(proposerName);
                             showFriendsMenu = false;
                             currentFriendsMenuState = FriendsMenuState.MAIN_MENU;
