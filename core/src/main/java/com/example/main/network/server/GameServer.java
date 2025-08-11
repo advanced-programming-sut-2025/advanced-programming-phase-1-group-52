@@ -463,6 +463,16 @@ public class GameServer {
                         String targetClient = getClientIdByUsername(partner);
                         if (targetClient != null) { sendMessageToClient(targetClient, actionMessage); return; }
                     }
+                } else if ("vote_terminate_start".equals(action)) {
+                    // Broadcast start of vote to lobby others
+                    if (lobbyId != null) { sendMessageToLobbyOthers(lobbyId, actionMessage, clientId); return; }
+                } else if ("vote_terminate_update".equals(action)) {
+                    // Broadcast vote progress to lobby others
+                    if (lobbyId != null) { sendMessageToLobbyOthers(lobbyId, actionMessage, clientId); return; }
+                } else if ("kick_vote_start".equals(action)) {
+                    if (lobbyId != null) { sendMessageToLobbyOthers(lobbyId, actionMessage, clientId); return; }
+                } else if ("kick_vote_update".equals(action)) {
+                    if (lobbyId != null) { sendMessageToLobbyOthers(lobbyId, actionMessage, clientId); return; }
                 }
             } catch (Exception ignored) {}
         }

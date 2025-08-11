@@ -696,6 +696,79 @@ public class ClientMessageHandler {
                     }
                 });
             }
+            else if ("reaction".equals(action) && actionData instanceof java.util.Map) {
+                @SuppressWarnings("unchecked")
+                java.util.Map<String, Object> map = (java.util.Map<String, Object>) actionData;
+                String senderUsername = (String) map.get("senderUsername");
+                String emojiName = (String) map.get("emojiName");
+                float duration = map.get("duration") != null ? ((Number) map.get("duration")).floatValue() : 5f;
+                com.badlogic.gdx.Gdx.app.postRunnable(() -> {
+                    com.badlogic.gdx.Screen current = com.example.main.Main.getInstance().getScreen();
+                    if (current instanceof com.example.main.GDXviews.GDXGameScreen) {
+                        ((com.example.main.GDXviews.GDXGameScreen) current).applyRemoteReaction(senderUsername, emojiName, duration);
+                    }
+                });
+            }
+            else if ("vote_terminate_start".equals(action) && actionData instanceof java.util.Map) {
+                @SuppressWarnings("unchecked")
+                java.util.Map<String, Object> map = (java.util.Map<String, Object>) actionData;
+                String initiator = (String) map.get("initiator");
+                com.badlogic.gdx.Gdx.app.postRunnable(() -> {
+                    com.badlogic.gdx.Screen current = com.example.main.Main.getInstance().getScreen();
+                    if (current instanceof com.example.main.GDXviews.GDXGameScreen) {
+                        ((com.example.main.GDXviews.GDXGameScreen) current).onTerminateVoteStarted(initiator);
+                    }
+                });
+            }
+            else if ("vote_terminate_update".equals(action) && actionData instanceof java.util.Map) {
+                @SuppressWarnings("unchecked")
+                java.util.Map<String, Object> map = (java.util.Map<String, Object>) actionData;
+                String initiator = (String) map.get("initiator");
+                int yes = ((Number) map.getOrDefault("yes", 0)).intValue();
+                int total = ((Number) map.getOrDefault("total", 0)).intValue();
+                boolean finished = Boolean.TRUE.equals(map.get("finished"));
+                boolean passed = Boolean.TRUE.equals(map.get("passed"));
+                com.badlogic.gdx.Gdx.app.postRunnable(() -> {
+                    com.badlogic.gdx.Screen current = com.example.main.Main.getInstance().getScreen();
+                    if (current instanceof com.example.main.GDXviews.GDXGameScreen) {
+                        ((com.example.main.GDXviews.GDXGameScreen) current).onTerminateVoteUpdate(initiator, yes, total, finished, passed);
+                    }
+                });
+            }
+            else if ("kick_vote_start".equals(action) && actionData instanceof java.util.Map) {
+                @SuppressWarnings("unchecked")
+                java.util.Map<String, Object> map = (java.util.Map<String, Object>) actionData;
+                String initiator = (String) map.get("initiator");
+                String target = (String) map.get("target");
+                com.badlogic.gdx.Gdx.app.postRunnable(() -> {
+                    com.badlogic.gdx.Screen current = com.example.main.Main.getInstance().getScreen();
+                    if (current instanceof com.example.main.GDXviews.GDXGameScreen) {
+                        ((com.example.main.GDXviews.GDXGameScreen) current).onKickVoteStarted(initiator, target);
+                    }
+                });
+            }
+            else if ("kick_vote_update".equals(action) && actionData instanceof java.util.Map) {
+                @SuppressWarnings("unchecked")
+                java.util.Map<String, Object> map = (java.util.Map<String, Object>) actionData;
+                String target = (String) map.get("target");
+                int yes = ((Number) map.getOrDefault("yes", 0)).intValue();
+                int total = ((Number) map.getOrDefault("total", 0)).intValue();
+                boolean finished = Boolean.TRUE.equals(map.get("finished"));
+                boolean passed = Boolean.TRUE.equals(map.get("passed"));
+                com.badlogic.gdx.Gdx.app.postRunnable(() -> {
+                    com.badlogic.gdx.Screen current = com.example.main.Main.getInstance().getScreen();
+                    if (current instanceof com.example.main.GDXviews.GDXGameScreen) {
+                        ((com.example.main.GDXviews.GDXGameScreen) current).onKickVoteUpdate(target, yes, total, finished, passed);
+                        // If I am the kicked target and vote is finished and passed, ensure I go to main menu
+                        if (finished && passed) {
+                            com.example.main.models.Game g = com.example.main.models.App.getInstance().getCurrentGame();
+                            if (g != null && g.getCurrentPlayer() != null && g.getCurrentPlayer().getUsername().equals(target)) {
+                                com.example.main.Main.getInstance().setScreen(new com.example.main.GDXviews.GDXMainMenu(com.example.main.models.App.getInstance().getNetworkService()));
+                            }
+                        }
+                    }
+                });
+            }
             else if ("trade_respond".equals(action) && actionData instanceof java.util.Map) {
                 @SuppressWarnings("unchecked")
                 java.util.Map<String, Object> map = (java.util.Map<String, Object>) actionData;
