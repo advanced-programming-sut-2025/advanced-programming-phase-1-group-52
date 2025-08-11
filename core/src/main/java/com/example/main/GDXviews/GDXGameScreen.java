@@ -1,14 +1,6 @@
 package com.example.main.GDXviews;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.PriorityQueue;
-import java.util.Random;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import com.badlogic.gdx.Gdx;
@@ -77,8 +69,7 @@ import static com.example.main.enums.player.Skills.Mining;
 import com.example.main.events.EventBus;
 import com.example.main.events.GameMapSyncEvent;
 import com.example.main.events.RequestMapSnapshotEvent;
-import com.example.main.models.ActiveBuff;
-import com.example.main.models.App;
+import com.example.main.models.*;
 import com.example.main.models.Date;
 import com.example.main.models.FishingMinigame;
 import com.example.main.models.Friendship;
@@ -1110,6 +1101,9 @@ public class GDXGameScreen implements Screen {
     private int playerTargetX, playerTargetY;
     private float toolRotation = 0f;
 
+    private float scoreboardUpdateTimer = 0f;
+    private static final float SCOREBOARD_UPDATE_INTERVAL = 0.5f;
+
     private static final int[][] HOUSE_POSITIONS = {
         {1, 1},
         {81, 1},
@@ -1264,6 +1258,17 @@ public class GDXGameScreen implements Screen {
     private String marriageProposer = null;
     private Label loadingLabel; // NEW: To show loading status
 
+    private Table scoreboardContainer; // The main container for the scoreboard UI
+    private Table scoreboardDisplayTable; // The inner table that shows the ranked list
+    private Label scoreboardTitle;
+
+    private enum SortMode {
+        BALANCE,
+        SKILL_EXPERIENCE,
+        FINISHED_QUESTS
+    }
+    private SortMode currentSortMode = SortMode.BALANCE;
+
     public GDXGameScreen() {
         System.out.println("[GAMESCREEN] Constructor START");
         controller = new GameMenuController();
@@ -1403,6 +1408,7 @@ public class GDXGameScreen implements Screen {
         setupEatMenuUI();
         setupInfoMenuUI();
         setupReactionMenu();
+        setupScoreboardUI();
 
         crowAnimations = new ArrayList<>();
         playerFoodItems = new ArrayList<>();
@@ -1458,6 +1464,14 @@ public class GDXGameScreen implements Screen {
         Gdx.gl.glClearColor(0.2f, 0.3f, 0.3f, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
         if (gameMap != null) {
+            if (scoreboardContainer != null && scoreboardContainer.isVisible()) {
+                scoreboardUpdateTimer -= delta;
+                if (scoreboardUpdateTimer <= 0f) {
+                    updateScoreboard(); // Refresh the scoreboard data
+                    scoreboardUpdateTimer = SCOREBOARD_UPDATE_INTERVAL; // Reset the timer
+                }
+            }
+
             if (eatingAnimationTimer > 0) {
                 eatingAnimationTimer -= delta;
             }
@@ -1985,16 +1999,20 @@ public class GDXGameScreen implements Screen {
         }
 
         if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
-            if (isPlantingSelectionOpen) {
+            if (scoreboardContainer.isVisible()) {
+                scoreboardContainer.setVisible(false);
+            }
+            else if (isInventoryOpen) {
+                isInventoryOpen = false;
+                Gdx.input.setInputProcessor(multiplexer);
+            }
+            else if (isPlantingSelectionOpen) {
                 closePlantingMenu();
-            } else {
-                isInventoryOpen = !isInventoryOpen;
-                if (isInventoryOpen) {
-                    showMainMenuButtons();
-                    Gdx.input.setInputProcessor(inventoryStage);
-                } else {
-                    Gdx.input.setInputProcessor(multiplexer);
-                }
+            }
+            else {
+                isInventoryOpen = true;
+                showMainMenuButtons();
+                Gdx.input.setInputProcessor(inventoryStage);
             }
         }
 
@@ -5004,6 +5022,7 @@ public class GDXGameScreen implements Screen {
         TextButton mapButton = new TextButton("Map", skin);
         TextButton craftInfoButton = new TextButton("Craft Info", skin);
         TextButton questsButton = new TextButton("Show Quests", skin);
+        TextButton scoreBoard = new TextButton("Score Board", skin);
         TextButton settingsButton = new TextButton("Settings", skin);
         TextButton closeButton = new TextButton("Close", skin);
 
@@ -5039,6 +5058,15 @@ public class GDXGameScreen implements Screen {
             public void clicked(InputEvent event, float x, float y) {
                 showMinimap = !showMinimap;
                 isInventoryOpen = false; // Close menu to see the map
+            }
+        });
+
+        TextButton scoreboardButton = new TextButton("Score Board", skin);
+        scoreboardButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                scoreboardContainer.setVisible(true);
+                updateScoreboard();
             }
         });
 
@@ -5080,6 +5108,7 @@ public class GDXGameScreen implements Screen {
         buttonTable.add(mapButton).width(buttonWidth).pad(buttonPad).row();
         buttonTable.add(craftInfoButton).width(buttonWidth).pad(buttonPad).row();
         buttonTable.add(questsButton).width(buttonWidth).pad(buttonPad).row();
+        buttonTable.add(scoreboardButton).width(buttonWidth).pad(buttonPad).row();
         buttonTable.add(settingsButton).width(buttonWidth).pad(buttonPad).row();
         buttonTable.add(closeButton).width(buttonWidth).pad(buttonPad).row();
         mainStack.add(buttonTable);
@@ -10455,5 +10484,138 @@ public class GDXGameScreen implements Screen {
                 image.setScale(0.5f);
             }
         }
+    }
+
+    private void updateScoreboard() {
+        if (game == null || game.getPlayers() == null) return;
+
+        List<PlayerScore> playerScores = new ArrayList<>();
+        String scoreLabel = "";
+
+        // 1. GATHER DATA based on the current sort mode
+        for (User user : game.getPlayers()) {
+            Player player = user.getPlayer();
+            if (player == null) continue;
+
+            double score = 0;
+            switch (currentSortMode) {
+                case BALANCE:
+                    scoreLabel = "g";
+                    scoreboardTitle.setText("Scoreboard - Balance");
+                    if (player.getBankAccount() != null) {
+                        score = player.getBankAccount().getBalance();
+                    }
+                    break;
+
+                case SKILL_EXPERIENCE:
+                    scoreLabel = "XP";
+                    scoreboardTitle.setText("Scoreboard - Total Experience");
+                    if (player.getSkills() != null) {
+                        for (SkillData skillData : player.getSkills().values()) {
+                            score += skillData.getExperience();
+                        }
+                    }
+                    break;
+
+                case FINISHED_QUESTS:
+                    scoreLabel = "Quests";
+                    scoreboardTitle.setText("Scoreboard - Quests Completed");
+                    score = player.getFinishedQuests();
+                    break;
+            }
+            playerScores.add(new PlayerScore(player.getUsername(), score, scoreLabel));
+        }
+
+        // 2. SORT the list in descending order
+        playerScores.sort(Comparator.comparingDouble(PlayerScore::getScore).reversed());
+
+        // 3. DISPLAY the sorted data in the table
+        scoreboardDisplayTable.clearChildren(); // Clear the old list
+        int rank = 1;
+        for (PlayerScore playerScore : playerScores) {
+            scoreboardDisplayTable.add(new Label(rank + ".", skin)).padRight(10);
+            scoreboardDisplayTable.add(new Label(playerScore.getPlayerName(), skin)).expandX().left();
+            scoreboardDisplayTable.add(new Label(playerScore.getFormattedScore(), skin)).right();
+            scoreboardDisplayTable.row();
+            rank++;
+        }
+    }
+
+    private void setupScoreboardUI() {
+        scoreboardContainer = new Table(skin);
+        scoreboardContainer.setBackground("default-window");
+        scoreboardContainer.setVisible(false);
+        scoreboardContainer.setSize(400, 500);
+        // Center the scoreboard on the screen
+        scoreboardContainer.setPosition(
+            (Gdx.graphics.getWidth() - scoreboardContainer.getWidth()) / 2,
+            (Gdx.graphics.getHeight() - scoreboardContainer.getHeight()) / 2
+        );
+
+        // ### FIX: Add the scoreboard to the INVENTORY STAGE, not the main stage. ###
+        // This ensures it receives input correctly when the inventory is open.
+        inventoryStage.addActor(scoreboardContainer);
+
+        // --- Title ---
+        scoreboardTitle = new Label("Scoreboard", skin);
+        scoreboardContainer.add(scoreboardTitle).colspan(3).pad(10).row();
+
+        // --- Sorting Buttons ---
+        Table buttonTable = new Table();
+        TextButton sortByBalanceBtn = new TextButton("Balance", skin);
+        sortByBalanceBtn.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                currentSortMode = SortMode.BALANCE;
+                updateScoreboard();
+            }
+        });
+        // ... (listeners for other sort buttons) ...
+        TextButton sortBySkillsBtn = new TextButton("Skills", skin);
+        sortBySkillsBtn.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                currentSortMode = SortMode.SKILL_EXPERIENCE;
+                updateScoreboard();
+            }
+        });
+
+        TextButton sortByQuestsBtn = new TextButton("Quests", skin);
+        sortByQuestsBtn.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                currentSortMode = SortMode.FINISHED_QUESTS;
+                updateScoreboard();
+            }
+        });
+
+        buttonTable.add(sortByBalanceBtn).expandX().fillX();
+        buttonTable.add(sortBySkillsBtn).expandX().fillX();
+        buttonTable.add(sortByQuestsBtn).expandX().fillX();
+        scoreboardContainer.add(buttonTable).colspan(3).fillX().padBottom(10).row();
+
+        // --- Ranked List Display ---
+        scoreboardDisplayTable = new Table();
+        ScrollPane scrollPane = new ScrollPane(scoreboardDisplayTable, skin);
+        scrollPane.setFadeScrollBars(false);
+        scoreboardContainer.add(scrollPane).colspan(3).expand().fill().pad(5).row();
+
+        // ### NEW: Add the Back button to the bottom of the scoreboard ###
+        addScoreboardBackButton(scoreboardContainer);
+    }
+
+    private void addScoreboardBackButton(Table container) {
+        TextButton backButton = new TextButton("Back", skin);
+        backButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                // Simply hide the scoreboard. The main menu is already visible behind it.
+                if (scoreboardContainer != null) {
+                    scoreboardContainer.setVisible(false);
+                }
+            }
+        });
+        // Add the button to the container with some padding.
+        container.add(backButton).width(150).pad(10);
     }
 }
