@@ -16,7 +16,12 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import com.example.main.auth.AuthManager;
 import com.example.main.auth.AuthResult;
 import com.example.main.enums.design.FarmThemes;
-import com.example.main.models.*;
+import com.example.main.models.Game;
+import com.example.main.models.GameMap;
+import com.example.main.models.GameMapSnapshot;
+import com.example.main.models.GameStateSnapshot;
+import com.example.main.models.Player;
+import com.example.main.models.User;
 import com.example.main.network.NetworkConstants;
 import com.example.main.network.common.Message;
 import com.example.main.network.common.MessageType;
@@ -406,6 +411,60 @@ public class GameServer {
                 }
             } catch (Exception ignored) {
             }
+        }
+
+        // Trade-specific direct routing
+        if (lobbyId != null && actionData instanceof Map) {
+            try {
+                Map<String, Object> map = (Map<String, Object>) actionData;
+                if ("trade_invite".equals(action)) {
+                    String target = (String) map.get("targetUsername");
+                    if (target != null) {
+                        String targetClient = getClientIdByUsername(target);
+                        if (targetClient != null) { sendMessageToClient(targetClient, actionMessage); return; }
+                    }
+                } else if ("trade_invite_response".equals(action)) {
+                    // deliver back to the original requester of the invite
+                    String requester = (String) map.get("requesterUsername");
+                    if (requester != null) {
+                        String targetClient = getClientIdByUsername(requester);
+                        if (targetClient != null) { sendMessageToClient(targetClient, actionMessage); return; }
+                    }
+                } else if ("trade_finalize_request".equals(action)) {
+                    // deliver finalize prompt to the partner (the receiver)
+                    String partner = (String) map.get("partner");
+                    if (partner != null) {
+                        String targetClient = getClientIdByUsername(partner);
+                        if (targetClient != null) { sendMessageToClient(targetClient, actionMessage); return; }
+                    }
+                } else if ("trade_finalize_response".equals(action)) {
+                    // deliver response back to initiator (not the responder)
+                    String initiator = (String) map.get("initiator");
+                    if (initiator != null) {
+                        String targetClient = getClientIdByUsername(initiator);
+                        if (targetClient != null) { sendMessageToClient(targetClient, actionMessage); return; }
+                    }
+                } else if ("trade_live_update".equals(action)) {
+                    String partner = (String) map.get("partner");
+                    if (partner != null) {
+                        String targetClient = getClientIdByUsername(partner);
+                        if (targetClient != null) { sendMessageToClient(targetClient, actionMessage); return; }
+                    }
+                } else if ("trade_request".equals(action)) {
+                    String receiver = (String) map.get("receiverUsername");
+                    if (receiver != null) {
+                        String targetClient = getClientIdByUsername(receiver);
+                        if (targetClient != null) { sendMessageToClient(targetClient, actionMessage); return; }
+                    }
+                } else if ("trade_respond".equals(action)) {
+                    // Route respond application to the partner (receiver)
+                    String partner = (String) map.get("partner");
+                    if (partner != null) {
+                        String targetClient = getClientIdByUsername(partner);
+                        if (targetClient != null) { sendMessageToClient(targetClient, actionMessage); return; }
+                    }
+                }
+            } catch (Exception ignored) {}
         }
 
         // Fallback: broadcast to others in the same lobby if available, else to all others

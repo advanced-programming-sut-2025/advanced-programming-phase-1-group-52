@@ -42,6 +42,7 @@ import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.ui.TextField;
 import com.badlogic.gdx.scenes.scene2d.ui.Tooltip;
 import com.badlogic.gdx.scenes.scene2d.ui.TooltipManager;
+import com.badlogic.gdx.scenes.scene2d.ui.Window;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
@@ -92,6 +93,8 @@ import com.example.main.models.Quest;
 import com.example.main.models.Result;
 import com.example.main.models.Tile;
 import com.example.main.models.Time;
+import com.example.main.models.Trade;
+import com.example.main.models.TradeRequest;
 import com.example.main.models.Tree;
 import com.example.main.models.User;
 import com.example.main.models.building.Housing;
@@ -284,6 +287,641 @@ public class GDXGameScreen implements Screen {
     private Stage eatMenuStage;
     private ArrayList<Food> playerFoodItems;
     private int selectedFoodIndex = 0;
+
+    // Trade Menu (fresh implementation)
+    private boolean isTradeMenuOpen = false;
+    private Stage tradeMenuStage;
+    private Table tradeMenuRoot;
+
+    private enum TradeMenuPage {
+        MAIN,
+        SELECT_PLAYER,
+        HISTORY
+    }
+    private TradeMenuPage tradeMenuPage = TradeMenuPage.MAIN;
+
+    // Live trade state
+    private boolean isTradeWaitingForResponse = false;
+    private String tradeInviteTargetUsername = null;
+    private String tradeInviteSenderUsername = null;
+
+    private boolean isLiveTradeOpen = false;
+    private String liveTradePartnerUsername = null;
+    private String liveTradeInitiatorUsername = null;
+    private boolean liveTradeAmInitiator = false;
+    private Table liveTradeRoot;
+    private Table liveTradeLeftList;
+    private Table liveTradeRightList;
+    private Label liveTradeGivingLabel;
+    private Label liveTradeReceivingLabel;
+    private String liveGivingItemName = null;
+    private int liveGivingAmount = 0;
+    private String liveReceivingItemName = null;
+    private int liveReceivingAmount = 0;
+    private int liveTradeIdInitiator = -1;
+    private int liveTradeIdReceiver = -1;
+    private Dialog tradeWaitingDialog;
+    private Window tradeInvitePopup;
+
+    private void showTradeMainMenu() {
+        if (tradeMenuStage == null) tradeMenuStage = new Stage(new ScreenViewport());
+        if (tradeMenuRoot != null) tradeMenuRoot.remove();
+        tradeMenuPage = TradeMenuPage.MAIN;
+
+        tradeMenuRoot = new Table();
+        tradeMenuRoot.setFillParent(true);
+        tradeMenuRoot.center();
+
+        Stack stack = new Stack();
+        stack.add(new Image(inventoryBackground));
+
+        Table content = new Table();
+        Label title = new Label("Trade", skin);
+        title.setFontScale(1.2f);
+        content.add(title).pad(20).row();
+
+        TextButton startTrade = new TextButton("Start Trade", skin);
+        TextButton tradeHistoryBtn = new TextButton("Trade History", skin);
+        TextButton closeBtn = new TextButton("Close", skin);
+
+        startTrade.addListener(new ClickListener(){
+            @Override public void clicked(InputEvent event, float x, float y){ showTradeSelectPlayer(); }
+        });
+        tradeHistoryBtn.addListener(new ClickListener(){
+            @Override public void clicked(InputEvent event, float x, float y){ showTradeHistory(); }
+        });
+        closeBtn.addListener(new ClickListener(){
+            @Override public void clicked(InputEvent event, float x, float y){ hideTradeMenu(); isTradeMenuOpen = false; Gdx.input.setInputProcessor(multiplexer); }
+        });
+
+        content.add(startTrade).width(260).pad(10).row();
+        content.add(tradeHistoryBtn).width(260).pad(10).row();
+        content.add(closeBtn).width(260).pad(10).row();
+
+        stack.add(content);
+        tradeMenuRoot.add(stack).width(Gdx.graphics.getWidth() * 0.6f).height(Gdx.graphics.getHeight() * 0.7f);
+        tradeMenuStage.addActor(tradeMenuRoot);
+    }
+
+    private void showTradeSelectPlayer() {
+        if (tradeMenuStage == null) tradeMenuStage = new Stage(new ScreenViewport());
+        if (tradeMenuRoot != null) tradeMenuRoot.remove();
+        tradeMenuPage = TradeMenuPage.SELECT_PLAYER;
+
+        tradeMenuRoot = new Table();
+        tradeMenuRoot.setFillParent(true);
+        tradeMenuRoot.center();
+
+        Stack stack = new Stack();
+        stack.add(new Image(inventoryBackground));
+
+        Table content = new Table();
+        content.add(new Label("Select a player to trade with", skin)).pad(20).row();
+
+        Table list = new Table();
+        for (User user : game.getPlayers()) {
+            if (user == null || user.getPlayer() == null) continue;
+            if (game.getCurrentPlayer() != null && user.getUsername().equals(game.getCurrentPlayer().getUsername())) continue;
+            if (user.getUsername().startsWith("empty_slot_")) continue;
+            TextButton playerBtn = new TextButton(user.getUsername(), skin);
+            playerBtn.addListener(new ClickListener(){
+                @Override public void clicked(InputEvent event, float x, float y){
+                    // Send trade invite via network
+                    com.example.main.service.NetworkService ns = com.example.main.models.App.getInstance().getNetworkService();
+                    if (ns != null) {
+                        java.util.HashMap<String, Object> data = new java.util.HashMap<>();
+                        data.put("senderUsername", game.getCurrentPlayer().getUsername());
+                        data.put("targetUsername", user.getUsername());
+                        ns.sendPlayerAction("trade_invite", data);
+                        isTradeWaitingForResponse = true;
+                        tradeInviteTargetUsername = user.getUsername();
+                        if (tradeWaitingDialog != null) tradeWaitingDialog.hide();
+                        tradeWaitingDialog = new Dialog("Waiting", skin);
+                        tradeWaitingDialog.text("Waiting for " + user.getUsername() + " to respond...");
+                        tradeWaitingDialog.button("Cancel", true);
+                        tradeWaitingDialog.show(tradeMenuStage);
+                        tradeWaitingDialog.setModal(true);
+                        tradeWaitingDialog.setMovable(false);
+                        // Cancel -> close waiting
+                        final String targetName = user.getUsername();
+                        Dialog dlgRef = tradeWaitingDialog;
+                        tradeWaitingDialog = new Dialog("Waiting", skin) {
+                            @Override
+                            protected void result(Object obj) {
+                                boolean cancel = Boolean.TRUE.equals(obj);
+                                if (cancel) {
+                                    isTradeWaitingForResponse = false;
+                                    if (dlgRef != null) dlgRef.hide();
+                                }
+                            }
+                        };
+                    }
+                }
+            });
+            list.add(playerBtn).width(240).pad(6).row();
+        }
+
+        ScrollPane scroll = new ScrollPane(list, skin);
+        scroll.setFadeScrollBars(false);
+        content.add(scroll).width(320).height(320).pad(10).row();
+
+        Table bottom = new Table();
+        TextButton backBtn = new TextButton("Back", skin);
+        TextButton closeBtn = new TextButton("Close", skin);
+        backBtn.addListener(new ClickListener(){ @Override public void clicked(InputEvent e, float x, float y){ showTradeMainMenu(); }});
+        closeBtn.addListener(new ClickListener(){ @Override public void clicked(InputEvent e, float x, float y){ hideTradeMenu(); isTradeMenuOpen=false; Gdx.input.setInputProcessor(multiplexer);} });
+        bottom.add(backBtn).pad(10);
+        bottom.add(closeBtn).pad(10);
+        content.add(bottom).padBottom(10);
+
+        stack.add(content);
+        tradeMenuRoot.add(stack).width(Gdx.graphics.getWidth() * 0.6f).height(Gdx.graphics.getHeight() * 0.7f);
+        tradeMenuStage.addActor(tradeMenuRoot);
+    }
+
+    private void showTradeHistory() {
+        if (tradeMenuStage == null) tradeMenuStage = new Stage(new ScreenViewport());
+        if (tradeMenuRoot != null) tradeMenuRoot.remove();
+        tradeMenuPage = TradeMenuPage.HISTORY;
+
+        tradeMenuRoot = new Table();
+        tradeMenuRoot.setFillParent(true);
+        tradeMenuRoot.center();
+
+        Stack stack = new Stack();
+        stack.add(new Image(inventoryBackground));
+
+        Table content = new Table();
+        content.add(new Label("Your Trades", skin)).pad(20).row();
+
+        com.example.main.controller.TradeMenuController tradeController = new com.example.main.controller.TradeMenuController();
+        com.example.main.models.Result res = tradeController.listTrades();
+        String tradesText = res != null ? res.Message() : "";
+
+        Table tradesList = new Table();
+        if (tradesText != null && !tradesText.isEmpty()) {
+            String[] entries = tradesText.split("\\r?\\n\\r?\\n");
+            for (String entry : entries) {
+                if (entry.trim().isEmpty()) continue;
+                Table card = new Table(skin);
+                card.setBackground("default-round");
+                card.add(new Label(entry.trim(), skin)).left().pad(10).row();
+                tradesList.add(card).expandX().fillX().pad(6).row();
+            }
+        } else {
+            tradesList.add(new Label("No trades to show.", skin)).pad(10).row();
+        }
+
+        ScrollPane scroll = new ScrollPane(tradesList, skin);
+        scroll.setFadeScrollBars(false);
+        content.add(scroll).width(500).height(360).pad(10).row();
+
+        Table bottom = new Table();
+        TextButton backBtn = new TextButton("Back", skin);
+        TextButton closeBtn = new TextButton("Close", skin);
+        backBtn.addListener(new ClickListener(){ @Override public void clicked(InputEvent e, float x, float y){ showTradeMainMenu(); }});
+        closeBtn.addListener(new ClickListener(){ @Override public void clicked(InputEvent e, float x, float y){ hideTradeMenu(); isTradeMenuOpen=false; Gdx.input.setInputProcessor(multiplexer);} });
+        bottom.add(backBtn).pad(10);
+        bottom.add(closeBtn).pad(10);
+        content.add(bottom).padBottom(10);
+
+        stack.add(content);
+        tradeMenuRoot.add(stack).width(Gdx.graphics.getWidth() * 0.7f).height(Gdx.graphics.getHeight() * 0.75f);
+        tradeMenuStage.addActor(tradeMenuRoot);
+    }
+
+    private void hideTradeMenu() {
+        if (tradeMenuRoot != null) { tradeMenuRoot.remove(); tradeMenuRoot = null; }
+    }
+
+    // Networking callbacks for trade invites
+    public void onTradeInviteReceived(String senderUsername, String targetUsername) {
+        if (game == null || controller == null) return;
+        if (game.getCurrentPlayer() == null) return;
+        if (!game.getCurrentPlayer().getUsername().equals(targetUsername)) return;
+
+        // Bottom-right popup using Window
+        if (tradeInvitePopup != null) {
+            tradeInvitePopup.remove();
+            tradeInvitePopup = null;
+        }
+        tradeInvitePopup = new Window("Trade Request", skin);
+        tradeInvitePopup.setModal(false);
+        tradeInvitePopup.setMovable(false);
+        Table content = new Table();
+        content.add(new Label(senderUsername + " wants to trade with you.", skin)).pad(8).row();
+        Table buttons = new Table();
+        TextButton acceptBtn = new TextButton("Accept", skin);
+        TextButton rejectBtn = new TextButton("Reject", skin);
+        buttons.add(acceptBtn).pad(5);
+        buttons.add(rejectBtn).pad(5);
+        content.add(buttons).padBottom(6).row();
+        tradeInvitePopup.add(content).pad(6);
+        tradeInvitePopup.pack();
+        float x = Gdx.graphics.getWidth() - tradeInvitePopup.getWidth() - 20f;
+        float y = 20f;
+        tradeInvitePopup.setPosition(x, y);
+        stage.addActor(tradeInvitePopup);
+        tradeInvitePopup.toFront();
+
+        acceptBtn.addListener(new ClickListener(){
+            @Override public void clicked(InputEvent event, float x, float y){
+                if (tradeInvitePopup != null) { tradeInvitePopup.remove(); tradeInvitePopup = null; }
+                com.example.main.service.NetworkService ns = com.example.main.models.App.getInstance().getNetworkService();
+                if (ns != null) {
+                    java.util.HashMap<String, Object> data = new java.util.HashMap<>();
+                    data.put("requesterUsername", senderUsername);
+                    data.put("responderUsername", game.getCurrentPlayer().getUsername());
+                    data.put("accepted", true);
+                    ns.sendPlayerAction("trade_invite_response", data);
+                }
+                openLiveTrade(senderUsername, game.getCurrentPlayer().getUsername(), false);
+            }
+        });
+        rejectBtn.addListener(new ClickListener(){
+            @Override public void clicked(InputEvent event, float x2, float y2){
+                if (tradeInvitePopup != null) { tradeInvitePopup.remove(); tradeInvitePopup = null; }
+                com.example.main.service.NetworkService ns = com.example.main.models.App.getInstance().getNetworkService();
+                if (ns != null) {
+                    java.util.HashMap<String, Object> data = new java.util.HashMap<>();
+                    data.put("requesterUsername", senderUsername);
+                    data.put("responderUsername", game.getCurrentPlayer().getUsername());
+                    data.put("accepted", false);
+                    ns.sendPlayerAction("trade_invite_response", data);
+                }
+            }
+        });
+    }
+
+    public void onTradeInviteResponse(String requesterUsername, String responderUsername, boolean accepted) {
+        if (game == null || controller == null) return;
+        if (game.getCurrentPlayer() == null) return;
+        if (!game.getCurrentPlayer().getUsername().equals(requesterUsername)) return;
+
+        isTradeWaitingForResponse = false;
+        if (!accepted) {
+            generalMessageLabel.setText(responderUsername + " rejected your trade request.");
+            generalMessageLabel.setVisible(true);
+            generalMessageTimer = 4f;
+            showTradeMainMenu();
+            return;
+        }
+        // Accepted → open live trade UI for both
+        openLiveTrade(requesterUsername, responderUsername, true);
+    }
+
+    private void openLiveTrade(String initiatorUsername, String partnerUsername, boolean amInitiator) {
+        isLiveTradeOpen = true;
+        liveTradeInitiatorUsername = initiatorUsername;
+        liveTradePartnerUsername = partnerUsername;
+        liveTradeAmInitiator = amInitiator;
+        isTradeMenuOpen = true;
+        if (tradeMenuStage == null) tradeMenuStage = new Stage(new ScreenViewport());
+        if (liveTradeRoot != null) liveTradeRoot.remove();
+
+        liveGivingItemName = null; liveGivingAmount = 0;
+        liveReceivingItemName = null; liveReceivingAmount = 0;
+
+        liveTradeRoot = new Table();
+        liveTradeRoot.setFillParent(true);
+        liveTradeRoot.center();
+
+        Stack stack = new Stack();
+        stack.add(new Image(inventoryBackground));
+
+        Table content = new Table();
+        content.add(new Label("Live Trade: " + initiatorUsername + " ↔ " + partnerUsername, skin)).pad(10).row();
+
+        Table lists = new Table();
+        liveTradeLeftList = new Table();
+        liveTradeRightList = new Table();
+        String selfUsername = game.getCurrentPlayer().getUsername();
+        String leftOwner = amInitiator ? selfUsername : partnerUsername;
+        String rightOwner = amInitiator ? partnerUsername : selfUsername;
+        boolean leftEnableAdd = amInitiator;  // initiator can add from their own list
+        boolean rightEnableAdd = amInitiator; // initiator can also add from partner's list
+        populateInventoryList(liveTradeLeftList, leftOwner, leftEnableAdd);
+        populateInventoryList(liveTradeRightList, rightOwner, rightEnableAdd);
+        ScrollPane leftScroll = new ScrollPane(liveTradeLeftList, skin);
+        ScrollPane rightScroll = new ScrollPane(liveTradeRightList, skin);
+        leftScroll.setFadeScrollBars(false);
+        rightScroll.setFadeScrollBars(false);
+        lists.add(new Label(amInitiator ? "Your Inventory" : partnerUsername + "'s Inventory", skin)).pad(5);
+        lists.add().width(20f);
+        lists.add(new Label(amInitiator ? partnerUsername + "'s Inventory" : "Your Inventory", skin)).pad(5).row();
+        lists.add(leftScroll).width(380).height(360).pad(10);
+        lists.add().width(20f);
+        lists.add(rightScroll).width(380).height(360).pad(10).row();
+        content.add(lists).row();
+
+        Table summary = new Table();
+        liveTradeGivingLabel = new Label("Giving: -", skin);
+        liveTradeReceivingLabel = new Label("Receiving: -", skin);
+        summary.add(liveTradeGivingLabel).pad(8);
+        summary.add(liveTradeReceivingLabel).pad(8).row();
+        content.add(summary).row();
+
+        Table bottom = new Table();
+        TextButton closeBtn = new TextButton("Close", skin);
+        closeBtn.addListener(new ClickListener(){ @Override public void clicked(InputEvent e, float x, float y){ closeLiveTrade(); }});
+        bottom.add(closeBtn).pad(10);
+        if (amInitiator) {
+            TextButton tradeBtn = new TextButton("Trade", skin);
+            tradeBtn.addListener(new ClickListener(){
+                @Override public void clicked(InputEvent e, float x, float y){
+                    // Initiator creates TradeRequest locally first to obtain tradeId
+                    com.example.main.controller.TradeMenuController tmc = new com.example.main.controller.TradeMenuController();
+                    com.example.main.models.Result createRes = tmc.tradeRequest(partnerUsername, liveGivingItemName, String.valueOf(liveGivingAmount), liveReceivingItemName, String.valueOf(liveReceivingAmount));
+                    // Find created trade id on initiator side
+                    int tradeId = findMatchingTradeId(liveTradeInitiatorUsername, liveTradePartnerUsername, liveGivingItemName, liveGivingAmount, liveReceivingItemName, liveReceivingAmount);
+                    liveTradeIdInitiator = tradeId;
+                    // Broadcast trade_request so receiver also has the pending trade in their model
+                    com.example.main.service.NetworkService nsInit = com.example.main.models.App.getInstance().getNetworkService();
+                    if (nsInit != null) {
+                        java.util.HashMap<String, Object> req = new java.util.HashMap<>();
+                        req.put("senderUsername", liveTradeInitiatorUsername);
+                        req.put("receiverUsername", liveTradePartnerUsername);
+                        req.put("givingItemName", liveGivingItemName);
+                        req.put("givingAmount", liveGivingAmount);
+                        req.put("receivingItemName", liveReceivingItemName);
+                        req.put("receivingAmount", liveReceivingAmount);
+                        nsInit.sendPlayerAction("trade_request", req);
+                    }
+                    // Send finalize signal so receiver shows accept/reject (including tradeId)
+                    com.example.main.service.NetworkService ns = com.example.main.models.App.getInstance().getNetworkService();
+                    if (ns != null) {
+                        java.util.HashMap<String, Object> data = new java.util.HashMap<>();
+                        data.put("initiator", initiatorUsername);
+                        data.put("partner", partnerUsername);
+                        data.put("givingItemName", liveGivingItemName);
+                        data.put("givingAmount", liveGivingAmount);
+                        data.put("receivingItemName", liveReceivingItemName);
+                        data.put("receivingAmount", liveReceivingAmount);
+                        data.put("tradeId", tradeId);
+                        ns.sendPlayerAction("trade_finalize_request", data);
+                    }
+                }
+            });
+            bottom.add(tradeBtn).pad(10);
+        }
+        content.add(bottom).pad(10).row();
+
+        stack.add(content);
+        liveTradeRoot.add(stack).width(Gdx.graphics.getWidth() * 0.9f).height(Gdx.graphics.getHeight() * 0.85f);
+        tradeMenuStage.addActor(liveTradeRoot);
+        Gdx.input.setInputProcessor(tradeMenuStage);
+    }
+
+    private void populateInventoryList(Table list, String ownerUsername, boolean enableAdd) {
+        User u = game.getUserByUsername(ownerUsername);
+        if (u == null || u.getPlayer() == null) return;
+        java.util.ArrayList<Item> items = u.getPlayer().getInventory().getItems();
+        list.clear();
+        for (Item item : items) {
+            if (item == null) continue;
+            Table row = new Table(skin);
+            row.setBackground("default-round");
+            row.add(new Label(item.getName(), skin)).left().pad(6);
+            TextField amountField = new TextField("1", skin);
+            amountField.setMessageText("amount");
+            row.add(amountField).width(60).pad(6);
+            TextButton addBtn = new TextButton("Add", skin);
+            addBtn.setDisabled(!enableAdd);
+            addBtn.addListener(new ClickListener(){
+                @Override public void clicked(InputEvent e, float x, float y){
+                    if (!enableAdd) return;
+                    int amt = 1;
+                    try { amt = Integer.parseInt(amountField.getText()); } catch (Exception ignored) {}
+                    if (ownerUsername.equals(game.getCurrentPlayer().getUsername())) {
+                        liveGivingItemName = item.getName();
+                        liveGivingAmount = amt;
+                    } else {
+                        liveReceivingItemName = item.getName();
+                        liveReceivingAmount = amt;
+                    }
+                    updateLiveTradeSummary();
+                    // sync live selection to partner
+                    com.example.main.service.NetworkService ns = com.example.main.models.App.getInstance().getNetworkService();
+                    if (ns != null) {
+                        java.util.HashMap<String, Object> data = new java.util.HashMap<>();
+                        data.put("initiator", liveTradeInitiatorUsername);
+                        data.put("partner", liveTradePartnerUsername);
+                        data.put("givingItemName", liveGivingItemName);
+                        data.put("givingAmount", liveGivingAmount);
+                        data.put("receivingItemName", liveReceivingItemName);
+                        data.put("receivingAmount", liveReceivingAmount);
+                        ns.sendPlayerAction("trade_live_update", data);
+                    }
+                }
+            });
+            row.add(addBtn).pad(6);
+            list.add(row).expandX().fillX().pad(4).row();
+        }
+    }
+
+    private void updateLiveTradeSummary() {
+        if (liveTradeGivingLabel != null) {
+            String g = (liveGivingItemName != null) ? (liveGivingAmount + " x " + liveGivingItemName) : "-";
+            liveTradeGivingLabel.setText("Giving: " + g);
+        }
+        if (liveTradeReceivingLabel != null) {
+            String r = (liveReceivingItemName != null) ? (liveReceivingAmount + " x " + liveReceivingItemName) : "-";
+            liveTradeReceivingLabel.setText("Receiving: " + r);
+        }
+    }
+
+    private void closeLiveTrade() {
+        isLiveTradeOpen = false;
+        if (liveTradeRoot != null) { liveTradeRoot.remove(); liveTradeRoot = null; }
+        isTradeMenuOpen = false;
+        Gdx.input.setInputProcessor(multiplexer);
+    }
+
+    // Live trade network update handlers
+    public void onTradeLiveUpdate(String initiator, String partner, String givingItemName, int givingAmount, String receivingItemName, int receivingAmount) {
+        // Only the counterpart should update from remote if they are part of this session
+        if (!isLiveTradeOpen) return;
+        if (!(initiator.equals(liveTradeInitiatorUsername) && partner.equals(liveTradePartnerUsername))) return;
+        // Mirror the initiator's latest selection in both UIs
+        liveGivingItemName = givingItemName;
+        liveGivingAmount = givingAmount;
+        liveReceivingItemName = receivingItemName;
+        liveReceivingAmount = receivingAmount;
+        updateLiveTradeSummary();
+    }
+
+    public void onTradeFinalizeRequest(String initiator, String partner, String givingItemName, int givingAmount, String receivingItemName, int receivingAmount, int tradeIdFromInitiator) {
+        if (game == null || controller == null) return;
+        if (game.getCurrentPlayer() == null) return;
+        String me = game.getCurrentPlayer().getUsername();
+        // Receiver shows accept/reject dialog
+        if (!me.equals(partner)) return;
+        liveGivingItemName = givingItemName;
+        liveGivingAmount = givingAmount;
+        liveReceivingItemName = receivingItemName;
+        liveReceivingAmount = receivingAmount;
+        liveTradeIdReceiver = tradeIdFromInitiator;
+        updateLiveTradeSummary();
+
+        Dialog dialog = new Dialog("Finalize Trade", skin) {
+            @Override
+            protected void result(Object obj) {
+                boolean accept = Boolean.TRUE.equals(obj);
+                com.example.main.service.NetworkService ns = com.example.main.models.App.getInstance().getNetworkService();
+                if (ns != null) {
+                    java.util.HashMap<String, Object> data = new java.util.HashMap<>();
+                    data.put("initiator", initiator);
+                    data.put("partner", partner);
+                    data.put("accepted", accept);
+                    ns.sendPlayerAction("trade_finalize_response", data);
+                }
+                if (!accept) {
+                    closeLiveTrade();
+                }
+            }
+        };
+        dialog.text("Accept trade: You receive " + receivingAmount + " x " + receivingItemName + " and give " + givingAmount + " x " + givingItemName + "?");
+        dialog.button("Accept", true);
+        dialog.button("Reject", false);
+        dialog.setModal(true);
+        dialog.show(tradeMenuStage != null ? tradeMenuStage : stage);
+    }
+
+    public void onTradeFinalizeResponse(String initiator, String partner, boolean accepted) {
+        if (game == null || controller == null) return;
+        if (game.getCurrentPlayer() == null) return;
+        String me = game.getCurrentPlayer().getUsername();
+        if (!me.equals(initiator)) return;
+        if (!accepted) {
+            generalMessageLabel.setText(partner + " rejected your trade.");
+            generalMessageLabel.setVisible(true);
+            generalMessageTimer = 4f;
+            closeLiveTrade();
+            return;
+        }
+        // Initiator triggers TradeMenuController.respondToTrade after partner accepted
+        if (liveReceivingItemName == null || liveGivingItemName == null || liveGivingAmount <= 0 || liveReceivingAmount <= 0) {
+            generalMessageLabel.setText("Incomplete trade selection.");
+            generalMessageLabel.setVisible(true);
+            generalMessageTimer = 3f;
+            return;
+        }
+        // Use the saved tradeId
+        int tradeId = liveTradeIdInitiator > 0 ? liveTradeIdInitiator : findMatchingTradeId(liveTradeInitiatorUsername, liveTradePartnerUsername, liveGivingItemName, liveGivingAmount, liveReceivingItemName, liveReceivingAmount);
+        if (tradeId <= 0) {
+            generalMessageLabel.setText("Trade not found.");
+            generalMessageLabel.setVisible(true);
+            generalMessageTimer = 3f;
+            return;
+        }
+        com.example.main.controller.TradeMenuController tmc = new com.example.main.controller.TradeMenuController();
+        com.example.main.models.Result res = tmc.respondToTrade("accept", String.valueOf(tradeId));
+        generalMessageLabel.setText(res.Message());
+        generalMessageLabel.setVisible(true);
+        generalMessageTimer = 4f;
+        closeLiveTrade();
+
+        // Inform partner to apply the same respond with initiator context to avoid currentPlayer mix-ups
+        com.example.main.service.NetworkService ns = com.example.main.models.App.getInstance().getNetworkService();
+        if (ns != null) {
+            java.util.HashMap<String, Object> data = new java.util.HashMap<>();
+            data.put("initiator", initiator);
+            data.put("partner", partner);
+            data.put("accepted", true);
+            data.put("givingItemName", liveGivingItemName);
+            data.put("givingAmount", liveGivingAmount);
+            data.put("receivingItemName", liveReceivingItemName);
+            data.put("receivingAmount", liveReceivingAmount);
+            ns.sendPlayerAction("trade_respond", data);
+        }
+    }
+
+    private int findMatchingTradeId(String initiator, String partner, String givingItem, int givingAmt, String receivingItem, int receivingAmt) {
+        // Search the initiator's trades for the latest matching pending request
+        User initiatorUser = game.getUserByUsername(initiator);
+        if (initiatorUser != null && initiatorUser.getPlayer() != null) {
+            java.util.ArrayList<Trade> trades = initiatorUser.getPlayer().getTrades();
+            for (int i = trades.size() - 1; i >= 0; i--) {
+                Trade t = trades.get(i);
+                if (t instanceof TradeRequest) {
+                    TradeRequest tr = (TradeRequest) t;
+                    if (!t.isAnswered()
+                        && t.getBuyer() != null && t.getSeller() != null
+                        && ((t.getBuyer().getUsername().equals(initiator) && t.getSeller().getUsername().equals(partner))
+                            || (t.getBuyer().getUsername().equals(partner) && t.getSeller().getUsername().equals(initiator)))
+                        && tr.getGivingItemName().equals(givingItem)
+                        && tr.getGivingAmount() == givingAmt
+                        && tr.getReceivingItemName().equals(receivingItem)
+                        && tr.getReceivingAmount() == receivingAmt) {
+                        return t.getTradeId();
+                    }
+                }
+            }
+        }
+        return -1;
+    }
+
+    // Apply remote creation of trade request so both clients have the Trade object
+    public void applyRemoteTradeRequest(String senderUsername, String receiverUsername, String givingItemName, int givingAmount, String receivingItemName, int receivingAmount) {
+        if (game == null || controller == null) return;
+        com.example.main.models.User prevUser = game.getUrrentUser();
+        com.example.main.models.Player prevPlayer = game.getCurrentPlayer();
+        com.example.main.models.User senderUser = game.getUserByUsername(senderUsername);
+        com.example.main.models.Player senderPlayer = senderUser != null ? senderUser.getPlayer() : null;
+        if (senderUser == null || senderPlayer == null) return;
+        try {
+            game.setCurrentUser(senderUser);
+            game.setCurrentPlayer(senderPlayer);
+            com.example.main.controller.TradeMenuController tmc = new com.example.main.controller.TradeMenuController();
+            tmc.tradeRequest(receiverUsername, givingItemName, String.valueOf(givingAmount), receivingItemName, String.valueOf(receivingAmount));
+            // Also mirror to ensure the receiver sees the trade in their own list if needed
+            com.example.main.models.User receiverUser = game.getUserByUsername(receiverUsername);
+            if (receiverUser != null && receiverUser.getPlayer() != null) {
+                // no-op: controller already adds to both buyer and seller trades
+            }
+        } finally {
+            if (prevUser != null) game.setCurrentUser(prevUser);
+            if (prevPlayer != null) game.setCurrentPlayer(prevPlayer);
+        }
+    }
+
+    // Apply remote response from initiator on partner side with initiator context, then with partner context
+    public void applyRemoteRespondToTrade(String initiatorUsername, String partnerUsername, boolean accepted,
+                                          String givingItemName, int givingAmount, String receivingItemName, int receivingAmount) {
+        if (!accepted) { closeLiveTrade(); return; }
+        if (game == null) return;
+        // First, set context to initiator to locate the correct trade id
+        com.example.main.models.User prevUser = game.getUrrentUser();
+        com.example.main.models.Player prevPlayer = game.getCurrentPlayer();
+        com.example.main.models.User initiatorUser = game.getUserByUsername(initiatorUsername);
+        com.example.main.models.Player initiatorPlayer = initiatorUser != null ? initiatorUser.getPlayer() : null;
+        if (initiatorUser == null || initiatorPlayer == null) return;
+        int tradeId = -1;
+        try {
+            game.setCurrentUser(initiatorUser);
+            game.setCurrentPlayer(initiatorPlayer);
+            tradeId = findMatchingTradeId(initiatorUsername, partnerUsername, givingItemName, givingAmount, receivingItemName, receivingAmount);
+        } finally {
+            if (prevUser != null) game.setCurrentUser(prevUser);
+            if (prevPlayer != null) game.setCurrentPlayer(prevPlayer);
+        }
+        if (tradeId <= 0) return;
+
+        // Now respond with partner as current player to apply inventory changes correctly
+        com.example.main.models.User partnerUser = game.getUserByUsername(partnerUsername);
+        com.example.main.models.Player partnerPlayer = partnerUser != null ? partnerUser.getPlayer() : null;
+        if (partnerUser == null || partnerPlayer == null) return;
+        try {
+            game.setCurrentUser(partnerUser);
+            game.setCurrentPlayer(partnerPlayer);
+            com.example.main.controller.TradeMenuController tmc = new com.example.main.controller.TradeMenuController();
+            tmc.respondToTrade("accept", String.valueOf(tradeId));
+        } finally {
+            if (prevUser != null) game.setCurrentUser(prevUser);
+            if (prevPlayer != null) game.setCurrentPlayer(prevPlayer);
+        }
+        closeLiveTrade();
+    }
     private Image selectedFoodImage;
     private Label selectedFoodLabel;
 
@@ -762,6 +1400,9 @@ public class GDXGameScreen implements Screen {
         multiplexer.addProcessor(inventoryStage);
         multiplexer.addProcessor(toolMenuStage);
         multiplexer.addProcessor(cheatMenuStage);
+        // trade menu stage
+        if (tradeMenuStage == null) tradeMenuStage = new Stage(new ScreenViewport());
+        multiplexer.addProcessor(tradeMenuStage);
         multiplexer.addProcessor(craftingStage);
         multiplexer.addProcessor(cookingStage);
         multiplexer.addProcessor(cookingCheatMenuStage);
@@ -917,6 +1558,13 @@ public class GDXGameScreen implements Screen {
 
         stage.act(delta);
         stage.draw();
+
+        // Always draw trade menu stage on top if open
+        if (isTradeMenuOpen && tradeMenuStage != null) {
+            tradeMenuStage.getViewport().update(Gdx.graphics.getWidth(), Gdx.graphics.getHeight(), true);
+            tradeMenuStage.act(delta);
+            tradeMenuStage.draw();
+        }
     }
 
     private void initializePlayerPosition() {
@@ -1207,8 +1855,13 @@ public class GDXGameScreen implements Screen {
             return;
         }
 
-        // If trade menu is open, only allow trade menu UI
-        if (showTradeMenu) {
+        // If new Trade menu is open, only allow trade menu UI
+        if (isTradeMenuOpen) {
+            if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
+                hideTradeMenu();
+                isTradeMenuOpen = false;
+                Gdx.input.setInputProcessor(multiplexer);
+            }
             return;
         }
 
@@ -1306,6 +1959,20 @@ public class GDXGameScreen implements Screen {
             if (isCraftingCheatMenuOpen) {
                 Gdx.input.setInputProcessor(craftingCheatMenuStage);
             } else {
+                Gdx.input.setInputProcessor(multiplexer);
+            }
+        }
+
+        // Open Trade Menu with 'R'
+        if (Gdx.input.isKeyJustPressed(Input.Keys.R)) {
+            isTradeMenuOpen = !isTradeMenuOpen;
+            if (isTradeMenuOpen) {
+                Gdx.app.log("TradeMenu", "Opening trade menu");
+                showTradeMainMenu();
+                Gdx.input.setInputProcessor(tradeMenuStage);
+            } else {
+                Gdx.app.log("TradeMenu", "Closing trade menu");
+                hideTradeMenu();
                 Gdx.input.setInputProcessor(multiplexer);
             }
         }
@@ -1959,6 +2626,13 @@ public class GDXGameScreen implements Screen {
 
         spriteBatch.setColor(1f, 1f, 1f, 1f);
         spriteBatch.end();
+
+        // Draw trade menu stage if open
+        if (isTradeMenuOpen && tradeMenuStage != null) {
+            tradeMenuStage.getViewport().update(Gdx.graphics.getWidth(), Gdx.graphics.getHeight(), true);
+            tradeMenuStage.act(Gdx.graphics.getDeltaTime());
+            tradeMenuStage.draw();
+        }
     }
 
     private void handleShopInteraction() {

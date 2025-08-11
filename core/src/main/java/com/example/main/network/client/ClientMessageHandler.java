@@ -595,6 +595,128 @@ public class ClientMessageHandler {
                     }
                 });
             }
+            else if ("trade_invite".equals(action) && actionData instanceof java.util.Map) {
+                @SuppressWarnings("unchecked")
+                java.util.Map<String, Object> map = (java.util.Map<String, Object>) actionData;
+                String senderUsername = (String) map.get("senderUsername");
+                String targetUsername = (String) map.get("targetUsername");
+                com.badlogic.gdx.Gdx.app.postRunnable(() -> {
+                    com.badlogic.gdx.Screen current = com.example.main.Main.getInstance().getScreen();
+                    if (current instanceof com.example.main.GDXviews.GDXGameScreen) {
+                        ((com.example.main.GDXviews.GDXGameScreen) current).onTradeInviteReceived(senderUsername, targetUsername);
+                    }
+                });
+            }
+            else if ("trade_invite_response".equals(action) && actionData instanceof java.util.Map) {
+                @SuppressWarnings("unchecked")
+                java.util.Map<String, Object> map = (java.util.Map<String, Object>) actionData;
+                String responder = (String) map.get("responderUsername");
+                String requester = (String) map.get("requesterUsername");
+                boolean accepted = Boolean.TRUE.equals(map.get("accepted"));
+                com.badlogic.gdx.Gdx.app.postRunnable(() -> {
+                    com.badlogic.gdx.Screen current = com.example.main.Main.getInstance().getScreen();
+                    if (current instanceof com.example.main.GDXviews.GDXGameScreen) {
+                        // Only the requester should handle this response; ignore if current user is the responder
+                        com.example.main.models.Game g = com.example.main.models.App.getInstance().getCurrentGame();
+                        if (g != null && g.getCurrentPlayer() != null) {
+                            String me = g.getCurrentPlayer().getUsername();
+                            if (!me.equals(responder)) {
+                                ((com.example.main.GDXviews.GDXGameScreen) current).onTradeInviteResponse(requester, responder, accepted);
+                            }
+                        }
+                    }
+                });
+            }
+            else if ("trade_live_update".equals(action) && actionData instanceof java.util.Map) {
+                @SuppressWarnings("unchecked")
+                java.util.Map<String, Object> map = (java.util.Map<String, Object>) actionData;
+                String initiator = (String) map.get("initiator");
+                String partner = (String) map.get("partner");
+                String givingItemName = (String) map.get("givingItemName");
+                Integer givingAmount = map.get("givingAmount") != null ? ((Number) map.get("givingAmount")).intValue() : 0;
+                String receivingItemName = (String) map.get("receivingItemName");
+                Integer receivingAmount = map.get("receivingAmount") != null ? ((Number) map.get("receivingAmount")).intValue() : 0;
+                com.badlogic.gdx.Gdx.app.postRunnable(() -> {
+                    com.badlogic.gdx.Screen current = com.example.main.Main.getInstance().getScreen();
+                    if (current instanceof com.example.main.GDXviews.GDXGameScreen) {
+                        ((com.example.main.GDXviews.GDXGameScreen) current).onTradeLiveUpdate(initiator, partner, givingItemName, givingAmount, receivingItemName, receivingAmount);
+                    }
+                });
+            }
+            else if ("trade_finalize_request".equals(action) && actionData instanceof java.util.Map) {
+                @SuppressWarnings("unchecked")
+                java.util.Map<String, Object> map = (java.util.Map<String, Object>) actionData;
+                String initiator = (String) map.get("initiator");
+                String partner = (String) map.get("partner");
+                String givingItemName = (String) map.get("givingItemName");
+                Integer givingAmount = ((Number) map.get("givingAmount")).intValue();
+                String receivingItemName = (String) map.get("receivingItemName");
+                Integer receivingAmount = ((Number) map.get("receivingAmount")).intValue();
+                Integer tradeId = map.get("tradeId") != null ? ((Number) map.get("tradeId")).intValue() : -1;
+                com.badlogic.gdx.Gdx.app.postRunnable(() -> {
+                    com.badlogic.gdx.Screen current = com.example.main.Main.getInstance().getScreen();
+                    if (current instanceof com.example.main.GDXviews.GDXGameScreen) {
+                        ((com.example.main.GDXviews.GDXGameScreen) current).onTradeFinalizeRequest(initiator, partner, givingItemName, givingAmount, receivingItemName, receivingAmount, tradeId);
+                    }
+                });
+            }
+            else if ("trade_finalize_response".equals(action) && actionData instanceof java.util.Map) {
+                @SuppressWarnings("unchecked")
+                java.util.Map<String, Object> map = (java.util.Map<String, Object>) actionData;
+                String initiator = (String) map.get("initiator");
+                String partner = (String) map.get("partner");
+                boolean accepted = Boolean.TRUE.equals(map.get("accepted"));
+                com.badlogic.gdx.Gdx.app.postRunnable(() -> {
+                    com.badlogic.gdx.Screen current = com.example.main.Main.getInstance().getScreen();
+                    if (current instanceof com.example.main.GDXviews.GDXGameScreen) {
+                        // Only the initiator should process the response; ignore if current user is the responder
+                        com.example.main.models.Game g = com.example.main.models.App.getInstance().getCurrentGame();
+                        if (g != null && g.getCurrentPlayer() != null) {
+                            String me = g.getCurrentPlayer().getUsername();
+                            if (!me.equals(partner)) {
+                                ((com.example.main.GDXviews.GDXGameScreen) current).onTradeFinalizeResponse(initiator, partner, accepted);
+                            }
+                        }
+                    }
+                });
+            }
+            else if ("trade_request".equals(action) && actionData instanceof java.util.Map) {
+                @SuppressWarnings("unchecked")
+                java.util.Map<String, Object> map = (java.util.Map<String, Object>) actionData;
+                String sender = (String) map.get("senderUsername");
+                String receiver = (String) map.get("receiverUsername");
+                String givingItemName = (String) map.get("givingItemName");
+                Integer givingAmount = ((Number) map.get("givingAmount")).intValue();
+                String receivingItemName = (String) map.get("receivingItemName");
+                Integer receivingAmount = ((Number) map.get("receivingAmount")).intValue();
+                com.badlogic.gdx.Gdx.app.postRunnable(() -> {
+                    com.badlogic.gdx.Screen current = com.example.main.Main.getInstance().getScreen();
+                    if (current instanceof com.example.main.GDXviews.GDXGameScreen) {
+                        ((com.example.main.GDXviews.GDXGameScreen) current).applyRemoteTradeRequest(sender, receiver, givingItemName, givingAmount, receivingItemName, receivingAmount);
+                    }
+                });
+            }
+            else if ("trade_respond".equals(action) && actionData instanceof java.util.Map) {
+                @SuppressWarnings("unchecked")
+                java.util.Map<String, Object> map = (java.util.Map<String, Object>) actionData;
+                String initiator = (String) map.get("initiator");
+                String partner = (String) map.get("partner");
+                boolean accepted = Boolean.TRUE.equals(map.get("accepted"));
+                String givingItemName = (String) map.get("givingItemName");
+                Integer givingAmount = ((Number) map.get("givingAmount")).intValue();
+                String receivingItemName = (String) map.get("receivingItemName");
+                Integer receivingAmount = ((Number) map.get("receivingAmount")).intValue();
+                com.badlogic.gdx.Gdx.app.postRunnable(() -> {
+                    com.badlogic.gdx.Screen current = com.example.main.Main.getInstance().getScreen();
+                    if (current instanceof com.example.main.GDXviews.GDXGameScreen) {
+                        // Only partner (receiver) should apply remote respond from initiator
+                        com.example.main.models.Game g = com.example.main.models.App.getInstance().getCurrentGame();
+                        if (g != null && g.getCurrentPlayer() != null && g.getCurrentPlayer().getUsername().equals(partner)) {
+                            ((com.example.main.GDXviews.GDXGameScreen) current).applyRemoteRespondToTrade(initiator, partner, accepted, givingItemName, givingAmount, receivingItemName, receivingAmount);
+                        }
+                    }
+                });
+            }
             else if ("hug".equals(action) && actionData instanceof java.util.Map) {
                 @SuppressWarnings("unchecked")
                 java.util.Map<String, Object> map = (java.util.Map<String, Object>) actionData;
