@@ -9,11 +9,11 @@ import com.example.main.network.NetworkConstants;
  * Launches the network game client
  */
 public class NetworkClientLauncher {
-    
+
     public static void main(String[] args) {
         String serverIp = NetworkConstants.DEFAULT_HOST;
         int serverPort = NetworkConstants.DEFAULT_PORT;
-        
+
         // Parse command line arguments
         if (args.length >= 1) {
             serverIp = args[0];
@@ -27,13 +27,13 @@ public class NetworkClientLauncher {
                 System.exit(1);
             }
         }
-        
+
         System.out.println("=== Stardew Valley Network Client ===");
         System.out.println("Connecting to server: " + serverIp + ":" + serverPort);
-        
+
         // Set the server connection info for the main application
         Main.setNetworkInfo(serverIp, serverPort);
-        
+
         // Always try graphics mode first for clients
         System.out.println("Starting graphics mode...");
         try {
@@ -46,7 +46,7 @@ public class NetworkClientLauncher {
             configuration.useVsync(false);
             configuration.setIdleFPS(30);
             configuration.setForegroundFPS(60);
-            
+
             new Lwjgl3Application(new Main(), configuration);
         } catch (Exception e) {
             System.err.println("Failed to create graphics application: " + e.getMessage());
@@ -55,4 +55,4 @@ public class NetworkClientLauncher {
             System.exit(1);
         }
     }
-} 
+}

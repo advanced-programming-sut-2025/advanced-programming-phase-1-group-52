@@ -312,6 +312,17 @@ public class GDXGameScreen implements Screen {
     private boolean isQuestMenuOpen = false;
     private boolean isJournalMenuOpen = false;
 
+    private boolean showReactionMenu = false;
+    private HorizontalGroup emojiGroup;
+    private Texture selectedEmojiTexture;
+    private float emojiDisplayTime = 0; // Timer to track display duration
+    private static final float EMOJI_DISPLAY_DURATION = 5.0f; // 5 seconds
+    private ArrayList<Image> emojiImages = new ArrayList<>();
+    private int selectedEmojiIndex = 0;
+    private ScrollPane emojiScrollPane;
+    private TextButton leftArrowButton;
+    private TextButton rightArrowButton;
+
     private Texture ground1Texture;
     private Texture ground2Texture;
     private Texture grass1Texture;
@@ -753,6 +764,7 @@ public class GDXGameScreen implements Screen {
         setupCookingCheatMenuUI();
         setupEatMenuUI();
         setupInfoMenuUI();
+        setupReactionMenu();
 
         crowAnimations = new ArrayList<>();
         playerFoodItems = new ArrayList<>();
@@ -874,9 +886,41 @@ public class GDXGameScreen implements Screen {
             renderGiantCrops();
             renderAnimals();
             renderMachinePlacement(spriteBatch);
+
+            if (emojiDisplayTime > 0 && selectedEmojiTexture != null) {
+                emojiDisplayTime -= delta; // Decrease timer
+
+                Player player = game.getCurrentPlayer();
+                if (player != null) {
+                    // 1. Get the coordinates of the tile directly NORTH of the player.
+                    int emojiTileX = player.currentX();
+                    int emojiTileY = player.currentY() - 1; // The tile above is at Y-1.
+
+                    // 2. Calculate the WORLD pixel coordinates for the CENTER of that target tile.
+                    float worldX = (emojiTileX * TILE_SIZE) + (TILE_SIZE / 2f);
+                    float worldY = ((MAP_HEIGHT - 1 - emojiTileY) * TILE_SIZE) + (TILE_SIZE / 2f);
+
+                    // 3. Project this world point to screen coordinates.
+                    Vector3 emojiAnchorPos = camera.project(new Vector3(worldX, worldY, 0));
+
+                    // 4. Calculate the final drawing position and size to center the emoji in the tile.
+                    float scaledEmojiWidth = selectedEmojiTexture.getWidth() * 0.5f;
+                    float scaledEmojiHeight = selectedEmojiTexture.getHeight() * 0.5f;
+                    float emojiDrawX = emojiAnchorPos.x - (scaledEmojiWidth / 2f);
+                    float emojiDrawY = emojiAnchorPos.y - (scaledEmojiHeight / 2f);
+
+                    // 5. Draw the emoji.
+                    spriteBatch.draw(selectedEmojiTexture, emojiDrawX, emojiDrawY, scaledEmojiWidth, scaledEmojiHeight);
+                }
+
+                // When the timer runs out, clear the texture
+                if (emojiDisplayTime <= 0) {
+                    selectedEmojiTexture = null;
+                }
+            }
+
             spriteBatch.end();
 
-            // Render animations (after animals so they appear on top)
             renderAnimations();
 
             renderWeather(delta);
@@ -1265,6 +1309,27 @@ public class GDXGameScreen implements Screen {
         com.badlogic.gdx.math.Vector3 mouseInWorld = camera.unproject(new com.badlogic.gdx.math.Vector3(Gdx.input.getX(), Gdx.input.getY(), 0));
         int targetTileX = (int) (mouseInWorld.x / TILE_SIZE);
         int targetTileY = MAP_HEIGHT - 1 - (int) (mouseInWorld.y / TILE_SIZE);
+
+        if (showReactionMenu && Gdx.input.isKeyJustPressed(Input.Keys.ENTER)) {
+            // This is the same list of names from the setup method
+            String[] emojiNames = {
+                "+1", "face_with_raised_eyebrow", "face_with_symbols_on_mouth", "farm_dialog",
+                "Good_Morning_dialog", "grin", "heart_eyes", "heart", "Hi_dialog", "joy",
+                "neutral_face", "nice_dialog", "relieved", "sunglasses"
+            };
+
+            // Set the selected emoji to be displayed
+            if (selectedEmojiIndex < emojiNames.length) {
+                selectedEmojiTexture = textureManager.getTexture(emojiNames[selectedEmojiIndex]);
+                emojiDisplayTime = EMOJI_DISPLAY_DURATION;
+            }
+
+            // Hide the entire reaction menu UI
+            showReactionMenu = false;
+            emojiScrollPane.setVisible(false);
+            leftArrowButton.setVisible(false);
+            rightArrowButton.setVisible(false);
+        }
 
         if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
             if (isPlantingSelectionOpen) {
@@ -5463,6 +5528,82 @@ public class GDXGameScreen implements Screen {
 
     private void setupInfoMenuUI() {}
 
+    private void setupReactionMenu() {
+        Table reactionMenuContainer = new Table();
+        reactionMenuContainer.setFillParent(true);
+        reactionMenuContainer.bottom().right();
+        stage.addActor(reactionMenuContainer);
+
+        Table emojiTable = new Table();
+        // Use the class field instead of a local variable
+        emojiScrollPane = new ScrollPane(emojiTable, skin);
+        emojiScrollPane.setFadeScrollBars(false);
+        emojiScrollPane.setVisible(false);
+
+        emojiImages.clear();
+        String[] emojiNames = {
+            "+1", "face_with_raised_eyebrow", "face_with_symbols_on_mouth", "farm_dialog",
+            "Good_Morning_dialog", "grin", "heart_eyes", "heart", "Hi_dialog", "joy",
+            "neutral_face", "nice_dialog", "relieved", "sunglasses"
+        };
+
+        for (String name : emojiNames) {
+            Texture emojiTexture = textureManager.getTexture(name);
+            if (emojiTexture != null) {
+                Image image = new Image(emojiTexture);
+                // ### FIX: The click listener on the image itself has been REMOVED ###
+                // Selection is now handled by the Enter key.
+                emojiImages.add(image);
+                emojiTable.add(image).size(image.getPrefWidth() * 0.5f, image.getPrefHeight() * 0.5f).pad(5);
+            }
+        }
+
+        // Use the class fields for the arrow buttons
+        leftArrowButton = new TextButton("<", skin);
+        leftArrowButton.setVisible(false);
+        leftArrowButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                selectedEmojiIndex--;
+                if (selectedEmojiIndex < 0) {
+                    selectedEmojiIndex = emojiImages.size() - 1;
+                }
+                updateEmojiHighlight();
+            }
+        });
+
+        rightArrowButton = new TextButton(">", skin);
+        rightArrowButton.setVisible(false);
+        rightArrowButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                selectedEmojiIndex++;
+                if (selectedEmojiIndex >= emojiImages.size()) {
+                    selectedEmojiIndex = 0;
+                }
+                updateEmojiHighlight();
+            }
+        });
+
+        TextButton reactionToggleButton = new TextButton("React", skin);
+        reactionToggleButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                showReactionMenu = !showReactionMenu;
+                leftArrowButton.setVisible(showReactionMenu);
+                emojiScrollPane.setVisible(showReactionMenu);
+                rightArrowButton.setVisible(showReactionMenu);
+            }
+        });
+
+        reactionMenuContainer.add(leftArrowButton).pad(5);
+        reactionMenuContainer.add(emojiScrollPane).size(400, 100);
+        reactionMenuContainer.add(rightArrowButton).pad(5);
+        reactionMenuContainer.add(reactionToggleButton).pad(15);
+
+        updateEmojiHighlight();
+    }
+
     private void showInfoMenu() {
         menuContentTable.clear();
         isInfoMenuOpen = true;
@@ -9627,4 +9768,18 @@ public class GDXGameScreen implements Screen {
         return snapshot;
     }
 
+    private void updateEmojiHighlight() {
+        for (int i = 0; i < emojiImages.size(); i++) {
+            Image image = emojiImages.get(i);
+            if (i == selectedEmojiIndex) {
+                // Highlight the selected emoji: make it white and slightly bigger
+                image.setColor(Color.WHITE);
+                image.setScale(0.6f);
+            } else {
+                // Un-highlight others: make them gray and normal size
+                image.setColor(Color.GRAY);
+                image.setScale(0.5f);
+            }
+        }
+    }
 }

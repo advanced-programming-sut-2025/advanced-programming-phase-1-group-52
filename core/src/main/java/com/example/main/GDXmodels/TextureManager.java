@@ -1,12 +1,11 @@
 package com.example.main.GDXmodels;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.utils.GdxRuntimeException;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Manages loading, storing, and retrieving all item and UI textures.
@@ -22,33 +21,37 @@ public class TextureManager {
      */
     public void loadAllItemTextures() {
         Gdx.app.log("TextureManager", "Starting to load all item textures...");
+
+        // ### FIX: Added "emojis" to the main asset list ###
         String[] assetDirs = {
             "Animal_product", "Animals", "Artisan_good", "Craftable_item",
             "Crafting", "Crops", "Fence", "Fertilizer", "Fish", "Foraging",
             "Gem", "Ingredient", "Mineral", "Recipe", "Resource", "Rock",
             "Tools", "Portraits", "Fishing_Pole", "Skill",
             "Tools/Axe", "Tools/Hoe", "Tools/Pickaxe", "Tools/Trash_can", "Tools/Watering_Can", "Trees", "Tools_animation",
-            // Include the entire Cut directory to load top-level UI textures like menu_background.png
-            "Cut", "Cut/map_elements", "Cut/player", "Cut/animals", "Cut/NPC", "weather"
+            "Cut", "Cut/map_elements", "Cut/player", "Cut/animals", "Cut/NPC", "weather",
+            "emojis" // Emojis are now treated like any other asset.
         };
 
         for (String dir : assetDirs) {
-            // Try multiple potential roots to be robust across launchers/builds
+            // This robust loader tries multiple possible paths, which will now find the emojis.
             String[] roots = new String[] {
                 "content/" + dir,            // Standard LibGDX assets root
-                dir,                           // In case assets were flattened
-                "assets/content/" + dir       // Fallback if someone passed absolute-ish paths
+                dir,                         // In case assets were flattened
+                "assets/content/" + dir      // Fallback path
             };
             for (String root : roots) {
                 try {
                     recursivelyLoadTextures(Gdx.files.internal(root));
                 } catch (Exception ignored) {
-                    // Ignore; we'll try the next root
+                    // Ignore; we'll try the next root if one fails
                 }
             }
         }
         Gdx.app.log("TextureManager", "Finished loading " + textureMap.size() + " textures.");
     }
+
+    // ### FIX: The separate, less reliable emoji loader has been removed. ###
 
     /**
      * Recursively scans a directory and loads any .png files found.
@@ -57,12 +60,9 @@ public class TextureManager {
     private void recursivelyLoadTextures(FileHandle directory) {
         if (directory.isDirectory()) {
             for (FileHandle file : directory.list()) {
-                // Recursive call for subdirectories
                 if (file.isDirectory()) {
                     recursivelyLoadTextures(file);
-                }
-                // Handle files directly within the loop
-                else {
+                } else {
                     if (file.extension().equalsIgnoreCase("png")) {
                         loadTexture(file);
                     }
@@ -79,7 +79,6 @@ public class TextureManager {
     private void loadTexture(FileHandle fileHandle) {
         try {
             Texture texture = new Texture(fileHandle);
-            // The key is the filename without the extension
             String key = fileHandle.nameWithoutExtension();
             textureMap.put(key, texture);
         } catch (GdxRuntimeException e) {
