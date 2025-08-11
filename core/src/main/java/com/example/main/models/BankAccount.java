@@ -1,13 +1,13 @@
 package com.example.main.models;
 
 public class BankAccount {
-    private int balance = 300000;
+    private int balance = 10000;
     private int fardaeiDollar = 0;
 
     public int getBalance() {
         return this.balance;
     }
-    
+
     public void deposit(int amount) {
         this.balance += amount;
     }

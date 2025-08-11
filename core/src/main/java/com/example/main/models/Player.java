@@ -52,6 +52,7 @@ public class Player {
     private static int nextHousingId = 1;
     private int trashCanX;
     private int trashCanY;
+    private int finishedQuests;
 
     public Player(String username, Gender gender) {
         this.username = username;
@@ -67,6 +68,7 @@ public class Player {
         this.cookingRecipes = new ArrayList<>();
         this.houseRefrigerator = new HouseRefrigerator();
         this.energy = 200;
+        this.finishedQuests = 0;
         for(Skills skill : Skills.values()){
             this.skills.put(skill, new SkillData());
         }
@@ -720,4 +722,13 @@ public class Player {
     public int getNextHousingId() {
         return nextHousingId;
     }
+
+    public int getFinishedQuests() {
+        return finishedQuests;
+    }
+
+    public void addFinishedQuests(int num) {
+        this.finishedQuests += num;
+    }
+
 }

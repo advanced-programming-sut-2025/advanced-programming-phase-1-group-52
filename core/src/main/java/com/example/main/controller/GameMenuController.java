@@ -814,6 +814,8 @@ public class GameMenuController {
         if (npc != null && npc.getQuests() != null) {
             npc.getQuests().put(quest, true);
         }
+        Player player = game.getCurrentPlayer();
+        player.addFinishedQuests(1);
         return new Result(true, "Nice job! You got your reward!");
     }
 
