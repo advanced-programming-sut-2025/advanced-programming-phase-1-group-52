@@ -448,6 +448,9 @@ public class GDXGameScreen implements Screen {
     private int playerTargetX, playerTargetY;
     private float toolRotation = 0f;
 
+    private float scoreboardUpdateTimer = 0f;
+    private static final float SCOREBOARD_UPDATE_INTERVAL = 0.5f;
+
     private static final int[][] HOUSE_POSITIONS = {
         {1, 1},
         {81, 1},
@@ -805,6 +808,14 @@ public class GDXGameScreen implements Screen {
         Gdx.gl.glClearColor(0.2f, 0.3f, 0.3f, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
         if (gameMap != null) {
+            if (scoreboardContainer != null && scoreboardContainer.isVisible()) {
+                scoreboardUpdateTimer -= delta;
+                if (scoreboardUpdateTimer <= 0f) {
+                    updateScoreboard(); // Refresh the scoreboard data
+                    scoreboardUpdateTimer = SCOREBOARD_UPDATE_INTERVAL; // Reset the timer
+                }
+            }
+
             if (eatingAnimationTimer > 0) {
                 eatingAnimationTimer -= delta;
             }
