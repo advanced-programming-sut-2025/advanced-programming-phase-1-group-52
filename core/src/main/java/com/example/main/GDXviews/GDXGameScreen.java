@@ -960,6 +960,9 @@ public class GDXGameScreen implements Screen {
     private ScrollPane emojiScrollPane;
     private TextButton leftArrowButton;
     private TextButton rightArrowButton;
+    // Multiplayer reactions: per-username reaction state
+    private static class ReactionState { Texture texture; float remainingSeconds; }
+    private java.util.Map<String, ReactionState> usernameToReaction = new java.util.HashMap<>();
 
     private Texture ground1Texture;
     private Texture ground2Texture;
@@ -1528,35 +1531,25 @@ public class GDXGameScreen implements Screen {
             renderAnimals();
             renderMachinePlacement(spriteBatch);
 
-            if (emojiDisplayTime > 0 && selectedEmojiTexture != null) {
-                emojiDisplayTime -= delta; // Decrease timer
-
-                Player player = game.getCurrentPlayer();
-                if (player != null) {
-                    // 1. Get the coordinates of the tile directly NORTH of the player.
-                    int emojiTileX = player.currentX();
-                    int emojiTileY = player.currentY() - 1; // The tile above is at Y-1.
-
-                    // 2. Calculate the WORLD pixel coordinates for the CENTER of that target tile.
-                    float worldX = (emojiTileX * TILE_SIZE) + (TILE_SIZE / 2f);
-                    float worldY = ((MAP_HEIGHT - 1 - emojiTileY) * TILE_SIZE) + (TILE_SIZE / 2f);
-
-                    // 3. Project this world point to screen coordinates.
-                    Vector3 emojiAnchorPos = camera.project(new Vector3(worldX, worldY, 0));
-
-                    // 4. Calculate the final drawing position and size to center the emoji in the tile.
-                    float scaledEmojiWidth = selectedEmojiTexture.getWidth() * 0.5f;
-                    float scaledEmojiHeight = selectedEmojiTexture.getHeight() * 0.5f;
-                    float emojiDrawX = emojiAnchorPos.x - (scaledEmojiWidth / 2f);
-                    float emojiDrawY = emojiAnchorPos.y - (scaledEmojiHeight / 2f);
-
-                    // 5. Draw the emoji.
-                    spriteBatch.draw(selectedEmojiTexture, emojiDrawX, emojiDrawY, scaledEmojiWidth, scaledEmojiHeight);
-                }
-
-                // When the timer runs out, clear the texture
-                if (emojiDisplayTime <= 0) {
-                    selectedEmojiTexture = null;
+            // Draw reactions above players' heads for all users
+            if (game != null && game.getPlayers() != null && !usernameToReaction.isEmpty()) {
+                for (User u : game.getPlayers()) {
+                    if (u == null || u.getPlayer() == null || u.getUsername().startsWith("empty_slot_")) continue;
+                    ReactionState rs = usernameToReaction.get(u.getUsername());
+                    if (rs == null || rs.texture == null || rs.remainingSeconds <= 0f) continue;
+                    // Decrement remaining time
+                    rs.remainingSeconds -= delta;
+                    if (rs.remainingSeconds <= 0f) { usernameToReaction.remove(u.getUsername()); continue; }
+                    // Compute world position just above player's head
+                    float worldX = u.getPlayer().currentX() * TILE_SIZE;
+                    float worldY = (MAP_HEIGHT - 1 - u.getPlayer().currentY()) * TILE_SIZE;
+                    Texture ptex = getPlayerTexture(u.getPlayer());
+                    float playerHeight = ptex != null ? ptex.getHeight() * 2f : TILE_SIZE * 2f; // fallback
+                    float scaledEmojiWidth = rs.texture.getWidth() * 0.5f;
+                    float scaledEmojiHeight = rs.texture.getHeight() * 0.5f;
+                    float emojiDrawX = worldX + (TILE_SIZE / 2f) - (scaledEmojiWidth / 2f);
+                    float emojiDrawY = worldY + playerHeight + 6f; // a small offset above head
+                    spriteBatch.draw(rs.texture, emojiDrawX, emojiDrawY, scaledEmojiWidth, scaledEmojiHeight);
                 }
             }
 
@@ -1973,8 +1966,25 @@ public class GDXGameScreen implements Screen {
 
             // Set the selected emoji to be displayed
             if (selectedEmojiIndex < emojiNames.length) {
-                selectedEmojiTexture = textureManager.getTexture(emojiNames[selectedEmojiIndex]);
+                String emojiName = emojiNames[selectedEmojiIndex];
+                selectedEmojiTexture = textureManager.getTexture(emojiName);
                 emojiDisplayTime = EMOJI_DISPLAY_DURATION;
+                // Set local reaction state for current player
+                if (game != null && game.getCurrentPlayer() != null && selectedEmojiTexture != null) {
+                    ReactionState rs = new ReactionState();
+                    rs.texture = selectedEmojiTexture;
+                    rs.remainingSeconds = EMOJI_DISPLAY_DURATION;
+                    usernameToReaction.put(game.getCurrentPlayer().getUsername(), rs);
+                }
+                // Broadcast to others
+                com.example.main.service.NetworkService ns = com.example.main.models.App.getInstance().getNetworkService();
+                if (ns != null && game != null && game.getCurrentPlayer() != null) {
+                    java.util.HashMap<String, Object> data = new java.util.HashMap<>();
+                    data.put("senderUsername", game.getCurrentPlayer().getUsername());
+                    data.put("emojiName", emojiName);
+                    data.put("duration", EMOJI_DISPLAY_DURATION);
+                    ns.sendPlayerAction("reaction", data);
+                }
             }
 
             // Hide the entire reaction menu UI
@@ -5222,21 +5232,28 @@ public class GDXGameScreen implements Screen {
 
         Table contentTable = new Table();
 
-        TextButton leaveGameButton = new TextButton("Leave Game", skin);
+        TextButton leaveGameButton = new TextButton("Terminate Game", skin);
         TextButton kickPlayerButton = new TextButton("Kick Player", skin);
 
         leaveGameButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                isInventoryOpen = false;
-                Main.getInstance().setScreen(new GDXMainMenu(com.example.main.models.App.getInstance().getNetworkService()));
+                // Start a vote to terminate the game
+                com.example.main.service.NetworkService ns = com.example.main.models.App.getInstance().getNetworkService();
+                if (ns != null && game != null && game.getCurrentPlayer() != null) {
+                    java.util.HashMap<String, Object> data = new java.util.HashMap<>();
+                    data.put("initiator", game.getCurrentPlayer().getUsername());
+                    ns.sendPlayerAction("vote_terminate_start", data);
+                    // Count initiator as accepted
+                    beginTerminateVoteLocal(game.getCurrentPlayer().getUsername());
+                }
             }
         });
 
         kickPlayerButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                System.out.println("Kick Player clicked - functionality not implemented.");
+                showKickPlayerMenu();
             }
         });
 
@@ -5255,6 +5272,260 @@ public class GDXGameScreen implements Screen {
 
         settingsStack.add(contentTable);
         menuContentTable.add(settingsStack).width(Gdx.graphics.getWidth() * 0.8f).height(Gdx.graphics.getHeight() * 0.8f);
+    }
+
+    private void showKickPlayerMenu() {
+        menuContentTable.clear();
+        Stack stack = new Stack();
+        stack.add(new Image(inventoryBackground));
+        Table content = new Table();
+        content.add(new Label("Select a player to kick", skin)).pad(12).row();
+        Table list = new Table();
+        if (game != null && game.getPlayers() != null) {
+            for (User u : game.getPlayers()) {
+                if (u == null || u.getPlayer() == null) continue;
+                if (game.getCurrentPlayer() != null && u.getUsername().equals(game.getCurrentPlayer().getUsername())) continue;
+                if (u.getUsername().startsWith("empty_slot_")) continue;
+                TextButton b = new TextButton(u.getUsername(), skin);
+                b.addListener(new ClickListener(){
+                    @Override public void clicked(InputEvent e, float x, float y){
+                        startKickVote(u.getUsername());
+                    }
+                });
+                list.add(b).width(240).pad(6).row();
+            }
+        }
+        ScrollPane sp = new ScrollPane(list, skin);
+        sp.setFadeScrollBars(false);
+        content.add(sp).width(400).height(300).pad(10).row();
+        Table bottom = new Table();
+        TextButton back = new TextButton("Back", skin);
+        TextButton close = new TextButton("Close", skin);
+        back.addListener(new ClickListener(){ @Override public void clicked(InputEvent e, float x, float y){ showSettingsMenu(); }});
+        close.addListener(new ClickListener(){ @Override public void clicked(InputEvent e, float x, float y){ isInventoryOpen = false; }});
+        bottom.add(back).pad(8);
+        bottom.add(close).pad(8);
+        content.add(bottom).pad(8).row();
+        stack.add(content);
+        menuContentTable.add(stack).width(Gdx.graphics.getWidth() * 0.8f).height(Gdx.graphics.getHeight() * 0.8f);
+    }
+
+    // --- Kick Player Voting ---
+    private Window kickVotePopup;
+    private String kickTarget = null;
+    private int kickYesVotes = 0;
+    private int kickTotalPlayers = 0;
+
+    private void startKickVote(String targetUsername) {
+        kickTarget = targetUsername;
+        kickTotalPlayers = (game != null && game.getPlayers() != null) ? (int) game.getPlayers().stream().filter(u -> u != null && u.getPlayer() != null && !u.getUsername().startsWith("empty_slot_")).count() : 0;
+        kickYesVotes = 1; // initiator yes
+        // Broadcast start (initiator counted yes, but initiator should not receive popup)
+        com.example.main.service.NetworkService ns = com.example.main.models.App.getInstance().getNetworkService();
+        if (ns != null && game != null && game.getCurrentPlayer() != null) {
+            java.util.HashMap<String, Object> data = new java.util.HashMap<>();
+            data.put("initiator", game.getCurrentPlayer().getUsername());
+            data.put("target", targetUsername);
+            ns.sendPlayerAction("kick_vote_start", data);
+            // Show live tally on initiator
+            broadcastKickVoteUpdate(false, false);
+        }
+    }
+
+    public void onKickVoteStarted(String initiator, String target) {
+        kickTarget = target;
+        kickTotalPlayers = (game != null && game.getPlayers() != null) ? (int) game.getPlayers().stream().filter(u -> u != null && u.getPlayer() != null && !u.getUsername().startsWith("empty_slot_")).count() : 0;
+        kickYesVotes = 1; // initiator yes counted
+        // Do not show popup for initiator
+        if (game != null && game.getCurrentPlayer() != null && game.getCurrentPlayer().getUsername().equals(initiator)) return;
+        showKickVotePopup(initiator, target);
+    }
+
+    private void showKickVotePopup(String initiator, String target) {
+        if (kickVotePopup != null) kickVotePopup.remove();
+        kickVotePopup = new Window("Kick Player?", skin);
+        kickVotePopup.setMovable(false);
+        kickVotePopup.setModal(true);
+        Table content = new Table();
+        content.add(new Label(initiator + " requests to kick " + target, skin)).pad(10).row();
+        TextButton accept = new TextButton("Accept", skin);
+        TextButton reject = new TextButton("Reject", skin);
+        Table buttons = new Table();
+        buttons.add(accept).pad(6);
+        buttons.add(reject).pad(6);
+        content.add(buttons).pad(6).row();
+        kickVotePopup.add(content).pad(8);
+        kickVotePopup.pack();
+        float x = Gdx.graphics.getWidth() - kickVotePopup.getWidth() - 20f;
+        float y = 20f;
+        kickVotePopup.setPosition(x, y);
+        stage.addActor(kickVotePopup);
+        kickVotePopup.toFront();
+
+        accept.addListener(new ClickListener(){
+            @Override public void clicked(InputEvent e, float px, float py){
+                kickVotePopup.remove();
+                if (game != null && game.getCurrentPlayer() != null && !game.getCurrentPlayer().getUsername().equals(initiator)) {
+                    kickYesVotes++;
+                }
+                checkKickThreshold();
+                broadcastKickVoteUpdate(false, false);
+                Gdx.input.setInputProcessor(multiplexer);
+                isInventoryOpen = false;
+                if (stage != null) stage.unfocusAll();
+            }
+        });
+        reject.addListener(new ClickListener(){
+            @Override public void clicked(InputEvent e, float px, float py){
+                kickVotePopup.remove();
+                broadcastKickVoteUpdate(false, false);
+                Gdx.input.setInputProcessor(multiplexer);
+                isInventoryOpen = false;
+                if (stage != null) stage.unfocusAll();
+            }
+        });
+    }
+
+    private void checkKickThreshold() {
+        if (kickTotalPlayers <= 0) return;
+        if (kickYesVotes > kickTotalPlayers / 2) {
+            // Passed
+            broadcastKickVoteUpdate(true, true);
+            // Remove player locally
+            if (controller != null && kickTarget != null) controller.removePlayer(kickTarget);
+        }
+    }
+
+    private void broadcastKickVoteUpdate(boolean finished, boolean passed) {
+        com.example.main.service.NetworkService ns = com.example.main.models.App.getInstance().getNetworkService();
+        if (ns != null) {
+            java.util.HashMap<String, Object> data = new java.util.HashMap<>();
+            if (kickTarget != null) data.put("target", kickTarget);
+            data.put("yes", kickYesVotes);
+            data.put("total", kickTotalPlayers);
+            data.put("finished", finished);
+            data.put("passed", passed);
+            ns.sendPlayerAction("kick_vote_update", data);
+        }
+    }
+
+    public void onKickVoteUpdate(String target, int yes, int total, boolean finished, boolean passed) {
+        kickTarget = target;
+        kickYesVotes = yes;
+        kickTotalPlayers = total;
+        if (finished && passed) {
+            if (kickVotePopup != null) kickVotePopup.remove();
+            if (controller != null && kickTarget != null) controller.removePlayer(kickTarget);
+        }
+    }
+
+    // --- Terminate Game Voting ---
+    private Window terminateVotePopup;
+    private int terminateYesVotes = 0;
+    private int terminateTotalPlayers = 0;
+    private String terminateInitiator = null;
+
+    private void beginTerminateVoteLocal(String initiator) {
+        terminateInitiator = initiator;
+        terminateTotalPlayers = (game != null && game.getPlayers() != null) ? (int) game.getPlayers().stream().filter(u -> u != null && u.getPlayer() != null && !u.getUsername().startsWith("empty_slot_")).count() : 0;
+        terminateYesVotes = 1; // initiator counts as yes
+        // Do NOT show popup for initiator
+        isInventoryOpen = false;
+        if (stage != null) stage.unfocusAll();
+        broadcastTerminateVoteUpdate(false, false);
+    }
+
+    public void onTerminateVoteStarted(String initiator) {
+        // Show popup on others with Accept/Reject
+        terminateInitiator = initiator;
+        terminateTotalPlayers = (game != null && game.getPlayers() != null) ? (int) game.getPlayers().stream().filter(u -> u != null && u.getPlayer() != null && !u.getUsername().startsWith("empty_slot_")).count() : 0;
+        // initiator yes counted; if I'm the initiator, don't show popup
+        terminateYesVotes = 1;
+        if (game != null && game.getCurrentPlayer() != null && !game.getCurrentPlayer().getUsername().equals(initiator)) {
+            showTerminateVotePopup(initiator);
+        }
+    }
+
+    private void showTerminateVotePopup(String initiator) {
+        if (terminateVotePopup != null) terminateVotePopup.remove();
+        terminateVotePopup = new Window("Terminate Game?", skin);
+        terminateVotePopup.setMovable(false);
+        terminateVotePopup.setModal(false);
+        Table content = new Table();
+        content.add(new Label(initiator + " requests to terminate the game.", skin)).pad(10).row();
+        TextButton accept = new TextButton("Accept", skin);
+        TextButton reject = new TextButton("Reject", skin);
+        Table buttons = new Table();
+        buttons.add(accept).pad(6);
+        buttons.add(reject).pad(6);
+        content.add(buttons).pad(6).row();
+        terminateVotePopup.add(content).pad(8);
+        terminateVotePopup.pack();
+        float x = Gdx.graphics.getWidth() - terminateVotePopup.getWidth() - 20f;
+        float y = 20f;
+        terminateVotePopup.setPosition(x, y);
+        stage.addActor(terminateVotePopup);
+        terminateVotePopup.toFront();
+
+        accept.addListener(new ClickListener(){
+            @Override public void clicked(InputEvent e, float px, float py){
+                if (terminateVotePopup != null) { terminateVotePopup.remove(); terminateVotePopup = null; }
+                // Increment yes locally only if not initiator
+                if (game != null && game.getCurrentPlayer() != null && !game.getCurrentPlayer().getUsername().equals(terminateInitiator)) {
+                    terminateYesVotes++;
+                }
+                checkTerminateThreshold();
+                broadcastTerminateVoteUpdate(false, false);
+                Gdx.input.setInputProcessor(multiplexer);
+                isInventoryOpen = false;
+                if (stage != null) stage.unfocusAll();
+            }
+        });
+        reject.addListener(new ClickListener(){
+            @Override public void clicked(InputEvent e, float px, float py){
+                if (terminateVotePopup != null) { terminateVotePopup.remove(); terminateVotePopup = null; }
+                broadcastTerminateVoteUpdate(false, false);
+                Gdx.input.setInputProcessor(multiplexer);
+                isInventoryOpen = false;
+                if (stage != null) stage.unfocusAll();
+            }
+        });
+    }
+
+    private void checkTerminateThreshold() {
+        // More than half of all players
+        if (terminateTotalPlayers <= 0) return;
+        if (terminateYesVotes > terminateTotalPlayers / 2) {
+            broadcastTerminateVoteUpdate(true, true);
+            // Exit to main menu
+            isInventoryOpen = false;
+            Main.getInstance().setScreen(new GDXMainMenu(com.example.main.models.App.getInstance().getNetworkService()));
+        }
+    }
+
+    private void broadcastTerminateVoteUpdate(boolean finished, boolean passed) {
+        com.example.main.service.NetworkService ns = com.example.main.models.App.getInstance().getNetworkService();
+        if (ns != null) {
+            java.util.HashMap<String, Object> data = new java.util.HashMap<>();
+            data.put("initiator", terminateInitiator);
+            data.put("yes", terminateYesVotes);
+            data.put("total", terminateTotalPlayers);
+            data.put("finished", finished);
+            data.put("passed", passed);
+            ns.sendPlayerAction("vote_terminate_update", data);
+        }
+    }
+
+    public void onTerminateVoteUpdate(String initiator, int yes, int total, boolean finished, boolean passed) {
+        // Sync counters
+        terminateInitiator = initiator;
+        terminateYesVotes = yes;
+        terminateTotalPlayers = total;
+        if (finished && passed) {
+            if (terminateVotePopup != null) terminateVotePopup.remove();
+            isInventoryOpen = false;
+            Main.getInstance().setScreen(new GDXMainMenu(com.example.main.models.App.getInstance().getNetworkService()));
+        }
     }
 
     private void addBackButtonToMenu(Table buttonTable) {
@@ -6276,6 +6547,17 @@ public class GDXGameScreen implements Screen {
         reactionMenuContainer.add(reactionToggleButton).pad(15);
 
         updateEmojiHighlight();
+    }
+
+    // Remote reaction application
+    public void applyRemoteReaction(String senderUsername, String emojiName, float duration) {
+        if (textureManager == null || game == null) return;
+        Texture tex = textureManager.getTexture(emojiName);
+        if (tex == null) return;
+        ReactionState rs = new ReactionState();
+        rs.texture = tex;
+        rs.remainingSeconds = duration > 0 ? duration : EMOJI_DISPLAY_DURATION;
+        usernameToReaction.put(senderUsername, rs);
     }
 
     private void showInfoMenu() {
