@@ -1401,6 +1401,16 @@ public class GDXGameScreen implements Screen {
                         generalMessageLabel.setColor(Color.CYAN);
                         if (result.isSuccessful()) {
                             startFishingMinigame(); // Activate the minigame UI
+                            // Broadcast fishing start for remote consistency
+                            com.example.main.service.NetworkService ns = com.example.main.models.App.getInstance().getNetworkService();
+                            if (ns != null) {
+                                java.util.HashMap<String, Object> data = new java.util.HashMap<>();
+                                data.put("senderUsername", game.getCurrentPlayer().getUsername());
+                                data.put("toolEnumName", currentTool.getToolType().name());
+                                data.put("targetX", targetTileX);
+                                data.put("targetY", targetTileY);
+                                ns.sendPlayerAction("use_tool", data);
+                            }
                         }
                     }
                     // Handle all other tools
@@ -1417,6 +1427,15 @@ public class GDXGameScreen implements Screen {
                                     startActionAnimation(PlayerActionState.TILLING);
                                 } else if (toolName.contains("scythe")) {
                                     startActionAnimation(PlayerActionState.HARVESTING);
+                                }
+                                com.example.main.service.NetworkService ns = com.example.main.models.App.getInstance().getNetworkService();
+                                if (ns != null) {
+                                    java.util.HashMap<String, Object> data = new java.util.HashMap<>();
+                                    data.put("senderUsername", game.getCurrentPlayer().getUsername());
+                                    data.put("toolEnumName", currentTool.getToolType().name());
+                                    data.put("targetX", targetTileX);
+                                    data.put("targetY", targetTileY);
+                                    ns.sendPlayerAction("use_tool", data);
                                 }
                             }
                         } else {
@@ -1470,13 +1489,38 @@ public class GDXGameScreen implements Screen {
         }
         if (Gdx.input.isKeyJustPressed(Input.Keys.NUM_1)) {
             if (controller != null) {
-                controller.changeTime("1");
+                Result result = controller.changeTime("1");
+                if (result != null && result.isSuccessful()) {
+                    com.example.main.service.NetworkService ns = com.example.main.models.App.getInstance().getNetworkService();
+                    if (ns != null) {
+                        java.util.HashMap<String, Object> data = new java.util.HashMap<>();
+                        data.put("senderUsername", game.getCurrentPlayer().getUsername());
+                        data.put("hours", 1);
+                        ns.sendPlayerAction("cheat_advance_time", data);
+                    }
+                }
             }
         }
 
         if (Gdx.input.isKeyJustPressed(Input.Keys.NUM_2)) {
             if (controller != null) {
-                controller.changeDate(1);
+                Result result = controller.changeDate(1);
+                if (result != null && result.isSuccessful()) {
+                    com.example.main.service.NetworkService ns = com.example.main.models.App.getInstance().getNetworkService();
+                    if (ns != null) {
+                        java.util.HashMap<String, Object> data = new java.util.HashMap<>();
+                        data.put("senderUsername", game.getCurrentPlayer().getUsername());
+                        data.put("days", 1);
+                        // Include canonical weather of main player for sync
+                        com.example.main.models.User main = game.getMainPlayer();
+                        com.example.main.enums.design.Weather w = game.getTodayWeather();
+                        if (main != null && w != null) {
+                            data.put("todayWeather", w.name());
+                            data.put("tomorrowWeather", game.getTomorrowWeather() != null ? game.getTomorrowWeather().name() : null);
+                        }
+                        ns.sendPlayerAction("cheat_advance_date", data);
+                    }
+                }
             }
         }
 
@@ -1485,9 +1529,18 @@ public class GDXGameScreen implements Screen {
                 Player currentPlayer = game.getCurrentPlayer();
                 String x = String.valueOf(currentPlayer.currentX());
                 String y = String.valueOf(currentPlayer.currentY());
-                System.out.println(controller.cheatLightning(x, y).Message());
+                Result r = controller.cheatLightning(x, y);
+                System.out.println(r.Message());
                 cheatLightningActive = true;
                 lightningDuration = 0.15f;
+                com.example.main.service.NetworkService ns = com.example.main.models.App.getInstance().getNetworkService();
+                if (ns != null) {
+                    java.util.HashMap<String, Object> data = new java.util.HashMap<>();
+                    data.put("senderUsername", game.getCurrentPlayer().getUsername());
+                    data.put("x", Integer.parseInt(x));
+                    data.put("y", Integer.parseInt(y));
+                    ns.sendPlayerAction("cheat_lightning", data);
+                }
             }
         }
 
@@ -1736,11 +1789,21 @@ public class GDXGameScreen implements Screen {
                             for (Housing housing : currentPlayer.getHousings()) {
                                 for (PurchasedAnimal animal : housing.getOccupants()) {
                                     if (animal.getName().equals(animalToShepherd)) {
-                                        // Set the animal's target position for smooth movement
+                                        // Set local movement
                                         animal.setTargetX(tileX);
                                         animal.setTargetY(tileY);
                                         animal.setMoving(true);
                                         animal.setMoveProgress(0f);
+                                        // Broadcast shepherd action
+                                        com.example.main.service.NetworkService ns = com.example.main.models.App.getInstance().getNetworkService();
+                                        if (ns != null) {
+                                            java.util.HashMap<String, Object> data = new java.util.HashMap<>();
+                                            data.put("senderUsername", game.getCurrentPlayer().getUsername());
+                                            data.put("animalName", animalToShepherd);
+                                            data.put("targetX", tileX);
+                                            data.put("targetY", tileY);
+                                            ns.sendPlayerAction("shepherd_animal", data);
+                                        }
                                         break;
                                     }
                                 }
@@ -3195,11 +3258,11 @@ public class GDXGameScreen implements Screen {
     }
 
     private void renderHousingSprite(int tileX, int tileY, float worldX, float worldY) {
-        Player currentPlayer = game.getCurrentPlayer();
-        if (currentPlayer == null) return;
-
-        if (currentPlayer.getHousings() == null) return;
-        for (Housing housing : currentPlayer.getHousings()) {
+        if (game == null) return;
+        for (User u : game.getPlayers()) {
+            Player p = u.getPlayer();
+            if (p == null || p.getHousings() == null) continue;
+            for (Housing housing : p.getHousings()) {
             if (housing.getX() == tileX && housing.getY() == tileY) {
                 CageType cageType = housing.getType();
                 String typeName = cageType.getName().toLowerCase();
@@ -3223,6 +3286,7 @@ public class GDXGameScreen implements Screen {
                 spriteBatch.draw(housingTexture, worldX, worldY - buildingHeight + TILE_SIZE, buildingWidth, buildingHeight);
                 return;
             }
+        }
         }
     }
 
@@ -3257,32 +3321,26 @@ public class GDXGameScreen implements Screen {
     }
 
     private int getHousingIndex(int x, int y) {
-        Player currentPlayer = game.getCurrentPlayer();
-        if (currentPlayer == null) return -1;
-
-        List<Housing> housings = currentPlayer.getHousings();
-        for (int i = 0; i < housings.size(); i++) {
-            Housing housing = housings.get(i);
-            CageType cageType = housing.getType();
-
-            // Determine building dimensions based on cage type
-            int buildingWidth, buildingHeight;
-            if (cageType.getName().toLowerCase().contains("barn")) {
-                // Barns are 7x4 tiles
-                buildingWidth = 7;
-                buildingHeight = 4;
-            } else {
-                // Coops are 6x3 tiles
-                buildingWidth = 6;
-                buildingHeight = 3;
-            }
-
-            // Check if the given coordinates are within this housing area
-            int housingX = housing.getX();
-            int housingY = housing.getY();
-            if (x >= housingX && x <= housingX + buildingWidth &&
-                y >= housingY && y <= housingY + buildingHeight) {
-                return i;
+        if (game == null) return -1;
+        for (User u : game.getPlayers()) {
+            Player p = u.getPlayer();
+            if (p == null || p.getHousings() == null) continue;
+            for (Housing housing : p.getHousings()) {
+                CageType cageType = housing.getType();
+                int buildingWidth, buildingHeight;
+                if (cageType.getName().toLowerCase().contains("barn")) {
+                    buildingWidth = 7;
+                    buildingHeight = 4;
+                } else {
+                    buildingWidth = 6;
+                    buildingHeight = 3;
+                }
+                int housingX = housing.getX();
+                int housingY = housing.getY();
+                if (x >= housingX && x <= housingX + buildingWidth &&
+                    y >= housingY && y <= housingY + buildingHeight) {
+                    return cageType.getName().toLowerCase().contains("barn") ? 0 : 1;
+                }
             }
         }
         return -1;
@@ -4513,8 +4571,22 @@ public class GDXGameScreen implements Screen {
             public void clicked(InputEvent event, float x, float y) {
                 // This is the core fix for the planting action
                 Result result = controller.plantItem(item, plantingTargetTile);
-                if (result.isSuccessful()) { // ADD THIS CHECK
+                if (result.isSuccessful()) {
                     startActionAnimation(PlayerActionState.PLANTING);
+                    com.example.main.service.NetworkService ns = com.example.main.models.App.getInstance().getNetworkService();
+                    if (ns != null && plantingTargetTile != null) {
+                        java.util.HashMap<String, Object> data = new java.util.HashMap<>();
+                        data.put("senderUsername", game.getCurrentPlayer().getUsername());
+                        if (item instanceof com.example.main.models.item.Seed) {
+                            String seedEnumName = ((com.example.main.models.item.Seed) item).getForagingSeedType().name();
+                            data.put("seedEnumName", seedEnumName);
+                        } else {
+                            data.put("seedEnumName", null);
+                        }
+                        data.put("x", plantingTargetTile.getX());
+                        data.put("y", plantingTargetTile.getY());
+                        ns.sendPlayerAction("plant_item", data);
+                    }
                 }
                 isPlantingMode = false;
                 plantingTargetTile = null;
@@ -4764,8 +4836,22 @@ public class GDXGameScreen implements Screen {
                 if (!plantableItems.isEmpty() && plantingTargetTile != null) {
                     Item selectedItem = plantableItems.get(selectedPlantableIndex);
                     Result result = controller.plantItem(selectedItem, plantingTargetTile);
-                    if (result.isSuccessful()) { // ADD THIS CHECK
+                    if (result.isSuccessful()) {
                         startActionAnimation(PlayerActionState.PLANTING);
+                        com.example.main.service.NetworkService ns = com.example.main.models.App.getInstance().getNetworkService();
+                        if (ns != null && plantingTargetTile != null) {
+                            java.util.HashMap<String, Object> data = new java.util.HashMap<>();
+                            data.put("senderUsername", game.getCurrentPlayer().getUsername());
+                            if (selectedItem instanceof com.example.main.models.item.Seed) {
+                                String seedEnumName = ((com.example.main.models.item.Seed) selectedItem).getForagingSeedType().name();
+                                data.put("seedEnumName", seedEnumName);
+                            } else {
+                                data.put("seedEnumName", null);
+                            }
+                            data.put("x", plantingTargetTile.getX());
+                            data.put("y", plantingTargetTile.getY());
+                            ns.sendPlayerAction("plant_item", data);
+                        }
                     }
                     closePlantingMenu();
                 }
@@ -6388,6 +6474,16 @@ public class GDXGameScreen implements Screen {
         animal.setX(position[0]);
         animal.setY(position[1]);
         animal.setInCage(false);
+        // Broadcast
+        com.example.main.service.NetworkService ns = com.example.main.models.App.getInstance().getNetworkService();
+        if (ns != null) {
+            java.util.HashMap<String, Object> data = new java.util.HashMap<>();
+            data.put("senderUsername", game.getCurrentPlayer().getUsername());
+            data.put("animalName", animal.getName());
+            data.put("targetX", position[0]);
+            data.put("targetY", position[1]);
+            ns.sendPlayerAction("bring_animal_out", data);
+        }
 
         // Initialize movement target to current position
         animal.setTargetX(position[0]);
@@ -6405,6 +6501,14 @@ public class GDXGameScreen implements Screen {
 
     private void bringAnimalIn(PurchasedAnimal animal) {
         animal.setInCage(true);
+        // Broadcast
+        com.example.main.service.NetworkService ns = com.example.main.models.App.getInstance().getNetworkService();
+        if (ns != null) {
+            java.util.HashMap<String, Object> data = new java.util.HashMap<>();
+            data.put("senderUsername", game.getCurrentPlayer().getUsername());
+            data.put("animalName", animal.getName());
+            ns.sendPlayerAction("bring_animal_in", data);
+        }
 
         // Update the housing menu
         if (housingMenuTable != null) {
@@ -6476,11 +6580,12 @@ public class GDXGameScreen implements Screen {
     }
 
     private void renderAnimals() {
-        Player currentPlayer = game.getCurrentPlayer();
-        if (currentPlayer == null) return;
-
-        for (Housing housing : currentPlayer.getHousings()) {
-            for (PurchasedAnimal animal : housing.getOccupants()) {
+        if (game == null) return;
+        for (User u : game.getPlayers()) {
+            Player p = u.getPlayer();
+            if (p == null || p.getHousings() == null) continue;
+            for (Housing housing : p.getHousings()) {
+                for (PurchasedAnimal animal : housing.getOccupants()) {
                 if (!animal.isInCage()) {
                     // Render animal outside
                     Texture animalTexture = animalTextures.get(animal.getType());
@@ -6531,35 +6636,44 @@ public class GDXGameScreen implements Screen {
         }
     }
 
+    }
+
     private void updateAnimalMovement(float delta) {
         if (showAnimalMenu) return;
-        Player currentPlayer = game.getCurrentPlayer();
-        if (currentPlayer == null) return;
+        if (game == null) return;
 
         animalMovementTimer += delta;
 
         if (animalMovementTimer >= ANIMAL_MOVEMENT_UPDATE_INTERVAL) {
             animalMovementTimer = 0f;
 
-            for (Housing housing : currentPlayer.getHousings()) {
-                for (PurchasedAnimal animal : housing.getOccupants()) {
-                    if (!animal.isInCage()) {
-                        updateAnimalMovement(animal, housing);
+            for (User u : game.getPlayers()) {
+                Player p = u.getPlayer();
+                if (p == null || p.getHousings() == null) continue;
+                for (Housing housing : p.getHousings()) {
+                    for (PurchasedAnimal animal : housing.getOccupants()) {
+                        if (!animal.isInCage()) {
+                            updateAnimalMovement(animal, housing);
+                        }
                     }
                 }
             }
         }
 
-        for (Housing housing : currentPlayer.getHousings()) {
-            for (PurchasedAnimal animal : housing.getOccupants()) {
-                if (!animal.isInCage() && animal.isMoving()) {
-                    animal.setMoveProgress(animal.getMoveProgress() + delta * animal.MOVE_SPEED);
+        for (User u : game.getPlayers()) {
+            Player p = u.getPlayer();
+            if (p == null || p.getHousings() == null) continue;
+            for (Housing housing : p.getHousings()) {
+                for (PurchasedAnimal animal : housing.getOccupants()) {
+                    if (!animal.isInCage() && animal.isMoving()) {
+                        animal.setMoveProgress(animal.getMoveProgress() + delta * animal.MOVE_SPEED);
 
-                    if (animal.getMoveProgress() >= 1.0f) {
-                        animal.setX(animal.getTargetX());
-                        animal.setY(animal.getTargetY());
-                        animal.setMoving(false);
-                        animal.setMoveProgress(0f);
+                        if (animal.getMoveProgress() >= 1.0f) {
+                            animal.setX(animal.getTargetX());
+                            animal.setY(animal.getTargetY());
+                            animal.setMoving(false);
+                            animal.setMoveProgress(0f);
+                        }
                     }
                 }
             }
@@ -6780,7 +6894,18 @@ public class GDXGameScreen implements Screen {
             @Override
             public void clicked(InputEvent event, float x, float y) {
                 if (controller != null && selectedAnimal != null) {
-                    controller.feedHay(selectedAnimal.getName());
+                    Result res = controller.feedHay(selectedAnimal.getName());
+                    if (res != null && res.isSuccessful()) {
+                        com.example.main.service.NetworkService ns = com.example.main.models.App.getInstance().getNetworkService();
+                        if (ns != null) {
+                            java.util.HashMap<String, Object> data = new java.util.HashMap<>();
+                            data.put("senderUsername", game.getCurrentPlayer().getUsername());
+                            data.put("animalName", selectedAnimal.getName());
+                            data.put("senderX", game.getCurrentPlayer().currentX());
+                            data.put("senderY", game.getCurrentPlayer().currentY());
+                            ns.sendPlayerAction("feed_hay", data);
+                        }
+                    }
 
                     // Create food particle animation at animal's position
                     float animalWorldX = selectedAnimal.getX() * TILE_SIZE + TILE_SIZE / 2f;
@@ -6800,7 +6925,18 @@ public class GDXGameScreen implements Screen {
             @Override
             public void clicked(InputEvent event, float x, float y) {
                 if (controller != null && selectedAnimal != null) {
-                    controller.petAnimal(selectedAnimal.getName());
+                    Result res = controller.petAnimal(selectedAnimal.getName());
+                    if (res != null && res.isSuccessful()) {
+                        com.example.main.service.NetworkService ns = com.example.main.models.App.getInstance().getNetworkService();
+                        if (ns != null) {
+                            java.util.HashMap<String, Object> data = new java.util.HashMap<>();
+                            data.put("senderUsername", game.getCurrentPlayer().getUsername());
+                            data.put("animalName", selectedAnimal.getName());
+                            data.put("senderX", game.getCurrentPlayer().currentX());
+                            data.put("senderY", game.getCurrentPlayer().currentY());
+                            ns.sendPlayerAction("pet_animal", data);
+                        }
+                    }
 
                     // Create heart and bounce animations at animal's position
                     float animalWorldX = selectedAnimal.getX() * TILE_SIZE + TILE_SIZE / 2f;
@@ -6821,7 +6957,16 @@ public class GDXGameScreen implements Screen {
             @Override
             public void clicked(InputEvent event, float x, float y) {
                 if (controller != null && selectedAnimal != null) {
-                    controller.sellAnimal(selectedAnimal.getName());
+                    Result res = controller.sellAnimal(selectedAnimal.getName());
+                    if (res != null && res.isSuccessful()) {
+                        com.example.main.service.NetworkService ns = com.example.main.models.App.getInstance().getNetworkService();
+                        if (ns != null) {
+                            java.util.HashMap<String, Object> data = new java.util.HashMap<>();
+                            data.put("senderUsername", game.getCurrentPlayer().getUsername());
+                            data.put("animalName", selectedAnimal.getName());
+                            ns.sendPlayerAction("sell_animal", data);
+                        }
+                    }
                     Player currentPlayer = game.getCurrentPlayer();
                     if (currentPlayer != null) {
                         for (Housing housing : currentPlayer.getHousings()) {
@@ -6976,7 +7121,16 @@ public class GDXGameScreen implements Screen {
                 @Override
                 public void clicked(InputEvent event, float x, float y) {
                     if (controller != null && selectedAnimal != null) {
-                        controller.collectAnimalProduct(selectedAnimal.getName());
+                        Result res = controller.collectAnimalProduct(selectedAnimal.getName());
+                        if (res != null && res.isSuccessful()) {
+                            com.example.main.service.NetworkService ns = com.example.main.models.App.getInstance().getNetworkService();
+                            if (ns != null) {
+                                java.util.HashMap<String, Object> data = new java.util.HashMap<>();
+                                data.put("senderUsername", game.getCurrentPlayer().getUsername());
+                                data.put("animalName", selectedAnimal.getName());
+                                ns.sendPlayerAction("collect_animal_product", data);
+                            }
+                        }
                     }
                     showAnimalMenu = false;
                     selectedAnimal = null;
@@ -7876,6 +8030,271 @@ public class GDXGameScreen implements Screen {
             game.setCurrentUser(senderUser);
             game.setCurrentPlayer(senderPlayer);
             controller.cheatAddCookingRecipe(recipeName);
+        } finally {
+            if (prevUser != null) game.setCurrentUser(prevUser);
+            if (prevPlayer != null) game.setCurrentPlayer(prevPlayer);
+        }
+    }
+
+    public void applyRemotePetAnimal(String senderUsername, String animalName, Integer senderX, Integer senderY) {
+        if (game == null || controller == null) return;
+        User prevUser = game.getUrrentUser();
+        Player prevPlayer = game.getCurrentPlayer();
+        User senderUser = game.getUserByUsername(senderUsername);
+        Player senderPlayer = senderUser != null ? senderUser.getPlayer() : null;
+        if (senderUser == null || senderPlayer == null) return;
+        try {
+            game.setCurrentUser(senderUser);
+            game.setCurrentPlayer(senderPlayer);
+            if (senderX != null && senderY != null) { senderPlayer.setCurrentX(senderX); senderPlayer.setCurrentY(senderY); }
+            controller.petAnimal(animalName);
+        } finally {
+            if (prevUser != null) game.setCurrentUser(prevUser);
+            if (prevPlayer != null) game.setCurrentPlayer(prevPlayer);
+        }
+    }
+
+    public void applyRemoteFeedHay(String senderUsername, String animalName, Integer senderX, Integer senderY) {
+        if (game == null || controller == null) return;
+        User prevUser = game.getUrrentUser();
+        Player prevPlayer = game.getCurrentPlayer();
+        User senderUser = game.getUserByUsername(senderUsername);
+        Player senderPlayer = senderUser != null ? senderUser.getPlayer() : null;
+        if (senderUser == null || senderPlayer == null) return;
+        try {
+            game.setCurrentUser(senderUser);
+            game.setCurrentPlayer(senderPlayer);
+            if (senderX != null && senderY != null) { senderPlayer.setCurrentX(senderX); senderPlayer.setCurrentY(senderY); }
+            controller.feedHay(animalName);
+        } finally {
+            if (prevUser != null) game.setCurrentUser(prevUser);
+            if (prevPlayer != null) game.setCurrentPlayer(prevPlayer);
+        }
+    }
+
+    public void applyRemoteSellAnimal(String senderUsername, String animalName) {
+        if (game == null || controller == null) return;
+        User prevUser = game.getUrrentUser();
+        Player prevPlayer = game.getCurrentPlayer();
+        User senderUser = game.getUserByUsername(senderUsername);
+        Player senderPlayer = senderUser != null ? senderUser.getPlayer() : null;
+        if (senderUser == null || senderPlayer == null) return;
+        try {
+            game.setCurrentUser(senderUser);
+            game.setCurrentPlayer(senderPlayer);
+            controller.sellAnimal(animalName);
+        } finally {
+            if (prevUser != null) game.setCurrentUser(prevUser);
+            if (prevPlayer != null) game.setCurrentPlayer(prevPlayer);
+        }
+    }
+
+    public void applyRemoteCollectAnimalProduct(String senderUsername, String animalName) {
+        if (game == null || controller == null) return;
+        User prevUser = game.getUrrentUser();
+        Player prevPlayer = game.getCurrentPlayer();
+        User senderUser = game.getUserByUsername(senderUsername);
+        Player senderPlayer = senderUser != null ? senderUser.getPlayer() : null;
+        if (senderUser == null || senderPlayer == null) return;
+        try {
+            game.setCurrentUser(senderUser);
+            game.setCurrentPlayer(senderPlayer);
+            controller.collectAnimalProduct(animalName);
+        } finally {
+            if (prevUser != null) game.setCurrentUser(prevUser);
+            if (prevPlayer != null) game.setCurrentPlayer(prevPlayer);
+        }
+    }
+
+    public void applyRemoteShepherdAnimal(String senderUsername, String animalName, int targetX, int targetY) {
+        if (game == null) return;
+        User senderUser = game.getUserByUsername(senderUsername);
+        Player senderPlayer = senderUser != null ? senderUser.getPlayer() : null;
+        if (senderPlayer == null) return;
+        for (Housing housing : senderPlayer.getHousings()) {
+            for (PurchasedAnimal animal : housing.getOccupants()) {
+                if (animal.getName().equals(animalName)) {
+                    animal.setTargetX(targetX);
+                    animal.setTargetY(targetY);
+                    animal.setMoving(true);
+                    animal.setMoveProgress(0f);
+                    // also set in/out cage based on tile
+                    if (game.getMap() != null) {
+                        Tile tile = game.getMap().getTile(targetX, targetY);
+                        if (tile != null && tile.getType() == TileType.Housing) {
+                            animal.setInCage(true);
+                        } else {
+                            animal.setInCage(false);
+                        }
+                    }
+                    return;
+                }
+            }
+        }
+    }
+
+    public void applyRemoteBringAnimalIn(String senderUsername, String animalName) {
+        if (game == null) return;
+        User senderUser = game.getUserByUsername(senderUsername);
+        Player senderPlayer = senderUser != null ? senderUser.getPlayer() : null;
+        if (senderPlayer == null) return;
+        for (Housing housing : senderPlayer.getHousings()) {
+            for (PurchasedAnimal animal : housing.getOccupants()) {
+                if (animal.getName().equals(animalName)) {
+                    animal.setInCage(true);
+                    animal.setMoving(false);
+                    animal.setMoveProgress(0f);
+                    return;
+                }
+            }
+        }
+    }
+
+    public void applyRemoteBringAnimalOut(String senderUsername, String animalName, int x, int y) {
+        if (game == null) return;
+        User senderUser = game.getUserByUsername(senderUsername);
+        Player senderPlayer = senderUser != null ? senderUser.getPlayer() : null;
+        if (senderPlayer == null) return;
+        for (Housing housing : senderPlayer.getHousings()) {
+            for (PurchasedAnimal animal : housing.getOccupants()) {
+                if (animal.getName().equals(animalName)) {
+                    animal.setInCage(false);
+                    animal.setX(x);
+                    animal.setY(y);
+                    animal.setTargetX(x);
+                    animal.setTargetY(y);
+                    animal.setMoving(false);
+                    animal.setMoveProgress(0f);
+                    return;
+                }
+            }
+        }
+    }
+
+    public void applyRemotePlantItem(String senderUsername, String seedEnumName, int x, int y) {
+        if (game == null || controller == null) return;
+        User prevUser = game.getUrrentUser();
+        Player prevPlayer = game.getCurrentPlayer();
+        User senderUser = game.getUserByUsername(senderUsername);
+        Player senderPlayer = senderUser != null ? senderUser.getPlayer() : null;
+        if (senderUser == null || senderPlayer == null) return;
+        try {
+            game.setCurrentUser(senderUser);
+            game.setCurrentPlayer(senderPlayer);
+            if (game.getMap() == null || !game.getMap().inBounds(x, y)) return;
+            Tile targetTile = game.getMap().getTile(x, y);
+            com.example.main.models.item.Seed seedToPlant = null;
+            try {
+                com.example.main.enums.items.ForagingSeedType type = com.example.main.enums.items.ForagingSeedType.valueOf(seedEnumName);
+                seedToPlant = new com.example.main.models.item.Seed(type, 1);
+            } catch (Exception ignored) {}
+            if (seedToPlant != null) {
+                controller.plantItem(seedToPlant, targetTile);
+                // Ensure local screen uses current map reference
+                this.gameMap = game.getMap();
+            }
+        } catch (Exception ignored) {
+        } finally {
+            if (prevUser != null) game.setCurrentUser(prevUser);
+            if (prevPlayer != null) game.setCurrentPlayer(prevPlayer);
+        }
+    }
+
+    public void applyRemoteAdvanceTime(String senderUsername, int hours) {
+        if (game == null || controller == null) return;
+        com.example.main.models.User prevUser = game.getUrrentUser();
+        com.example.main.models.Player prevPlayer = game.getCurrentPlayer();
+        com.example.main.models.User senderUser = game.getUserByUsername(senderUsername);
+        com.example.main.models.Player senderPlayer = senderUser != null ? senderUser.getPlayer() : null;
+        if (senderUser == null || senderPlayer == null) return;
+        try {
+            game.setCurrentUser(senderUser);
+            game.setCurrentPlayer(senderPlayer);
+            controller.changeTime(String.valueOf(hours));
+            this.gameMap = game.getMap();
+        } finally {
+            if (prevUser != null) game.setCurrentUser(prevUser);
+            if (prevPlayer != null) game.setCurrentPlayer(prevPlayer);
+        }
+    }
+
+    public void applyRemoteAdvanceDate(String senderUsername, int days) {
+        if (game == null || controller == null) return;
+        com.example.main.models.User prevUser = game.getUrrentUser();
+        com.example.main.models.Player prevPlayer = game.getCurrentPlayer();
+        com.example.main.models.User senderUser = game.getUserByUsername(senderUsername);
+        com.example.main.models.Player senderPlayer = senderUser != null ? senderUser.getPlayer() : null;
+        if (senderUser == null || senderPlayer == null) return;
+        try {
+            game.setCurrentUser(senderUser);
+            game.setCurrentPlayer(senderPlayer);
+            controller.changeDate(days);
+            this.gameMap = game.getMap();
+            // Align weather to main player's weather after day changes
+            com.example.main.models.User main = game.getMainPlayer();
+            if (main != null) {
+                com.example.main.enums.design.Weather w = game.getTodayWeather();
+                game.setTodayWeather(w);
+            }
+        } finally {
+            if (prevUser != null) game.setCurrentUser(prevUser);
+            if (prevPlayer != null) game.setCurrentPlayer(prevPlayer);
+        }
+    }
+
+    public void applyRemoteUseTool(String senderUsername, String toolEnumName, int targetX, int targetY) {
+        if (game == null || controller == null || game.getMap() == null) return;
+        if (!game.getMap().inBounds(targetX, targetY)) return;
+        com.example.main.models.User prevUser = game.getUrrentUser();
+        com.example.main.models.Player prevPlayer = game.getCurrentPlayer();
+        com.example.main.models.User senderUser = game.getUserByUsername(senderUsername);
+        com.example.main.models.Player senderPlayer = senderUser != null ? senderUser.getPlayer() : null;
+        if (senderUser == null || senderPlayer == null) return;
+        try {
+            game.setCurrentUser(senderUser);
+            game.setCurrentPlayer(senderPlayer);
+            // Ensure the sender has the tool equipped locally for consistent logic (watering can checks, etc.)
+            try {
+                com.example.main.enums.items.ToolType t = com.example.main.enums.items.ToolType.valueOf(toolEnumName);
+                // Try to find an owned instance first
+                for (com.example.main.models.item.Item it : senderPlayer.getInventory().getItems()) {
+                    if (it instanceof com.example.main.models.item.Tool tool && tool.getToolType() == t) {
+                        senderPlayer.setCurrentTool(tool);
+                        break;
+                    }
+                }
+                if (senderPlayer.getCurrentTool() == null || senderPlayer.getCurrentTool().getToolType() != t) {
+                    // fallback create a temporary tool if not found (shouldn't happen normally)
+                    com.example.main.models.item.Item tmp = com.example.main.models.item.ItemFactory.createItemOrThrow(t.getName(), 1);
+                    if (tmp instanceof com.example.main.models.item.Tool) {
+                        senderPlayer.setCurrentTool((com.example.main.models.item.Tool) tmp);
+                    }
+                }
+            } catch (Exception ignored) {}
+            com.example.main.models.Tile tile = game.getMap().getTile(targetX, targetY);
+            controller.useTool(tile);
+            this.gameMap = game.getMap();
+        } finally {
+            if (prevUser != null) game.setCurrentUser(prevUser);
+            if (prevPlayer != null) game.setCurrentPlayer(prevPlayer);
+        }
+    }
+
+    public void applyRemoteCheatLightning(String senderUsername, int x, int y) {
+        if (game == null || controller == null || game.getMap() == null) return;
+        if (!game.getMap().inBounds(x, y)) return;
+        com.example.main.models.User prevUser = game.getUrrentUser();
+        com.example.main.models.Player prevPlayer = game.getCurrentPlayer();
+        com.example.main.models.User senderUser = game.getUserByUsername(senderUsername);
+        com.example.main.models.Player senderPlayer = senderUser != null ? senderUser.getPlayer() : null;
+        if (senderUser == null || senderPlayer == null) return;
+        try {
+            game.setCurrentUser(senderUser);
+            game.setCurrentPlayer(senderPlayer);
+            controller.cheatLightning(String.valueOf(x), String.valueOf(y));
+            cheatLightningActive = true;
+            lightningDuration = 0.15f;
+            this.gameMap = game.getMap();
         } finally {
             if (prevUser != null) game.setCurrentUser(prevUser);
             if (prevPlayer != null) game.setCurrentPlayer(prevPlayer);

@@ -422,6 +422,179 @@ public class ClientMessageHandler {
                     }
                 });
             }
+            else if ("pet_animal".equals(action) && actionData instanceof java.util.Map) {
+                @SuppressWarnings("unchecked")
+                java.util.Map<String, Object> map = (java.util.Map<String, Object>) actionData;
+                String senderUsername = (String) map.get("senderUsername");
+                String animalName = (String) map.get("animalName");
+                Integer senderX = map.get("senderX") instanceof Number ? ((Number) map.get("senderX")).intValue() : null;
+                Integer senderY = map.get("senderY") instanceof Number ? ((Number) map.get("senderY")).intValue() : null;
+                com.badlogic.gdx.Gdx.app.postRunnable(() -> {
+                    com.badlogic.gdx.Screen current = com.example.main.Main.getInstance().getScreen();
+                    if (current instanceof com.example.main.GDXviews.GDXGameScreen) {
+                        ((com.example.main.GDXviews.GDXGameScreen) current).applyRemotePetAnimal(senderUsername, animalName, senderX, senderY);
+                    }
+                });
+            }
+            else if ("feed_hay".equals(action) && actionData instanceof java.util.Map) {
+                @SuppressWarnings("unchecked")
+                java.util.Map<String, Object> map = (java.util.Map<String, Object>) actionData;
+                String senderUsername = (String) map.get("senderUsername");
+                String animalName = (String) map.get("animalName");
+                Integer senderX = map.get("senderX") instanceof Number ? ((Number) map.get("senderX")).intValue() : null;
+                Integer senderY = map.get("senderY") instanceof Number ? ((Number) map.get("senderY")).intValue() : null;
+                com.badlogic.gdx.Gdx.app.postRunnable(() -> {
+                    com.badlogic.gdx.Screen current = com.example.main.Main.getInstance().getScreen();
+                    if (current instanceof com.example.main.GDXviews.GDXGameScreen) {
+                        ((com.example.main.GDXviews.GDXGameScreen) current).applyRemoteFeedHay(senderUsername, animalName, senderX, senderY);
+                    }
+                });
+            }
+            else if ("sell_animal".equals(action) && actionData instanceof java.util.Map) {
+                @SuppressWarnings("unchecked")
+                java.util.Map<String, Object> map = (java.util.Map<String, Object>) actionData;
+                String senderUsername = (String) map.get("senderUsername");
+                String animalName = (String) map.get("animalName");
+                com.badlogic.gdx.Gdx.app.postRunnable(() -> {
+                    com.badlogic.gdx.Screen current = com.example.main.Main.getInstance().getScreen();
+                    if (current instanceof com.example.main.GDXviews.GDXGameScreen) {
+                        ((com.example.main.GDXviews.GDXGameScreen) current).applyRemoteSellAnimal(senderUsername, animalName);
+                    }
+                });
+            }
+            else if ("collect_animal_product".equals(action) && actionData instanceof java.util.Map) {
+                @SuppressWarnings("unchecked")
+                java.util.Map<String, Object> map = (java.util.Map<String, Object>) actionData;
+                String senderUsername = (String) map.get("senderUsername");
+                String animalName = (String) map.get("animalName");
+                com.badlogic.gdx.Gdx.app.postRunnable(() -> {
+                    com.badlogic.gdx.Screen current = com.example.main.Main.getInstance().getScreen();
+                    if (current instanceof com.example.main.GDXviews.GDXGameScreen) {
+                        ((com.example.main.GDXviews.GDXGameScreen) current).applyRemoteCollectAnimalProduct(senderUsername, animalName);
+                    }
+                });
+            }
+            else if ("shepherd_animal".equals(action) && actionData instanceof java.util.Map) {
+                @SuppressWarnings("unchecked")
+                java.util.Map<String, Object> map = (java.util.Map<String, Object>) actionData;
+                String senderUsername = (String) map.get("senderUsername");
+                String animalName = (String) map.get("animalName");
+                int targetX = ((Number) map.get("targetX")).intValue();
+                int targetY = ((Number) map.get("targetY")).intValue();
+                com.badlogic.gdx.Gdx.app.postRunnable(() -> {
+                    com.badlogic.gdx.Screen current = com.example.main.Main.getInstance().getScreen();
+                    if (current instanceof com.example.main.GDXviews.GDXGameScreen) {
+                        ((com.example.main.GDXviews.GDXGameScreen) current).applyRemoteShepherdAnimal(senderUsername, animalName, targetX, targetY);
+                    }
+                });
+            }
+            else if ("bring_animal_in".equals(action) && actionData instanceof java.util.Map) {
+                @SuppressWarnings("unchecked")
+                java.util.Map<String, Object> map = (java.util.Map<String, Object>) actionData;
+                String senderUsername = (String) map.get("senderUsername");
+                String animalName = (String) map.get("animalName");
+                com.badlogic.gdx.Gdx.app.postRunnable(() -> {
+                    com.badlogic.gdx.Screen current = com.example.main.Main.getInstance().getScreen();
+                    if (current instanceof com.example.main.GDXviews.GDXGameScreen) {
+                        ((com.example.main.GDXviews.GDXGameScreen) current).applyRemoteBringAnimalIn(senderUsername, animalName);
+                    }
+                });
+            }
+            else if ("bring_animal_out".equals(action) && actionData instanceof java.util.Map) {
+                @SuppressWarnings("unchecked")
+                java.util.Map<String, Object> map = (java.util.Map<String, Object>) actionData;
+                String senderUsername = (String) map.get("senderUsername");
+                String animalName = (String) map.get("animalName");
+                int targetX = ((Number) map.get("targetX")).intValue();
+                int targetY = ((Number) map.get("targetY")).intValue();
+                com.badlogic.gdx.Gdx.app.postRunnable(() -> {
+                    com.badlogic.gdx.Screen current = com.example.main.Main.getInstance().getScreen();
+                    if (current instanceof com.example.main.GDXviews.GDXGameScreen) {
+                        ((com.example.main.GDXviews.GDXGameScreen) current).applyRemoteBringAnimalOut(senderUsername, animalName, targetX, targetY);
+                    }
+                });
+            }
+            else if ("plant_item".equals(action) && actionData instanceof java.util.Map) {
+                @SuppressWarnings("unchecked")
+                java.util.Map<String, Object> map = (java.util.Map<String, Object>) actionData;
+                String senderUsername = (String) map.get("senderUsername");
+                String seedEnumName = (String) map.get("seedEnumName");
+                int x = ((Number) map.get("x")).intValue();
+                int y = ((Number) map.get("y")).intValue();
+                com.badlogic.gdx.Gdx.app.postRunnable(() -> {
+                    com.badlogic.gdx.Screen current = com.example.main.Main.getInstance().getScreen();
+                    if (current instanceof com.example.main.GDXviews.GDXGameScreen) {
+                        ((com.example.main.GDXviews.GDXGameScreen) current).applyRemotePlantItem(senderUsername, seedEnumName, x, y);
+                    }
+                });
+            }
+            else if ("cheat_advance_time".equals(action) && actionData instanceof java.util.Map) {
+                @SuppressWarnings("unchecked")
+                java.util.Map<String, Object> map = (java.util.Map<String, Object>) actionData;
+                String senderUsername = (String) map.get("senderUsername");
+                int hours = ((Number) map.get("hours")).intValue();
+                com.badlogic.gdx.Gdx.app.postRunnable(() -> {
+                    com.badlogic.gdx.Screen current = com.example.main.Main.getInstance().getScreen();
+                    if (current instanceof com.example.main.GDXviews.GDXGameScreen) {
+                        ((com.example.main.GDXviews.GDXGameScreen) current).applyRemoteAdvanceTime(senderUsername, hours);
+                    }
+                });
+            }
+            else if ("cheat_advance_date".equals(action) && actionData instanceof java.util.Map) {
+                @SuppressWarnings("unchecked")
+                java.util.Map<String, Object> map = (java.util.Map<String, Object>) actionData;
+                String senderUsername = (String) map.get("senderUsername");
+                int days = ((Number) map.get("days")).intValue();
+                String todayWeather = (String) map.get("todayWeather");
+                String tomorrowWeather = (String) map.get("tomorrowWeather");
+                com.badlogic.gdx.Gdx.app.postRunnable(() -> {
+                    com.badlogic.gdx.Screen current = com.example.main.Main.getInstance().getScreen();
+                    if (current instanceof com.example.main.GDXviews.GDXGameScreen) {
+                        ((com.example.main.GDXviews.GDXGameScreen) current).applyRemoteAdvanceDate(senderUsername, days);
+                        // After date advance, normalize weather to sender's
+                        if (todayWeather != null) {
+                            try {
+                                com.example.main.enums.design.Weather tw = com.example.main.enums.design.Weather.valueOf(todayWeather);
+                                com.example.main.GDXviews.GDXGameScreen screen = (com.example.main.GDXviews.GDXGameScreen) current;
+                                com.example.main.models.Game g = com.example.main.models.App.getInstance().getCurrentGame();
+                                if (g != null) {
+                                    g.setTodayWeather(tw);
+                                    if (tomorrowWeather != null) {
+                                        try { g.setTomorrowWeather(com.example.main.enums.design.Weather.valueOf(tomorrowWeather)); } catch (Exception ignored) {}
+                                    }
+                                }
+                            } catch (Exception ignored) {}
+                        }
+                    }
+                });
+            }
+            else if ("use_tool".equals(action) && actionData instanceof java.util.Map) {
+                @SuppressWarnings("unchecked")
+                java.util.Map<String, Object> map = (java.util.Map<String, Object>) actionData;
+                String senderUsername = (String) map.get("senderUsername");
+                String toolEnumName = (String) map.get("toolEnumName");
+                int targetX = ((Number) map.get("targetX")).intValue();
+                int targetY = ((Number) map.get("targetY")).intValue();
+                com.badlogic.gdx.Gdx.app.postRunnable(() -> {
+                    com.badlogic.gdx.Screen current = com.example.main.Main.getInstance().getScreen();
+                    if (current instanceof com.example.main.GDXviews.GDXGameScreen) {
+                        ((com.example.main.GDXviews.GDXGameScreen) current).applyRemoteUseTool(senderUsername, toolEnumName, targetX, targetY);
+                    }
+                });
+            }
+            else if ("cheat_lightning".equals(action) && actionData instanceof java.util.Map) {
+                @SuppressWarnings("unchecked")
+                java.util.Map<String, Object> map = (java.util.Map<String, Object>) actionData;
+                String senderUsername = (String) map.get("senderUsername");
+                int x = ((Number) map.get("x")).intValue();
+                int y = ((Number) map.get("y")).intValue();
+                com.badlogic.gdx.Gdx.app.postRunnable(() -> {
+                    com.badlogic.gdx.Screen current = com.example.main.Main.getInstance().getScreen();
+                    if (current instanceof com.example.main.GDXviews.GDXGameScreen) {
+                        ((com.example.main.GDXviews.GDXGameScreen) current).applyRemoteCheatLightning(senderUsername, x, y);
+                    }
+                });
+            }
             else if ("hug".equals(action) && actionData instanceof java.util.Map) {
                 @SuppressWarnings("unchecked")
                 java.util.Map<String, Object> map = (java.util.Map<String, Object>) actionData;
