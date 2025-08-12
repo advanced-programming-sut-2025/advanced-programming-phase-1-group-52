@@ -34,10 +34,10 @@ public class GDXInventoryScreen implements Screen {
         mainTable.setFillParent(true);
         stage.addActor(mainTable);
 
-                  Table navTable = new Table();
+        Table navTable = new Table();
         mainTable.top().add(navTable).pad(20);
 
-                  TextButton inventoryButton = new TextButton("Inventory", skin);
+        TextButton inventoryButton = new TextButton("Inventory", skin);
         TextButton skillsButton = new TextButton("Skills", skin);
         TextButton socialButton = new TextButton("Social", skin);
         TextButton mapButton = new TextButton("Map", skin);
