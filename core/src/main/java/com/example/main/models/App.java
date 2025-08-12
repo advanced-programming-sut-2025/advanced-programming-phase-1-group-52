@@ -23,6 +23,14 @@ public class App {
         return instance;
     }
 
+    public User findUser(String username){
+        List<User> users = getUsers();
+        for(User user : users){
+            if (user.getUsername().equals(username)) return user;
+        }
+        return null;
+    }
+
     public List<User> getUsers() {
         return AuthManager.getInstance().getAllUsers();
     }

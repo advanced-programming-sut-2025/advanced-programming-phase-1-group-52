@@ -87,11 +87,12 @@ public class GDXLoginMenu implements Screen {
     private void handleLogin() {
         String username = usernameField.getText();
         String password = passwordField.getText();
-        
+
         if (Main.isNetworkMode()) {
             // Network mode - authenticate with server
             handleNetworkLogin(username, password);
-        } else {
+        }
+        else {
             // Single player mode - use local authentication
             Result result = controller.login(username, password);
             messageLabel.setText(result.Message());
@@ -101,7 +102,7 @@ public class GDXLoginMenu implements Screen {
             }
         }
     }
-    
+
     private void handleNetworkLogin(String username, String password) {
         // In network mode, authenticate directly with server
         messageLabel.setText("Connecting to server...");
@@ -120,8 +121,12 @@ public class GDXLoginMenu implements Screen {
         // Authenticate with server. The response will be handled by ClientMessageHandler.
         if (networkService.authenticate(username, password)) {
             messageLabel.setText("Login request sent. Waiting for server response...");
-        } else {
-            messageLabel.setText("Failed to send login request.");
+        }
+        else {
+            User user;
+            if ((user = App.getInstance().findUser(username)) == null) messageLabel.setText("User not found!");
+            else if (!user.getPassword().equals(password)) messageLabel.setText("Password is incorrect!");
+            else messageLabel.setText("Failed to send login request.");
         }
     }
 

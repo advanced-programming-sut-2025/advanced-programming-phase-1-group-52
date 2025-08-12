@@ -99,7 +99,7 @@ public class GDXMainMenu implements Screen {
         // Update welcome message with current user from the global App singleton
         com.example.main.models.User currentUser = com.example.main.models.App.getInstance().getCurrentUser();
         if (currentUser != null && currentUser.getUsername() != null) {
-            welcomeLabel.setText("Welcome, " + currentUser.getUsername());
+            welcomeLabel.setText("Welcome, " + currentUser.getNickname());
         } else {
             welcomeLabel.setText("Welcome, Guest");
         }
