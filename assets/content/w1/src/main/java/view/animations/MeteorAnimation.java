@@ -27,7 +27,7 @@ public class MeteorAnimation extends Transition {
         this.pane = pane;
         this.meteor = meteor;
         hSpeed = ApplicationController.random.nextDouble(-1, 1);
-        
+
         this.setCycleCount(-1);
         this.setCycleDuration(Duration.millis(duration));
     }
@@ -36,14 +36,14 @@ public class MeteorAnimation extends Transition {
     protected void interpolate(double v) {
         double y = meteor.getY() + vSpeed;
         double x = meteor.getX() + hSpeed;
-        vSpeed += acceleration; // vSpeed + acceleration
+        vSpeed += acceleration;
 
         if (meteor.getBoundsInParent().intersects(cannon.getBoundsInParent())) {
            collision(meteor, cannon);
         }
 
         if (y >= pane.getHeight() - meteor.HEIGHT - 80) {
-            vSpeed = 2 * acceleration - vSpeed; // (-vSpeed' = -vSpeed - acceleration) + 2acceleration
+            vSpeed = 2 * acceleration - vSpeed;
             y = meteor.getY();
         }
         if (x <= 10 || x >= pane.getWidth() - meteor.WIDTH - 10) {
@@ -57,7 +57,7 @@ public class MeteorAnimation extends Transition {
     private void collision(Meteor meteor, Cannon cannon) {
         game.meteors.getChildren().remove(meteor);
         this.stop();
-        
+
         FadeTransition fadeTransition = new FadeTransition();
         fadeTransition.setNode(cannon);
         fadeTransition.setDuration(Duration.millis(1000));

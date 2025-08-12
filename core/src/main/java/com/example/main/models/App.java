@@ -23,6 +23,14 @@ public class App {
         return instance;
     }
 
+    public User findUser(String username){
+        List<User> users = getUsers();
+        for(User user : users){
+            if (user.getUsername().equals(username)) return user;
+        }
+        return null;
+    }
+
     public List<User> getUsers() {
         return AuthManager.getInstance().getAllUsers();
     }
@@ -76,9 +84,7 @@ public class App {
     }
 
     public void updateUserData() {
-        // User data is now managed by AuthManager
-        // This method is kept for compatibility
-    }
+                        }
 
     public User getUser(String hostUsername) {
         List<User> users = AuthManager.getInstance().getAllUsers();

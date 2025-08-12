@@ -66,8 +66,7 @@ public class GDXProfileMenu implements Screen {
         userInfoButton = new TextButton("Show User Info", skin);
         backButton = new TextButton("Back to Main Menu", skin);
 
-        // Add listeners to buttons
-        changeUsernameButton.addListener(new ClickListener() {
+                  changeUsernameButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
                 Result result = controller.changeUsername(usernameField.getText());
@@ -115,8 +114,7 @@ public class GDXProfileMenu implements Screen {
         });
 
 
-        // Layout the table
-        table.add(messageLabel).colspan(3).pad(10).center();
+                  table.add(messageLabel).colspan(3).pad(10).center();
         table.row();
         table.add(new Label("Change Username:", skin)).left().padRight(10);
         table.add(usernameField).width(200).pad(5);
@@ -146,8 +144,7 @@ public class GDXProfileMenu implements Screen {
 
     @Override
     public void show() {
-        // You can refresh user info here if needed when the screen is shown
-        String username = App.getInstance().getCurrentUser() != null ? App.getInstance().getCurrentUser().getUsername() : "Guest";
+                  String username = App.getInstance().getCurrentUser() != null ? App.getInstance().getCurrentUser().getUsername() : "Guest";
         userInfoLabel.setText("User: " + username);
         messageLabel.setText("");
     }

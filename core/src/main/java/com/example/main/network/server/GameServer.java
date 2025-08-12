@@ -27,11 +27,9 @@ import com.example.main.network.common.Message;
 import com.example.main.network.common.MessageType;
 import com.google.gson.Gson;
 
-/**
- * Main game server that handles multiple client connections
- */
+
 public class GameServer {
-    // All your existing fields remain the same...
+
     private final int port;
     private final ServerSocket serverSocket;
     private final AtomicBoolean running;
@@ -39,8 +37,8 @@ public class GameServer {
     private final ConcurrentHashMap<String, ClientHandler> connectedClients;
     private final ConcurrentHashMap<String, User> authenticatedUsers;
     private final ConcurrentHashMap<String, Lobby> lobbies;
-    private final ConcurrentHashMap<String, String> clientToLobby; // clientId -> lobbyId
-    private final ConcurrentHashMap<String, String> usernameToClientId; // username -> clientId
+    private final ConcurrentHashMap<String, String> clientToLobby;
+    private final ConcurrentHashMap<String, String> usernameToClientId;
     private Game game;
     private final List<User> availableUsers;
     private final ConcurrentHashMap<String, ConcurrentHashMap<String, FarmThemes>> lobbyFarmChoices;
@@ -48,7 +46,7 @@ public class GameServer {
 
 
     public GameServer(int port) throws IOException {
-        // Constructor remains the same
+
         this.port = port;
         this.serverSocket = new ServerSocket(port);
         this.running = new AtomicBoolean(false);
@@ -68,7 +66,7 @@ public class GameServer {
         running.set(true);
         System.out.println("Server is running and accepting connections...");
 
-        // Start heartbeat thread
+
         startHeartbeatThread();
 
         while (running.get()) {
@@ -90,12 +88,12 @@ public class GameServer {
     public void stop() {
         running.set(false);
 
-        // Disconnect all clients
+
         for (ClientHandler handler : connectedClients.values()) {
             handler.disconnect();
         }
 
-        // Shutdown executor service
+
         executorService.shutdown();
 
         try {
@@ -112,7 +110,7 @@ public class GameServer {
         connectedClients.put(clientId, handler);
         System.out.println("Client added: " + clientId + " (Total after: " + connectedClients.size() + ")");
 
-        // Print current authenticated users for debugging
+
         System.out.println("Current authenticated users: " + authenticatedUsers.size());
         for (Map.Entry<String, User> entry : authenticatedUsers.entrySet()) {
             System.out.println("  Authenticated user: " + entry.getValue().getUsername() + " (client ID: " + entry.getKey() + ")");
@@ -125,7 +123,7 @@ public class GameServer {
             handler.disconnect();
         }
 
-        // Remove authenticated user and logout from AuthManager
+
         User user = authenticatedUsers.remove(clientId);
         if (user != null) {
             usernameToClientId.remove(user.getUsername());
@@ -133,42 +131,42 @@ public class GameServer {
             authManager.logoutByUsername(user.getUsername());
             System.out.println("User logged out: " + user.getUsername());
 
-            // --- THIS IS THE NEW LOGIC ---
-            // Find which lobby (and therefore, game) the user was in.
+
+
             String lobbyId = clientToLobby.remove(clientId);
             if (lobbyId != null) {
                 Lobby lobby = lobbies.get(lobbyId);
                 if (lobby != null) {
                     lobby.removePlayer(clientId);
 
-                    // Check if there's an active game associated with this lobby.
+
                     Game activeGame = activeGames.get(lobbyId);
                     if (activeGame != null) {
-                        // Update the server's version of the game state.
+
                         activeGame.removePlayer(user.getUsername());
 
-                        // Create a PLAYER_LEAVE message to send to other clients.
+
                         HashMap<String, Object> body = new HashMap<>();
                         body.put("username", user.getUsername());
                         Message leaveMessage = new Message(body, MessageType.PLAYER_LEAVE);
 
-                        // Send the message to all remaining players in the lobby.
+
                         for (String remainingClientId : lobby.getPlayerIds()) {
                             sendMessageToClient(remainingClientId, leaveMessage);
                         }
                     }
 
-                    // If the lobby is now empty, clean it up.
+
                     if (lobby.getPlayerCount() == 0) {
                         lobbies.remove(lobbyId);
-                        activeGames.remove(lobbyId); // Also remove the game instance
+                        activeGames.remove(lobbyId);
                         System.out.println("Lobby " + lobbyId + " and its game have been removed.");
                     }
                 }
             }
-            // --- END OF NEW LOGIC ---
 
-            // This broadcast is for lobby screens, which is still needed.
+
+
             broadcastOnlineUsersUpdate();
         }
     }
@@ -176,7 +174,7 @@ public class GameServer {
     public boolean authenticateUser(String clientId, String username, String password) {
         System.out.println("TEST Authentication attempt for client " + clientId + ": username=" + username + ", password=" + password);
 
-        // Use the new AuthManager for authentication
+
         AuthManager authManager = AuthManager.getInstance();
         AuthResult result = authManager.authenticate(username, password);
 
@@ -205,24 +203,24 @@ public class GameServer {
     public String createLobby(String hostClientId) {
         System.out.println("Creating new lobby for client " + hostClientId);
 
-        // **THE CORE FIX IS HERE**
 
-        // 1. Get the authenticated user object for the host. This is now guaranteed to exist
-        //    because the ClientHandler checks for authentication.
+
+
+
         User hostUser = authenticatedUsers.get(hostClientId);
         if (hostUser == null) {
             System.err.println("[SERVER ERROR] createLobby was called for an unauthenticated client ID: " + hostClientId);
-            return null; // A safeguard in case the check in ClientHandler fails.
+            return null;
         }
 
-        // 2. Create the lobby using your existing constructor.
+
         String lobbyId = UUID.randomUUID().toString();
         String lobbyName = hostUser.getUsername() + "'s Lobby";
         Lobby lobby = new Lobby(lobbyId, lobbyName, hostClientId, false, "", true);
         lobbies.put(lobbyId, lobby);
 
-        // 3. **IMMEDIATELY** add the host to the lobby's internal player list.
-        //    This ensures getHostUsername() will work correctly from now on.
+
+
         lobby.addPlayer(hostClientId, hostUser);
 
         System.out.println("Lobby " + lobbyId + " created for host " + hostUser.getUsername() + " and host was added as a player.");
@@ -238,7 +236,7 @@ public class GameServer {
 
         if (lobby.isPrivate()) {
             if (password == null || !lobby.checkPassword(password)) {
-                return false; // Wrong password
+                return false;
             }
         }
 
@@ -266,7 +264,7 @@ public class GameServer {
             lobby.removePlayer(clientId);
             System.out.println("Player left lobby " + lobbyId);
 
-            // If lobby is empty, remove it
+
             if (lobby.getPlayerCount() == 0) {
                 lobbies.remove(lobbyId);
                 System.out.println("Lobby " + lobbyId + " removed (empty)");
@@ -300,7 +298,7 @@ public class GameServer {
     }
 
     public List<User> getOnlinePlayers() {
-        // Use AuthManager to get online users
+
         AuthManager authManager = AuthManager.getInstance();
         List<String> onlineUsernames = authManager.getOnlineUsers();
         List<User> onlineUsers = new ArrayList<>();
@@ -331,9 +329,9 @@ public class GameServer {
     public void broadcastOnlineUsersUpdate() {
         List<User> onlineUsers = new ArrayList<>(authenticatedUsers.values());
 
-        if (onlineUsers.size() < 1) return; // Don't broadcast an empty list or a list with one user
+        if (onlineUsers.size() < 1) return;
 
-        // Create a message with the list of online users
+
         java.util.HashMap<String, Object> messageData = new java.util.HashMap<>();
         messageData.put("users", onlineUsers);
         Message message = new Message(messageData, MessageType.ONLINE_USERS_UPDATE);
@@ -381,7 +379,7 @@ public class GameServer {
     }
 
     public void handlePlayerAction(String clientId, String action, Object actionData) {
-        // Handle player actions and forward to appropriate recipients
+
         User user = getAuthenticatedUser(clientId);
         if (user == null) {
             return;
@@ -393,10 +391,10 @@ public class GameServer {
         messageData.put("senderId", clientId);
         Message actionMessage = new Message(messageData, MessageType.PLAYER_ACTION);
 
-        // Prefer lobby-scoped routing
+
         String lobbyId = clientToLobby.get(clientId);
 
-        // Special-case: private talk -> route to receiver if online
+
         if ("talk".equals(action) && actionData instanceof Map) {
             try {
                 @SuppressWarnings("unchecked")
@@ -413,7 +411,7 @@ public class GameServer {
             }
         }
 
-        // Trade-specific direct routing
+
         if (lobbyId != null && actionData instanceof Map) {
             try {
                 Map<String, Object> map = (Map<String, Object>) actionData;
@@ -424,21 +422,21 @@ public class GameServer {
                         if (targetClient != null) { sendMessageToClient(targetClient, actionMessage); return; }
                     }
                 } else if ("trade_invite_response".equals(action)) {
-                    // deliver back to the original requester of the invite
+
                     String requester = (String) map.get("requesterUsername");
                     if (requester != null) {
                         String targetClient = getClientIdByUsername(requester);
                         if (targetClient != null) { sendMessageToClient(targetClient, actionMessage); return; }
                     }
                 } else if ("trade_finalize_request".equals(action)) {
-                    // deliver finalize prompt to the partner (the receiver)
+
                     String partner = (String) map.get("partner");
                     if (partner != null) {
                         String targetClient = getClientIdByUsername(partner);
                         if (targetClient != null) { sendMessageToClient(targetClient, actionMessage); return; }
                     }
                 } else if ("trade_finalize_response".equals(action)) {
-                    // deliver response back to initiator (not the responder)
+
                     String initiator = (String) map.get("initiator");
                     if (initiator != null) {
                         String targetClient = getClientIdByUsername(initiator);
@@ -457,17 +455,17 @@ public class GameServer {
                         if (targetClient != null) { sendMessageToClient(targetClient, actionMessage); return; }
                     }
                 } else if ("trade_respond".equals(action)) {
-                    // Route respond application to the partner (receiver)
+
                     String partner = (String) map.get("partner");
                     if (partner != null) {
                         String targetClient = getClientIdByUsername(partner);
                         if (targetClient != null) { sendMessageToClient(targetClient, actionMessage); return; }
                     }
                 } else if ("vote_terminate_start".equals(action)) {
-                    // Broadcast start of vote to lobby others
+
                     if (lobbyId != null) { sendMessageToLobbyOthers(lobbyId, actionMessage, clientId); return; }
                 } else if ("vote_terminate_update".equals(action)) {
-                    // Broadcast vote progress to lobby others
+
                     if (lobbyId != null) { sendMessageToLobbyOthers(lobbyId, actionMessage, clientId); return; }
                 } else if ("kick_vote_start".equals(action)) {
                     if (lobbyId != null) { sendMessageToLobbyOthers(lobbyId, actionMessage, clientId); return; }
@@ -477,7 +475,7 @@ public class GameServer {
             } catch (Exception ignored) {}
         }
 
-        // Fallback: broadcast to others in the same lobby if available, else to all others
+
         if (lobbyId != null) {
             sendMessageToLobbyOthers(lobbyId, actionMessage, clientId);
         } else {
@@ -500,7 +498,7 @@ public class GameServer {
             ArrayList<User> players = new ArrayList<>(authenticatedUsers.values());
             this.game = new Game(players);
 
-            // Broadcast game start to all clients
+
             java.util.HashMap<String, Object> gameData = new java.util.HashMap<>();
             gameData.put("game", game);
             Message gameStateMessage = new Message(gameData, MessageType.GAME_STATE);
@@ -549,8 +547,8 @@ public class GameServer {
     }
 
     private User findUserByUsername(String username) {
-        // In a real application, this would query a database
-        // For now, we'll use the available users list
+
+
         for (User user : availableUsers) {
             if (user.getUsername().equals(username)) {
                 return user;
@@ -572,7 +570,7 @@ public class GameServer {
     }
 
     public void handlePlayerMove(String lobbyId, String clientId, int newX, int newY) {
-        // **THE FIX**: This lookup will now succeed because the game was stored.
+
         Game game = activeGames.get(lobbyId);
         if (game == null) {
             System.err.println("[SERVER WARNING] Received move for a non-existent game: " + lobbyId);
@@ -653,12 +651,12 @@ public class GameServer {
         }
     }
 
-    // --- THIS IS THE FINAL, CORRECTED METHOD ---
+
     private Game createGameFromLobby(Lobby lobby, Map<String, FarmThemes> choices) {
-        // Step 1: Get ONLY the real players from the lobby.
+
         ArrayList<User> realPlayers = new ArrayList<>(lobby.getPlayers().values());
 
-        // Step 2: Set up the Player object for each REAL user.
+
         for (int i = 0; i < realPlayers.size(); i++) {
             User user = realPlayers.get(i);
             if (user.getPlayer() == null) {
@@ -671,13 +669,13 @@ public class GameServer {
             }
         }
 
-        // Step 3: CRITICAL FIX - Call the Game constructor with ONLY the list of real players.
+
         Game newGame = new Game(realPlayers);
         if (!realPlayers.isEmpty()) {
             newGame.setMainPlayer(realPlayers.get(0));
         }
 
-        // Step 4: For the visual GameMap, create a SEPARATE padded list.
+
         List<User> playersForMapLayout = new ArrayList<>(realPlayers);
         while (playersForMapLayout.size() < 4) {
             playersForMapLayout.add(new User("empty_slot_" + playersForMapLayout.size(), "", "", "", null));
@@ -717,18 +715,18 @@ public class GameServer {
         if (lobbyId == null) return;
 
         try {
-            // --- THIS IS THE CORRECTED LOGIC ---
 
-            // 1. Get the raw, generic object from the message. It's currently a LinkedTreeMap.
+
+
             Object rawSnapshotObject = message.getFromBody("gameMapSnapshot");
 
-            // 2. Create a new Gson instance to perform the explicit conversion.
+
             Gson gson = new Gson();
 
-            // 3. Convert the generic map into our specific GameMapSnapshot object.
+
             GameMapSnapshot snapshot = gson.fromJson(gson.toJson(rawSnapshotObject), GameMapSnapshot.class);
 
-            // --- END OF CORRECTION ---
+
 
             if (snapshot != null) {
                 System.out.println("[SERVER LOG] Received and converted host map snapshot. Forwarding to guests.");
@@ -736,7 +734,7 @@ public class GameServer {
                 Message syncMessage = new Message(new HashMap<>(), MessageType.SYNC_GAME_MAP);
                 syncMessage.putInBody("gameMapSnapshot", snapshot);
 
-                // Forward the validated snapshot to all OTHER players
+
                 Lobby lobby = lobbies.get(lobbyId);
                 if (lobby != null) {
                     for (String otherPlayerId : lobby.getPlayerIds()) {
@@ -758,13 +756,13 @@ public class GameServer {
         try {
             GameServer server = new GameServer(NetworkConstants.DEFAULT_PORT);
 
-            // Add some test users
+
             server.addAvailableUser(new User("player1", "password1", "Player 1", "player1@test.com", null));
             server.addAvailableUser(new User("player2", "password2", "Player 2", "player2@test.com", null));
             server.addAvailableUser(new User("player3", "password3", "Player 3", "player3@test.com", null));
             server.addAvailableUser(new User("player4", "password4", "Player 4", "player4@test.com", null));
 
-            // Add shutdown hook
+
             Runtime.getRuntime().addShutdownHook(new Thread(server::stop));
 
             server.start();

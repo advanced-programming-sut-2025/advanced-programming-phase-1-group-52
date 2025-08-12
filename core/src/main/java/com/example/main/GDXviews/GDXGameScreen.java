@@ -129,13 +129,11 @@ public class GDXGameScreen implements Screen {
     private boolean showMinimap = false;
     private boolean mKeyPressed = false;
 
-    // Trade menu variables
-    private boolean showTradeMenu = false;
+          private boolean showTradeMenu = false;
     private boolean tKeyPressed = false;
     private Table tradeMenuTable;
 
-    // Trade menu state management
-    private enum TradeMenuState {
+          private enum TradeMenuState {
         NEW_TRADE_NOTIFICATIONS,
         MAIN_MENU,
         PLAYER_SELECTION,
@@ -148,8 +146,7 @@ public class GDXGameScreen implements Screen {
     private TradeMenuState currentTradeMenuState = TradeMenuState.MAIN_MENU;
     private List<String> newTradeNotifications = new ArrayList<>();
 
-    // Trade form data
-    private String selectedPlayerForTrade = null;
+          private String selectedPlayerForTrade = null;
     private String selectedTradeType = null;
     private String itemName = "";
     private int itemAmount = 1;
@@ -160,21 +157,18 @@ public class GDXGameScreen implements Screen {
     private int receivingItemAmount = 1;
     private String tradeErrorMessage = "";
 
-    // Shop menu variables
-    private boolean showShopMenu = false;
+          private boolean showShopMenu = false;
     private Table shopMenuTable;
     private ShopType currentShopType = null;
     private StoreMenuController shopController;
 
-    // Building placement mode variables
-    private boolean isBuildingPlacementMode = false;
+          private boolean isBuildingPlacementMode = false;
     private String buildingToPlace = null;
     private Texture buildingPlacementTexture = null;
     private float buildingPlacementX = 0f;
     private float buildingPlacementY = 0f;
 
-    // Shop menu state management
-    private enum ShopMenuState {
+          private enum ShopMenuState {
         MAIN_MENU,
         ALL_PRODUCTS,
         AVAILABLE_PRODUCTS
@@ -184,14 +178,12 @@ public class GDXGameScreen implements Screen {
     private String shopResultMessage = "";
     private boolean shopResultSuccess = false;
 
-    // Time-related variables
-    private float timeAccumulator = 0f;
+          private float timeAccumulator = 0f;
     private static final float SECONDS_PER_10_IN_GAME_MINUTES = 5f;
 
     private TextureManager textureManager;
 
-    // HUD Assets
-    private Texture clockTexture;
+          private Texture clockTexture;
     private BitmapFont hudFont;
 
     private Texture rainTexture;
@@ -200,23 +192,20 @@ public class GDXGameScreen implements Screen {
     private Array<Rectangle> snowParticles;
     private float weatherStateTime = 0f;
 
-    //Inventory Fields
-    private boolean isInventoryOpen = false;
+          private boolean isInventoryOpen = false;
     private Stage inventoryStage;
     private Texture inventoryBackground;
     private Table menuContentTable;
     private Table mainInventoryContainer;
 
-    // NEW: Tool Selection Menu Fields
-    private boolean isToolMenuOpen = false;
+          private boolean isToolMenuOpen = false;
     private Stage toolMenuStage;
     private ArrayList<Tool> playerTools;
     private int currentToolIndex = 0;
     private Image currentToolImage;
     private Label currentToolLabel;
 
-    // NEW: Storm Effect Fields
-    private float stormEffectTimer = 0f;
+          private float stormEffectTimer = 0f;
     private float nextLightningTime = 0f;
     private boolean lightningActive = false;
     private float lightningDuration = 0f;
@@ -226,8 +215,7 @@ public class GDXGameScreen implements Screen {
     private Tile plantingTargetTile = null;
     private Label plantingPromptLabel;
 
-    // Cheat Menu Fields
-    private boolean isCheatMenuOpen = false;
+          private boolean isCheatMenuOpen = false;
     private Stage cheatMenuStage;
     private TextField cheatItemNameField;
     private TextField cheatItemQuantityField;
@@ -251,21 +239,17 @@ public class GDXGameScreen implements Screen {
 
     private PlayerActionState playerActionState = PlayerActionState.IDLE;
     private float actionTimer = 0f;
-    private static final float ACTION_ANIMATION_DURATION = 0.5f; // Duration for animations in seconds
-
-    // Crafting Menu Fields
-    private boolean isCraftingMenuOpen = false;
+    private static final float ACTION_ANIMATION_DURATION = 0.5f;
+          private boolean isCraftingMenuOpen = false;
     private Stage craftingStage;
     private Table craftingMenuContentTable;
 
-    // Cooking Menu Fields
-    private boolean isCookingMenuOpen = false;
+          private boolean isCookingMenuOpen = false;
     private Stage cookingStage;
     private Table cookingMenuContentTable;
     private Table fridgeContentTable;
 
-    // ADD THESE NEW FIELDS
-    private boolean isCraftingCheatMenuOpen = false;
+          private boolean isCraftingCheatMenuOpen = false;
     private Stage craftingCheatMenuStage;
     private TextField cheatCraftingRecipeField;
 
@@ -273,14 +257,12 @@ public class GDXGameScreen implements Screen {
     private Stage cookingCheatMenuStage;
     private TextField cheatCookingRecipeField;
 
-    // Eat Menu Fields
-    private boolean isEatMenuOpen = false;
+          private boolean isEatMenuOpen = false;
     private Stage eatMenuStage;
     private ArrayList<Food> playerFoodItems;
     private int selectedFoodIndex = 0;
 
-    // Trade Menu (fresh implementation)
-    private boolean isTradeMenuOpen = false;
+          private boolean isTradeMenuOpen = false;
     private Stage tradeMenuStage;
     private Table tradeMenuRoot;
 
@@ -291,8 +273,7 @@ public class GDXGameScreen implements Screen {
     }
     private TradeMenuPage tradeMenuPage = TradeMenuPage.MAIN;
 
-    // Live trade state
-    private boolean isTradeWaitingForResponse = false;
+          private boolean isTradeWaitingForResponse = false;
     private String tradeInviteTargetUsername = null;
     private String tradeInviteSenderUsername = null;
 
@@ -377,8 +358,7 @@ public class GDXGameScreen implements Screen {
             TextButton playerBtn = new TextButton(user.getUsername(), skin);
             playerBtn.addListener(new ClickListener(){
                 @Override public void clicked(InputEvent event, float x, float y){
-                    // Send trade invite via network
-                    com.example.main.service.NetworkService ns = com.example.main.models.App.getInstance().getNetworkService();
+                                          com.example.main.service.NetworkService ns = com.example.main.models.App.getInstance().getNetworkService();
                     if (ns != null) {
                         java.util.HashMap<String, Object> data = new java.util.HashMap<>();
                         data.put("senderUsername", game.getCurrentPlayer().getUsername());
@@ -393,8 +373,7 @@ public class GDXGameScreen implements Screen {
                         tradeWaitingDialog.show(tradeMenuStage);
                         tradeWaitingDialog.setModal(true);
                         tradeWaitingDialog.setMovable(false);
-                        // Cancel -> close waiting
-                        final String targetName = user.getUsername();
+                                                  final String targetName = user.getUsername();
                         Dialog dlgRef = tradeWaitingDialog;
                         tradeWaitingDialog = new Dialog("Waiting", skin) {
                             @Override
@@ -485,14 +464,12 @@ public class GDXGameScreen implements Screen {
         if (tradeMenuRoot != null) { tradeMenuRoot.remove(); tradeMenuRoot = null; }
     }
 
-    // Networking callbacks for trade invites
-    public void onTradeInviteReceived(String senderUsername, String targetUsername) {
+          public void onTradeInviteReceived(String senderUsername, String targetUsername) {
         if (game == null || controller == null) return;
         if (game.getCurrentPlayer() == null) return;
         if (!game.getCurrentPlayer().getUsername().equals(targetUsername)) return;
 
-        // Bottom-right popup using Window
-        if (tradeInvitePopup != null) {
+                  if (tradeInvitePopup != null) {
             tradeInvitePopup.remove();
             tradeInvitePopup = null;
         }
@@ -557,8 +534,7 @@ public class GDXGameScreen implements Screen {
             showTradeMainMenu();
             return;
         }
-        // Accepted → open live trade UI for both
-        openLiveTrade(requesterUsername, responderUsername, true);
+                  openLiveTrade(requesterUsername, responderUsername, true);
     }
 
     private void openLiveTrade(String initiatorUsername, String partnerUsername, boolean amInitiator) {
@@ -589,8 +565,8 @@ public class GDXGameScreen implements Screen {
         String selfUsername = game.getCurrentPlayer().getUsername();
         String leftOwner = amInitiator ? selfUsername : partnerUsername;
         String rightOwner = amInitiator ? partnerUsername : selfUsername;
-        boolean leftEnableAdd = amInitiator;  // initiator can add from their own list
-        boolean rightEnableAdd = amInitiator; // initiator can also add from partner's list
+        boolean leftEnableAdd = amInitiator;
+        boolean rightEnableAdd = amInitiator;
         populateInventoryList(liveTradeLeftList, leftOwner, leftEnableAdd);
         populateInventoryList(liveTradeRightList, rightOwner, rightEnableAdd);
         ScrollPane leftScroll = new ScrollPane(liveTradeLeftList, skin);
@@ -620,14 +596,11 @@ public class GDXGameScreen implements Screen {
             TextButton tradeBtn = new TextButton("Trade", skin);
             tradeBtn.addListener(new ClickListener(){
                 @Override public void clicked(InputEvent e, float x, float y){
-                    // Initiator creates TradeRequest locally first to obtain tradeId
-                    com.example.main.controller.TradeMenuController tmc = new com.example.main.controller.TradeMenuController();
+                                          com.example.main.controller.TradeMenuController tmc = new com.example.main.controller.TradeMenuController();
                     com.example.main.models.Result createRes = tmc.tradeRequest(partnerUsername, liveGivingItemName, String.valueOf(liveGivingAmount), liveReceivingItemName, String.valueOf(liveReceivingAmount));
-                    // Find created trade id on initiator side
-                    int tradeId = findMatchingTradeId(liveTradeInitiatorUsername, liveTradePartnerUsername, liveGivingItemName, liveGivingAmount, liveReceivingItemName, liveReceivingAmount);
+                                          int tradeId = findMatchingTradeId(liveTradeInitiatorUsername, liveTradePartnerUsername, liveGivingItemName, liveGivingAmount, liveReceivingItemName, liveReceivingAmount);
                     liveTradeIdInitiator = tradeId;
-                    // Broadcast trade_request so receiver also has the pending trade in their model
-                    com.example.main.service.NetworkService nsInit = com.example.main.models.App.getInstance().getNetworkService();
+                                          com.example.main.service.NetworkService nsInit = com.example.main.models.App.getInstance().getNetworkService();
                     if (nsInit != null) {
                         java.util.HashMap<String, Object> req = new java.util.HashMap<>();
                         req.put("senderUsername", liveTradeInitiatorUsername);
@@ -638,8 +611,7 @@ public class GDXGameScreen implements Screen {
                         req.put("receivingAmount", liveReceivingAmount);
                         nsInit.sendPlayerAction("trade_request", req);
                     }
-                    // Send finalize signal so receiver shows accept/reject (including tradeId)
-                    com.example.main.service.NetworkService ns = com.example.main.models.App.getInstance().getNetworkService();
+                                          com.example.main.service.NetworkService ns = com.example.main.models.App.getInstance().getNetworkService();
                     if (ns != null) {
                         java.util.HashMap<String, Object> data = new java.util.HashMap<>();
                         data.put("initiator", initiatorUsername);
@@ -691,8 +663,7 @@ public class GDXGameScreen implements Screen {
                         liveReceivingAmount = amt;
                     }
                     updateLiveTradeSummary();
-                    // sync live selection to partner
-                    com.example.main.service.NetworkService ns = com.example.main.models.App.getInstance().getNetworkService();
+                                          com.example.main.service.NetworkService ns = com.example.main.models.App.getInstance().getNetworkService();
                     if (ns != null) {
                         java.util.HashMap<String, Object> data = new java.util.HashMap<>();
                         data.put("initiator", liveTradeInitiatorUsername);
@@ -728,13 +699,10 @@ public class GDXGameScreen implements Screen {
         Gdx.input.setInputProcessor(multiplexer);
     }
 
-    // Live trade network update handlers
-    public void onTradeLiveUpdate(String initiator, String partner, String givingItemName, int givingAmount, String receivingItemName, int receivingAmount) {
-        // Only the counterpart should update from remote if they are part of this session
-        if (!isLiveTradeOpen) return;
+          public void onTradeLiveUpdate(String initiator, String partner, String givingItemName, int givingAmount, String receivingItemName, int receivingAmount) {
+                  if (!isLiveTradeOpen) return;
         if (!(initiator.equals(liveTradeInitiatorUsername) && partner.equals(liveTradePartnerUsername))) return;
-        // Mirror the initiator's latest selection in both UIs
-        liveGivingItemName = givingItemName;
+                  liveGivingItemName = givingItemName;
         liveGivingAmount = givingAmount;
         liveReceivingItemName = receivingItemName;
         liveReceivingAmount = receivingAmount;
@@ -745,8 +713,7 @@ public class GDXGameScreen implements Screen {
         if (game == null || controller == null) return;
         if (game.getCurrentPlayer() == null) return;
         String me = game.getCurrentPlayer().getUsername();
-        // Receiver shows accept/reject dialog
-        if (!me.equals(partner)) return;
+                  if (!me.equals(partner)) return;
         liveGivingItemName = givingItemName;
         liveGivingAmount = givingAmount;
         liveReceivingItemName = receivingItemName;
@@ -790,15 +757,13 @@ public class GDXGameScreen implements Screen {
             closeLiveTrade();
             return;
         }
-        // Initiator triggers TradeMenuController.respondToTrade after partner accepted
-        if (liveReceivingItemName == null || liveGivingItemName == null || liveGivingAmount <= 0 || liveReceivingAmount <= 0) {
+                  if (liveReceivingItemName == null || liveGivingItemName == null || liveGivingAmount <= 0 || liveReceivingAmount <= 0) {
             generalMessageLabel.setText("Incomplete trade selection.");
             generalMessageLabel.setVisible(true);
             generalMessageTimer = 3f;
             return;
         }
-        // Use the saved tradeId
-        int tradeId = liveTradeIdInitiator > 0 ? liveTradeIdInitiator : findMatchingTradeId(liveTradeInitiatorUsername, liveTradePartnerUsername, liveGivingItemName, liveGivingAmount, liveReceivingItemName, liveReceivingAmount);
+                  int tradeId = liveTradeIdInitiator > 0 ? liveTradeIdInitiator : findMatchingTradeId(liveTradeInitiatorUsername, liveTradePartnerUsername, liveGivingItemName, liveGivingAmount, liveReceivingItemName, liveReceivingAmount);
         if (tradeId <= 0) {
             generalMessageLabel.setText("Trade not found.");
             generalMessageLabel.setVisible(true);
@@ -812,8 +777,7 @@ public class GDXGameScreen implements Screen {
         generalMessageTimer = 4f;
         closeLiveTrade();
 
-        // Inform partner to apply the same respond with initiator context to avoid currentPlayer mix-ups
-        com.example.main.service.NetworkService ns = com.example.main.models.App.getInstance().getNetworkService();
+                  com.example.main.service.NetworkService ns = com.example.main.models.App.getInstance().getNetworkService();
         if (ns != null) {
             java.util.HashMap<String, Object> data = new java.util.HashMap<>();
             data.put("initiator", initiator);
@@ -828,8 +792,7 @@ public class GDXGameScreen implements Screen {
     }
 
     private int findMatchingTradeId(String initiator, String partner, String givingItem, int givingAmt, String receivingItem, int receivingAmt) {
-        // Search the initiator's trades for the latest matching pending request
-        User initiatorUser = game.getUserByUsername(initiator);
+                  User initiatorUser = game.getUserByUsername(initiator);
         if (initiatorUser != null && initiatorUser.getPlayer() != null) {
             java.util.ArrayList<Trade> trades = initiatorUser.getPlayer().getTrades();
             for (int i = trades.size() - 1; i >= 0; i--) {
@@ -852,8 +815,7 @@ public class GDXGameScreen implements Screen {
         return -1;
     }
 
-    // Apply remote creation of trade request so both clients have the Trade object
-    public void applyRemoteTradeRequest(String senderUsername, String receiverUsername, String givingItemName, int givingAmount, String receivingItemName, int receivingAmount) {
+          public void applyRemoteTradeRequest(String senderUsername, String receiverUsername, String givingItemName, int givingAmount, String receivingItemName, int receivingAmount) {
         if (game == null || controller == null) return;
         com.example.main.models.User prevUser = game.getUrrentUser();
         com.example.main.models.Player prevPlayer = game.getCurrentPlayer();
@@ -865,23 +827,21 @@ public class GDXGameScreen implements Screen {
             game.setCurrentPlayer(senderPlayer);
             com.example.main.controller.TradeMenuController tmc = new com.example.main.controller.TradeMenuController();
             tmc.tradeRequest(receiverUsername, givingItemName, String.valueOf(givingAmount), receivingItemName, String.valueOf(receivingAmount));
-            // Also mirror to ensure the receiver sees the trade in their own list if needed
-            com.example.main.models.User receiverUser = game.getUserByUsername(receiverUsername);
+                          com.example.main.models.User receiverUser = game.getUserByUsername(receiverUsername);
             if (receiverUser != null && receiverUser.getPlayer() != null) {
-                // no-op: controller already adds to both buyer and seller trades
-            }
+                              }
         } finally {
             if (prevUser != null) game.setCurrentUser(prevUser);
             if (prevPlayer != null) game.setCurrentPlayer(prevPlayer);
         }
     }
 
-    // Apply remote response from initiator on partner side with initiator context, then with partner context
+
     public void applyRemoteRespondToTrade(String initiatorUsername, String partnerUsername, boolean accepted,
                                           String givingItemName, int givingAmount, String receivingItemName, int receivingAmount) {
         if (!accepted) { closeLiveTrade(); return; }
         if (game == null) return;
-        // First, set context to initiator to locate the correct trade id
+
         com.example.main.models.User prevUser = game.getUrrentUser();
         com.example.main.models.Player prevPlayer = game.getCurrentPlayer();
         com.example.main.models.User initiatorUser = game.getUserByUsername(initiatorUsername);
@@ -898,7 +858,7 @@ public class GDXGameScreen implements Screen {
         }
         if (tradeId <= 0) return;
 
-        // Now respond with partner as current player to apply inventory changes correctly
+
         com.example.main.models.User partnerUser = game.getUserByUsername(partnerUsername);
         com.example.main.models.Player partnerPlayer = partnerUser != null ? partnerUser.getPlayer() : null;
         if (partnerUser == null || partnerPlayer == null) return;
@@ -916,7 +876,7 @@ public class GDXGameScreen implements Screen {
     private Image selectedFoodImage;
     private Label selectedFoodLabel;
 
-    // Eating Animation Fields
+
     private Texture eatingTexture;
     private float eatingAnimationTimer = 0f;
     private static final float EATING_ANIMATION_DURATION = 0.75f;
@@ -929,7 +889,7 @@ public class GDXGameScreen implements Screen {
     private int activeMachineTileX = -1;
     private int activeMachineTileY = -1;
 
-    // Fishing Minigame Fields
+
     private boolean isFishingMinigameActive = false;
     private Stage fishingStage;
     private Texture fishingBarBg, playerBarTexture, fishIconTexture, legendaryCrownTexture;
@@ -944,14 +904,14 @@ public class GDXGameScreen implements Screen {
     private boolean showReactionMenu = false;
     private HorizontalGroup emojiGroup;
     private Texture selectedEmojiTexture;
-    private float emojiDisplayTime = 0; // Timer to track display duration
-    private static final float EMOJI_DISPLAY_DURATION = 5.0f; // 5 seconds
+    private float emojiDisplayTime = 0;
+    private static final float EMOJI_DISPLAY_DURATION = 5.0f;
     private ArrayList<Image> emojiImages = new ArrayList<>();
     private int selectedEmojiIndex = 0;
     private ScrollPane emojiScrollPane;
     private TextButton leftArrowButton;
     private TextButton rightArrowButton;
-    // Multiplayer reactions: per-username reaction state
+
     private static class ReactionState { Texture texture; float remainingSeconds; }
     private java.util.Map<String, ReactionState> usernameToReaction = new java.util.HashMap<>();
 
@@ -1047,19 +1007,19 @@ public class GDXGameScreen implements Screen {
     private Texture foragingBuffTexture;
     private Texture fishingBuffTexture;
 
-    // NPC interaction state
+
     private ArrayList<NPC> nearbyNPCs = new ArrayList<>();
     private NPC currentDialogNPC = null;
     private String currentDialogMessage = "";
     private boolean showDialog = false;
-    private ArrayList<NPC> clickedNPCs = new ArrayList<>(); // Track which NPCs have been clicked
+    private ArrayList<NPC> clickedNPCs = new ArrayList<>();
 
-    // NPC menu state
+
     private boolean showNPCMenu = false;
     private NPC selectedNPC = null;
     private Table npcMenuTable;
 
-    // NPC menu state management
+
     private enum NPCMenuState {
         MAIN_MENU,
         FRIENDSHIP,
@@ -1069,7 +1029,7 @@ public class GDXGameScreen implements Screen {
 
     private NPCMenuState currentNPCMenuState = NPCMenuState.MAIN_MENU;
 
-    // Quest result message storage
+
     private String questResultMessage = "";
     private boolean questResultSuccess = false;
 
@@ -1130,11 +1090,11 @@ public class GDXGameScreen implements Screen {
     };
 
     private static final int[][] NPC_HOUSE_AREAS = {
-        {42, 46, 40, 46},  // Sebastian: (42,40) to (46,46) - 5x7 including walls
-        {52, 56, 40, 46},  // Abigail: (52,40) to (56,46) - 5x7 including walls
-        {32, 36, 50, 56},  // Harvey: (32,50) to (36,56) - 5x7 including walls
-        {42, 46, 50, 56},  // Lia: (42,50) to (46,56) - 5x7 including walls
-        {52, 56, 50, 56}   // Robin: (52,50) to (56,56) - 5x7 including walls
+        {42, 46, 40, 46},
+        {52, 56, 40, 46},
+        {32, 36, 50, 56},
+        {42, 46, 50, 56},
+        {52, 56, 50, 56}
     };
 
     private static final int[][] SHOP_POSITIONS = {
@@ -1148,42 +1108,42 @@ public class GDXGameScreen implements Screen {
     };
 
     private static final int[][] SHOP_AREAS = {
-        {32, 39, 2, 9},   // Blacksmith: (32,2) to (39,9) - 8x8 including walls
-        {46, 53, 2, 9},   // JojaMart: (46,2) to (53,9) - 8x8 including walls
-        {32, 39, 12, 19}, // PierresGeneralStore: (32,12) to (39,19) - 8x8 including walls
-        {46, 53, 12, 19}, // CarpentersShop: (46,12) to (53,19) - 8x8 including walls
-        {32, 39, 22, 29}, // FishShop: (32,22) to (39,29) - 8x8 including walls
-        {46, 53, 22, 29}, // MarniesRanch: (46,22) to (53,29) - 8x8 including walls
-        {32, 39, 32, 39}  // TheStardropSaloon: (32,32) to (39,39) - 8x8 including walls
+        {32, 39, 2, 9},
+        {46, 53, 2, 9},
+        {32, 39, 12, 19},
+        {46, 53, 12, 19},
+        {32, 39, 22, 29},
+        {46, 53, 22, 29},
+        {32, 39, 32, 39}
     };
 
     private static final int TILE_SIZE = 32;
     private static final int MAP_WIDTH = 90;
     private static final int MAP_HEIGHT = 60;
 
-    // Add state for gift mode and result message
+
     private boolean isGiftMode = false;
     private String giftResultMessage = "";
     private boolean giftResultSuccess = false;
 
-    // Animal menu
+
     private boolean showAnimalMenu = false;
     private PurchasedAnimal selectedAnimal = null;
     private Table animalMenuTable = null;
 
-    // Shepherd mode variables
+
     private boolean isShepherdMode = false;
     private String animalToShepherd = null;
 
-    // Animation system variables
+
     private ArrayList<AnimationEffect> activeAnimations = new ArrayList<>();
 
-    // Animation effect class
+
     private static class AnimationEffect {
         float x, y;
         float duration;
         float elapsed;
-        String type; // "food", "hearts", "bounce"
+        String type;
         float bounceHeight = 0f;
         float bounceSpeed = 0f;
 
@@ -1199,12 +1159,12 @@ public class GDXGameScreen implements Screen {
         }
     }
 
-    // Friends menu variables
+
     private boolean showFriendsMenu = false;
     private boolean fKeyPressed = false;
     private Table friendsMenuTable;
 
-    // Friends menu state management
+
     private enum FriendsMenuState {
         MAIN_MENU,
         PLAYER_ACTIONS,
@@ -1223,17 +1183,17 @@ public class GDXGameScreen implements Screen {
     private String friendshipResultMessage = "";
     private boolean friendshipResultSuccess = false;
 
-    // Chat room variables
+
     private TextField chatMessageField;
     private ScrollPane chatScrollPane;
     private Table chatMessagesTable;
 
-    // Add this field to track unread messages
+
     private Map<String, Boolean> unreadTalkNotifications = new HashMap<>();
-    // Add this for gift notifications
+
     private Map<String, Boolean> unreadGiftNotifications = new HashMap<>();
 
-    // Gift menu variables
+
     private Table giftMenuTable;
     private Table receivedGiftsTable;
     private Table giftHistoryTable;
@@ -1242,27 +1202,27 @@ public class GDXGameScreen implements Screen {
     private TextField giftRatingField;
     private String selectedGiftId = null;
 
-    // Sell menu variables
+
     private boolean showSellMenu = false;
     private Table sellMenuTable;
     private ScrollPane sellMenuScrollPane;
     private String sellErrorMessage = "";
     private boolean showSellError = false;
 
-    // Send gift variables
+
     private Table sendGiftTable;
     private ScrollPane sendGiftScrollPane;
     private String giftErrorMessage = "";
     private boolean showGiftError = false;
 
-    // Marriage variables
+
     private String marriageErrorMessage = "";
     private boolean showMarriageError = false;
     private String marriageProposer = null;
-    private Label loadingLabel; // NEW: To show loading status
+    private Label loadingLabel;
 
-    private Table scoreboardContainer; // The main container for the scoreboard UI
-    private Table scoreboardDisplayTable; // The inner table that shows the ranked list
+    private Table scoreboardContainer;
+    private Table scoreboardDisplayTable;
     private Label scoreboardTitle;
 
     private enum SortMode {
@@ -1280,7 +1240,7 @@ public class GDXGameScreen implements Screen {
         Gdx.input.setInputProcessor(stage);
         skin = new Skin(Gdx.files.internal("uiskin.json"));
 
-        // --- SETUP LOADING LABEL ---
+
         loadingLabel = new Label("Loading Map...", skin);
         Table loadingTable = new Table();
         loadingTable.setFillParent(true);
@@ -1345,26 +1305,26 @@ public class GDXGameScreen implements Screen {
         loadHudAssets();
         loadWeatherAssets();
 
-        // --- START: CORRECTED MAP INITIALIZATION LOGIC ---
+
         NetworkService networkService = App.getInstance().getNetworkService();
         this.networkController = networkService.getLobbyController();
         this.game = App.getInstance().getCurrentGame();
         controller.setGame(game);
-        this.gameMap = null; // Start as null for everyone
+        this.gameMap = null;
         this.localPlayer = game.getLocalPlayerUser().getPlayer();
 
         initializePlayerPosition();
 
-        // Determine if this client is the host
+
         String myUsername = App.getInstance().getCurrentUser().getUsername();
         String hostUsername = game.getMainPlayer().getUsername();
 
         if (myUsername.equals(hostUsername)) {
-            // --- HOST LOGIC ---
-            // The host proactively generates the map and sends it to the server.
+
+
             System.out.println("[GAMESCREEN - HOST] I am the host. Proactively generating and sending map.");
 
-            // 1. Create the GameMap object
+
             ArrayList<FarmThemes> themes = new ArrayList<>();
             for (User user : game.getPlayers()) {
                 if (!user.getUsername().startsWith("empty_slot_")) themes.add(user.getFarmTheme());
@@ -1372,31 +1332,31 @@ public class GDXGameScreen implements Screen {
             while (themes.size() < 4) themes.add(FarmThemes.Neutral);
             GameMap newMasterMap = new GameMap(game.getPlayers(), themes);
             game.setGameMap(newMasterMap);
-            // Ensure controller has a non-null map reference for gameplay logic (e.g., fishing)
+
             controller.setMap(newMasterMap);
 
-            // 2. Generate the random visual elements for the map
+
             generateRandomMaps();
 
-            // 3. Create the blueprint snapshot
+
             GameMapSnapshot snapshot = createMapSnapshot();
 
-            // 4. Send the snapshot to the server
+
             Message mapMessage = new Message(new HashMap<>(), MessageType.SEND_GAME_MAP);
             mapMessage.putInBody("gameMapSnapshot", snapshot);
             networkService.getClient().sendMessage(mapMessage);
 
-            // 5. Finally, set the local map so the host can see it and hide the loading message
+
             this.gameMap = newMasterMap;
             controller.setMap(this.gameMap);
             this.loadingLabel.setVisible(false);
 
         } else {
-            // --- GUEST LOGIC ---
-            // Guests do nothing but wait. The EventBus will notify them when the map arrives.
+
+
             System.out.println("[GAMESCREEN - GUEST] I am a guest. Waiting for map from server.");
         }
-        // --- END: CORRECTED MAP INITIALIZATION LOGIC ---
+
 
         inventoryStage = new Stage(new ScreenViewport());
         inventoryBackground = new Texture("content/Cut/menu_background.png");
@@ -1421,7 +1381,7 @@ public class GDXGameScreen implements Screen {
         multiplexer.addProcessor(inventoryStage);
         multiplexer.addProcessor(toolMenuStage);
         multiplexer.addProcessor(cheatMenuStage);
-        // trade menu stage
+
         if (tradeMenuStage == null) tradeMenuStage = new Stage(new ScreenViewport());
         multiplexer.addProcessor(tradeMenuStage);
         multiplexer.addProcessor(craftingStage);
@@ -1435,7 +1395,7 @@ public class GDXGameScreen implements Screen {
         plantableItems = new ArrayList<>();
         Gdx.input.setInputProcessor(multiplexer);
 
-        // Subscribe to events so the GUEST client can receive the map.
+
         subscribeToEvents();
         System.out.println("[GAMESCREEN] Constructor END. Now listening for events.");
     }
@@ -1447,9 +1407,9 @@ public class GDXGameScreen implements Screen {
 
     private void loadHudAssets() {
         clockTexture = new Texture("content/clock/Clock.png");
-        hudFont = new BitmapFont(); // Use the default LibGDX font
-        hudFont.setColor(Color.WHITE); // Changed to WHITE for better contrast
-        hudFont.getData().setScale(1.5f); // Adjust scale as needed
+        hudFont = new BitmapFont();
+        hudFont.setColor(Color.WHITE);
+        hudFont.getData().setScale(1.5f);
     }
 
     private void updateTime(float delta) {
@@ -1470,8 +1430,8 @@ public class GDXGameScreen implements Screen {
             if (scoreboardContainer != null && scoreboardContainer.isVisible()) {
                 scoreboardUpdateTimer -= delta;
                 if (scoreboardUpdateTimer <= 0f) {
-                    updateScoreboard(); // Refresh the scoreboard data
-                    scoreboardUpdateTimer = SCOREBOARD_UPDATE_INTERVAL; // Reset the timer
+                    updateScoreboard();
+                    scoreboardUpdateTimer = SCOREBOARD_UPDATE_INTERVAL;
                 }
             }
 
@@ -1499,7 +1459,7 @@ public class GDXGameScreen implements Screen {
                 updateTime(delta);
             }
 
-            // Update general message timer
+
             if (generalMessageTimer > 0) {
                 generalMessageTimer -= delta;
                 if (generalMessageTimer <= 0) {
@@ -1511,24 +1471,17 @@ public class GDXGameScreen implements Screen {
             if (currentPlayer != null && !currentPlayer.getNotifications().isEmpty()) {
                 Notification notif = currentPlayer.getNotifications().get(0);
                 generalMessageLabel.setText(notif.getMessage());
-                generalMessageLabel.setColor(Color.CYAN); // Use a distinct color for notifications
+                generalMessageLabel.setColor(Color.CYAN);
                 generalMessageLabel.setVisible(true);
                 generalMessageTimer = GENERAL_MESSAGE_DURATION;
             }
 
             if (currentPlayer != null && currentPlayer.getCurrentTool() != null) {
-                // Get mouse position in screen coordinates
                 float mouseX = Gdx.input.getX();
                 float mouseY = Gdx.input.getY();
-
-                // Convert mouse position to world coordinates
                 com.badlogic.gdx.math.Vector3 mouseInWorld = camera.unproject(new com.badlogic.gdx.math.Vector3(mouseX, mouseY, 0));
-
-                // Get player's center position in world coordinates
                 float playerCenterX = (currentPlayer.currentX() * TILE_SIZE) + (TILE_SIZE / 2f);
                 float playerCenterY = ((MAP_HEIGHT - 1 - currentPlayer.currentY()) * TILE_SIZE) + (TILE_SIZE / 2f);
-
-                // Calculate the angle
                 float deltaX = mouseInWorld.x - playerCenterX;
                 float deltaY = mouseInWorld.y - playerCenterY;
                 toolRotation = com.badlogic.gdx.math.MathUtils.atan2(deltaY, deltaX) * com.badlogic.gdx.math.MathUtils.radiansToDegrees;
@@ -1545,32 +1498,28 @@ public class GDXGameScreen implements Screen {
             renderAnimals();
             renderMachinePlacement(spriteBatch);
 
-            // Draw reactions above players' heads for all users
             if (game != null && game.getPlayers() != null && !usernameToReaction.isEmpty()) {
                 for (User u : game.getPlayers()) {
                     if (u == null || u.getPlayer() == null || u.getUsername().startsWith("empty_slot_")) continue;
                     ReactionState rs = usernameToReaction.get(u.getUsername());
                     if (rs == null || rs.texture == null || rs.remainingSeconds <= 0f) continue;
-                    // Decrement remaining time
+
                     rs.remainingSeconds -= delta;
                     if (rs.remainingSeconds <= 0f) { usernameToReaction.remove(u.getUsername()); continue; }
-                    // Compute world position just above player's head
+
                     float worldX = u.getPlayer().currentX() * TILE_SIZE;
                     float worldY = (MAP_HEIGHT - 1 - u.getPlayer().currentY()) * TILE_SIZE;
                     Texture ptex = getPlayerTexture(u.getPlayer());
-                    float playerHeight = ptex != null ? ptex.getHeight() * 2f : TILE_SIZE * 2f; // fallback
+                    float playerHeight = ptex != null ? ptex.getHeight() * 2f : TILE_SIZE * 2f;
                     float scaledEmojiWidth = rs.texture.getWidth() * 0.5f;
                     float scaledEmojiHeight = rs.texture.getHeight() * 0.5f;
                     float emojiDrawX = worldX + (TILE_SIZE / 2f) - (scaledEmojiWidth / 2f);
-                    float emojiDrawY = worldY + playerHeight + 6f; // a small offset above head
+                    float emojiDrawY = worldY + playerHeight + 6f;
                     spriteBatch.draw(rs.texture, emojiDrawX, emojiDrawY, scaledEmojiWidth, scaledEmojiHeight);
                 }
             }
-
             spriteBatch.end();
-
             renderAnimations();
-
             renderWeather(delta);
             renderDayNightOverlay();
             renderCheatMenu(delta);
@@ -1579,19 +1528,16 @@ public class GDXGameScreen implements Screen {
             if (showMinimap) {
                 renderMinimap();
             }
-
             renderWeather(delta);
             renderHud();
             renderDayNightOverlay();
             renderToolMenu(delta);
             renderInventoryOverlay(delta);
 
-            // Render building placement preview
             if (isBuildingPlacementMode && buildingPlacementTexture != null) {
                 renderBuildingPlacementPreview();
             }
 
-            // Render shepherd mode UI
             renderShepherdModeUI();
             renderCrowAnimations(delta);
             renderCraftingMenu(delta);
@@ -1606,11 +1552,9 @@ public class GDXGameScreen implements Screen {
         }
         machineUiStage.act(delta);
         machineUiStage.draw();
-
         stage.act(delta);
         stage.draw();
 
-        // Always draw trade menu stage on top if open
         if (isTradeMenuOpen && tradeMenuStage != null) {
             tradeMenuStage.getViewport().update(Gdx.graphics.getWidth(), Gdx.graphics.getHeight(), true);
             tradeMenuStage.act(delta);
@@ -1704,7 +1648,7 @@ public class GDXGameScreen implements Screen {
         barnTexture = textureManager.getTexture("Barn");
         coopTexture = textureManager.getTexture("Coop");
 
-        // Load trash can textures
+
         trashCanTexture = textureManager.getTexture("Trash_Can");
         copperTrashCanTexture = textureManager.getTexture("Trash_Can");
         steelTrashCanTexture = textureManager.getTexture("Trash_Can");
@@ -1747,22 +1691,22 @@ public class GDXGameScreen implements Screen {
         femaleRight1Texture = textureManager.getTexture("female_right1");
         femaleRight2Texture = textureManager.getTexture("female_right2");
 
-        // Load NPC textures
+
         sebastianTexture = textureManager.getTexture("sebastian");
         abigailTexture = textureManager.getTexture("abigail");
         harveyTexture = textureManager.getTexture("harvey");
         liaTexture = textureManager.getTexture("lia");
         robinTexture = textureManager.getTexture("robin");
 
-        // Load NPC interaction textures
+
         dialogBoxTexture = textureManager.getTexture("dialog_box");
         menuBackgroundTexture = textureManager.getTexture("menu_background");
         if (menuBackgroundTexture == null) {
-            // Fallback: direct file load if the manager missed it
+
             try {
                 menuBackgroundTexture = new Texture(Gdx.files.internal("content/Cut/menu_background.png"));
             } catch (Exception e) {
-                // Last resort: use a 1x1 white texture to avoid crashes
+
                 Pixmap pm = new Pixmap(1, 1, Pixmap.Format.RGBA8888);
                 pm.setColor(Color.WHITE);
                 pm.fill();
@@ -1771,25 +1715,25 @@ public class GDXGameScreen implements Screen {
             }
         }
 
-        // Load animal textures
+
         loadAnimalTextures();
     }
 
     private void loadAnimalTextures() {
-        // Load all animal textures from the animals directory
+
         for (AnimalType animalType : AnimalType.values()) {
             animalTextures.put(animalType, textureManager.getTexture(animalType.name()));
         }
     }
 
     private void loadWeatherAssets() {
-        // Load the single images
+
         rainTexture = textureManager.getTexture("rain1");
         if (rainTexture == null) {
             try {
                 rainTexture = new Texture(Gdx.files.internal("content/weather/rain1.png"));
             } catch (Exception ignored) {
-                // last resort placeholder
+
                 Pixmap pm = new Pixmap(2, 2, Pixmap.Format.RGBA8888);
                 pm.setColor(Color.WHITE);
                 pm.fill();
@@ -1811,9 +1755,9 @@ public class GDXGameScreen implements Screen {
             }
         }
 
-        // Initialize rain particles
+
         rainParticles = new Array<>();
-        for (int i = 0; i < 200; i++) { // Create 200 raindrops
+        for (int i = 0; i < 200; i++) {
             rainParticles.add(new Rectangle(
                 (float) (Math.random() * Gdx.graphics.getWidth()),
                 (float) (Math.random() * Gdx.graphics.getHeight()),
@@ -1822,9 +1766,9 @@ public class GDXGameScreen implements Screen {
             ));
         }
 
-        // Initialize snow particles
+
         snowParticles = new Array<>();
-        for (int i = 0; i < 100; i++) { // Create 100 snowflakes
+        for (int i = 0; i < 100; i++) {
             snowParticles.add(new Rectangle(
                 (float) (Math.random() * Gdx.graphics.getWidth()),
                 (float) (Math.random() * Gdx.graphics.getHeight()),
@@ -1906,7 +1850,7 @@ public class GDXGameScreen implements Screen {
             return;
         }
 
-        // If new Trade menu is open, only allow trade menu UI
+
         if (isTradeMenuOpen) {
             if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
                 hideTradeMenu();
@@ -1916,9 +1860,9 @@ public class GDXGameScreen implements Screen {
             return;
         }
 
-        // If NPC menu is open, only allow NPC menu UI
+
         if (showNPCMenu) {
-            // Allow ESC key to close NPC menu
+
             if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
                 showNPCMenu = false;
                 selectedNPC = null;
@@ -1930,9 +1874,9 @@ public class GDXGameScreen implements Screen {
             return;
         }
 
-        // If housing menu is open, only allow housing menu UI
+
         if (showHousingMenu) {
-            // Allow ESC key to close housing menu
+
             if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
                 showHousingMenu = false;
                 selectedHousing = null;
@@ -1971,26 +1915,26 @@ public class GDXGameScreen implements Screen {
         int targetTileY = MAP_HEIGHT - 1 - (int) (mouseInWorld.y / TILE_SIZE);
 
         if (showReactionMenu && Gdx.input.isKeyJustPressed(Input.Keys.ENTER)) {
-            // This is the same list of names from the setup method
+
             String[] emojiNames = {
                 "+1", "face_with_raised_eyebrow", "face_with_symbols_on_mouth", "farm_dialog",
                 "Good_Morning_dialog", "grin", "heart_eyes", "heart", "Hi_dialog", "joy",
                 "neutral_face", "nice_dialog", "relieved", "sunglasses"
             };
 
-            // Set the selected emoji to be displayed
+
             if (selectedEmojiIndex < emojiNames.length) {
                 String emojiName = emojiNames[selectedEmojiIndex];
                 selectedEmojiTexture = textureManager.getTexture(emojiName);
                 emojiDisplayTime = EMOJI_DISPLAY_DURATION;
-                // Set local reaction state for current player
+
                 if (game != null && game.getCurrentPlayer() != null && selectedEmojiTexture != null) {
                     ReactionState rs = new ReactionState();
                     rs.texture = selectedEmojiTexture;
                     rs.remainingSeconds = EMOJI_DISPLAY_DURATION;
                     usernameToReaction.put(game.getCurrentPlayer().getUsername(), rs);
                 }
-                // Broadcast to others
+
                 com.example.main.service.NetworkService ns = com.example.main.models.App.getInstance().getNetworkService();
                 if (ns != null && game != null && game.getCurrentPlayer() != null) {
                     java.util.HashMap<String, Object> data = new java.util.HashMap<>();
@@ -2001,7 +1945,7 @@ public class GDXGameScreen implements Screen {
                 }
             }
 
-            // Hide the entire reaction menu UI
+
             showReactionMenu = false;
             emojiScrollPane.setVisible(false);
             leftArrowButton.setVisible(false);
@@ -2056,7 +2000,7 @@ public class GDXGameScreen implements Screen {
             }
         }
 
-        // Open Trade Menu with 'R'
+
         if (Gdx.input.isKeyJustPressed(Input.Keys.R)) {
             isTradeMenuOpen = !isTradeMenuOpen;
             if (isTradeMenuOpen) {
@@ -2110,7 +2054,7 @@ public class GDXGameScreen implements Screen {
         if (Gdx.input.isKeyJustPressed(Input.Keys.SHIFT_LEFT) || Gdx.input.isKeyJustPressed(Input.Keys.SHIFT_RIGHT)) {
             isEatMenuOpen = !isEatMenuOpen;
             if (isEatMenuOpen) {
-                showEatMenu(); // Populate the menu
+                showEatMenu();
                 Gdx.input.setInputProcessor(eatMenuStage);
             } else {
                 Gdx.input.setInputProcessor(multiplexer);
@@ -2144,7 +2088,7 @@ public class GDXGameScreen implements Screen {
             }
         }
 
-        // --- MODIFIED ENTER KEY LOGIC ---
+
         if (Gdx.input.isKeyJustPressed(Input.Keys.ENTER)) {
             if (controller != null && game.getCurrentPlayer() != null) {
                 Tool currentTool = game.getCurrentPlayer().getCurrentTool();
@@ -2154,14 +2098,14 @@ public class GDXGameScreen implements Screen {
                     message = "No tool equipped!";
                     generalMessageLabel.setColor(Color.YELLOW);
                 } else {
-                    // Check for Fishing Rod first
+
                     if (currentTool.getToolType().name().contains("Rod")) {
                         Result result = controller.fishing(currentTool.getName());
                         message = result.Message();
                         generalMessageLabel.setColor(Color.CYAN);
                         if (result.isSuccessful()) {
-                            startFishingMinigame(); // Activate the minigame UI
-                            // Broadcast fishing start for remote consistency
+                            startFishingMinigame();
+
                             com.example.main.service.NetworkService ns = com.example.main.models.App.getInstance().getNetworkService();
                             if (ns != null) {
                                 java.util.HashMap<String, Object> data = new java.util.HashMap<>();
@@ -2173,7 +2117,7 @@ public class GDXGameScreen implements Screen {
                             }
                         }
                     }
-                    // Handle all other tools
+
                     else {
                         Result result;
                         if (targetTileX >= 0 && targetTileX < MAP_WIDTH && targetTileY >= 0 && targetTileY < MAP_HEIGHT) {
@@ -2210,7 +2154,7 @@ public class GDXGameScreen implements Screen {
                 generalMessageTimer = GENERAL_MESSAGE_DURATION;
             }
         }
-        // --- END MODIFIED ENTER KEY LOGIC ---
+
 
 
         handleMinimapToggle();
@@ -2221,27 +2165,27 @@ public class GDXGameScreen implements Screen {
         handleMachinePlacement();
         handleMachineInteraction();
 
-        // Handle NPC interactions
+
         if (showDialog) {
             handleDialogDismiss();
         } else {
-            // Only handle NPC clicks if no dialog is showing
+
             if (Gdx.input.isButtonJustPressed(Input.Buttons.LEFT)) {
                 handleNPCClick(Gdx.input.getX(), Gdx.input.getY());
             }
-            // Handle right-click for NPC menu
+
             if (Gdx.input.isButtonJustPressed(Input.Buttons.RIGHT)) {
                 handleNPCRightClick(Gdx.input.getX(), Gdx.input.getY());
             }
         }
 
-        // Handle housing interactions
+
         if (Gdx.input.isButtonJustPressed(Input.Buttons.LEFT)) {
-            // First, check if an animal was clicked
+
             if (handleAnimalClick(Gdx.input.getX(), Gdx.input.getY())) {
                 return;
             }
-            // Check if a trash can was clicked
+
             if (handleTrashCanClick(Gdx.input.getX(), Gdx.input.getY())) {
                 return;
             }
@@ -2271,7 +2215,7 @@ public class GDXGameScreen implements Screen {
                         java.util.HashMap<String, Object> data = new java.util.HashMap<>();
                         data.put("senderUsername", game.getCurrentPlayer().getUsername());
                         data.put("days", 1);
-                        // Include canonical weather of main player for sync
+
                         com.example.main.models.User main = game.getMainPlayer();
                         com.example.main.enums.design.Weather w = game.getTodayWeather();
                         if (main != null && w != null) {
@@ -2339,9 +2283,9 @@ public class GDXGameScreen implements Screen {
 
         if (currentPlayer != null && currentPlayer.isFainted() && (upPressed || downPressed || leftPressed || rightPressed)) {
             generalMessageLabel.setText("I'm too exhausted to move...");
-            generalMessageLabel.setColor(Color.RED); // Set color to red for fainted message
+            generalMessageLabel.setColor(Color.RED);
             generalMessageLabel.setVisible(true);
-            generalMessageTimer = GENERAL_MESSAGE_DURATION; // Use the general timer
+            generalMessageTimer = GENERAL_MESSAGE_DURATION;
             return;
         }
 
@@ -2401,10 +2345,10 @@ public class GDXGameScreen implements Screen {
         }
 
         if (localPlayer != null && (localPlayer.currentX() != lastSentX || localPlayer.currentY() != lastSentY)) {
-            // The position is new, so send it to the server.
+
             networkController.sendPlayerMove(localPlayer.currentX(), localPlayer.currentY());
 
-            // Update the last sent position to prevent sending redundant messages.
+
             lastSentX = localPlayer.currentX();
             lastSentY = localPlayer.currentY();
         }
@@ -2460,28 +2404,28 @@ public class GDXGameScreen implements Screen {
     }
 
     private void handleBuildingPlacement() {
-        // Update building placement position to follow cursor
+
         float mouseX = Gdx.input.getX();
         float mouseY = Gdx.input.getY();
 
-        // Store screen coordinates for rendering
-        // Note: LibGDX Y coordinates are inverted (0 is at top, increases downward)
+
+
         buildingPlacementX = mouseX;
         buildingPlacementY = Gdx.graphics.getHeight() - mouseY;
 
-        // Handle left click to place building
+
         if (Gdx.input.isButtonJustPressed(Input.Buttons.LEFT)) {
-            // Convert screen coordinates to world coordinates for tile placement
+
             Vector3 worldCoords = camera.unproject(new Vector3(mouseX, mouseY, 0));
-            // Convert world coordinates to tile coordinates
+
             int tileX = (int) (worldCoords.x / TILE_SIZE);
             int tileY = (int) ((MAP_HEIGHT * TILE_SIZE - worldCoords.y) / TILE_SIZE);
 
-            // Call the buildBarnOrCoop method
+
             Result result = shopController.buildBarnOrCoop(buildingToPlace, String.valueOf(tileX), String.valueOf(tileY));
 
             if (result.isSuccessful()) {
-                // Broadcast building placement to other clients
+
                 com.example.main.service.NetworkService ns = com.example.main.models.App.getInstance().getNetworkService();
                 if (ns != null) {
                     java.util.HashMap<String, Object> actionData = new java.util.HashMap<>();
@@ -2491,18 +2435,18 @@ public class GDXGameScreen implements Screen {
                     actionData.put("y", tileY);
                     ns.sendPlayerAction("build_barn_or_coop", actionData);
                 }
-                // Building placed successfully
+
                 generalMessageLabel.setText(result.Message());
                 generalMessageLabel.setColor(Color.GREEN);
                 generalMessageLabel.setVisible(true);
                 generalMessageTimer = GENERAL_MESSAGE_DURATION;
 
-                // Exit building placement mode
+
                 isBuildingPlacementMode = false;
                 buildingToPlace = null;
                 buildingPlacementTexture = null;
             } else {
-                // Building placement failed
+
                 generalMessageLabel.setText(result.Message());
                 generalMessageLabel.setColor(Color.RED);
                 generalMessageLabel.setVisible(true);
@@ -2510,7 +2454,7 @@ public class GDXGameScreen implements Screen {
             }
         }
 
-        // Handle right click to cancel placement
+
         if (Gdx.input.isButtonJustPressed(Input.Buttons.RIGHT)) {
             isBuildingPlacementMode = false;
             buildingToPlace = null;
@@ -2524,37 +2468,37 @@ public class GDXGameScreen implements Screen {
     }
 
     private void handleShepherdMode() {
-        // Handle camera movement during shepherd mode
+
         handleCameraMovement(Gdx.graphics.getDeltaTime());
 
-        // Handle left click to shepherd animal to target location
+
         if (Gdx.input.isButtonJustPressed(Input.Buttons.LEFT)) {
-            // Get mouse position in screen coordinates
+
             int mouseX = Gdx.input.getX();
             int mouseY = Gdx.input.getY();
 
-            // Convert screen coordinates to world coordinates
+
             Vector3 worldCoords = camera.unproject(new Vector3(mouseX, mouseY, 0));
 
-            // Convert world coordinates to tile coordinates
+
             int tileX = (int) (worldCoords.x / TILE_SIZE);
             int tileY = (int) ((MAP_HEIGHT * TILE_SIZE - worldCoords.y) / TILE_SIZE);
 
             if (tileX >= 0 && tileX < MAP_WIDTH && tileY >= 0 && tileY < MAP_HEIGHT) {
                 Player currentPlayer = game.getCurrentPlayer();
                 if (currentPlayer != null && isAnimalWalkable(tileX, tileY, currentPlayer)) {
-                    // Find the animal and set it to move to the target location
+
                     if (controller != null && animalToShepherd != null) {
                         if (currentPlayer != null) {
                             for (Housing housing : currentPlayer.getHousings()) {
                                 for (PurchasedAnimal animal : housing.getOccupants()) {
                                     if (animal.getName().equals(animalToShepherd)) {
-                                        // Set local movement
+
                                         animal.setTargetX(tileX);
                                         animal.setTargetY(tileY);
                                         animal.setMoving(true);
                                         animal.setMoveProgress(0f);
-                                        // Broadcast shepherd action
+
                                         com.example.main.service.NetworkService ns = com.example.main.models.App.getInstance().getNetworkService();
                                         if (ns != null) {
                                             java.util.HashMap<String, Object> data = new java.util.HashMap<>();
@@ -2571,7 +2515,7 @@ public class GDXGameScreen implements Screen {
                         }
                     }
 
-                    // Exit shepherd mode
+
                     isShepherdMode = false;
                     animalToShepherd = null;
 
@@ -2588,7 +2532,7 @@ public class GDXGameScreen implements Screen {
             }
         }
 
-        // Handle right click to cancel shepherd mode
+
         if (Gdx.input.isButtonJustPressed(Input.Buttons.RIGHT)) {
             isShepherdMode = false;
             animalToShepherd = null;
@@ -2599,7 +2543,7 @@ public class GDXGameScreen implements Screen {
             generalMessageTimer = GENERAL_MESSAGE_DURATION;
         }
 
-        // Handle ESC key to cancel shepherd mode
+
         if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
             isShepherdMode = false;
             animalToShepherd = null;
@@ -2614,42 +2558,42 @@ public class GDXGameScreen implements Screen {
     private void renderBuildingPlacementPreview() {
         if (buildingPlacementTexture == null) return;
 
-        // Set up sprite batch for UI rendering
+
         spriteBatch.setProjectionMatrix(hudCamera.combined);
         spriteBatch.begin();
 
-        // Draw the building preview with some transparency
+
         spriteBatch.setColor(1f, 1f, 1f, 0.7f);
 
-        // Draw the building texture directly at screen coordinates
+
         float buildingWidth = buildingPlacementTexture.getWidth() * 2f;
         float buildingHeight = buildingPlacementTexture.getHeight() * 2f;
-        // Position the building slightly offset from the cursor so it doesn't cover it completely
+
         spriteBatch.draw(buildingPlacementTexture, buildingPlacementX + 10, buildingPlacementY - buildingHeight + 10, buildingWidth, buildingHeight);
 
-        // Reset color
+
         spriteBatch.setColor(1f, 1f, 1f, 1f);
         spriteBatch.end();
 
-        // Reset projection matrix for world rendering
+
         spriteBatch.setProjectionMatrix(camera.combined);
     }
 
     private void renderShepherdModeUI() {
         if (!isShepherdMode || animalToShepherd == null) return;
 
-        // Set up sprite batch for UI rendering
+
         spriteBatch.setProjectionMatrix(hudCamera.combined);
         spriteBatch.begin();
 
-        // Draw shepherd mode indicator
+
         hudFont.setColor(Color.YELLOW);
         String shepherdText = "Shepherd Mode: " + animalToShepherd + " - Click to move animal";
         hudFont.draw(spriteBatch, shepherdText, 10, Gdx.graphics.getHeight() - 10);
 
         spriteBatch.end();
 
-        // Reset projection matrix for world rendering
+
         spriteBatch.setProjectionMatrix(camera.combined);
     }
 
@@ -2686,7 +2630,7 @@ public class GDXGameScreen implements Screen {
             alpha = Math.max(0f, alpha);
 
             if (effect.type.equals("food")) {
-                // Render food particles
+
                 spriteBatch.setColor(1f, 1f, 1f, alpha);
                 for (int i = 0; i < 5; i++) {
                     float offsetX = (float) Math.sin(effect.elapsed * 3f + i) * 20f;
@@ -2694,15 +2638,15 @@ public class GDXGameScreen implements Screen {
                     float particleX = effect.x + offsetX;
                     float particleY = effect.y + offsetY;
 
-                    // Draw a simple food particle (small colored rectangle)
+
                     spriteBatch.setColor(0.8f, 0.6f, 0.2f, alpha);
-                    // Use a simple white texture for the food particle
+
                     if (grass1Texture != null) {
                         spriteBatch.draw(grass1Texture, particleX, particleY, 8, 8);
                     }
                 }
             } else if (effect.type.equals("hearts")) {
-                // Render hearts
+
                 spriteBatch.setColor(1f, 0.3f, 0.7f, alpha);
                 for (int i = 0; i < 3; i++) {
                     float offsetX = (float) Math.sin(effect.elapsed * 2f + i) * 15f;
@@ -2710,7 +2654,7 @@ public class GDXGameScreen implements Screen {
                     float heartX = effect.x + offsetX;
                     float heartY = effect.y + offsetY;
 
-                    // Draw heart shape using text or simple shape
+
                     hudFont.setColor(1f, 0.3f, 0.7f, alpha);
                     hudFont.draw(spriteBatch, "♥", heartX, heartY);
                 }
@@ -2720,7 +2664,7 @@ public class GDXGameScreen implements Screen {
         spriteBatch.setColor(1f, 1f, 1f, 1f);
         spriteBatch.end();
 
-        // Draw trade menu stage if open
+
         if (isTradeMenuOpen && tradeMenuStage != null) {
             tradeMenuStage.getViewport().update(Gdx.graphics.getWidth(), Gdx.graphics.getHeight(), true);
             tradeMenuStage.act(Gdx.graphics.getDeltaTime());
@@ -2729,36 +2673,36 @@ public class GDXGameScreen implements Screen {
     }
 
     private void handleShopInteraction() {
-        // Check for mouse click
+
         if (Gdx.input.isButtonJustPressed(Input.Buttons.LEFT)) {
-            // Get mouse position in screen coordinates
+
             int mouseX = Gdx.input.getX();
             int mouseY = Gdx.input.getY();
 
-            // Convert screen coordinates to world coordinates
+
             Vector3 worldCoords = camera.unproject(new Vector3(mouseX, mouseY, 0));
 
-            // Convert world coordinates to tile coordinates
+
             int tileX = (int) (worldCoords.x / TILE_SIZE);
             int tileY = (int) ((MAP_HEIGHT * TILE_SIZE - worldCoords.y) / TILE_SIZE);
 
-            // Check if the clicked tile is within a shop area
+
             int shopIndex = getShopIndex(tileX, tileY);
             if (shopIndex != -1) {
-                // Get the shop type based on the index
+
                 ShopType[] shopTypes = ShopType.values();
                 if (shopIndex < shopTypes.length) {
                     currentShopType = shopTypes[shopIndex];
 
-                    // Move player to the shop location for the shop controller to work
+
                     Player currentPlayer = game.getCurrentPlayer();
                     if (currentPlayer != null) {
-                        // Set player position to the shop corner + 1 to be inside the shop area
-                        // (the corner is a wall, so we need to be inside)
+
+
                         currentPlayer.setCurrentX(currentShopType.getCornerX() + 1);
                         currentPlayer.setCurrentY(currentShopType.getCornerY() + 1);
 
-                        // Update camera to follow player
+
                         updateCameraToFollowPlayer(currentPlayer);
                     }
 
@@ -3015,7 +2959,7 @@ public class GDXGameScreen implements Screen {
             boolean isMale = player.getGender().name().equals("Male");
             Player currentPlayer = game.getCurrentPlayer();
 
-            // --- Action Animation Logic ---
+
             if (player.equals(currentPlayer) && playerActionState != PlayerActionState.IDLE && playerActionState != PlayerActionState.WALKING) {
                 switch (playerActionState) {
                     case WATERING:
@@ -3040,12 +2984,12 @@ public class GDXGameScreen implements Screen {
                             default: return isMale ? maleScytheIdle2Texture : femaleScytheIdle2Texture;
                         }
                     case PLANTING:
-                        // Planting is often direction-agnostic, but you could add directions if you want
+
                         return isMale ? malePlantingIdleTexture : femalePlantingIdleTexture;
                 }
             }
 
-            // --- Original Idle/Walking Logic ---
+
             if (!player.equals(currentPlayer) || !playerMoving) {
                 return isMale ? maleIdleTexture : femaleIdleTexture;
             }
@@ -3080,7 +3024,7 @@ public class GDXGameScreen implements Screen {
             int npcX = npc.getX();
             int npcY = npc.getY();
 
-            // Check if NPC is within map bounds
+
             if (npcX < 0 || npcX >= MAP_WIDTH || npcY < 0 || npcY >= MAP_HEIGHT) {
                 continue;
             }
@@ -3184,7 +3128,7 @@ public class GDXGameScreen implements Screen {
         ArrayList<NPC> npcs = game.getNPCs();
         if (npcs == null) return;
 
-        // Create a list of NPCs to remove from clickedNPCs
+
         ArrayList<NPC> npcsToRemove = new ArrayList<>();
 
         for (NPC npc : npcs) {
@@ -3193,24 +3137,24 @@ public class GDXGameScreen implements Screen {
             int npcX = npc.getX();
             int npcY = npc.getY();
 
-            // Check if NPC is within 8 tiles (3x3 area around player)
+
             int distanceX = Math.abs(playerX - npcX);
             int distanceY = Math.abs(playerY - npcY);
 
             if (distanceX <= 1 && distanceY <= 1) {
-                // Only add if this NPC hasn't been clicked recently
+
                 if (!clickedNPCs.contains(npc)) {
                     nearbyNPCs.add(npc);
                 }
             } else {
-                // If NPC is no longer nearby, remove it from clickedNPCs
+
                 if (clickedNPCs.contains(npc)) {
                     npcsToRemove.add(npc);
                 }
             }
         }
 
-        // Remove NPCs that are no longer nearby from clickedNPCs
+
         clickedNPCs.removeAll(npcsToRemove);
     }
 
@@ -3224,28 +3168,28 @@ public class GDXGameScreen implements Screen {
             float worldX = npcX * TILE_SIZE;
             float worldY = (MAP_HEIGHT - 1 - npcY) * TILE_SIZE;
 
-            // Position the "meet" button to the right of the NPC's head
+
             float buttonWidth = 60f;
             float buttonHeight = 24f;
-            float buttonX = worldX + TILE_SIZE + 8f; // 8 pixels to the right of NPC
-            float buttonY = worldY + TILE_SIZE + 8f; // 8 pixels above the NPC
+            float buttonX = worldX + TILE_SIZE + 8f;
+            float buttonY = worldY + TILE_SIZE + 8f;
 
-            // Draw a visible button background (similar to trade menu buttons)
-            spriteBatch.setColor(0.8f, 0.8f, 0.8f, 1f); // Light gray background
+
+            spriteBatch.setColor(0.8f, 0.8f, 0.8f, 1f);
             spriteBatch.draw(ground1Texture, buttonX, buttonY, buttonWidth, buttonHeight);
-            spriteBatch.setColor(1f, 1f, 1f, 1f); // Reset color
+            spriteBatch.setColor(1f, 1f, 1f, 1f);
 
-            // Draw button border
-            spriteBatch.setColor(0.2f, 0.2f, 0.2f, 1f); // Dark border
-            // Draw border lines
+
+            spriteBatch.setColor(0.2f, 0.2f, 0.2f, 1f);
+
             float borderThickness = 2f;
-            spriteBatch.draw(ground1Texture, buttonX, buttonY, buttonWidth, borderThickness); // Bottom
-            spriteBatch.draw(ground1Texture, buttonX, buttonY + buttonHeight - borderThickness, buttonWidth, borderThickness); // Top
-            spriteBatch.draw(ground1Texture, buttonX, buttonY, borderThickness, buttonHeight); // Left
-            spriteBatch.draw(ground1Texture, buttonX + buttonWidth - borderThickness, buttonY, borderThickness, buttonHeight); // Right
-            spriteBatch.setColor(1f, 1f, 1f, 1f); // Reset color
+            spriteBatch.draw(ground1Texture, buttonX, buttonY, buttonWidth, borderThickness);
+            spriteBatch.draw(ground1Texture, buttonX, buttonY + buttonHeight - borderThickness, buttonWidth, borderThickness);
+            spriteBatch.draw(ground1Texture, buttonX, buttonY, borderThickness, buttonHeight);
+            spriteBatch.draw(ground1Texture, buttonX + buttonWidth - borderThickness, buttonY, borderThickness, buttonHeight);
+            spriteBatch.setColor(1f, 1f, 1f, 1f);
 
-            // Draw "meet" text
+
             if (hudFont != null) {
                 hudFont.setColor(Color.BLACK);
                 hudFont.getData().setScale(0.8f);
@@ -3265,22 +3209,22 @@ public class GDXGameScreen implements Screen {
         float worldX = npcX * TILE_SIZE;
         float worldY = (MAP_HEIGHT - 1 - npcY) * TILE_SIZE;
 
-        // Position dialog box above the NPC's head
+
         float dialogWidth = 200f;
         float dialogHeight = 80f;
-        float dialogX = worldX + TILE_SIZE + 10f; // 10 pixels to the right of NPC
-        float dialogY = worldY + TILE_SIZE + 20f; // 20 pixels above the NPC
+        float dialogX = worldX + TILE_SIZE + 10f;
+        float dialogY = worldY + TILE_SIZE + 20f;
 
-        // Draw dialog box background
+
         spriteBatch.draw(dialogBoxTexture, dialogX, dialogY, dialogWidth, dialogHeight);
 
-        // Draw dialog text with smaller font
+
         if (hudFont != null && currentDialogMessage != null && !currentDialogMessage.isEmpty()) {
             hudFont.setColor(Color.BLACK);
-            // Scale down the font size (twice the previous size)
+
             hudFont.getData().setScale(1.0f);
             hudFont.draw(spriteBatch, currentDialogMessage, dialogX + 10, dialogY + dialogHeight - 10);
-            // Reset font scale
+
             hudFont.getData().setScale(1.0f);
             hudFont.setColor(Color.WHITE);
         }
@@ -3289,7 +3233,7 @@ public class GDXGameScreen implements Screen {
     private void handleNPCClick(int screenX, int screenY) {
         if (nearbyNPCs.isEmpty()) return;
 
-        // Convert screen coordinates to world coordinates
+
         Vector3 worldCoords = camera.unproject(new Vector3(screenX, screenY, 0));
 
         for (NPC npc : nearbyNPCs) {
@@ -3301,7 +3245,7 @@ public class GDXGameScreen implements Screen {
             float worldX = npcX * TILE_SIZE;
             float worldY = (MAP_HEIGHT - 1 - npcY) * TILE_SIZE;
 
-            // Check if click is on the "meet" button area (to the right of NPC's head)
+
             float buttonWidth = 60f;
             float buttonHeight = 24f;
             float buttonX = worldX + TILE_SIZE + 8f;
@@ -3310,15 +3254,15 @@ public class GDXGameScreen implements Screen {
             if (worldCoords.x >= buttonX && worldCoords.x <= buttonX + buttonWidth &&
                 worldCoords.y >= buttonY && worldCoords.y <= buttonY + buttonHeight) {
 
-                // Call meetNPC method
+
                 Result result = controller.meetNPC(npc.getType().name());
 
-                // Show dialog with result
+
                 currentDialogNPC = npc;
                 currentDialogMessage = result.Message();
                 showDialog = true;
 
-                // Add NPC to clicked list to hide + button
+
                 clickedNPCs.add(npc);
                 nearbyNPCs.remove(npc);
 
@@ -3336,7 +3280,7 @@ public class GDXGameScreen implements Screen {
     }
 
     private void handleNPCRightClick(int screenX, int screenY) {
-        // Convert screen coordinates to world coordinates
+
         Vector3 worldCoords = camera.unproject(new Vector3(screenX, screenY, 0));
 
         ArrayList<NPC> npcs = game.getNPCs();
@@ -3351,7 +3295,7 @@ public class GDXGameScreen implements Screen {
             float worldX = npcX * TILE_SIZE;
             float worldY = (MAP_HEIGHT - 1 - npcY) * TILE_SIZE;
 
-            // Check if right-click is on the NPC
+
             if (worldCoords.x >= worldX && worldCoords.x <= worldX + TILE_SIZE &&
                 worldCoords.y >= worldY && worldCoords.y <= worldY + TILE_SIZE) {
 
@@ -3370,7 +3314,7 @@ public class GDXGameScreen implements Screen {
 
         npcMenuTable = new Table();
         npcMenuTable.setBackground(new TextureRegionDrawable(menuBackgroundTexture));
-        // Make the background 75% of screen size (same as trade menu)
+
         npcMenuTable.setSize(Gdx.graphics.getWidth() * 0.75f, Gdx.graphics.getHeight() * 0.75f);
         npcMenuTable.setPosition(
             (Gdx.graphics.getWidth() - npcMenuTable.getWidth()) / 2f,
@@ -3379,7 +3323,7 @@ public class GDXGameScreen implements Screen {
 
         stage.addActor(npcMenuTable);
 
-        // Ensure the stage is the input processor for NPC menu
+
         Gdx.input.setInputProcessor(stage);
 
         switch (currentNPCMenuState) {
@@ -3401,18 +3345,18 @@ public class GDXGameScreen implements Screen {
     private void createMainNPCMenu() {
         npcMenuTable.clear();
 
-        // NPC name label
+
         Label npcNameLabel = new Label(selectedNPC.getType().name(), skin);
         npcNameLabel.setFontScale(1.2f);
         npcMenuTable.add(npcNameLabel).colspan(2).pad(10).row();
 
-        // Buttons
+
         TextButton friendshipButton = new TextButton("Friendship", skin);
         TextButton questsButton = new TextButton("Quests", skin);
         TextButton giftButton = new TextButton("Gift", skin);
         TextButton closeButton = new TextButton("Close", skin);
 
-        // Add button listeners
+
         friendshipButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
@@ -3449,12 +3393,12 @@ public class GDXGameScreen implements Screen {
                     npcMenuTable.remove();
                     npcMenuTable = null;
                 }
-                // Restore input processor to multiplexer
+
                 Gdx.input.setInputProcessor(multiplexer);
             }
         });
 
-        // Add buttons to table with larger sizes for the bigger menu
+
         npcMenuTable.add(friendshipButton).size(200, 50).pad(10);
         npcMenuTable.add(questsButton).size(200, 50).pad(10).row();
         npcMenuTable.add(giftButton).size(200, 50).pad(10);
@@ -3464,12 +3408,12 @@ public class GDXGameScreen implements Screen {
     private void createFriendshipMenu() {
         npcMenuTable.clear();
 
-        // Title with NPC name
+
         Label titleLabel = new Label(selectedNPC.getType().name() + " friendship status", skin);
         titleLabel.setFontScale(1.5f);
         npcMenuTable.add(titleLabel).colspan(2).pad(20).row();
 
-        // Get friendship information
+
         NPCFriendship friendship = selectedNPC.getFriendShipWith(game.getCurrentPlayer());
         if (friendship != null) {
             Label friendshipLabel = new Label(friendship.toString(), skin);
@@ -3481,7 +3425,7 @@ public class GDXGameScreen implements Screen {
             npcMenuTable.add(noFriendshipLabel).colspan(2).pad(20).row();
         }
 
-        // Back and Close buttons
+
         TextButton backButton = new TextButton("Back", skin);
         TextButton closeButton = new TextButton("Close", skin);
 
@@ -3503,7 +3447,7 @@ public class GDXGameScreen implements Screen {
                     npcMenuTable.remove();
                     npcMenuTable = null;
                 }
-                // Restore input processor to multiplexer
+
                 Gdx.input.setInputProcessor(multiplexer);
             }
         });
@@ -3515,23 +3459,23 @@ public class GDXGameScreen implements Screen {
     private void createQuestsMenu() {
         npcMenuTable.clear();
 
-        // Title
+
         Label titleLabel = new Label(selectedNPC.getType().name() + " Quests", skin);
         titleLabel.setFontScale(1.5f);
         npcMenuTable.add(titleLabel).colspan(2).pad(20).row();
 
-        // Result message area
+
         Label resultMessageLabel = new Label(questResultMessage, skin);
         resultMessageLabel.setFontScale(1.2f);
         resultMessageLabel.setColor(questResultSuccess ? Color.GREEN : Color.RED);
-        // Make sure the result message is visible and properly positioned
+
         npcMenuTable.add(resultMessageLabel).colspan(2).pad(10).fillX().center().row();
 
-        // Create quest list table
+
         Table questListTable = new Table();
         questListTable.setBackground(new TextureRegionDrawable(menuBackgroundTexture));
 
-        // Get quests from NPC
+
         HashMap<Quest, Boolean> quests = selectedNPC.getQuests();
         if (quests != null && !quests.isEmpty()) {
             int questIndex = 0;
@@ -3539,17 +3483,17 @@ public class GDXGameScreen implements Screen {
                 Quest quest = entry.getKey();
                 Boolean isCompleted = entry.getValue();
 
-                // Create quest entry
+
                 Table questEntry = new Table();
                 questEntry.setBackground(new TextureRegionDrawable(menuBackgroundTexture));
 
-                // Quest information
+
                 Label questInfoLabel = new Label(quest.toString(), skin);
                 questInfoLabel.setColor(Color.BLACK);
                 questInfoLabel.setFontScale(1.2f);
                 questEntry.add(questInfoLabel).pad(5).row();
 
-                // Status
+
                 String statusText = (isCompleted != null && isCompleted) ? "Status: COMPLETED" : "Status: AVAILABLE";
                 Color statusColor = (isCompleted != null && isCompleted) ? Color.GRAY : Color.GREEN;
                 Label statusLabel = new Label(statusText, skin);
@@ -3557,20 +3501,20 @@ public class GDXGameScreen implements Screen {
                 statusLabel.setFontScale(0.9f);
                 questEntry.add(statusLabel).pad(5).row();
 
-                // Complete button (only for available quests)
+
                 if (isCompleted == null || !isCompleted) {
                     TextButton completeButton = new TextButton("Complete Quest", skin);
                     final int finalQuestIndex = questIndex;
                                             completeButton.addListener(new ClickListener() {
                             @Override
                             public void clicked(InputEvent event, float x, float y) {
-                                // Call finishQuest method
+
                                 Result result = controller.finishQuest(String.valueOf(quest.getId()));
 
-                                // Store result message
+
                                 questResultMessage = result.Message();
                                 if (result.isSuccessful()) {
-                                    // Broadcast quest completion with actor and id
+
                                     com.example.main.service.NetworkService ns = com.example.main.models.App.getInstance().getNetworkService();
                                     if (ns != null) {
                                         java.util.HashMap<String, Object> actionData = new java.util.HashMap<>();
@@ -3581,7 +3525,7 @@ public class GDXGameScreen implements Screen {
                                 }
                                 questResultSuccess = result.isSuccessful();
 
-                                // Refresh the quest menu to show updated status
+
                                 createQuestsMenu();
                             }
                         });
@@ -3597,14 +3541,14 @@ public class GDXGameScreen implements Screen {
             questListTable.add(noQuestsLabel).pad(20).row();
         }
 
-        // Create scroll pane for quest list
+
         ScrollPane scrollPane = new ScrollPane(questListTable, skin);
         scrollPane.setScrollBarPositions(false, true);
         scrollPane.setFadeScrollBars(false);
 
         npcMenuTable.add(scrollPane).colspan(2).fill().expand().pad(10).row();
 
-        // Back and Close buttons
+
         TextButton backButton = new TextButton("Back", skin);
         TextButton closeButton = new TextButton("Close", skin);
 
@@ -3630,7 +3574,7 @@ public class GDXGameScreen implements Screen {
                     npcMenuTable.remove();
                     npcMenuTable = null;
                 }
-                // Restore input processor to multiplexer
+
                 Gdx.input.setInputProcessor(multiplexer);
             }
         });
@@ -3645,13 +3589,13 @@ public class GDXGameScreen implements Screen {
         titleLabel.setFontScale(1.5f);
         npcMenuTable.add(titleLabel).colspan(2).pad(20).row();
 
-        // Show result message if any
+
         if (!giftResultMessage.isEmpty()) {
             Label resultLabel = new Label(giftResultMessage, skin);
             resultLabel.setFontScale(1.2f);
             resultLabel.setColor(giftResultSuccess ? Color.GREEN : Color.RED);
             npcMenuTable.add(resultLabel).colspan(2).pad(10).fillX().center().row();
-            // If successful, close the NPC menu after a short delay
+
             if (giftResultSuccess) {
                 Timer.schedule(new Timer.Task() {
                     @Override
@@ -3666,11 +3610,11 @@ public class GDXGameScreen implements Screen {
                             npcMenuTable = null;
                         }
                     }
-                }, 1.0f); // 1 second delay
+                }, 1.0f);
             }
         }
 
-        // Inventory grid (like main inventory, but items are buttons for gifting)
+
         Table itemsTable = new Table();
         Player player = game.getCurrentPlayer();
         ArrayList<Item> items = player.getInventory().getItems();
@@ -3688,7 +3632,7 @@ public class GDXGameScreen implements Screen {
             }
             itemSlot.row();
             itemSlot.add(new Label(String.valueOf(item.getNumber()), skin));
-            // Make the whole slot clickable for gifting
+
             itemSlot.addListener(new ClickListener() {
                 @Override
                 public void clicked(InputEvent event, float x, float y) {
@@ -3708,7 +3652,7 @@ public class GDXGameScreen implements Screen {
         ScrollPane scrollPane = new ScrollPane(itemsTable, skin);
         npcMenuTable.add(scrollPane).colspan(2).expand().fill().pad(10).row();
 
-        // Back and Close buttons
+
         TextButton backButton = new TextButton("Back", skin);
         TextButton closeButton = new TextButton("Close", skin);
         backButton.addListener(new ClickListener() {
@@ -3732,7 +3676,7 @@ public class GDXGameScreen implements Screen {
                     npcMenuTable.remove();
                     npcMenuTable = null;
                 }
-                // Restore input processor to multiplexer
+
                 Gdx.input.setInputProcessor(multiplexer);
             }
         });
@@ -3874,7 +3818,7 @@ public class GDXGameScreen implements Screen {
             if (treeTexture == null) {
                 treeTexture = tree1Texture;
             }
-            // Draw at real PNG size, bottom-aligned to the tile
+
             float px = worldX + (TILE_SIZE - treeTexture.getWidth()) / 2f;
             float py = worldY;
             spriteBatch.draw(treeTexture, px, py, treeTexture.getWidth(), treeTexture.getHeight());
@@ -3898,7 +3842,7 @@ public class GDXGameScreen implements Screen {
                 case 2: treeTexture = tree3Texture; break;
                 default: treeTexture = tree1Texture; break;
             }
-            // Draw at real PNG size, bottom-aligned to the tile
+
             float px = worldX + (TILE_SIZE - treeTexture.getWidth()) / 2f;
             float py = worldY;
             spriteBatch.draw(treeTexture, px, py, treeTexture.getWidth(), treeTexture.getHeight());
@@ -3919,20 +3863,20 @@ public class GDXGameScreen implements Screen {
 
         int[] houseArea = HOUSE_AREAS[playerIndex];
         int houseStartX = houseArea[0];
-        int houseStartY = houseArea[2];  // This is the top row of the house area
-        int houseEndY = houseArea[3];    // This is the bottom row of the house area
+        int houseStartY = houseArea[2];
+        int houseEndY = houseArea[3];
 
-        // Only render the house image once at the top-left corner of the house area
+
         if (tileX == houseStartX && tileY == houseStartY) {
-            // Calculate the size to cover the entire 8x8 house area
-            float houseWidth = 8 * TILE_SIZE;  // 8 tiles wide
-            float houseHeight = 8 * TILE_SIZE; // 8 tiles tall
 
-            // Calculate the bottom-left position for the house image
-            // The worldY for houseStartY gives us the screen position of the top row
-            // We need to move down by (8-1) tiles to get to the bottom of the house area
+            float houseWidth = 8 * TILE_SIZE;
+            float houseHeight = 8 * TILE_SIZE;
+
+
+
+
             float houseX = worldX;
-            float houseY = worldY - (7 * TILE_SIZE); // Move down 7 tiles from the top tile
+            float houseY = worldY - (7 * TILE_SIZE);
 
             spriteBatch.draw(houseTexture, houseX, houseY, houseWidth, houseHeight);
         }
@@ -3956,19 +3900,19 @@ public class GDXGameScreen implements Screen {
 
         int[] npcHouseArea = NPC_HOUSE_AREAS[npcIndex];
         int houseStartX = npcHouseArea[0];
-        int houseStartY = npcHouseArea[2];  // This is the top row of the house area
+        int houseStartY = npcHouseArea[2];
 
-        // Only render the house image once at the top-left corner of the house area
+
         if (tileX == houseStartX && tileY == houseStartY) {
-            // Calculate the size to cover the entire 5x7 NPC house area
-            float npcHouseWidth = 5 * TILE_SIZE;  // 5 tiles wide
-            float npcHouseHeight = 7 * TILE_SIZE; // 7 tiles tall
 
-            // Calculate the bottom-left position for the NPC house image
-            // The worldY for houseStartY gives us the screen position of the top row
-            // We need to move down by (7-1) tiles to get to the bottom of the house area
+            float npcHouseWidth = 5 * TILE_SIZE;
+            float npcHouseHeight = 7 * TILE_SIZE;
+
+
+
+
             float npcHouseX = worldX;
-            float npcHouseY = worldY - (6 * TILE_SIZE); // Move down 6 tiles from the top tile
+            float npcHouseY = worldY - (6 * TILE_SIZE);
 
             spriteBatch.draw(npcHouseTexture, npcHouseX, npcHouseY, npcHouseWidth, npcHouseHeight);
         }
@@ -3998,15 +3942,15 @@ public class GDXGameScreen implements Screen {
         int shopStartY = shopArea[2];
 
         if (tileX == shopStartX && tileY == shopStartY) {
-            // Calculate the size to cover the entire 8x8 shop area
-            float shopWidth = 8 * TILE_SIZE;  // 8 tiles wide
-            float shopHeight = 8 * TILE_SIZE; // 8 tiles tall
 
-            // Calculate the bottom-left position for the shop image
-            // The worldY for shopStartY gives us the screen position of the top row
-            // We need to move down by (8-1) tiles to get to the bottom of the shop area
+            float shopWidth = 8 * TILE_SIZE;
+            float shopHeight = 8 * TILE_SIZE;
+
+
+
+
             float shopX = worldX;
-            float shopY = worldY - (7 * TILE_SIZE); // Move down 7 tiles from the top tile
+            float shopY = worldY - (7 * TILE_SIZE);
 
             spriteBatch.draw(shopTexture, shopX, shopY, shopWidth, shopHeight);
         }
@@ -4044,7 +3988,7 @@ public class GDXGameScreen implements Screen {
                     buildingWidthTiles = 6;
                     buildingHeightTiles = 8;
                 } else {
-                    housingTexture = barnTexture; // Default fallback
+                    housingTexture = barnTexture;
                     buildingWidthTiles = 7;
                     buildingHeightTiles = 8;
                 }
@@ -4117,14 +4061,14 @@ public class GDXGameScreen implements Screen {
         float screenWidth = Gdx.graphics.getWidth();
         float screenHeight = Gdx.graphics.getHeight();
 
-        float minimapSize = Math.min(screenWidth, screenHeight) * 0.25f; // Smaller size
+        float minimapSize = Math.min(screenWidth, screenHeight) * 0.25f;
 
         float minimapX = (screenWidth - minimapSize) / 2f;
         float minimapY = (screenHeight - minimapSize) / 2f;
 
         renderMinimapBackgroundAndBorder(minimapX, minimapY, minimapSize, minimapSize);
 
-        // Create a proper minimap camera
+
         OrthographicCamera minimapCamera = new OrthographicCamera();
         minimapCamera.setToOrtho(false, minimapSize, minimapSize);
         minimapCamera.position.set(minimapSize / 2f, minimapSize / 2f, 0);
@@ -4133,12 +4077,12 @@ public class GDXGameScreen implements Screen {
         spriteBatch.setProjectionMatrix(minimapCamera.combined);
         spriteBatch.begin();
 
-        // Calculate scale to fit the entire map in the minimap
+
         float scaleX = minimapSize / (MAP_WIDTH * TILE_SIZE);
         float scaleY = minimapSize / (MAP_HEIGHT * TILE_SIZE);
-        float scale = Math.min(scaleX, scaleY) * 0.9f; // 90% to leave some border
+        float scale = Math.min(scaleX, scaleY) * 0.9f;
 
-        // Calculate offset to center the map
+
         float offsetX = (minimapSize - (MAP_WIDTH * TILE_SIZE * scale)) / 2f;
         float offsetY = (minimapSize - (MAP_HEIGHT * TILE_SIZE * scale)) / 2f;
 
@@ -4146,12 +4090,12 @@ public class GDXGameScreen implements Screen {
 
         spriteBatch.end();
 
-        // Reset to main camera
+
         spriteBatch.setProjectionMatrix(camera.combined);
     }
 
     private void renderHud() {
-        // --- Draw UI Backgrounds ---
+
         Gdx.gl.glEnable(GL20.GL_BLEND);
         Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
         shapeRenderer.setProjectionMatrix(hudCamera.combined);
@@ -4161,7 +4105,7 @@ public class GDXGameScreen implements Screen {
 
         float infoBgX = 10;
         float infoBgY = Gdx.graphics.getHeight() - 70;
-        float infoBgWidth = 220; // Adjust width as needed
+        float infoBgWidth = 220;
         float infoBgHeight = 60;
         shapeRenderer.rect(infoBgX, infoBgY, infoBgWidth, infoBgHeight);
 
@@ -4199,18 +4143,16 @@ public class GDXGameScreen implements Screen {
         String timeString = String.format("%d:%02d %s", hour, time.getMinute(), ampm);
         hudFont.draw(spriteBatch, timeString, clockX + 148, clockY + 120);
 
-        // --- NEW: Draw the player's balance ---
+
         Player player = game.getCurrentPlayer();
         if (player != null) {
             String balanceString = String.valueOf(player.getBankAccount().getBalance());
             balanceString += " | ";
             String energyString = String.valueOf(player.getEnergy());
-            hudFont.draw(spriteBatch, balanceString, clockX + 110, clockY + 40);
-            hudFont.draw(spriteBatch, energyString,clockX + 170, clockY + 40);
+            hudFont.draw(spriteBatch, balanceString, clockX + 100, clockY + 40);
+            hudFont.draw(spriteBatch, energyString,clockX + 180, clockY + 40);
         }
-        // --- END NEW ---
 
-        // Revert font color to white for the dark background
         hudFont.setColor(Color.WHITE);
         String seasonString = "Season: " + controller.showSeason();
         hudFont.draw(spriteBatch, seasonString, 20, Gdx.graphics.getHeight() - 20);
@@ -4218,10 +4160,10 @@ public class GDXGameScreen implements Screen {
         String weatherString = "Weather: " + game.getTodayWeather().name();
         hudFont.draw(spriteBatch, weatherString, 20, Gdx.graphics.getHeight() - 50);
 
-        float onlineUsersX = 20; // Moved to the right
-        float onlineUsersY = Gdx.graphics.getHeight() - 100; // Adjusted Y position
+        float onlineUsersX = 20;
+        float onlineUsersY = Gdx.graphics.getHeight() - 100;
         float backgroundWidth = 250;
-        float backgroundHeight = 0; // Will be calculated based on user count
+        float backgroundHeight = 0;
 
         int userCount = 0;
         if (game != null && game.getPlayers() != null) {
@@ -4231,21 +4173,21 @@ public class GDXGameScreen implements Screen {
                 }
             }
         }
-        backgroundHeight = 40 + (userCount * 25); // Base height + height per user
+        backgroundHeight = 40 + (userCount * 25);
 
-        spriteBatch.end(); // End sprite batch to draw shapes
+        spriteBatch.end();
 
         Gdx.gl.glEnable(GL20.GL_BLEND);
         Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
         shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
-        shapeRenderer.setColor(0, 0, 0, 0.5f); // Black with 50% opacity
+        shapeRenderer.setColor(0, 0, 0, 0.5f);
         shapeRenderer.rect(onlineUsersX - 10, onlineUsersY - backgroundHeight + 20, backgroundWidth, backgroundHeight);
         shapeRenderer.end();
         Gdx.gl.glDisable(GL20.GL_BLEND);
 
-        spriteBatch.begin(); // Restart sprite batch for text
+        spriteBatch.begin();
 
-// --- Draw Text ---
+
         hudFont.setColor(Color.WHITE);
         float textY = onlineUsersY;
         hudFont.draw(spriteBatch, "Online Users:", onlineUsersX, textY);
@@ -4266,7 +4208,7 @@ public class GDXGameScreen implements Screen {
     private void renderMinimapContent(float scale, float offsetX, float offsetY) {
         Tile[][] tiles = gameMap.getTiles();
 
-        // Render only lakes (water tiles)
+
         for (int x = 0; x < MAP_WIDTH; x++) {
             for (int y = 0; y < MAP_HEIGHT; y++) {
                 if (tiles[x] != null && tiles[x][y] != null) {
@@ -4276,8 +4218,8 @@ public class GDXGameScreen implements Screen {
                         float worldX = offsetX + (x * TILE_SIZE * scale);
                         float worldY = offsetY + ((MAP_HEIGHT - 1 - y) * TILE_SIZE * scale);
 
-                        // Render water as blue
-                        spriteBatch.setColor(0.2f, 0.4f, 0.8f, 1f); // Blue for water
+
+                        spriteBatch.setColor(0.2f, 0.4f, 0.8f, 1f);
                         spriteBatch.draw(ground1Texture, worldX, worldY, TILE_SIZE * scale, TILE_SIZE * scale);
                         spriteBatch.setColor(1f, 1f, 1f, 1f);
                     }
@@ -4285,7 +4227,7 @@ public class GDXGameScreen implements Screen {
             }
         }
 
-        // Render buildings and structures
+
         for (int y = 0; y < MAP_HEIGHT; y++) {
             for (int x = 0; x < MAP_WIDTH; x++) {
                 if (tiles[x] != null && tiles[x][y] != null) {
@@ -4323,7 +4265,7 @@ public class GDXGameScreen implements Screen {
             }
         }
 
-        // Render players
+
         for (User user : game.getPlayers()) {
             Player player = user.getPlayer();
             if (player == null) continue;
@@ -4338,11 +4280,11 @@ public class GDXGameScreen implements Screen {
             float worldX = offsetX + (playerX * TILE_SIZE * scale);
             float worldY = offsetY + ((MAP_HEIGHT - 1 - playerY) * TILE_SIZE * scale);
 
-            // Draw player as a colored dot
+
             if (player.equals(game.getCurrentPlayer())) {
-                spriteBatch.setColor(1f, 1f, 0f, 1f); // Yellow for current player
+                spriteBatch.setColor(1f, 1f, 0f, 1f);
             } else {
-                spriteBatch.setColor(0f, 1f, 0f, 1f); // Green for other players
+                spriteBatch.setColor(0f, 1f, 0f, 1f);
             }
             spriteBatch.draw(ground1Texture, worldX + (TILE_SIZE * scale * 0.25f), worldY + (TILE_SIZE * scale * 0.25f),
                            TILE_SIZE * scale * 0.5f, TILE_SIZE * scale * 0.5f);
@@ -4389,7 +4331,7 @@ public class GDXGameScreen implements Screen {
                     break;
             }
             if (houseTexture != null) {
-                spriteBatch.setColor(0.8f, 0.6f, 0.4f, 1f); // Brown for houses
+                spriteBatch.setColor(0.8f, 0.6f, 0.4f, 1f);
                 spriteBatch.draw(houseTexture, worldX, worldY, TILE_SIZE * scale, TILE_SIZE * scale);
                 spriteBatch.setColor(1f, 1f, 1f, 1f);
             }
@@ -4418,7 +4360,7 @@ public class GDXGameScreen implements Screen {
                     break;
             }
             if (npcHouseTexture != null) {
-                spriteBatch.setColor(0.6f, 0.4f, 0.8f, 1f); // Purple for NPC houses
+                spriteBatch.setColor(0.6f, 0.4f, 0.8f, 1f);
                 spriteBatch.draw(npcHouseTexture, worldX, worldY, TILE_SIZE * scale, TILE_SIZE * scale);
                 spriteBatch.setColor(1f, 1f, 1f, 1f);
             }
@@ -4453,7 +4395,7 @@ public class GDXGameScreen implements Screen {
                     break;
             }
             if (shopTexture != null) {
-                spriteBatch.setColor(0.8f, 0.8f, 0.2f, 1f); // Yellow for shops
+                spriteBatch.setColor(0.8f, 0.8f, 0.2f, 1f);
                 spriteBatch.draw(shopTexture, worldX, worldY, TILE_SIZE * scale, TILE_SIZE * scale);
                 spriteBatch.setColor(1f, 1f, 1f, 1f);
             }
@@ -4470,7 +4412,7 @@ public class GDXGameScreen implements Screen {
                 housingTexture = coopTexture;
             }
             if (housingTexture != null) {
-                spriteBatch.setColor(0.4f, 0.2f, 0.1f, 1f); // Dark brown for housing
+                spriteBatch.setColor(0.4f, 0.2f, 0.1f, 1f);
                 spriteBatch.draw(housingTexture, worldX, worldY, TILE_SIZE * scale, TILE_SIZE * scale);
                 spriteBatch.setColor(1f, 1f, 1f, 1f);
             }
@@ -4491,7 +4433,7 @@ public class GDXGameScreen implements Screen {
                 break;
         }
         if (treeTexture != null) {
-            spriteBatch.setColor(0.2f, 0.6f, 0.2f, 1f); // Dark green for trees
+            spriteBatch.setColor(0.2f, 0.6f, 0.2f, 1f);
             spriteBatch.draw(treeTexture, worldX, worldY, TILE_SIZE * scale, TILE_SIZE * scale);
             spriteBatch.setColor(1f, 1f, 1f, 1f);
         }
@@ -4528,11 +4470,11 @@ public class GDXGameScreen implements Screen {
 
         switch (game.getTodayWeather()) {
             case Rainy:
-            case Stormy: // Also show rain during a storm
+            case Stormy:
                 for (Rectangle particle : rainParticles) {
-                    // Move rain straight down
+
                     particle.y -= 300 * delta;
-                    // If it goes off screen, reset it to the top
+
                     if (particle.y < 0) {
                         particle.y = Gdx.graphics.getHeight();
                         particle.x = (float) (Math.random() * Gdx.graphics.getWidth());
@@ -4543,27 +4485,27 @@ public class GDXGameScreen implements Screen {
 
             case Snowy:
                 for (Rectangle particle : snowParticles) {
-                    // Move snow down and add a gentle side-to-side sway
+
                     particle.y -= 60 * delta;
                     particle.x += (float) (Math.sin(particle.y / 30) * 20 * delta);
 
-                    // If it goes off screen, reset it to the top
+
                     if (particle.y < 0) {
                         particle.y = Gdx.graphics.getHeight();
                         particle.x = (float) (Math.random() * Gdx.graphics.getWidth());
                     }
-                    spriteBatch.draw(snowTexture, particle.x, particle.y, 24, 24); // Drawing snow slightly larger
+                    spriteBatch.draw(snowTexture, particle.x, particle.y, 24, 24);
                 }
                 break;
 
             default:
-                // No weather effect for sunny days
+
                 break;
         }
 
         spriteBatch.end();
 
-        // Handle lightning flash for storms OR manual cheat
+
         boolean shouldFlash = false;
         if (game.getTodayWeather() == Weather.Stormy) {
             stormEffectTimer += delta;
@@ -4577,23 +4519,23 @@ public class GDXGameScreen implements Screen {
             }
         }
 
-        // Also check if the cheat is active
+
         if (cheatLightningActive) {
             shouldFlash = true;
         }
 
-        // If a flash should happen, render it
+
         if (shouldFlash) {
             lightningDuration -= delta;
             Gdx.gl.glEnable(GL20.GL_BLEND);
             shapeRenderer.setProjectionMatrix(hudCamera.combined);
             shapeRenderer.begin(com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType.Filled);
-            shapeRenderer.setColor(1, 1, 1, 0.7f); // White flash
+            shapeRenderer.setColor(1, 1, 1, 0.7f);
             shapeRenderer.rect(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
             shapeRenderer.end();
             Gdx.gl.glDisable(GL20.GL_BLEND);
 
-            // Reset the flags when the duration is over
+
             if (lightningDuration <= 0) {
                 lightningActive = false;
                 cheatLightningActive = false;
@@ -4608,24 +4550,24 @@ public class GDXGameScreen implements Screen {
         int hour = time.getHour();
         int minute = time.getMinute();
 
-        // The darkening effect starts at 6 PM (hour 18) and ends at 2 AM (hour 26)
+
         float startHour = 18f;
         float endHour = 26f;
-        // --- THIS VALUE HAS BEEN CHANGED ---
-        float maxOpacity = 0.4f; // Was 0.85f, now it's less dense
+
+        float maxOpacity = 0.4f;
 
         float currentHour = hour + (minute / 60f);
         float opacity = 0f;
 
         if (currentHour >= startHour) {
-            // Calculate the progress through the evening
+
             float progress = (currentHour - startHour) / (endHour - startHour);
-            // Clamp the value between 0 and 1 to prevent errors
+
             progress = Math.max(0, Math.min(1, progress));
             opacity = progress * maxOpacity;
         }
 
-        // If opacity is greater than 0, draw the overlay
+
         if (opacity > 0) {
             Gdx.gl.glEnable(GL20.GL_BLEND);
             Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
@@ -4633,7 +4575,7 @@ public class GDXGameScreen implements Screen {
             shapeRenderer.setProjectionMatrix(hudCamera.combined);
             shapeRenderer.begin(com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType.Filled);
 
-            // Black color with calculated opacity
+
             shapeRenderer.setColor(0, 0, 0, opacity);
             shapeRenderer.rect(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 
@@ -4642,7 +4584,7 @@ public class GDXGameScreen implements Screen {
         }
     }
 
-    // In GDXGameScreen.java
+
 
     private void renderInventoryOverlay(float delta) {
         if (!isInventoryOpen) {
@@ -4672,12 +4614,12 @@ public class GDXGameScreen implements Screen {
         mainCraftingContainer.center();
         craftingStage.addActor(mainCraftingContainer);
 
-        // A background for the menu
+
         Table background = new Table(skin);
         background.setBackground(new TextureRegionDrawable(new TextureRegion(inventoryBackground)));
         mainCraftingContainer.add(background).width(Gdx.graphics.getWidth() * 0.7f).height(Gdx.graphics.getHeight() * 0.8f);
 
-        // Back button row
+
         TextButton craftingBackButton = new TextButton("Back", skin);
         craftingBackButton.addListener(new ClickListener() {
             @Override
@@ -4702,10 +4644,10 @@ public class GDXGameScreen implements Screen {
 
         ArrayList<CraftingRecipe> knownRecipes = currentPlayer.getCraftingRecipe();
 
-        // Loop through ALL possible crafting recipes in the game
+
         for (CraftingRecipes recipeEnum : CraftingRecipes.values()) {
             boolean isKnown = false;
-            // Check if the current recipe is in the player's list of known recipes
+
             for (CraftingRecipe known : knownRecipes) {
                 if (known.getRecipeType() == recipeEnum) {
                     isKnown = true;
@@ -4713,7 +4655,7 @@ public class GDXGameScreen implements Screen {
                 }
             }
 
-            // Create the UI element for this recipe
+
             Table recipeRow = new Table();
             recipeRow.pad(5);
 
@@ -4723,7 +4665,7 @@ public class GDXGameScreen implements Screen {
             if (productTexture != null) {
                 productImage = new Image(productTexture);
             } else {
-                // Use a default placeholder if the texture is not found
+
                 productImage = new Image(skin.getDrawable("default-round"));
                 Gdx.app.log("CraftingMenu", "Missing texture for product: " + product.getEnumName());
             }
@@ -4731,10 +4673,10 @@ public class GDXGameScreen implements Screen {
             Label recipeLabel = new Label(recipeEnum.getName(), skin);
 
             if (isKnown) {
-                // If known, make it a button and check if it's craftable
+
                 TextButton craftButton = new TextButton("Craft", skin);
 
-                // Check if player has enough ingredients
+
                 boolean canCraft = true;
                 for (Map.Entry<ItemType, Integer> entry : recipeEnum.getIngredients().entrySet()) {
                     Item itemInInventory = currentPlayer.getInventory().findItemByType(entry.getKey());
@@ -4743,7 +4685,7 @@ public class GDXGameScreen implements Screen {
                         break;
                     }
                 }
-                craftButton.setDisabled(!canCraft); // Disable button if ingredients are missing
+                craftButton.setDisabled(!canCraft);
 
                 craftButton.addListener(new ClickListener() {
                     @Override
@@ -4755,10 +4697,10 @@ public class GDXGameScreen implements Screen {
                                 isMachinePlacementMode = true;
                                 machineToPlace = (CraftingMachine) craftedItem;
                                 machinePlacementTexture = textureManager.getTexture(machineToPlace.getItemType().getEnumName());
-                                isCraftingMenuOpen = false; // Close crafting menu
+                                isCraftingMenuOpen = false;
                                 Gdx.input.setInputProcessor(multiplexer);
                             }
-                            // Network sync
+
                             com.example.main.service.NetworkService ns = com.example.main.models.App.getInstance().getNetworkService();
                             if (ns != null) {
                                 java.util.HashMap<String, Object> data = new java.util.HashMap<>();
@@ -4779,8 +4721,8 @@ public class GDXGameScreen implements Screen {
                 recipeRow.add(craftButton).width(80);
 
             } else {
-                // If not known, show it as locked
-                productImage.setColor(Color.BLACK); // Make the image dark
+
+                productImage.setColor(Color.BLACK);
                 recipeLabel.setColor(Color.GRAY);
                 recipeRow.add(productImage).size(32, 32).padRight(10);
                 recipeRow.add(recipeLabel).width(200).left();
@@ -4796,7 +4738,7 @@ public class GDXGameScreen implements Screen {
         craftingStage.draw();
     }
 
-    // In main/GDXviews/GDXGameScreen.java
+
 
     private void setupCookingUI() {
         Table mainCookingContainer = new Table();
@@ -4808,7 +4750,7 @@ public class GDXGameScreen implements Screen {
         background.setBackground(new TextureRegionDrawable(new TextureRegion(inventoryBackground)));
         mainCookingContainer.add(background).width(Gdx.graphics.getWidth() * 0.8f).height(Gdx.graphics.getHeight() * 0.85f);
 
-        // Back button row
+
         TextButton cookingBackButton = new TextButton("Back", skin);
         cookingBackButton.addListener(new ClickListener() {
             @Override
@@ -4824,7 +4766,7 @@ public class GDXGameScreen implements Screen {
 
         Table leftPanel = new Table();
         leftPanel.top();
-        leftPanel.add(new Label("Recipes", skin)).padBottom(10).row(); // CORRECTED
+        leftPanel.add(new Label("Recipes", skin)).padBottom(10).row();
         cookingMenuContentTable = new Table();
         ScrollPane recipeScrollPane = new ScrollPane(cookingMenuContentTable, skin);
         recipeScrollPane.setFadeScrollBars(false);
@@ -4832,7 +4774,7 @@ public class GDXGameScreen implements Screen {
 
         Table rightPanel = new Table();
         rightPanel.top();
-        rightPanel.add(new Label("Refrigerator", skin)).padBottom(10).row(); // CORRECTED
+        rightPanel.add(new Label("Refrigerator", skin)).padBottom(10).row();
         fridgeContentTable = new Table();
         ScrollPane fridgeScrollPane = new ScrollPane(fridgeContentTable, skin);
         fridgeScrollPane.setFadeScrollBars(false);
@@ -4845,9 +4787,9 @@ public class GDXGameScreen implements Screen {
             @Override
             public void clicked(InputEvent event, float x, float y) {
                 Result result = controller.moveRandomFoodToRefrigerator();
-                showCookingMenu(); // Refresh the entire menu to show updated lists
+                showCookingMenu();
 
-                // Show feedback message to the player
+
                 generalMessageLabel.setText(result.Message());
                 generalMessageLabel.setVisible(true);
                 generalMessageTimer = GENERAL_MESSAGE_DURATION;
@@ -4872,7 +4814,7 @@ public class GDXGameScreen implements Screen {
         Player currentPlayer = game.getCurrentPlayer();
         if (currentPlayer == null) return;
 
-        // --- Populate Recipe List ---
+
         cookingMenuContentTable.clear();
         cookingMenuContentTable.top();
         ArrayList<CookingRecipe> knownRecipes = currentPlayer.getCookingRecipe();
@@ -4890,7 +4832,7 @@ public class GDXGameScreen implements Screen {
             if (isKnown) {
                 TextButton cookButton = new TextButton("Cook", skin);
 
-                // Check ingredients from both inventory and fridge
+
                 boolean canCook = true;
                 Map<ItemType, Integer> totalIngredients = new HashMap<>();
                 currentPlayer.getInventory().getItems().forEach(item -> totalIngredients.merge(item.getItemType(), item.getNumber(), Integer::sum));
@@ -4906,12 +4848,12 @@ public class GDXGameScreen implements Screen {
                 cookButton.addListener(new ClickListener() {
                     @Override
                     public void clicked(InputEvent event, float x, float y) {
-                        // --- REPLACE THE OLD LOGIC WITH THIS ---
+
                         Result result = controller.cookFood(recipeEnum.getDisplayName());
                         if (result.isSuccessful()) {
-                            // On success, show the placement dialog
+
                             showPlacementDialog(controller.getJustCookedFood());
-                            // Network sync
+
                             com.example.main.service.NetworkService ns = com.example.main.models.App.getInstance().getNetworkService();
                             if (ns != null) {
                                 java.util.HashMap<String, Object> data = new java.util.HashMap<>();
@@ -4922,12 +4864,12 @@ public class GDXGameScreen implements Screen {
                                 ns.sendPlayerAction("cook_food", data);
                             }
                         } else {
-                            // On failure, show the detailed error message
+
                             generalMessageLabel.setText(result.Message());
                             generalMessageLabel.setVisible(true);
                             generalMessageTimer = GENERAL_MESSAGE_DURATION;
                         }
-                        // Refresh the menu to show updated ingredient counts after an attempt
+
                         showCookingMenu();
                     }
                 });
@@ -4946,7 +4888,7 @@ public class GDXGameScreen implements Screen {
             cookingMenuContentTable.add(recipeRow).fillX().row();
         }
 
-        // --- Populate Refrigerator List ---
+
         fridgeContentTable.clear();
         fridgeContentTable.top();
         for (Item item : currentPlayer.getHouseRefrigerator().getItems()) {
@@ -4969,8 +4911,8 @@ public class GDXGameScreen implements Screen {
     }
 
     public void triggerCrowAttackAnimation() {
-        crowAnimations.clear(); // Clear any old animations
-        // Spawn a random number of crows (between 3 and 5)
+        crowAnimations.clear();
+
         int crowCount = 3 + (int)(Math.random() * 3);
         for (int i = 0; i < crowCount; i++) {
             crowAnimations.add(new CrowAnimation());
@@ -4982,7 +4924,7 @@ public class GDXGameScreen implements Screen {
             return;
         }
 
-        // Use the HUD camera so crows fly over the entire screen, not just the game world
+
         spriteBatch.setProjectionMatrix(hudCamera.combined);
         spriteBatch.begin();
 
@@ -4991,9 +4933,9 @@ public class GDXGameScreen implements Screen {
             crow.update(delta);
 
             if (crow.isOffScreen()) {
-                iterator.remove(); // Remove crows that have flown away
+                iterator.remove();
             } else {
-                // Automatically flip the crow texture based on its direction
+
                 boolean flip = crow.speedX < 0;
                 spriteBatch.draw(crowTexture,
                     crow.x, crow.y,
@@ -5021,7 +4963,7 @@ public class GDXGameScreen implements Screen {
         menuContentTable.clear();
 
         Stack mainStack = new Stack();
-        mainStack.add(new Image(inventoryBackground)); // Add the background
+        mainStack.add(new Image(inventoryBackground));
 
         Table buttonTable = new Table();
 
@@ -5067,7 +5009,7 @@ public class GDXGameScreen implements Screen {
             @Override
             public void clicked(InputEvent event, float x, float y) {
                 showMinimap = !showMinimap;
-                isInventoryOpen = false; // Close menu to see the map
+                isInventoryOpen = false;
             }
         });
 
@@ -5127,9 +5069,9 @@ public class GDXGameScreen implements Screen {
 
     private void showInventoryDisplay(boolean showOnlyPlantables) {
         menuContentTable.clear();
-        // Use a Stack to layer the background behind the content
+
         Stack inventoryStack = new Stack();
-        inventoryStack.add(new Image(inventoryBackground)); // Add background image
+        inventoryStack.add(new Image(inventoryBackground));
 
         Table contentTable = new Table();
         Table itemsTable = new Table();
@@ -5167,11 +5109,11 @@ public class GDXGameScreen implements Screen {
 
     private void showSkillsDisplay() {
         menuContentTable.clear();
-        // Use a Stack to layer the background behind the content
+
         Stack skillsStack = new Stack();
         skillsStack.add(new Image(inventoryBackground));
 
-        // A second table to hold the actual content on top of the background
+
         Table contentTable = new Table();
 
         Player currentPlayer = game.getCurrentPlayer();
@@ -5245,7 +5187,7 @@ public class GDXGameScreen implements Screen {
 
         contentTable.add(scrollPane).expand().fill().pad(40).row();
 
-        // Add the back button to the content table, not the menuContentTable
+
         Table bottomButtonTable = new Table();
         addBackButtonToMenu(bottomButtonTable);
         contentTable.add(bottomButtonTable).bottom().left();
@@ -5267,13 +5209,13 @@ public class GDXGameScreen implements Screen {
         leaveGameButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                // Start a vote to terminate the game
+
                 com.example.main.service.NetworkService ns = com.example.main.models.App.getInstance().getNetworkService();
                 if (ns != null && game != null && game.getCurrentPlayer() != null) {
                     java.util.HashMap<String, Object> data = new java.util.HashMap<>();
                     data.put("initiator", game.getCurrentPlayer().getUsername());
                     ns.sendPlayerAction("vote_terminate_start", data);
-                    // Count initiator as accepted
+
                     beginTerminateVoteLocal(game.getCurrentPlayer().getUsername());
                 }
             }
@@ -5286,15 +5228,15 @@ public class GDXGameScreen implements Screen {
             }
         });
 
-        // A table to center the main buttons
+
         Table mainButtons = new Table();
         mainButtons.add(leaveGameButton).width(200).pad(10).row();
         mainButtons.add(kickPlayerButton).width(200).pad(10).row();
 
-        // Add the main buttons to the content table, allowing them to expand and center
+
         contentTable.add(mainButtons).expand().center().row();
 
-        // A separate table for the back button to align it to the bottom-left
+
         Table bottomButtonTable = new Table();
         addBackButtonToMenu(bottomButtonTable);
         contentTable.add(bottomButtonTable).bottom().left();
@@ -5339,7 +5281,7 @@ public class GDXGameScreen implements Screen {
         menuContentTable.add(stack).width(Gdx.graphics.getWidth() * 0.8f).height(Gdx.graphics.getHeight() * 0.8f);
     }
 
-    // --- Kick Player Voting ---
+
     private Window kickVotePopup;
     private String kickTarget = null;
     private int kickYesVotes = 0;
@@ -5348,15 +5290,15 @@ public class GDXGameScreen implements Screen {
     private void startKickVote(String targetUsername) {
         kickTarget = targetUsername;
         kickTotalPlayers = (game != null && game.getPlayers() != null) ? (int) game.getPlayers().stream().filter(u -> u != null && u.getPlayer() != null && !u.getUsername().startsWith("empty_slot_")).count() : 0;
-        kickYesVotes = 1; // initiator yes
-        // Broadcast start (initiator counted yes, but initiator should not receive popup)
+        kickYesVotes = 1;
+
         com.example.main.service.NetworkService ns = com.example.main.models.App.getInstance().getNetworkService();
         if (ns != null && game != null && game.getCurrentPlayer() != null) {
             java.util.HashMap<String, Object> data = new java.util.HashMap<>();
             data.put("initiator", game.getCurrentPlayer().getUsername());
             data.put("target", targetUsername);
             ns.sendPlayerAction("kick_vote_start", data);
-            // Show live tally on initiator
+
             broadcastKickVoteUpdate(false, false);
         }
     }
@@ -5364,8 +5306,8 @@ public class GDXGameScreen implements Screen {
     public void onKickVoteStarted(String initiator, String target) {
         kickTarget = target;
         kickTotalPlayers = (game != null && game.getPlayers() != null) ? (int) game.getPlayers().stream().filter(u -> u != null && u.getPlayer() != null && !u.getUsername().startsWith("empty_slot_")).count() : 0;
-        kickYesVotes = 1; // initiator yes counted
-        // Do not show popup for initiator
+        kickYesVotes = 1;
+
         if (game != null && game.getCurrentPlayer() != null && game.getCurrentPlayer().getUsername().equals(initiator)) return;
         showKickVotePopup(initiator, target);
     }
@@ -5418,9 +5360,9 @@ public class GDXGameScreen implements Screen {
     private void checkKickThreshold() {
         if (kickTotalPlayers <= 0) return;
         if (kickYesVotes > kickTotalPlayers / 2) {
-            // Passed
+
             broadcastKickVoteUpdate(true, true);
-            // Remove player locally
+
             if (controller != null && kickTarget != null) controller.removePlayer(kickTarget);
         }
     }
@@ -5448,7 +5390,7 @@ public class GDXGameScreen implements Screen {
         }
     }
 
-    // --- Terminate Game Voting ---
+
     private Window terminateVotePopup;
     private int terminateYesVotes = 0;
     private int terminateTotalPlayers = 0;
@@ -5457,18 +5399,18 @@ public class GDXGameScreen implements Screen {
     private void beginTerminateVoteLocal(String initiator) {
         terminateInitiator = initiator;
         terminateTotalPlayers = (game != null && game.getPlayers() != null) ? (int) game.getPlayers().stream().filter(u -> u != null && u.getPlayer() != null && !u.getUsername().startsWith("empty_slot_")).count() : 0;
-        terminateYesVotes = 1; // initiator counts as yes
-        // Do NOT show popup for initiator
+        terminateYesVotes = 1;
+
         isInventoryOpen = false;
         if (stage != null) stage.unfocusAll();
         broadcastTerminateVoteUpdate(false, false);
     }
 
     public void onTerminateVoteStarted(String initiator) {
-        // Show popup on others with Accept/Reject
+
         terminateInitiator = initiator;
         terminateTotalPlayers = (game != null && game.getPlayers() != null) ? (int) game.getPlayers().stream().filter(u -> u != null && u.getPlayer() != null && !u.getUsername().startsWith("empty_slot_")).count() : 0;
-        // initiator yes counted; if I'm the initiator, don't show popup
+
         terminateYesVotes = 1;
         if (game != null && game.getCurrentPlayer() != null && !game.getCurrentPlayer().getUsername().equals(initiator)) {
             showTerminateVotePopup(initiator);
@@ -5499,7 +5441,7 @@ public class GDXGameScreen implements Screen {
         accept.addListener(new ClickListener(){
             @Override public void clicked(InputEvent e, float px, float py){
                 if (terminateVotePopup != null) { terminateVotePopup.remove(); terminateVotePopup = null; }
-                // Increment yes locally only if not initiator
+
                 if (game != null && game.getCurrentPlayer() != null && !game.getCurrentPlayer().getUsername().equals(terminateInitiator)) {
                     terminateYesVotes++;
                 }
@@ -5522,11 +5464,11 @@ public class GDXGameScreen implements Screen {
     }
 
     private void checkTerminateThreshold() {
-        // More than half of all players
+
         if (terminateTotalPlayers <= 0) return;
         if (terminateYesVotes > terminateTotalPlayers / 2) {
             broadcastTerminateVoteUpdate(true, true);
-            // Exit to main menu
+
             isInventoryOpen = false;
             Main.getInstance().setScreen(new GDXMainMenu(com.example.main.models.App.getInstance().getNetworkService()));
         }
@@ -5546,7 +5488,7 @@ public class GDXGameScreen implements Screen {
     }
 
     public void onTerminateVoteUpdate(String initiator, int yes, int total, boolean finished, boolean passed) {
-        // Sync counters
+
         terminateInitiator = initiator;
         terminateYesVotes = yes;
         terminateTotalPlayers = total;
@@ -5608,7 +5550,7 @@ public class GDXGameScreen implements Screen {
                 itemSlot.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                // This is the core fix for the planting action
+
                 Result result = controller.plantItem(item, plantingTargetTile);
                 if (result.isSuccessful()) {
                     startActionAnimation(PlayerActionState.PLANTING);
@@ -5633,7 +5575,7 @@ public class GDXGameScreen implements Screen {
                 plantingPromptLabel.setVisible(false);
                 Gdx.input.setInputProcessor(multiplexer);
 
-                // Show feedback to the player
+
                 generalMessageLabel.setText(result.Message());
                 generalMessageLabel.setVisible(true);
                 generalMessageTimer = GENERAL_MESSAGE_DURATION;
@@ -5643,7 +5585,7 @@ public class GDXGameScreen implements Screen {
                 itemSlot.addListener(new ClickListener() {
                     @Override
                     public void clicked(InputEvent event, float x, float y) {
-                        // Show a confirmation dialog before deleting
+
                         showTrashConfirmationDialog(item);
                     }
                 });
@@ -5663,8 +5605,8 @@ public class GDXGameScreen implements Screen {
         if (item == null || item.getName() == null) {
             return "Unknown";
         }
-        // This version relies on the item's display name matching the asset file name.
-        // Example: item.getName() -> "Basic Fertilizer" -> "Basic_Fertilizer"
+
+
         return item.getItemType().getEnumName();
     }
 
@@ -5681,7 +5623,7 @@ public class GDXGameScreen implements Screen {
         TextButton leftButton = new TextButton("<", skin);
         TextButton rightButton = new TextButton(">", skin);
         TextButton acceptButton = new TextButton("Equip", skin);
-        TextButton unequipButton = new TextButton("Unequip", skin); // Create the new button
+        TextButton unequipButton = new TextButton("Unequip", skin);
 
         leftButton.addListener(new ClickListener() {
             @Override
@@ -5714,16 +5656,16 @@ public class GDXGameScreen implements Screen {
             }
         });
 
-        // Add listener for the unequip button
+
         unequipButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                game.getCurrentPlayer().setCurrentTool(null); // Set the current tool to null
-                isToolMenuOpen = false; // Close menu
+                game.getCurrentPlayer().setCurrentTool(null);
+                isToolMenuOpen = false;
             }
         });
 
-        // Layout the tool menu
+
         toolTable.add(leftButton).pad(5);
         toolTable.add(currentToolImage).size(64, 64).pad(5);
         toolTable.add(rightButton).pad(5);
@@ -5731,11 +5673,11 @@ public class GDXGameScreen implements Screen {
         toolTable.add(currentToolLabel).colspan(3).pad(5);
         toolTable.row();
 
-        // Create a horizontal group for the buttons
+
         HorizontalGroup buttonGroup = new HorizontalGroup();
         buttonGroup.space(10);
         buttonGroup.addActor(acceptButton);
-        buttonGroup.addActor(unequipButton); // Add the unequip button to the group
+        buttonGroup.addActor(unequipButton);
 
         toolTable.add(buttonGroup).colspan(3).pad(5);
 
@@ -5756,7 +5698,7 @@ public class GDXGameScreen implements Screen {
         if (texture != null) {
             currentToolImage.setDrawable(new Image(texture).getDrawable());
                 } else {
-            // Fallback if texture is missing
+
             currentToolImage.setDrawable(skin.getDrawable("default-round"));
         }
         currentToolLabel.setText(tool.getName());
@@ -5780,7 +5722,7 @@ public class GDXGameScreen implements Screen {
         cheatItemQuantityField.setMessageText("Quantity");
 
         TextButton addButton = new TextButton("Add Item", skin);
-        TextButton closeButton = new TextButton("Close", skin); // Create a close button
+        TextButton closeButton = new TextButton("Close", skin);
         Label cheatMessageLabel = new Label("", skin);
 
         addButton.addListener(new ClickListener() {
@@ -5791,7 +5733,7 @@ public class GDXGameScreen implements Screen {
                 Result result = controller.cheatAddItem(itemName, quantityStr);
                 cheatMessageLabel.setText(result.Message());
                 if (result.isSuccessful()) {
-                    // Broadcast cheat add item to other clients
+
                     com.example.main.service.NetworkService ns = com.example.main.models.App.getInstance().getNetworkService();
                     if (ns != null) {
                         try {
@@ -5802,19 +5744,19 @@ public class GDXGameScreen implements Screen {
                             actionData.put("quantity", qty);
                             ns.sendPlayerAction("cheat_add_item", actionData);
                         } catch (NumberFormatException ignored) {
-                            // ignore malformed quantity in broadcast
+
                         }
                     }
                 }
             }
         });
 
-        // Add a listener to the close button
+
         closeButton.addListener(new ClickListener() {
                         @Override
                         public void clicked(InputEvent event, float x, float y) {
                 isCheatMenuOpen = false;
-                Gdx.input.setInputProcessor(multiplexer); // Return focus to the game
+                Gdx.input.setInputProcessor(multiplexer);
             }
         });
 
@@ -5822,7 +5764,7 @@ public class GDXGameScreen implements Screen {
         cheatTable.add(cheatItemNameField).width(200).pad(5);
         cheatTable.add(cheatItemQuantityField).width(100).pad(5).row();
 
-        // Add both buttons to the table
+
         Table buttonTable = new Table();
         buttonTable.add(addButton).pad(5);
         buttonTable.add(closeButton).pad(5);
@@ -5958,7 +5900,7 @@ public class GDXGameScreen implements Screen {
     private void setupCraftingCheatMenuUI() {
         craftingCheatMenuStage = new Stage(new ScreenViewport());
         Table cheatTable = new Table(skin);
-        cheatTable.setBackground(skin.newDrawable("white", new Color(0.1f, 0.1f, 0.2f, 0.8f))); // Blue tint
+        cheatTable.setBackground(skin.newDrawable("white", new Color(0.1f, 0.1f, 0.2f, 0.8f)));
         craftingCheatMenuStage.addActor(cheatTable);
 
         cheatCraftingRecipeField = new TextField("", skin);
@@ -6008,7 +5950,7 @@ public class GDXGameScreen implements Screen {
     private void setupCookingCheatMenuUI() {
         cookingCheatMenuStage = new Stage(new ScreenViewport());
         Table cheatTable = new Table(skin);
-        cheatTable.setBackground(skin.newDrawable("white", new Color(0.2f, 0.1f, 0.1f, 0.8f))); // Red tint
+        cheatTable.setBackground(skin.newDrawable("white", new Color(0.2f, 0.1f, 0.1f, 0.8f)));
         cookingCheatMenuStage.addActor(cheatTable);
 
         cheatCookingRecipeField = new TextField("", skin);
@@ -6107,13 +6049,13 @@ public class GDXGameScreen implements Screen {
                     Food foodToEat = playerFoodItems.get(selectedFoodIndex);
                     Result result = controller.eat(foodToEat.getName());
 
-                    // Start animation and show message
+
                     eatingAnimationTimer = EATING_ANIMATION_DURATION;
                     generalMessageLabel.setText(result.Message());
                     generalMessageLabel.setVisible(true);
                     generalMessageTimer = GENERAL_MESSAGE_DURATION;
 
-                    // Send network sync
+
                     if (result.isSuccessful()) {
                         com.example.main.service.NetworkService ns = com.example.main.models.App.getInstance().getNetworkService();
                         if (ns != null) {
@@ -6124,7 +6066,7 @@ public class GDXGameScreen implements Screen {
                         }
                     }
 
-                    // Close menu
+
                     isEatMenuOpen = false;
                     Gdx.input.setInputProcessor(multiplexer);
                 }
@@ -6198,7 +6140,7 @@ public class GDXGameScreen implements Screen {
         spriteBatch.begin();
 
         float buffIconX = Gdx.graphics.getWidth() - 60;
-        float buffIconY = Gdx.graphics.getHeight() - 250; // Position below the clock
+        float buffIconY = Gdx.graphics.getHeight() - 250;
 
         for (ActiveBuff buff : currentPlayer.getActiveBuffs()) {
             Texture buffTexture = null;
@@ -6215,7 +6157,7 @@ public class GDXGameScreen implements Screen {
 
             if (buffTexture != null) {
                 spriteBatch.draw(buffTexture, buffIconX - 5, buffIconY + 10, 32, 32);
-                buffIconY -= 40; // Move next icon down
+                buffIconY -= 40;
             }
         }
         spriteBatch.end();
@@ -6224,7 +6166,7 @@ public class GDXGameScreen implements Screen {
     private void handleMachinePlacement() {
         if (!isMachinePlacementMode) return;
 
-        // Handle left-click to place
+
         if (Gdx.input.isButtonJustPressed(Input.Buttons.LEFT)) {
             Vector3 worldCoords = camera.unproject(new Vector3(Gdx.input.getX(), Gdx.input.getY(), 0));
             int tileX = (int) (worldCoords.x / TILE_SIZE);
@@ -6243,7 +6185,7 @@ public class GDXGameScreen implements Screen {
             generalMessageTimer = GENERAL_MESSAGE_DURATION;
 
             if (result.isSuccessful()) {
-                // Broadcast placement to other clients
+
                 com.example.main.service.NetworkService ns = com.example.main.models.App.getInstance().getNetworkService();
                 if (ns != null && machineToPlace != null && machineToPlace.getItemType() != null) {
                     java.util.HashMap<String, Object> data = new java.util.HashMap<>();
@@ -6259,7 +6201,7 @@ public class GDXGameScreen implements Screen {
             }
         }
 
-        // Handle right-click to cancel
+
         if (Gdx.input.isButtonJustPressed(Input.Buttons.RIGHT)) {
             isMachinePlacementMode = false;
             machineToPlace = null;
@@ -6290,7 +6232,7 @@ public class GDXGameScreen implements Screen {
         machineUiStage.clear();
         Dialog dialog = new Dialog(activeMachine.getMachineType().getName(), skin, "dialog");
 
-        // UI Components
+
         Table content = dialog.getContentTable();
         Image inputImage = new Image();
         Image outputImage = new Image();
@@ -6298,7 +6240,7 @@ public class GDXGameScreen implements Screen {
         Table recipeTable = new Table();
         ScrollPane recipePane = new ScrollPane(recipeTable, skin);
 
-        // Layout
+
         content.add(new Label("Input:", skin));
         content.add(inputImage).size(48, 48).pad(10);
         content.add(new Label("Output:", skin));
@@ -6306,7 +6248,7 @@ public class GDXGameScreen implements Screen {
         content.add(progressBar).colspan(4).fillX().pad(5).row();
         content.add(recipePane).colspan(4).height(150).fill().pad(5);
 
-        // Populate Recipes (only if the machine is idle)
+
         if (activeMachine.isIdle()) {
             for (ArtisanProductType recipe : ArtisanProductType.values()) {
                 if (recipe.getMachine() == activeMachine.getMachineType()) {
@@ -6320,14 +6262,14 @@ public class GDXGameScreen implements Screen {
                             generalMessageLabel.setText(result.Message());
                             generalMessageLabel.setVisible(true);
                             generalMessageTimer = GENERAL_MESSAGE_DURATION;
-                            showMachineUI(); // Refresh the dialog
+                            showMachineUI();
                         }
                     });
                 }
             }
         }
 
-        // Populate Buttons and State based on machine status
+
         if (activeMachine.isIdle()) {
             dialog.getButtonTable().add(new Label("Select a recipe to start.", skin));
         } else if (activeMachine.isProcessing()) {
@@ -6343,7 +6285,7 @@ public class GDXGameScreen implements Screen {
                     generalMessageLabel.setText(result.Message());
                     generalMessageLabel.setVisible(true);
                     generalMessageTimer = GENERAL_MESSAGE_DURATION;
-                    showMachineUI(); // Refresh the dialog
+                    showMachineUI();
                 }
             });
             dialog.button(finishNow);
@@ -6356,7 +6298,7 @@ public class GDXGameScreen implements Screen {
                     generalMessageLabel.setText(result.Message());
                     generalMessageLabel.setVisible(true);
                     generalMessageTimer = GENERAL_MESSAGE_DURATION;
-                    showMachineUI(); // Refresh the dialog
+                    showMachineUI();
                 }
             });
             dialog.button(cancel);
@@ -6393,7 +6335,7 @@ public class GDXGameScreen implements Screen {
         float renderX = tileX * TILE_SIZE;
         float renderY = (MAP_HEIGHT - 1 - tileY) * TILE_SIZE;
 
-        batch.setColor(1, 1, 1, 0.6f); // Make it transparent
+        batch.setColor(1, 1, 1, 0.6f);
         batch.draw(machinePlacementTexture, renderX, renderY, TILE_SIZE, TILE_SIZE);
         batch.setColor(1, 1, 1, 1);
     }
@@ -6401,22 +6343,22 @@ public class GDXGameScreen implements Screen {
     private void startFishingMinigame() {
         if (controller.getActiveMinigame() == null) return;
         isFishingMinigameActive = true;
-        Gdx.input.setInputProcessor(fishingStage); // Take exclusive control of input
+        Gdx.input.setInputProcessor(fishingStage);
     }
 
     private void endFishingMinigame(boolean success) {
         isFishingMinigameActive = false;
-        Gdx.input.setInputProcessor(multiplexer); // Return control
+        Gdx.input.setInputProcessor(multiplexer);
 
         FishingMinigame minigame = controller.getActiveMinigame();
         if (minigame == null) return;
 
         if (success) {
             Fish caughtFish = new Fish(minigame.getFish(), 1);
-            // Apply perfect catch bonus
+
             if (minigame.isPerfect()) {
                 generalMessageLabel.setText("Perfect Catch! " + caughtFish.getName());
-                // Logic to upgrade quality can be added here
+
             } else {
                 generalMessageLabel.setText("You caught a " + caughtFish.getName() + "!");
             }
@@ -6439,7 +6381,7 @@ public class GDXGameScreen implements Screen {
             return;
         }
 
-        // Handle input for the minigame
+
         boolean holdingUp = Gdx.input.isKeyPressed(Input.Keys.UP) || Gdx.input.isKeyPressed(Input.Keys.W);
         boolean holdingDown = Gdx.input.isKeyPressed(Input.Keys.DOWN) || Gdx.input.isKeyPressed(Input.Keys.S);
         if (Gdx.input.isKeyJustPressed(Input.Keys.Q)) {
@@ -6449,7 +6391,7 @@ public class GDXGameScreen implements Screen {
 
         minigame.update(delta, holdingUp, holdingDown);
 
-        // Check for win/loss conditions
+
         if (minigame.getCaptureProgress() >= 1.0f) {
             endFishingMinigame(true);
         } else if (minigame.getCaptureProgress() <= 0f) {
@@ -6466,32 +6408,32 @@ public class GDXGameScreen implements Screen {
         float screenWidth = Gdx.graphics.getWidth();
         float screenHeight = Gdx.graphics.getHeight();
 
-        // All drawing happens on the HUD camera
+
         spriteBatch.setProjectionMatrix(hudCamera.combined);
         spriteBatch.begin();
 
-        // Main vertical bar
+
         float barWidth = 64;
         float barHeight = screenHeight * 0.7f;
         float barX = (screenWidth - barWidth) / 2f;
         float barY = (screenHeight - barHeight) / 2f;
         spriteBatch.draw(fishingBarBg, barX, barY, barWidth, barHeight);
 
-        // Player's green bar
+
         float playerBarHeight = barHeight * minigame.getPlayerBarSize();
         float playerBarY = barY + (barHeight - playerBarHeight) * minigame.getPlayerBarPosition();
         spriteBatch.draw(playerBarTexture, barX, playerBarY, barWidth, playerBarHeight);
 
-        // Fish Icon
+
         float fishY = barY + (barHeight - fishIconTexture.getHeight()) * minigame.getFishPosition();
         spriteBatch.draw(fishIconTexture, barX + (barWidth - fishIconTexture.getWidth()) / 2f, fishY);
 
-        // Legendary Crown
+
         if (minigame.getFish().getType().equals("Legendary")) {
             spriteBatch.draw(legendaryCrownTexture, barX + (barWidth - legendaryCrownTexture.getWidth()) / 2f, fishY + fishIconTexture.getHeight() - 10);
         }
 
-        // Capture Progress Bar
+
         float progressX = barX + barWidth + 20;
         float progressY = barY;
         spriteBatch.draw(progressBarBg, progressX, progressY, progressBarBg.getWidth(), barHeight);
@@ -6509,7 +6451,7 @@ public class GDXGameScreen implements Screen {
         stage.addActor(reactionMenuContainer);
 
         Table emojiTable = new Table();
-        // Use the class field instead of a local variable
+
         emojiScrollPane = new ScrollPane(emojiTable, skin);
         emojiScrollPane.setFadeScrollBars(false);
         emojiScrollPane.setVisible(false);
@@ -6525,14 +6467,14 @@ public class GDXGameScreen implements Screen {
             Texture emojiTexture = textureManager.getTexture(name);
             if (emojiTexture != null) {
                 Image image = new Image(emojiTexture);
-                // ### FIX: The click listener on the image itself has been REMOVED ###
-                // Selection is now handled by the Enter key.
+
+
                 emojiImages.add(image);
                 emojiTable.add(image).size(image.getPrefWidth() * 0.5f, image.getPrefHeight() * 0.5f).pad(5);
             }
         }
 
-        // Use the class fields for the arrow buttons
+
         leftArrowButton = new TextButton("<", skin);
         leftArrowButton.setVisible(false);
         leftArrowButton.addListener(new ClickListener() {
@@ -6578,7 +6520,7 @@ public class GDXGameScreen implements Screen {
         updateEmojiHighlight();
     }
 
-    // Remote reaction application
+
     public void applyRemoteReaction(String senderUsername, String emojiName, float duration) {
         if (textureManager == null || game == null) return;
         Texture tex = textureManager.getTexture(emojiName);
@@ -6604,13 +6546,13 @@ public class GDXGameScreen implements Screen {
 
         TextButton searchButton = new TextButton("Get Info", skin);
 
-        // --- NEW: Image widget for the plant/tree ---
+
         Image itemImage = new Image();
 
-        // --- MODIFIED: Label with center alignment ---
+
         Label infoLabel = new Label("Enter a name and click 'Get Info'.", skin);
         infoLabel.setWrap(true);
-        infoLabel.setAlignment(Align.center); // Center the text
+        infoLabel.setAlignment(Align.center);
 
         ScrollPane scrollPane = new ScrollPane(infoLabel, skin);
         scrollPane.setFadeScrollBars(false);
@@ -6621,16 +6563,16 @@ public class GDXGameScreen implements Screen {
                 String plantName = searchField.getText().trim();
                 if (plantName.isEmpty()) {
                     infoLabel.setText("Please enter a name.");
-                    itemImage.setDrawable(null); // Clear the image
+                    itemImage.setDrawable(null);
                     return;
                 }
 
-                // First, try searching for a crop
+
                 Result result = controller.craftInfo(plantName);
                 String textureKey = null;
 
                 if (result.isSuccessful()) {
-                    // Find the CropType to get its enum name for the texture
+
                     for (CropType type : CropType.values()) {
                         if (type.getName().equalsIgnoreCase(plantName)) {
                             textureKey = type.getEnumName();
@@ -6638,10 +6580,10 @@ public class GDXGameScreen implements Screen {
                         }
                     }
                 } else {
-                    // If not found, try searching for a tree
+
                     result = controller.treeInfo(plantName);
                     if (result.isSuccessful()) {
-                        // Find the TreeType to get its enum name for the texture
+
                         for (TreeType type : TreeType.values()) {
                             if (type.getName().equalsIgnoreCase(plantName)) {
                                 textureKey = type.getEnumName();
@@ -6651,23 +6593,23 @@ public class GDXGameScreen implements Screen {
                     }
                 }
 
-                // Display the result text
+
                 if (result.isSuccessful()) {
                     infoLabel.setText(result.Message());
                 } else {
                     infoLabel.setText("Could not find information for '" + plantName + "'.");
                 }
 
-                // --- NEW: Update the image ---
+
                 if (textureKey != null) {
                     Texture itemTexture = textureManager.getTexture(textureKey);
                     if (itemTexture != null) {
                         itemImage.setDrawable(new TextureRegionDrawable(new TextureRegion(itemTexture)));
                     } else {
-                        itemImage.setDrawable(null); // Clear image if texture not found
+                        itemImage.setDrawable(null);
                     }
                 } else {
-                    itemImage.setDrawable(null); // Clear image if no key found
+                    itemImage.setDrawable(null);
                 }
             }
         });
@@ -6677,7 +6619,7 @@ public class GDXGameScreen implements Screen {
         searchBar.add(searchButton);
 
         contentTable.add(searchBar).padBottom(15).row();
-        contentTable.add(itemImage).size(64, 64).padBottom(15).row(); // <-- ADDED image widget
+        contentTable.add(itemImage).size(64, 64).padBottom(15).row();
         contentTable.add(scrollPane).expand().fill().padBottom(15).row();
 
         Table bottomButtonTable = new Table();
@@ -6692,7 +6634,7 @@ public class GDXGameScreen implements Screen {
         if (!isInfoMenuOpen) return;
     }
 
-    // In main/GDXviews/GDXGameScreen.java
+
 
     private void showQuestsMenu() {
         menuContentTable.clear();
@@ -6705,11 +6647,11 @@ public class GDXGameScreen implements Screen {
 
         contentTable.add(new Label("Active Quests", skin)).padBottom(15).row();
 
-        // Call the controller to get the quest information
+
         Result result = controller.showQuests();
         String questsText = result.Message();
 
-        // If there are no quests, display a message
+
         if (questsText.trim().isEmpty()) {
             questsText = "No active quests at the moment.";
         }
@@ -6731,7 +6673,7 @@ public class GDXGameScreen implements Screen {
         menuContentTable.add(questStack).width(Gdx.graphics.getWidth() * 0.8f).height(Gdx.graphics.getHeight() * 0.8f);
     }
 
-    // In main/GDXviews/GDXGameScreen.java
+
 
     private void showJournalMenu() {
         menuContentTable.clear();
@@ -6742,10 +6684,10 @@ public class GDXGameScreen implements Screen {
         Table contentTable = new Table();
         contentTable.pad(20);
 
-        // --- Title ---
+
         contentTable.add(new Label("Journal", skin)).padBottom(20).row();
 
-        // --- Date and Weather Info ---
+
         Table infoTable = new Table();
         infoTable.defaults().pad(5).left();
         Date currentDate = game.getDate();
@@ -6756,7 +6698,7 @@ public class GDXGameScreen implements Screen {
         infoTable.add(new Label(weatherInfo, skin)).row();
         contentTable.add(infoTable).left().padBottom(20).row();
 
-        // --- Quests Section ---
+
         contentTable.add(new Label("--- Active Quests ---", skin)).padBottom(10).row();
         Result result = controller.showQuests();
         String questsText = result.Message();
@@ -6771,7 +6713,7 @@ public class GDXGameScreen implements Screen {
         questScrollPane.setFadeScrollBars(false);
         contentTable.add(questScrollPane).expand().fillX().height(150).padBottom(20).row();
 
-        // --- News Section (Placeholder) ---
+
         contentTable.add(new Label("--- Daily News ---", skin)).padBottom(10).row();
         Label newsLabel = new Label("The news channel is quiet today.", skin);
         newsLabel.setWrap(true);
@@ -6781,7 +6723,7 @@ public class GDXGameScreen implements Screen {
         newsScrollPane.setFadeScrollBars(false);
         contentTable.add(newsScrollPane).expand().fillX().height(100).padBottom(20).row();
 
-        // --- Back Button ---
+
         Table bottomButtonTable = new Table();
         addBackButtonToMenu(bottomButtonTable);
         contentTable.add(bottomButtonTable).bottom().left().expandY();
@@ -6803,7 +6745,7 @@ public class GDXGameScreen implements Screen {
                     int finalStage = cropType.getStages().size();
                     String textureKey = cropType.getEnumName() + "_Stage_" + finalStage;
                     Texture cropTexture = textureManager.getTexture(textureKey);
-                    // --- END OF NEW LOGIC ---
+
 
                     if (cropTexture != null) {
                         float worldX = x * TILE_SIZE;
@@ -6909,11 +6851,11 @@ public class GDXGameScreen implements Screen {
         femaleRight1Texture.dispose();
         femaleRight2Texture.dispose();
 
-        // Dispose NPC interaction textures
+
         dialogBoxTexture.dispose();
         menuBackgroundTexture.dispose();
 
-        // Clean up friends menu
+
         if (friendsMenuTable != null) {
             friendsMenuTable.remove();
             friendsMenuTable = null;
@@ -6927,17 +6869,17 @@ public class GDXGameScreen implements Screen {
         float speedX, speedY;
 
         public CrowAnimation() {
-            // Start the crow off-screen from either the left or the right
+
             if (Math.random() > 0.5) {
-                x = -100; // Start from left
-                speedX = (float) (250 + Math.random() * 150); // Move right
+                x = -100;
+                speedX = (float) (250 + Math.random() * 150);
             } else {
-                x = Gdx.graphics.getWidth() + 100; // Start from right
-                speedX = (float) -(250 + Math.random() * 150); // Move left
+                x = Gdx.graphics.getWidth() + 100;
+                speedX = (float) -(250 + Math.random() * 150);
             }
-            // Start at a random height
+
             y = (float) (Math.random() * Gdx.graphics.getHeight());
-            // Add a slight up/down movement to make it look more natural
+
             speedY = (float) (Math.random() * 100 - 50);
         }
 
@@ -6957,23 +6899,23 @@ public class GDXGameScreen implements Screen {
         }
 
         shopMenuTable = new Table();
-        // Make the background 75% of screen size
+
         shopMenuTable.setSize(Gdx.graphics.getWidth() * 0.75f, Gdx.graphics.getHeight() * 0.75f);
         shopMenuTable.setPosition(
             (Gdx.graphics.getWidth() - shopMenuTable.getWidth()) / 2f,
             (Gdx.graphics.getHeight() - shopMenuTable.getHeight()) / 2f
         );
 
-        // Create a background drawable from the menu background texture
+
         TextureRegionDrawable backgroundDrawable = new TextureRegionDrawable(menuBackgroundTexture);
         shopMenuTable.setBackground(backgroundDrawable);
 
         stage.addActor(shopMenuTable);
 
-        // Ensure the stage is the input processor for shop menu
+
         Gdx.input.setInputProcessor(stage);
 
-        // Create the appropriate menu based on state
+
         switch (currentShopMenuState) {
             case MAIN_MENU:
                 createMainShopMenu();
@@ -6990,13 +6932,13 @@ public class GDXGameScreen implements Screen {
     private void createMainShopMenu() {
         shopMenuTable.clear();
 
-        // Add shop name at the top with blue color
+
         Label titleLabel = new Label(currentShopType.getName(), skin);
         titleLabel.setFontScale(1.5f);
         titleLabel.setColor(Color.BLUE);
         shopMenuTable.add(titleLabel).padBottom(20).row();
 
-        // Available Products button
+
         TextButton availableProductsButton = new TextButton("Available Products", skin);
         availableProductsButton.addListener(new ClickListener() {
             @Override
@@ -7008,7 +6950,7 @@ public class GDXGameScreen implements Screen {
         });
         shopMenuTable.add(availableProductsButton).width(200).pad(10).row();
 
-        // All Products button
+
         TextButton allProductsButton = new TextButton("All Products", skin);
         allProductsButton.addListener(new ClickListener() {
             @Override
@@ -7020,7 +6962,7 @@ public class GDXGameScreen implements Screen {
         });
         shopMenuTable.add(allProductsButton).width(200).pad(10).row();
 
-        // Close button
+
         TextButton closeButton = new TextButton("Close", skin);
         closeButton.addListener(new ClickListener() {
             @Override
@@ -7030,7 +6972,7 @@ public class GDXGameScreen implements Screen {
                     shopMenuTable.remove();
                     shopMenuTable = null;
                 }
-                // Restore input processor to multiplexer
+
                 Gdx.input.setInputProcessor(multiplexer);
             }
         });
@@ -7039,34 +6981,34 @@ public class GDXGameScreen implements Screen {
 
     private void createAllProductsMenu() {
         shopMenuTable.clear();
-        // Add shop name at the top with blue color
+
         Label titleLabel = new Label(currentShopType.getName() + " - All Products", skin);
         titleLabel.setFontScale(1.5f);
         titleLabel.setColor(Color.BLUE);
         shopMenuTable.add(titleLabel).padBottom(20).row();
-        // Show result message if exists
+
         if (!shopResultMessage.isEmpty()) {
             Label resultLabel = new Label(shopResultMessage, skin);
             resultLabel.setColor(shopResultSuccess ? Color.GREEN : Color.RED);
             resultLabel.setFontScale(1.1f);
             shopMenuTable.add(resultLabel).padBottom(15).row();
         }
-        // Get all products from the shop controller
+
         Result result = shopController.showAllProducts();
         String productsText = result.isSuccessful() ? result.Message() : "Failed to load products";
-        // Create a table to hold all product cards
+
         Table productsTable = new Table();
         if (result.isSuccessful() && !productsText.trim().isEmpty()) {
             String[] products = productsText.split("\n");
             for (String product : products) {
                 if (product.trim().isEmpty()) continue;
 
-                // Create beautiful product card similar to trade menu
+
                 Table productCard = new Table();
                 productCard.setBackground(skin.getDrawable("default-round"));
                 productCard.pad(15);
 
-                // Product name and price
+
                 Label productLabel = new Label(product.trim(), skin);
                 productLabel.setColor(Color.WHITE);
                 productLabel.setFontScale(1.2f);
@@ -7080,15 +7022,15 @@ public class GDXGameScreen implements Screen {
             noProductsLabel.setColor(Color.GRAY);
             productsTable.add(noProductsLabel).pad(30).row();
         }
-        // Create scroll pane for the products with proper configuration
+
         ScrollPane scrollPane = new ScrollPane(productsTable, skin);
         scrollPane.setFadeScrollBars(false);
         scrollPane.setScrollbarsOnTop(true);
         scrollPane.setScrollBarPositions(false, true);
         scrollPane.setScrollingDisabled(false, false);
-        // Add scroll pane to main table with fixed height
+
         shopMenuTable.add(scrollPane).width(550).height(400).pad(10).row();
-        // Back and Close buttons (always show both)
+
         Table buttonTable = new Table();
         TextButton backButton = new TextButton("Back", skin);
         backButton.addListener(new ClickListener() {
@@ -7109,7 +7051,7 @@ public class GDXGameScreen implements Screen {
                     shopMenuTable.remove();
                     shopMenuTable = null;
                 }
-                // Restore input processor to multiplexer
+
                 Gdx.input.setInputProcessor(multiplexer);
             }
         });
@@ -7119,35 +7061,35 @@ public class GDXGameScreen implements Screen {
 
     private void createAvailableProductsMenu() {
         shopMenuTable.clear();
-        // Add shop name at the top with blue color
+
         Label titleLabel = new Label(currentShopType.getName() + " - Available Products", skin);
         titleLabel.setFontScale(1.5f);
         titleLabel.setColor(Color.BLUE);
         shopMenuTable.add(titleLabel).padBottom(20).row();
-        // Show result message if exists
+
         if (!shopResultMessage.isEmpty()) {
             Label resultLabel = new Label(shopResultMessage, skin);
             resultLabel.setColor(shopResultSuccess ? Color.GREEN : Color.RED);
             resultLabel.setFontScale(1.1f);
             shopMenuTable.add(resultLabel).padBottom(15).row();
         }
-        // Get available products from the shop controller
+
         Result result = shopController.showAvailableProducts();
         String productsText = result.isSuccessful() ? result.Message() : "Failed to load products";
-        // Create a table to hold all product cards
+
         Table productsTable = new Table();
         if (result.isSuccessful() && !productsText.trim().isEmpty()) {
             String[] products = productsText.split("\n");
-            for (int i = 0; i < products.length; i += 2) { // Each product and its stock info
+            for (int i = 0; i < products.length; i += 2) {
                 if (i >= products.length) break;
                 String product = products[i];
                 String stockInfo = (i + 1 < products.length) ? products[i + 1] : "";
                 if (product.trim().isEmpty()) continue;
 
-                // Extract product name for purchase
+
                 String productName = extractProductName(product);
 
-                // Create display text with stock info
+
                 String displayText = product.trim();
                 if (!stockInfo.isEmpty()) {
                     displayText += " | " + stockInfo;
@@ -7156,12 +7098,12 @@ public class GDXGameScreen implements Screen {
                 productCard.setBackground(skin.getDrawable("default-round"));
                 productCard.pad(15);
 
-                // Product name and price with stock info
+
                 Label productLabel = new Label(displayText, skin);
                 productLabel.setColor(Color.WHITE);
                 productLabel.setFontScale(1.2f);
                 productCard.add(productLabel).colspan(4).padBottom(10).row();
-                // Purchase controls
+
                 Label amountLabel = new Label("Amount:", skin);
                 amountLabel.setColor(Color.WHITE);
                 productCard.add(amountLabel).padRight(5);
@@ -7192,34 +7134,34 @@ public class GDXGameScreen implements Screen {
                         try {
                             int amount = Integer.parseInt(amountField.getText());
                             if (amount > 0) {
-                                // Check if this is a barn or coop purchase
+
                                 if (currentShopType == ShopType.CarpentersShop &&
                                     (productName.contains("Barn") || productName.contains("Coop"))) {
-                                    // Handle barn/coop purchase - enter building placement mode
+
                                     isBuildingPlacementMode = true;
                                     buildingToPlace = productName;
 
-                                    // Set the appropriate texture based on the building type
+
                                     if (productName.contains("Barn")) {
                                         buildingPlacementTexture = barnTexture;
                                     } else if (productName.contains("Coop")) {
                                         buildingPlacementTexture = coopTexture;
                                     }
 
-                                    // Close the shop menu
+
                                     showShopMenu = false;
                                     if (shopMenuTable != null) {
                                         shopMenuTable.remove();
                                         shopMenuTable = null;
                                     }
 
-                                    // Show placement instructions
+
                                     generalMessageLabel.setText("Click where you want to place the " + productName + ". Right-click to cancel.");
                                     generalMessageLabel.setColor(Color.CYAN);
                                     generalMessageLabel.setVisible(true);
                                     generalMessageTimer = GENERAL_MESSAGE_DURATION;
                                 } else if (currentShopType == ShopType.MarniesRanch) {
-                                    // Check if this product is an animal (has a required building)
+
                                     boolean isAnimal = false;
                                     for (com.example.main.enums.design.Shop.MarniesRanch entry : com.example.main.enums.design.Shop.MarniesRanch.values()) {
                                         if (entry.getDisplayName().equals(productName) && entry.getBuildingRequired() != null) {
@@ -7231,7 +7173,7 @@ public class GDXGameScreen implements Screen {
                                         showAnimalPurchasePage(productName);
                                         return;
                                     }
-                                    // Otherwise, normal purchase
+
                                     Result purchaseResult = shopController.purchase(productName, String.valueOf(amount));
                                     shopResultMessage = purchaseResult.Message();
                                     shopResultSuccess = purchaseResult.isSuccessful();
@@ -7249,7 +7191,7 @@ public class GDXGameScreen implements Screen {
                                     }
                                     createShopMenuUI();
                                 } else {
-                                    // Handle normal purchase
+
                                     Result purchaseResult = shopController.purchase(productName, String.valueOf(amount));
                                     shopResultMessage = purchaseResult.Message();
                                     shopResultSuccess = purchaseResult.isSuccessful();
@@ -7284,15 +7226,15 @@ public class GDXGameScreen implements Screen {
             noProductsLabel.setColor(Color.GRAY);
             productsTable.add(noProductsLabel).pad(30).row();
         }
-        // Create scroll pane for the products with proper configuration
+
         ScrollPane scrollPane = new ScrollPane(productsTable, skin);
         scrollPane.setFadeScrollBars(false);
         scrollPane.setScrollbarsOnTop(true);
         scrollPane.setScrollBarPositions(false, true);
         scrollPane.setScrollingDisabled(false, false);
-        // Add scroll pane to main table with fixed height
+
         shopMenuTable.add(scrollPane).width(550).height(400).pad(10).row();
-        // Back and Close buttons (always show both)
+
         Table buttonTable = new Table();
         TextButton backButton = new TextButton("Back", skin);
         backButton.addListener(new ClickListener() {
@@ -7313,7 +7255,7 @@ public class GDXGameScreen implements Screen {
                     shopMenuTable.remove();
                     shopMenuTable = null;
                 }
-                // Restore input processor to multiplexer
+
                 Gdx.input.setInputProcessor(multiplexer);
             }
         });
@@ -7322,8 +7264,8 @@ public class GDXGameScreen implements Screen {
     }
 
     private String extractProductName(String productText) {
-        // Extract the product name from the product text
-        // The format is usually "Product Name - Price: X"
+
+
         if (productText.contains(" - ")) {
             return productText.split(" - ")[0].trim();
         }
@@ -7332,7 +7274,7 @@ public class GDXGameScreen implements Screen {
 
     private void showAnimalPurchasePage(String animalKey) {
         if (shopResultSuccess) {
-            // keep the message
+
         } else {
             shopResultMessage = "";
         }
@@ -7343,7 +7285,7 @@ public class GDXGameScreen implements Screen {
         titleLabel.setColor(Color.BLUE);
         shopMenuTable.add(titleLabel).padBottom(20).row();
 
-        // Animal name input
+
         Label nameLabel = new Label("Animal Name:", skin);
         nameLabel.setColor(Color.WHITE);
         final TextField nameField = new TextField("", skin);
@@ -7351,20 +7293,20 @@ public class GDXGameScreen implements Screen {
         shopMenuTable.add(nameLabel).padRight(10);
         shopMenuTable.add(nameField).width(200).padBottom(10).row();
 
-        // Housing selection
+
         Label housingLabel = new Label("Select Housing:", skin);
         housingLabel.setColor(Color.WHITE);
         Player player = game.getCurrentPlayer();
         if (player == null || player.getHousings() == null) return;
         java.util.List<Housing> housings = player.getHousings();
         java.util.List<Housing> validHousings = new java.util.ArrayList<>();
-        // Find required building type for this animal
+
         String requiredBuilding = null;
         int animalCapacity = 1;
         for (com.example.main.enums.design.Shop.MarniesRanch entry : com.example.main.enums.design.Shop.MarniesRanch.values()) {
             if (entry.getDisplayName().equals(animalKey)) {
                 requiredBuilding = entry.getBuildingRequired();
-                animalCapacity = 1; // You can adjust this if animals can take more than 1 slot
+                animalCapacity = 1;
                 break;
             }
         }
@@ -7374,7 +7316,7 @@ public class GDXGameScreen implements Screen {
                 String housingTypeName = h.getType().getName().toLowerCase();
                 String requiredBuildingLower = requiredBuilding.toLowerCase();
 
-                // Check if housing type matches the required building
+
                 if (requiredBuildingLower.contains("barn")) {
                     typeOk = housingTypeName.contains("barn");
                 } else if (requiredBuildingLower.contains("coop")) {
@@ -7415,7 +7357,7 @@ public class GDXGameScreen implements Screen {
         shopMenuTable.add(housingLabel).padRight(10);
         shopMenuTable.add(housingSelect).width(200).padBottom(10).row();
 
-        // Confirm and Cancel buttons
+
         Table buttonTable = new Table();
         TextButton confirmButton = new TextButton("Confirm", skin);
         TextButton cancelButton = new TextButton("Cancel", skin);
@@ -7445,7 +7387,7 @@ public class GDXGameScreen implements Screen {
                 shopResultMessage = result.Message();
                 shopResultSuccess = result.isSuccessful();
                 if (shopResultSuccess) {
-                    // Broadcast animal purchase
+
                     com.example.main.service.NetworkService ns = com.example.main.models.App.getInstance().getNetworkService();
                     if (ns != null) {
                         java.util.HashMap<String, Object> actionData = new java.util.HashMap<>();
@@ -7455,7 +7397,7 @@ public class GDXGameScreen implements Screen {
                         actionData.put("givenName", animalName);
                         ns.sendPlayerAction("buy_animal", actionData);
                     }
-                    // Show the animal purchase page again for the same animal, with updated housing list
+
                     showAnimalPurchasePage(animalKey);
                 } else {
                     createShopMenuUI();
@@ -7468,7 +7410,7 @@ public class GDXGameScreen implements Screen {
                 createShopMenuUI();
             }
         });
-        // Show result message if any
+
         if (!shopResultMessage.isEmpty()) {
             Label resultLabel = new Label(shopResultMessage, skin);
             resultLabel.setColor(shopResultSuccess ? Color.GREEN : Color.RED);
@@ -7478,12 +7420,12 @@ public class GDXGameScreen implements Screen {
     }
 
     private void handleHousingClick(int screenX, int screenY) {
-        // Convert screen coordinates to world coordinates
+
         Vector3 mouseInWorld = camera.unproject(new Vector3(screenX, screenY, 0));
         int targetTileX = (int) (mouseInWorld.x / TILE_SIZE);
         int targetTileY = MAP_HEIGHT - 1 - (int) (mouseInWorld.y / TILE_SIZE);
 
-        // Check if click is on a housing
+
         int housingIndex = getHousingIndex(targetTileX, targetTileY);
         if (housingIndex != -1) {
             Player currentPlayer = game.getCurrentPlayer();
@@ -7505,13 +7447,13 @@ public class GDXGameScreen implements Screen {
         housingMenuTable.setSize(600, 400);
         housingMenuTable.setPosition(Gdx.graphics.getWidth() / 2f - 300, Gdx.graphics.getHeight() / 2f - 200);
 
-        // Title
+
         Label titleLabel = new Label("Housing Management - " + selectedHousing.getType().getName() + " (ID: " + selectedHousing.getId() + ")", skin);
         titleLabel.setFontScale(1.2f);
         titleLabel.setColor(Color.WHITE);
         housingMenuTable.add(titleLabel).colspan(2).padBottom(20).row();
 
-        // Animal list with scroll pane
+
         Table animalListTable = new Table();
         animalListTable.defaults().pad(5);
 
@@ -7520,7 +7462,7 @@ public class GDXGameScreen implements Screen {
             noAnimalsLabel.setColor(Color.GRAY);
             animalListTable.add(noAnimalsLabel).row();
         } else {
-            // Add header
+
             Label nameHeader = new Label("Animal Name", skin);
             Label typeHeader = new Label("Type", skin);
             Label statusHeader = new Label("Status", skin);
@@ -7536,7 +7478,7 @@ public class GDXGameScreen implements Screen {
             animalListTable.add(statusHeader).width(100);
             animalListTable.add(actionHeader).width(100).row();
 
-            // Add each animal
+
             for (PurchasedAnimal animal : selectedHousing.getOccupants()) {
                 Label nameLabel = new Label(animal.getName(), skin);
                 Label typeLabel = new Label(animal.getType().getName(), skin);
@@ -7576,7 +7518,7 @@ public class GDXGameScreen implements Screen {
 
         housingMenuTable.add(scrollPane).width(500).height(250).padBottom(20).row();
 
-        // Close button
+
         TextButton closeButton = new TextButton("Close", skin);
         closeButton.addListener(new ClickListener() {
             @Override
@@ -7595,12 +7537,12 @@ public class GDXGameScreen implements Screen {
     }
 
     private void bringAnimalOut(PurchasedAnimal animal) {
-        // Find a reachable position around the housing
+
         int[] position = findReachablePositionAroundHousing(selectedHousing);
         animal.setX(position[0]);
         animal.setY(position[1]);
         animal.setInCage(false);
-        // Broadcast
+
         com.example.main.service.NetworkService ns = com.example.main.models.App.getInstance().getNetworkService();
         if (ns != null) {
             java.util.HashMap<String, Object> data = new java.util.HashMap<>();
@@ -7611,14 +7553,14 @@ public class GDXGameScreen implements Screen {
             ns.sendPlayerAction("bring_animal_out", data);
         }
 
-        // Initialize movement target to current position
+
         animal.setTargetX(position[0]);
         animal.setTargetY(position[1]);
         animal.setMoving(false);
         animal.setMoveProgress(0f);
-        animal.setLastMoveTime(0); // Start moving immediately
+        animal.setLastMoveTime(0);
 
-        // Update the housing menu
+
         if (housingMenuTable != null) {
             housingMenuTable.remove();
             createHousingMenuUI();
@@ -7627,7 +7569,7 @@ public class GDXGameScreen implements Screen {
 
     private void bringAnimalIn(PurchasedAnimal animal) {
         animal.setInCage(true);
-        // Broadcast
+
         com.example.main.service.NetworkService ns = com.example.main.models.App.getInstance().getNetworkService();
         if (ns != null) {
             java.util.HashMap<String, Object> data = new java.util.HashMap<>();
@@ -7636,7 +7578,7 @@ public class GDXGameScreen implements Screen {
             ns.sendPlayerAction("bring_animal_in", data);
         }
 
-        // Update the housing menu
+
         if (housingMenuTable != null) {
             housingMenuTable.remove();
             createHousingMenuUI();
@@ -7646,36 +7588,36 @@ public class GDXGameScreen implements Screen {
     private int[] findReachablePositionAroundHousing(Housing housing) {
         Player currentPlayer = game.getCurrentPlayer();
         if (currentPlayer == null) {
-            return new int[]{housing.getX() + 2, housing.getY() + 2}; // Fallback position
+            return new int[]{housing.getX() + 2, housing.getY() + 2};
         }
 
-        // Define potential positions around the housing (all sides)
+
         List<int[]> potentialPositions = new ArrayList<>();
 
-        // Right side positions
+
         for (int y = housing.getY() + 2; y <= housing.getY() + 6; y++) {
             potentialPositions.add(new int[]{housing.getX() + 8, y});
         }
 
-        // Left side positions
+
         for (int y = housing.getY() + 2; y <= housing.getY() + 6; y++) {
             potentialPositions.add(new int[]{housing.getX() - 1, y});
         }
 
-        // Top side positions
+
         for (int x = housing.getX() + 2; x <= housing.getX() + 6; x++) {
             potentialPositions.add(new int[]{x, housing.getY() + 9});
         }
 
-        // Bottom side positions
+
         for (int x = housing.getX() + 2; x <= housing.getX() + 6; x++) {
             potentialPositions.add(new int[]{x, housing.getY() - 1});
         }
 
-        // Shuffle the positions to make spawn location random
+
         java.util.Collections.shuffle(potentialPositions, random);
 
-        // Check each position for walkability
+
         for (int[] pos : potentialPositions) {
             if (pos[0] >= 0 && pos[0] < MAP_WIDTH && pos[1] >= 0 && pos[1] < MAP_HEIGHT) {
                 if (isAnimalWalkable(pos[0], pos[1], currentPlayer)) {
@@ -7684,12 +7626,12 @@ public class GDXGameScreen implements Screen {
             }
         }
 
-        // If no good position found, return a fallback position
+
         return new int[]{housing.getX() + 2, housing.getY() + 2};
     }
 
     private boolean isAnimalWalkable(int x, int y, Player currentPlayer) {
-        // Check if the tile is walkable for animals (similar to player walkability but simpler)
+
         if (x < 0 || x >= MAP_WIDTH || y < 0 || y >= MAP_HEIGHT) {
             return false;
         }
@@ -7699,7 +7641,7 @@ public class GDXGameScreen implements Screen {
             return false;
         }
 
-        // Animals can walk on grass, earth, and some other walkable tiles
+
         TileType tileType = tile.getType();
         return tileType == TileType.Grass || tileType == TileType.Earth ||
                tileType == TileType.Shoveled || tileType == TileType.Water;
@@ -7713,13 +7655,13 @@ public class GDXGameScreen implements Screen {
             for (Housing housing : p.getHousings()) {
                 for (PurchasedAnimal animal : housing.getOccupants()) {
                 if (!animal.isInCage()) {
-                    // Render animal outside
+
                     Texture animalTexture = animalTextures.get(animal.getType());
                     if (animalTexture != null) {
                         float worldX = animal.getX() * TILE_SIZE;
                         float worldY = (MAP_HEIGHT - 1 - animal.getY()) * TILE_SIZE;
 
-                        // Apply movement interpolation if animal is moving
+
                         if (animal.isMoving()) {
                             float startX = animal.getX() * TILE_SIZE;
                             float startY = (MAP_HEIGHT - 1 - animal.getY()) * TILE_SIZE;
@@ -7730,7 +7672,7 @@ public class GDXGameScreen implements Screen {
                             worldY = startY + (endY - startY) * animal.getMoveProgress();
                         }
 
-                        // Apply bounce effect if there's a bounce animation for this animal
+
                         float bounceOffset = 0f;
                         for (AnimationEffect effect : activeAnimations) {
                             if (effect.type.equals("bounce")) {
@@ -7745,15 +7687,15 @@ public class GDXGameScreen implements Screen {
                         }
                         worldY += bounceOffset;
 
-                        // Determine if animal is moving left (flip image)
+
                         boolean movingLeft = animal.isMoving() && animal.getTargetX() < animal.getX();
 
-                        // Render animal with proper flipping, using TILE_SIZE x TILE_SIZE
+
                         if (movingLeft) {
-                            // Flip horizontally for left movement
+
                             spriteBatch.draw(animalTexture, worldX + TILE_SIZE, worldY, -TILE_SIZE, TILE_SIZE);
                         } else {
-                            // Normal rendering for right movement or stationary
+
                             spriteBatch.draw(animalTexture, worldX, worldY, TILE_SIZE, TILE_SIZE);
                         }
                     }
@@ -7955,19 +7897,19 @@ public class GDXGameScreen implements Screen {
     }
 
     private boolean handleTrashCanClick(int screenX, int screenY) {
-        // Convert screen coordinates to world coordinates
+
         Vector3 worldCoords = camera.unproject(new Vector3(screenX, screenY, 0));
 
-        // Convert world coordinates to tile coordinates
+
         int tileX = (int) (worldCoords.x / TILE_SIZE);
         int tileY = (int) ((MAP_HEIGHT * TILE_SIZE - worldCoords.y) / TILE_SIZE);
 
         Player currentPlayer = game.getCurrentPlayer();
         if (currentPlayer == null) return false;
 
-        // Check if click is on the current player's trash can
+
         if (currentPlayer.getTrashCanX() == tileX && currentPlayer.getTrashCanY() == tileY) {
-            // Open the sell menu
+
             showSellMenu = true;
             createSellMenuUI();
             Gdx.input.setInputProcessor(stage);
@@ -8033,7 +7975,7 @@ public class GDXGameScreen implements Screen {
                         }
                     }
 
-                    // Create food particle animation at animal's position
+
                     float animalWorldX = selectedAnimal.getX() * TILE_SIZE + TILE_SIZE / 2f;
                     float animalWorldY = (MAP_HEIGHT - 1 - selectedAnimal.getY()) * TILE_SIZE + TILE_SIZE / 2f;
                     createAnimation(animalWorldX, animalWorldY, "food");
@@ -8064,7 +8006,7 @@ public class GDXGameScreen implements Screen {
                         }
                     }
 
-                    // Create heart and bounce animations at animal's position
+
                     float animalWorldX = selectedAnimal.getX() * TILE_SIZE + TILE_SIZE / 2f;
                     float animalWorldY = (MAP_HEIGHT - 1 - selectedAnimal.getY()) * TILE_SIZE + TILE_SIZE / 2f;
                     createAnimation(animalWorldX, animalWorldY, "hearts");
@@ -8223,7 +8165,7 @@ public class GDXGameScreen implements Screen {
         title.setAlignment(Align.center);
         animalMenuTable.add(title).center().row();
 
-        // Call the controller method to get collectable products
+
         String collectResult = "";
         boolean collectSuccess = false;
         if (controller != null && selectedAnimal != null) {
@@ -8232,13 +8174,13 @@ public class GDXGameScreen implements Screen {
             collectSuccess = result.isSuccessful();
         }
 
-        // Display the result message
+
         Label resultLabel = new Label(collectResult, skin);
         resultLabel.setAlignment(Align.topLeft);
         resultLabel.setWrap(true);
         animalMenuTable.add(resultLabel).expandX().fillX().row();
 
-        // Add collect button if the result was successful
+
         if (collectSuccess) {
             TextButton collectProductBtn = new TextButton("Collect Product", skin);
             animalMenuTable.add(collectProductBtn).row();
@@ -8302,7 +8244,7 @@ public class GDXGameScreen implements Screen {
     private void startActionAnimation(PlayerActionState state) {
         playerActionState = state;
         actionTimer = ACTION_ANIMATION_DURATION;
-        playerMoving = false; // Stop movement during the animation
+        playerMoving = false;
     }
 
     private void showPlacementDialog(Food food) {
@@ -8314,7 +8256,7 @@ public class GDXGameScreen implements Screen {
                     generalMessageLabel.setText(placementResult.Message());
                     generalMessageLabel.setVisible(true);
                     generalMessageTimer = GENERAL_MESSAGE_DURATION;
-                    showCookingMenu(); // Refresh menu to show updated item counts
+                    showCookingMenu();
                 }
             }
         };
@@ -8389,11 +8331,11 @@ public class GDXGameScreen implements Screen {
 
     private void createMainFriendsMenu() {
         friendsMenuTable.clear();
-        // Title
+
         Label titleLabel = new Label("Friends Menu", skin);
         titleLabel.setFontScale(1.5f);
         friendsMenuTable.add(titleLabel).colspan(2).pad(20).row();
-        // Get other players (excluding current player)
+
         Player currentPlayer = game.getCurrentPlayer();
         ArrayList<Player> otherPlayers = new ArrayList<>();
         for (User user : game.getPlayers()) {
@@ -8402,7 +8344,7 @@ public class GDXGameScreen implements Screen {
                 otherPlayers.add(player);
             }
         }
-        // Create buttons for each other player
+
         for (Player player : otherPlayers) {
             String buttonText = player.getUsername();
             if (Boolean.TRUE.equals(unreadTalkNotifications.get(player.getUsername()))) {
@@ -8418,14 +8360,14 @@ public class GDXGameScreen implements Screen {
                 public void clicked(InputEvent event, float x, float y) {
                     selectedPlayerForActions = playerName;
                     currentFriendsMenuState = FriendsMenuState.PLAYER_ACTIONS;
-                    // Clear notification when chat is opened
+
                     unreadTalkNotifications.put(playerName, false);
                     createFriendsMenuUI();
                 }
             });
             friendsMenuTable.add(playerButton).size(200, 50).pad(10);
         }
-        // Close button
+
         TextButton closeButton = new TextButton("Close", skin);
         closeButton.addListener(new ClickListener() {
             @Override
@@ -8448,19 +8390,19 @@ public class GDXGameScreen implements Screen {
     private void createPlayerActionsMenu() {
         friendsMenuTable.clear();
 
-        // Title with player name
+
         Label titleLabel = new Label("Actions with " + selectedPlayerForActions, skin);
         titleLabel.setFontScale(1.5f);
         friendsMenuTable.add(titleLabel).colspan(2).pad(20).row();
 
-        // Show error message if any
+
         if (!friendshipResultMessage.isEmpty()) {
             Label resultLabel = new Label(friendshipResultMessage, skin);
             resultLabel.setColor(friendshipResultSuccess ? Color.GREEN : Color.RED);
             friendsMenuTable.add(resultLabel).colspan(2).pad(10).fillX().center().row();
         }
 
-        // Action buttons with notification tags
+
         String talkButtonText = "Talk";
         if (Boolean.TRUE.equals(unreadTalkNotifications.get(selectedPlayerForActions))) {
             talkButtonText += " [NEW]";
@@ -8480,7 +8422,7 @@ public class GDXGameScreen implements Screen {
         TextButton backButton = new TextButton("Back", skin);
         TextButton closeButton = new TextButton("Close", skin);
 
-        // Add button listeners
+
         friendshipButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
@@ -8493,7 +8435,7 @@ public class GDXGameScreen implements Screen {
             @Override
             public void clicked(InputEvent event, float x, float y) {
                 currentFriendsMenuState = FriendsMenuState.CHAT_ROOM;
-                // Mark messages as read when opening chat
+
                 unreadTalkNotifications.put(selectedPlayerForActions, false);
                 createFriendsMenuUI();
             }
@@ -8503,7 +8445,7 @@ public class GDXGameScreen implements Screen {
             @Override
             public void clicked(InputEvent event, float x, float y) {
                 currentFriendsMenuState = FriendsMenuState.GIFT_MENU;
-                // Mark gifts as read when opening gift menu
+
                 unreadGiftNotifications.put(selectedPlayerForActions, false);
                 createFriendsMenuUI();
             }
@@ -8523,7 +8465,7 @@ public class GDXGameScreen implements Screen {
                         actionData.put("senderY", game.getCurrentPlayer().currentY());
                         ns.sendPlayerAction("hug", actionData);
                     }
-                    // Close menu on success
+
                     showFriendsMenu = false;
                     currentFriendsMenuState = FriendsMenuState.MAIN_MENU;
                     selectedPlayerForActions = null;
@@ -8533,7 +8475,7 @@ public class GDXGameScreen implements Screen {
                     }
                     Gdx.input.setInputProcessor(multiplexer);
                 } else {
-                    // Show error message in red on top of menu
+
                     friendshipResultMessage = result.Message();
                     friendshipResultSuccess = false;
                     createPlayerActionsMenu();
@@ -8555,7 +8497,7 @@ public class GDXGameScreen implements Screen {
                         actionData.put("senderY", game.getCurrentPlayer().currentY());
                         ns.sendPlayerAction("flower_someone", actionData);
                     }
-                    // Close menu on success
+
                     showFriendsMenu = false;
                     currentFriendsMenuState = FriendsMenuState.MAIN_MENU;
                     selectedPlayerForActions = null;
@@ -8565,7 +8507,7 @@ public class GDXGameScreen implements Screen {
                     }
                     Gdx.input.setInputProcessor(multiplexer);
                 } else {
-                    // Show error message in red on top of menu
+
                     friendshipResultMessage = result.Message();
                     friendshipResultSuccess = false;
                     createPlayerActionsMenu();
@@ -8610,7 +8552,7 @@ public class GDXGameScreen implements Screen {
             }
         });
 
-        // Add buttons to table
+
         friendsMenuTable.add(friendshipButton).size(200, 50).pad(10);
         friendsMenuTable.add(talkButton).size(200, 50).pad(10).row();
         friendsMenuTable.add(giftButton).size(200, 50).pad(10);
@@ -8626,7 +8568,7 @@ public class GDXGameScreen implements Screen {
             return;
         }
 
-        // The menu is rendered by the stage, so we just need to act on it
+
         stage.act(delta);
     }
 
@@ -8635,23 +8577,23 @@ public class GDXGameScreen implements Screen {
             return;
         }
 
-        // The menu is rendered by the stage, so we just need to act on it
+
         stage.act(delta);
     }
 
     private void createFriendshipDetailsMenu() {
         friendsMenuTable.clear();
 
-        // Title
+
         Label titleLabel = new Label("Friendship Details with " + selectedPlayerForActions, skin);
         titleLabel.setFontScale(1.5f);
         friendsMenuTable.add(titleLabel).colspan(2).pad(20).row();
 
-        // Get friendship details
+
         Player currentPlayer = game.getCurrentPlayer();
         Player targetPlayer = null;
 
-        // Find the target player
+
         for (User user : game.getPlayers()) {
             Player player = user.getPlayer();
             if (player != null && player.getUsername().equals(selectedPlayerForActions)) {
@@ -8661,7 +8603,7 @@ public class GDXGameScreen implements Screen {
         }
 
         if (targetPlayer != null) {
-            // Get friendship object and display its toString
+
             Friendship friendship = game.getFriendshipByPlayers(currentPlayer, targetPlayer);
             if (friendship != null) {
                 Label friendshipLabel = new Label(friendship.toString(), skin);
@@ -8681,7 +8623,7 @@ public class GDXGameScreen implements Screen {
             friendsMenuTable.add(errorLabel).colspan(2).pad(20).row();
         }
 
-        // Back and Close buttons
+
         TextButton backButton = new TextButton("Back", skin);
         TextButton closeButton = new TextButton("Close", skin);
 
@@ -8716,29 +8658,29 @@ public class GDXGameScreen implements Screen {
     private void createChatRoomMenu() {
         friendsMenuTable.clear();
 
-        // Title with player name
+
         Label titleLabel = new Label("Chat with " + selectedPlayerForActions, skin);
         titleLabel.setFontScale(1.5f);
         friendsMenuTable.add(titleLabel).colspan(2).pad(20).row();
 
-        // Create chat messages area
+
         chatMessagesTable = new Table();
         chatMessagesTable.setBackground(new TextureRegionDrawable(menuBackgroundTexture));
-        chatMessagesTable.left().top(); // Ensure messages are added left-to-right, top-to-bottom
+        chatMessagesTable.left().top();
         chatMessagesTable.defaults().expandX().fillX().pad(2);
 
-        // Load previous messages
+
         loadChatHistory();
 
-        // Create scroll pane for messages
+
         chatScrollPane = new ScrollPane(chatMessagesTable, skin);
         chatScrollPane.setScrollBarPositions(false, true);
         chatScrollPane.setFadeScrollBars(false);
-        chatScrollPane.setScrollPercentY(1.0f); // Scroll to bottom
+        chatScrollPane.setScrollPercentY(1.0f);
 
         friendsMenuTable.add(chatScrollPane).colspan(2).fill().expand().pad(10).row();
 
-        // Create input area
+
         Table inputTable = new Table();
 
         chatMessageField = new TextField("", skin);
@@ -8754,7 +8696,7 @@ public class GDXGameScreen implements Screen {
             }
         });
 
-        // Add enter key support
+
         chatMessageField.addListener(new InputListener() {
             @Override
             public boolean keyDown(InputEvent event, int keycode) {
@@ -8771,7 +8713,7 @@ public class GDXGameScreen implements Screen {
 
         friendsMenuTable.add(inputTable).colspan(2).fillX().pad(10).row();
 
-        // Back and Close buttons
+
         TextButton backButton = new TextButton("Back", skin);
         TextButton closeButton = new TextButton("Close", skin);
 
@@ -8804,7 +8746,7 @@ public class GDXGameScreen implements Screen {
         friendsMenuTable.add(backButton).size(200, 50).pad(10);
         friendsMenuTable.add(closeButton).size(200, 50).pad(10);
 
-        // Set focus to message field
+
         stage.setKeyboardFocus(chatMessageField);
     }
 
@@ -8814,7 +8756,7 @@ public class GDXGameScreen implements Screen {
         Player currentPlayer = game.getCurrentPlayer();
         Player targetPlayer = null;
 
-        // Find the target player
+
         for (User user : game.getPlayers()) {
             Player player = user.getPlayer();
             if (player != null && player.getUsername().equals(selectedPlayerForActions)) {
@@ -8824,7 +8766,7 @@ public class GDXGameScreen implements Screen {
         }
 
         if (targetPlayer != null) {
-            // Get talk history
+
             Result result = controller.talkHistory(selectedPlayerForActions);
             String history = result.Message();
 
@@ -8833,12 +8775,12 @@ public class GDXGameScreen implements Screen {
                 noHistoryLabel.setColor(Color.GRAY);
                 chatMessagesTable.add(noHistoryLabel).pad(10).row();
             } else {
-                // Parse and display messages
+
                 String[] lines = history.split("\n");
                 for (String line : lines) {
                     if (line.trim().isEmpty()) continue;
                     if (line.contains(":")) {
-                        // Format: sender to receiver: message
+
                         String[] parts = line.split(":", 2);
                         if (parts.length == 2) {
                             String header = parts[0].trim();
@@ -8876,7 +8818,7 @@ public class GDXGameScreen implements Screen {
             }
         }
 
-        // Scroll to bottom to show latest messages
+
         if (chatScrollPane != null) {
             chatScrollPane.setScrollPercentY(1.0f);
         }
@@ -8905,7 +8847,7 @@ public class GDXGameScreen implements Screen {
                                     sender = headerParts[0].trim();
                                     receiver = headerParts[1].trim();
                                 }
-                                // If the last message is from the other player to current player, mark as unread
+
                                 if (sender.equals(player.getUsername()) && receiver.equals(currentPlayer.getUsername())) {
                                     unreadTalkNotifications.put(player.getUsername(), true);
                                 }
@@ -8932,13 +8874,13 @@ public class GDXGameScreen implements Screen {
                     if (giftBlocks.length > 0) {
                         String lastGiftBlock = giftBlocks[giftBlocks.length - 1].trim();
                         if (!lastGiftBlock.isEmpty()) {
-                            // Check if the last gift is from the other player to current player
+
                             String[] lines = lastGiftBlock.split("\n");
                             for (String line : lines) {
                                 if (line.startsWith("Gift from ")) {
                                     String senderName = line.substring(10).split(":")[0].trim();
                                     if (senderName.equals(player.getUsername())) {
-                                        // Check if this gift is unrated (Rate: 0)
+
                                         boolean hasUnratedGift = false;
                                         for (String giftLine : lines) {
                                             if (giftLine.trim().equals("Rate: 0")) {
@@ -8965,7 +8907,7 @@ public class GDXGameScreen implements Screen {
         if (!message.isEmpty()) {
             Result result = controller.talk(selectedPlayerForActions, message);
             if (result.isSuccessful()) {
-                // Broadcast this talk action to other clients so they can apply the same method/state
+
                 com.example.main.service.NetworkService ns = com.example.main.models.App.getInstance().getNetworkService();
                 if (ns != null) {
                     java.util.HashMap<String, Object> actionData = new java.util.HashMap<>();
@@ -8974,7 +8916,7 @@ public class GDXGameScreen implements Screen {
                     actionData.put("message", message);
                     ns.sendPlayerAction("talk", actionData);
                 }
-                // Only mark as unread for the receiver, not the sender
+
                 if (!selectedPlayerForActions.equals(game.getCurrentPlayer().getUsername())) {
                     unreadTalkNotifications.put(selectedPlayerForActions, true);
                 }
@@ -8994,7 +8936,7 @@ public class GDXGameScreen implements Screen {
             return;
         }
 
-        // Preserve current context
+
         User previousUser = game.getUrrentUser();
         Player previousPlayer = game.getCurrentPlayer();
 
@@ -9006,13 +8948,13 @@ public class GDXGameScreen implements Screen {
         }
 
         try {
-            // Apply the same state as on the sender's client
+
             game.setCurrentUser(senderUser);
             game.setCurrentPlayer(senderPlayer);
-            // Use remote variant to avoid local proximity checks
+
             controller.talkRemote(senderUsername, receiverUsername, message);
 
-            // Update local notifications/UI for the receiver side
+
             String localUsername = localPlayer != null ? localPlayer.getUsername() : (game.getCurrentPlayer() != null ? game.getCurrentPlayer().getUsername() : null);
             if (localUsername != null && localUsername.equals(receiverUsername)) {
                 boolean chatOpenWithSender = (currentFriendsMenuState == FriendsMenuState.CHAT_ROOM)
@@ -9028,7 +8970,7 @@ public class GDXGameScreen implements Screen {
                 }
             }
         } finally {
-            // Restore previous context
+
             if (previousUser != null) game.setCurrentUser(previousUser);
             if (previousPlayer != null) game.setCurrentPlayer(previousPlayer);
         }
@@ -9061,7 +9003,7 @@ public class GDXGameScreen implements Screen {
         try {
             game.setCurrentUser(senderUser);
             game.setCurrentPlayer(senderPlayer);
-            // Ensure the sender is considered to be at the purchasing shop tile for this application
+
             if (shopX != null && shopY != null && senderPlayer != null) {
                 senderPlayer.setCurrentX(shopX);
                 senderPlayer.setCurrentY(shopY);
@@ -9244,7 +9186,7 @@ public class GDXGameScreen implements Screen {
                     animal.setTargetY(targetY);
                     animal.setMoving(true);
                     animal.setMoveProgress(0f);
-                    // also set in/out cage based on tile
+
                     if (game.getMap() != null) {
                         Tile tile = game.getMap().getTile(targetX, targetY);
                         if (tile != null && tile.getType() == TileType.Housing) {
@@ -9316,7 +9258,7 @@ public class GDXGameScreen implements Screen {
             } catch (Exception ignored) {}
             if (seedToPlant != null) {
                 controller.plantItem(seedToPlant, targetTile);
-                // Ensure local screen uses current map reference
+
                 this.gameMap = game.getMap();
             }
         } catch (Exception ignored) {
@@ -9356,7 +9298,7 @@ public class GDXGameScreen implements Screen {
             game.setCurrentPlayer(senderPlayer);
             controller.changeDate(days);
             this.gameMap = game.getMap();
-            // Align weather to main player's weather after day changes
+
             com.example.main.models.User main = game.getMainPlayer();
             if (main != null) {
                 com.example.main.enums.design.Weather w = game.getTodayWeather();
@@ -9379,10 +9321,10 @@ public class GDXGameScreen implements Screen {
         try {
             game.setCurrentUser(senderUser);
             game.setCurrentPlayer(senderPlayer);
-            // Ensure the sender has the tool equipped locally for consistent logic (watering can checks, etc.)
+
             try {
                 com.example.main.enums.items.ToolType t = com.example.main.enums.items.ToolType.valueOf(toolEnumName);
-                // Try to find an owned instance first
+
                 for (com.example.main.models.item.Item it : senderPlayer.getInventory().getItems()) {
                     if (it instanceof com.example.main.models.item.Tool tool && tool.getToolType() == t) {
                         senderPlayer.setCurrentTool(tool);
@@ -9390,7 +9332,7 @@ public class GDXGameScreen implements Screen {
                     }
                 }
                 if (senderPlayer.getCurrentTool() == null || senderPlayer.getCurrentTool().getToolType() != t) {
-                    // fallback create a temporary tool if not found (shouldn't happen normally)
+
                     com.example.main.models.item.Item tmp = com.example.main.models.item.ItemFactory.createItemOrThrow(t.getName(), 1);
                     if (tmp instanceof com.example.main.models.item.Tool) {
                         senderPlayer.setCurrentTool((com.example.main.models.item.Tool) tmp);
@@ -9577,7 +9519,7 @@ public class GDXGameScreen implements Screen {
         try {
             game.setCurrentUser(senderUser);
             game.setCurrentPlayer(senderPlayer);
-            // Construct a CraftingMachine instance from enum name and call controller.placeMachine
+
             com.example.main.enums.items.ItemType maybeType = null;
             try {
                 com.example.main.enums.items.CraftingMachineType t = com.example.main.enums.items.CraftingMachineType.valueOf(machineEnumName);
@@ -9663,7 +9605,7 @@ public class GDXGameScreen implements Screen {
         try {
             game.setCurrentUser(senderUser);
             game.setCurrentPlayer(senderPlayer);
-            // On remote clients, bypass proximity and sender inventory checks, and directly apply to receiver
+
             controller.giftPlayerRemote(senderUsername, receiverUsername, itemName, String.valueOf(amount));
         } finally {
             if (prevUser != null) game.setCurrentUser(prevUser);
@@ -9682,7 +9624,7 @@ public class GDXGameScreen implements Screen {
             game.setCurrentUser(senderUser);
             game.setCurrentPlayer(senderPlayer);
             controller.rateGift(giftId, String.valueOf(rate));
-            // Optionally refresh UI if on gifts screen
+
             if (currentFriendsMenuState == FriendsMenuState.RECEIVED_GIFTS) {
                 createFriendsMenuUI();
             }
@@ -9750,19 +9692,19 @@ public class GDXGameScreen implements Screen {
     private void createPlayerGiftMenu() {
         friendsMenuTable.clear();
 
-        // Title
+
         Label titleLabel = new Label("Gift Menu", skin);
         titleLabel.setFontScale(1.5f);
         friendsMenuTable.add(titleLabel).colspan(2).pad(20).row();
 
-        // Gift menu buttons
+
         TextButton sendGiftButton = new TextButton("Send Gift", skin);
         TextButton receivedGiftsButton = new TextButton("Received Gifts", skin);
         TextButton giftHistoryButton = new TextButton("Gift History", skin);
         TextButton backButton = new TextButton("Back", skin);
         TextButton closeButton = new TextButton("Close", skin);
 
-        // Add button listeners
+
         sendGiftButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
@@ -9813,7 +9755,7 @@ public class GDXGameScreen implements Screen {
             }
         });
 
-        // Add buttons to table
+
         friendsMenuTable.add(sendGiftButton).size(200, 50).pad(10);
         friendsMenuTable.add(receivedGiftsButton).size(200, 50).pad(10).row();
         friendsMenuTable.add(giftHistoryButton).size(200, 50).pad(10);
@@ -9824,16 +9766,16 @@ public class GDXGameScreen implements Screen {
     private void createReceivedGiftsMenu() {
         friendsMenuTable.clear();
 
-        // Title
+
         Label titleLabel = new Label("Received Gifts", skin);
         titleLabel.setFontScale(1.5f);
         friendsMenuTable.add(titleLabel).colspan(2).pad(20).row();
 
-        // Get received gifts
+
         Result result = controller.showGiftsList();
         String giftsText = result.Message();
 
-        // Create scrollable table for gifts
+
         receivedGiftsTable = new Table();
         receivedGiftsTable.defaults().expandX().fillX().pad(2);
 
@@ -9842,12 +9784,12 @@ public class GDXGameScreen implements Screen {
             noGiftsLabel.setColor(Color.GRAY);
             receivedGiftsTable.add(noGiftsLabel).row();
         } else {
-            // Split gifts by separator
+
             String[] giftBlocks = giftsText.split("------------------------");
             for (String block : giftBlocks) {
                 String trimmed = block.trim();
                 if (!trimmed.isEmpty()) {
-                    // Extract gift ID
+
                     String giftId = null;
                     for (String line : trimmed.split("\n")) {
                         if (line.startsWith("ID:")) {
@@ -9860,14 +9802,14 @@ public class GDXGameScreen implements Screen {
             }
         }
 
-        // Create scroll pane
+
         receivedGiftsScrollPane = new ScrollPane(receivedGiftsTable, skin);
         receivedGiftsScrollPane.setFadeScrollBars(false);
         receivedGiftsScrollPane.setScrollBarPositions(false, true);
 
         friendsMenuTable.add(receivedGiftsScrollPane).size(600, 400).pad(10).row();
 
-        // Back button
+
         TextButton backButton = new TextButton("Back", skin);
         backButton.addListener(new ClickListener() {
             @Override
@@ -9881,12 +9823,12 @@ public class GDXGameScreen implements Screen {
     }
 
     private void addGiftToTable(String giftInfo, String giftId) {
-        // Create gift info label
+
         Label giftLabel = new Label(giftInfo, skin);
         giftLabel.setWrap(true);
         giftLabel.setAlignment(Align.left);
 
-        // Check if gift is rated (rate = 0 means not rated)
+
         boolean unrated = false;
         for (String line : giftInfo.split("\n")) {
             if (line.trim().equals("Rate: 0")) {
@@ -9900,7 +9842,7 @@ public class GDXGameScreen implements Screen {
         giftTable.add(giftLabel).row();
 
         if (unrated) {
-            // Unique rating field and button for each gift
+
             final TextField ratingField = new TextField("", skin);
             ratingField.setMessageText("Enter rating (1-5)");
             ratingField.setMaxLength(1);
@@ -9913,7 +9855,7 @@ public class GDXGameScreen implements Screen {
                     if (!rating.isEmpty()) {
                         Result result = controller.rateGift(finalGiftId, rating);
                         if (result.isSuccessful()) {
-                            // Broadcast rate gift
+
                             com.example.main.service.NetworkService ns = com.example.main.models.App.getInstance().getNetworkService();
                             if (ns != null) {
                                 java.util.HashMap<String, Object> actionData = new java.util.HashMap<>();
@@ -9922,11 +9864,11 @@ public class GDXGameScreen implements Screen {
                                 actionData.put("rate", Integer.parseInt(rating));
                                 ns.sendPlayerAction("rate_gift", actionData);
                             }
-                            // Refresh the received gifts menu
+
                             currentFriendsMenuState = FriendsMenuState.RECEIVED_GIFTS;
                             createFriendsMenuUI();
                         } else {
-                            // Show error message
+
                             generalMessageLabel.setText(result.Message());
                             generalMessageLabel.setVisible(true);
                             generalMessageTimer = GENERAL_MESSAGE_DURATION;
@@ -9943,16 +9885,16 @@ public class GDXGameScreen implements Screen {
     private void createGiftHistoryMenu() {
         friendsMenuTable.clear();
 
-        // Title
+
         Label titleLabel = new Label("Gift History with " + selectedPlayerForActions, skin);
         titleLabel.setFontScale(1.5f);
         friendsMenuTable.add(titleLabel).colspan(2).pad(20).row();
 
-        // Get gift history
+
         Result result = controller.showGiftHistoryWith(selectedPlayerForActions);
         String giftsText = result.Message();
 
-        // Create scrollable table for gifts
+
         giftHistoryTable = new Table();
         giftHistoryTable.defaults().expandX().fillX().pad(2);
 
@@ -9961,7 +9903,7 @@ public class GDXGameScreen implements Screen {
             noGiftsLabel.setColor(Color.GRAY);
             giftHistoryTable.add(noGiftsLabel).row();
         } else {
-            // Parse and display gifts
+
             String[] lines = giftsText.split("\n");
             for (String line : lines) {
                 if (line.trim().isEmpty()) continue;
@@ -9973,14 +9915,14 @@ public class GDXGameScreen implements Screen {
             }
         }
 
-        // Create scroll pane
+
         giftHistoryScrollPane = new ScrollPane(giftHistoryTable, skin);
         giftHistoryScrollPane.setFadeScrollBars(false);
         giftHistoryScrollPane.setScrollBarPositions(false, true);
 
         friendsMenuTable.add(giftHistoryScrollPane).size(600, 400).pad(10).row();
 
-        // Back button
+
         TextButton backButton = new TextButton("Back", skin);
         backButton.addListener(new ClickListener() {
             @Override
@@ -9996,23 +9938,23 @@ public class GDXGameScreen implements Screen {
     private void createSendGiftMenu() {
         friendsMenuTable.clear();
 
-        // Title
+
         Label titleLabel = new Label("Send Gift to " + selectedPlayerForActions, skin);
         titleLabel.setFontScale(1.5f);
         friendsMenuTable.add(titleLabel).colspan(2).pad(20).row();
 
-        // Error message display
+
         if (showGiftError && !giftErrorMessage.isEmpty()) {
             Label errorLabel = new Label(giftErrorMessage, skin);
             errorLabel.setColor(Color.RED);
             friendsMenuTable.add(errorLabel).colspan(2).pad(10).row();
         }
 
-        // Get inventory items
+
         Result result = controller.showInventoryItems();
         String inventoryText = result.Message();
 
-        // Create scrollable table for inventory items
+
         sendGiftTable = new Table();
         sendGiftTable.defaults().expandX().fillX().pad(2);
 
@@ -10021,31 +9963,31 @@ public class GDXGameScreen implements Screen {
             noItemsLabel.setColor(Color.GRAY);
             sendGiftTable.add(noItemsLabel).row();
         } else {
-            // Parse and display inventory items
+
             String[] lines = inventoryText.split("\n");
             for (String line : lines) {
                 if (line.trim().isEmpty()) continue;
 
-                // Format: "ItemName xAmount"
+
                 String[] parts = line.split(" x");
                 if (parts.length == 2) {
                     String itemName = parts[0].trim();
                     int maxAmount = Integer.parseInt(parts[1].trim());
 
-                    // Create row for this item
+
                     Table itemRow = new Table();
                     itemRow.defaults().expandX().fillX().pad(2);
 
-                    // Item name and amount
+
                     Label itemLabel = new Label(itemName + " x" + maxAmount, skin);
                     itemRow.add(itemLabel).expandX().left().pad(5);
 
-                    // Amount input field
+
                     TextField amountField = new TextField("1", skin);
                     amountField.setTextFieldFilter(new TextField.TextFieldFilter.DigitsOnlyFilter());
                     itemRow.add(amountField).size(80, 30).pad(5);
 
-                    // Gift button
+
                     TextButton giftButton = new TextButton("Gift", skin);
                     giftButton.addListener(new ClickListener() {
                         @Override
@@ -10082,10 +10024,10 @@ public class GDXGameScreen implements Screen {
                                 return;
                             }
 
-                            // Call giftPlayer method
+
                             Result giftResult = controller.giftPlayer(selectedPlayerForActions, itemName, String.valueOf(amount));
                             if (giftResult.isSuccessful()) {
-                                // Broadcast gift action
+
                                 com.example.main.service.NetworkService ns = com.example.main.models.App.getInstance().getNetworkService();
                                 if (ns != null) {
                                     java.util.HashMap<String, Object> actionData = new java.util.HashMap<>();
@@ -10097,7 +10039,7 @@ public class GDXGameScreen implements Screen {
                                     actionData.put("senderY", game.getCurrentPlayer().currentY());
                                     ns.sendPlayerAction("gift_player", actionData);
                                 }
-                                // Close friends menu on success
+
                                 showFriendsMenu = false;
                                 currentFriendsMenuState = FriendsMenuState.MAIN_MENU;
                                 selectedPlayerForActions = null;
@@ -10111,12 +10053,12 @@ public class GDXGameScreen implements Screen {
                                 }
                                 Gdx.input.setInputProcessor(multiplexer);
 
-                                // Show success message
+
                                 generalMessageLabel.setText(giftResult.Message());
                                 generalMessageLabel.setVisible(true);
                                 generalMessageTimer = GENERAL_MESSAGE_DURATION;
                             } else {
-                                // Show error message
+
                                 giftErrorMessage = giftResult.Message();
                                 showGiftError = true;
                                 createSendGiftMenu();
@@ -10130,15 +10072,15 @@ public class GDXGameScreen implements Screen {
             }
         }
 
-        // Create scroll pane
+
         sendGiftScrollPane = new ScrollPane(sendGiftTable, skin);
         sendGiftScrollPane.setFadeScrollBars(false);
         sendGiftScrollPane.setScrollBarPositions(false, true);
 
-        // Add scroll pane to main table
+
         friendsMenuTable.add(sendGiftScrollPane).size(600, 400).pad(10).row();
 
-        // Back button
+
         TextButton backButton = new TextButton("Back", skin);
         backButton.addListener(new ClickListener() {
             @Override
@@ -10246,7 +10188,7 @@ public class GDXGameScreen implements Screen {
 
                             Result sellResult = controller.sell(itemName, String.valueOf(amount));
                             if (sellResult.isSuccessful()) {
-                                // Broadcast sell action to other clients
+
                                 com.example.main.service.NetworkService ns = com.example.main.models.App.getInstance().getNetworkService();
                                 if (ns != null) {
                                     java.util.HashMap<String, Object> actionData = new java.util.HashMap<>();
@@ -10330,7 +10272,7 @@ public class GDXGameScreen implements Screen {
             public void clicked(InputEvent event, float x, float y) {
                 Result result = controller.askMarriage(selectedPlayerForActions);
                 if (result.isSuccessful()) {
-                    // Broadcast ask marriage
+
                     com.example.main.service.NetworkService ns = com.example.main.models.App.getInstance().getNetworkService();
                     if (ns != null) {
                         java.util.HashMap<String, Object> actionData = new java.util.HashMap<>();
@@ -10390,7 +10332,7 @@ public class GDXGameScreen implements Screen {
             }
         });
 
-        // Add buttons to table
+
         friendsMenuTable.add(askMarriageButton).size(200, 50).pad(10).row();
         friendsMenuTable.add(respondButton).size(200, 50).pad(10).row();
         friendsMenuTable.add(backButton).size(200, 50).pad(10).row();
@@ -10425,7 +10367,7 @@ public class GDXGameScreen implements Screen {
                     public void clicked(InputEvent event, float x, float y) {
                         Result result = controller.respondToMarriage("accept", proposerName);
                         if (result.isSuccessful()) {
-                            // Broadcast accept
+
                             com.example.main.service.NetworkService ns = com.example.main.models.App.getInstance().getNetworkService();
                             if (ns != null) {
                                 java.util.HashMap<String, Object> actionData = new java.util.HashMap<>();
@@ -10456,7 +10398,7 @@ public class GDXGameScreen implements Screen {
                     public void clicked(InputEvent event, float x, float y) {
                         Result result = controller.respondToMarriage("reject", proposerName);
                         if (result.isSuccessful()) {
-                            // Broadcast reject
+
                             com.example.main.service.NetworkService ns = com.example.main.models.App.getInstance().getNetworkService();
                             if (ns != null) {
                                 java.util.HashMap<String, Object> actionData = new java.util.HashMap<>();
@@ -10558,19 +10500,17 @@ public class GDXGameScreen implements Screen {
             Message mapMessage = new Message(new HashMap<>(), MessageType.SEND_GAME_MAP);
             mapMessage.putInBody("gameMapSnapshot", snapshot);
 
-            // Get network service from App to send the message
+
             App.getInstance().getNetworkService().getClient().sendMessage(mapMessage);
         });
     }
 
-    /**
-     * Called by the EventBus when this client (a guest) receives the host's map.
-     */
+
     private void onGameMapSync(GameMapSyncEvent event) {
         Gdx.app.postRunnable(() -> {
             System.out.println("[GAMESCREEN] Event received. Initializing map from snapshot.");
             initializeMapFromSnapshot(event.getGameMapSnapshot());
-            // After building the map from snapshot, wire it to controller for gameplay logic
+
             if (game != null && game.getMap() != null) {
                 controller.setMap(game.getMap());
             }
@@ -10581,7 +10521,7 @@ public class GDXGameScreen implements Screen {
         Gdx.app.postRunnable(() -> {
             System.out.println("[GAMESCREEN - HOST] Event received! Generating the master map...");
 
-            // 1. Create the GameMap object
+
             ArrayList<FarmThemes> themes = new ArrayList<>();
             for (User user : game.getPlayers()) {
                 if (!user.getUsername().startsWith("empty_slot_")) themes.add(user.getFarmTheme());
@@ -10590,41 +10530,38 @@ public class GDXGameScreen implements Screen {
             GameMap newMasterMap = new GameMap(game.getPlayers(), themes);
             game.setGameMap(newMasterMap);
 
-            // 2. Generate the random visual tile variants
+
             generateRandomMaps();
             System.out.println("[GAMESCREEN - HOST] Visuals generated.");
 
-            // 3. Create the blueprint snapshot from the final map
+
             GameMapSnapshot snapshot = createMapSnapshot();
             System.out.println("[GAMESCREEN - HOST] Snapshot created.");
 
-            // 4. Send the snapshot to the server
+
             Message mapMessage = new Message(new HashMap<>(), MessageType.SEND_GAME_MAP);
             mapMessage.putInBody("gameMapSnapshot", snapshot);
             App.getInstance().getNetworkService().getClient().sendMessage(mapMessage);
             System.out.println("[GAMESCREEN - HOST] Snapshot sent to server. Setting local map.");
 
-            // 5. Finally, set the local map so the host can see it.
+
             this.gameMap = newMasterMap;
-            this.loadingLabel.setVisible(false); // Hide "Loading..." message
+            this.loadingLabel.setVisible(false);
         });
     }
 
-    /**
-     * TRIGGERED ON GUEST CLIENTS.
-     * Builds the map from the host's blueprint.
-     */
+
     private void onGuestNeedsToBuildMap(GameMapSyncEvent event) {
         Gdx.app.postRunnable(() -> {
             System.out.println("[GAMESCREEN - GUEST] Sync event received! Building map from snapshot...");
             initializeMapFromSnapshot(event.getGameMapSnapshot());
             System.out.println("[GAMESCREEN - GUEST] Map built successfully.");
-            this.loadingLabel.setVisible(false); // Hide "Loading..." message
+            this.loadingLabel.setVisible(false);
         });
     }
 
     public void initializeMapFromSnapshot(GameMapSnapshot snapshot) {
-        // ... (The corrected implementation from the previous response)
+
         System.out.println("[GAMESCREEN] Initializing map from host's snapshot.");
 
         int mapWidth = snapshot.tileTypes.length;
@@ -10659,14 +10596,14 @@ public class GDXGameScreen implements Screen {
 
         this.gameMap = game.getMap();
 
-        // Rebuild interactive elements (shops, trees) that are not captured by snapshot tileTypes
+
         rebuildInteractiveElementsAfterSnapshot();
     }
 
     private void rebuildInteractiveElementsAfterSnapshot() {
         if (game == null || game.getMap() == null) return;
         Tile[][] tiles = game.getMap().getTiles();
-        // Recreate Shop objects and assign to their tile regions
+
         for (ShopType shopType : ShopType.values()) {
             com.example.main.models.building.Shop shop = new com.example.main.models.building.Shop(shopType);
             for (int i = shopType.getCornerX(); i < shopType.getCornerX() + 7; i++) {
@@ -10681,7 +10618,7 @@ public class GDXGameScreen implements Screen {
             }
         }
 
-        // Recreate wild trees and basic growth trackers from treeVariantMap where tile type is Tree
+
         for (int x = 0; x < tiles.length; x++) {
             for (int y = 0; y < tiles[0].length; y++) {
                 Tile t = tiles[x][y];
@@ -10695,12 +10632,12 @@ public class GDXGameScreen implements Screen {
                         default -> TreeType.Oak;
                     };
                     t.setTree(new Tree(treeType));
-                    // Set a basic growth tracker so rendering/logic works
+
                     Fruit growth = new Fruit(treeType.getProduct(), 1);
                     growth.setCurrentStage(1);
                     t.setPlant(growth);
                 }
-                // Recreate foraging crops on planted tiles (snapshot lacks plant object)
+
                 if (t.getType() == TileType.Planted && t.getPlant() == null) {
                     com.example.main.enums.items.ForagingCropType[] all = com.example.main.enums.items.ForagingCropType.values();
                     int idx = Math.abs((x * 31 + y * 17)) % all.length;
@@ -10709,16 +10646,16 @@ public class GDXGameScreen implements Screen {
                     crop.setReadyToHarvest(true);
                     t.setPlant(crop);
                 }
-                // Recreate foraging seeds on shoveled tiles where seed is missing
+
                 if (t.getType() == TileType.Shoveled && t.getSeed() == null) {
                     com.example.main.enums.items.ForagingSeedType[] seeds = com.example.main.enums.items.ForagingSeedType.values();
-                    // Filter only foraging seeds
+
                     com.example.main.enums.items.ForagingSeedType seedType = seeds[Math.abs((x * 13 + y * 7)) % seeds.length];
                     if (seedType.isForaging()) {
                         t.setSeed(new com.example.main.models.item.Seed(seedType, 1));
                     }
                 }
-                // Recreate quarry minerals on stone tiles (functionality)
+
                 if (t.getItem() == null) {
                     switch (t.getType()) {
                         case CopperStone -> t.setItem(new com.example.main.models.item.Mineral(com.example.main.enums.items.MineralType.Copper_Ore, 1));
@@ -10734,7 +10671,7 @@ public class GDXGameScreen implements Screen {
     }
 
     public GameMapSnapshot createMapSnapshot() {
-        // ... (The implementation from the previous response)
+
         GameMapSnapshot snapshot = new GameMapSnapshot();
         Tile[][] tiles = game.getMap().getTiles();
         snapshot.tileTypes = new TileType[tiles.length][tiles[0].length];
@@ -10757,11 +10694,11 @@ public class GDXGameScreen implements Screen {
         for (int i = 0; i < emojiImages.size(); i++) {
             Image image = emojiImages.get(i);
             if (i == selectedEmojiIndex) {
-                // Highlight the selected emoji: make it white and slightly bigger
+
                 image.setColor(Color.WHITE);
                 image.setScale(0.6f);
             } else {
-                // Un-highlight others: make them gray and normal size
+
                 image.setColor(Color.GRAY);
                 image.setScale(0.5f);
             }
@@ -10774,7 +10711,7 @@ public class GDXGameScreen implements Screen {
         List<PlayerScore> playerScores = new ArrayList<>();
         String scoreLabel = "";
 
-        // 1. GATHER DATA based on the current sort mode
+
         for (User user : game.getPlayers()) {
             Player player = user.getPlayer();
             if (player == null) continue;
@@ -10808,11 +10745,11 @@ public class GDXGameScreen implements Screen {
             playerScores.add(new PlayerScore(player.getUsername(), score, scoreLabel));
         }
 
-        // 2. SORT the list in descending order
+
         playerScores.sort(Comparator.comparingDouble(PlayerScore::getScore).reversed());
 
-        // 3. DISPLAY the sorted data in the table
-        scoreboardDisplayTable.clearChildren(); // Clear the old list
+
+        scoreboardDisplayTable.clearChildren();
         int rank = 1;
         for (PlayerScore playerScore : playerScores) {
             scoreboardDisplayTable.add(new Label(rank + ".", skin)).padRight(10);
@@ -10828,21 +10765,21 @@ public class GDXGameScreen implements Screen {
         scoreboardContainer.setBackground("default-window");
         scoreboardContainer.setVisible(false);
         scoreboardContainer.setSize(400, 500);
-        // Center the scoreboard on the screen
+
         scoreboardContainer.setPosition(
             (Gdx.graphics.getWidth() - scoreboardContainer.getWidth()) / 2,
             (Gdx.graphics.getHeight() - scoreboardContainer.getHeight()) / 2
         );
 
-        // ### FIX: Add the scoreboard to the INVENTORY STAGE, not the main stage. ###
-        // This ensures it receives input correctly when the inventory is open.
+
+
         inventoryStage.addActor(scoreboardContainer);
 
-        // --- Title ---
+
         scoreboardTitle = new Label("Scoreboard", skin);
         scoreboardContainer.add(scoreboardTitle).colspan(3).pad(10).row();
 
-        // --- Sorting Buttons ---
+
         Table buttonTable = new Table();
         TextButton sortByBalanceBtn = new TextButton("Balance", skin);
         sortByBalanceBtn.addListener(new ClickListener() {
@@ -10852,7 +10789,7 @@ public class GDXGameScreen implements Screen {
                 updateScoreboard();
             }
         });
-        // ... (listeners for other sort buttons) ...
+
         TextButton sortBySkillsBtn = new TextButton("Skills", skin);
         sortBySkillsBtn.addListener(new ClickListener() {
             @Override
@@ -10876,13 +10813,13 @@ public class GDXGameScreen implements Screen {
         buttonTable.add(sortByQuestsBtn).expandX().fillX();
         scoreboardContainer.add(buttonTable).colspan(3).fillX().padBottom(10).row();
 
-        // --- Ranked List Display ---
+
         scoreboardDisplayTable = new Table();
         ScrollPane scrollPane = new ScrollPane(scoreboardDisplayTable, skin);
         scrollPane.setFadeScrollBars(false);
         scoreboardContainer.add(scrollPane).colspan(3).expand().fill().pad(5).row();
 
-        // ### NEW: Add the Back button to the bottom of the scoreboard ###
+
         addScoreboardBackButton(scoreboardContainer);
     }
 
@@ -10891,13 +10828,13 @@ public class GDXGameScreen implements Screen {
         backButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                // Simply hide the scoreboard. The main menu is already visible behind it.
+
                 if (scoreboardContainer != null) {
                     scoreboardContainer.setVisible(false);
                 }
             }
         });
-        // Add the button to the container with some padding.
+
         container.add(backButton).width(150).pad(10);
     }
 }

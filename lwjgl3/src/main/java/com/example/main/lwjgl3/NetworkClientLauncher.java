@@ -5,16 +5,14 @@ import com.badlogic.gdx.backends.lwjgl3.Lwjgl3ApplicationConfiguration;
 import com.example.main.Main;
 import com.example.main.network.NetworkConstants;
 
-/**
- * Launches the network game client
- */
+
 public class NetworkClientLauncher {
 
     public static void main(String[] args) {
         String serverIp = NetworkConstants.DEFAULT_HOST;
         int serverPort = NetworkConstants.DEFAULT_PORT;
 
-        // Parse command line arguments
+
         if (args.length >= 1) {
             serverIp = args[0];
         }
@@ -31,10 +29,10 @@ public class NetworkClientLauncher {
         System.out.println("=== Stardew Valley Network Client ===");
         System.out.println("Connecting to server: " + serverIp + ":" + serverPort);
 
-        // Set the server connection info for the main application
+
         Main.setNetworkInfo(serverIp, serverPort);
 
-        // Always try graphics mode first for clients
+
         System.out.println("Starting graphics mode...");
         try {
             Lwjgl3ApplicationConfiguration configuration = new Lwjgl3ApplicationConfiguration();

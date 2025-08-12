@@ -14,8 +14,7 @@ import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.example.main.Main;
 import com.example.main.controller.NetworkLobbyController;
 import com.example.main.models.App;
-import com.example.main.service.NetworkService; // Assuming you have this import
-
+import com.example.main.service.NetworkService;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -38,14 +37,12 @@ public class GDXNetworkLobby implements Screen {
     private boolean isAdmin = false;
 
     public GDXNetworkLobby() {
-        // Use the existing, connected NetworkService from the App singleton
-        controller = new NetworkLobbyController(App.getInstance().getNetworkService());
+                  controller = new NetworkLobbyController(App.getInstance().getNetworkService());
         stage = new Stage(new ScreenViewport());
         Gdx.input.setInputProcessor(stage);
         skin = new Skin(Gdx.files.internal("uiskin.json"));
 
-        // Set up callback for online users updates
-        controller.setOnlineUsersUpdateCallback(users -> Gdx.app.postRunnable(() -> updateOnlineUsersFromServer(users)));
+                  controller.setOnlineUsersUpdateCallback(users -> Gdx.app.postRunnable(() -> updateOnlineUsersFromServer(users)));
 
         createUI();
         updateOnlineUsers();
@@ -56,34 +53,28 @@ public class GDXNetworkLobby implements Screen {
         mainTable.setFillParent(true);
         stage.addActor(mainTable);
 
-        // Status label
-        statusLabel = new Label("Connecting to server...", skin);
+                  statusLabel = new Label("Connecting to server...", skin);
         mainTable.add(statusLabel).colspan(2).pad(10).center();
         mainTable.row();
 
-        // Lobby label
-        lobbyLabel = new Label("Network Lobby", skin);
+                  lobbyLabel = new Label("Network Lobby", skin);
         mainTable.add(lobbyLabel).colspan(2).pad(10).center();
         mainTable.row();
 
-        // Section Labels
-        mainTable.add(new Label("Online Users:", skin)).left().pad(5);
+                  mainTable.add(new Label("Online Users:", skin)).left().pad(5);
         mainTable.add(new Label("Lobby Players:", skin)).left().pad(5);
         mainTable.row();
 
-        // Online users table
-        onlineUsersTable = new Table();
+                  onlineUsersTable = new Table();
         onlineUsersTable.setBackground(skin.newDrawable("white", 0.1f, 0.1f, 0.1f, 0.8f));
         mainTable.add(onlineUsersTable).width(300).height(200).pad(5);
 
-        // Lobby players table
-        lobbyPlayersTable = new Table();
+                  lobbyPlayersTable = new Table();
         lobbyPlayersTable.setBackground(skin.newDrawable("white", 0.1f, 0.1f, 0.1f, 0.8f));
         mainTable.add(lobbyPlayersTable).width(300).height(200).pad(5);
         mainTable.row();
 
-        // Buttons
-        Table buttonTable = new Table();
+                  Table buttonTable = new Table();
         leaveLobbyButton = new TextButton("Leave Lobby", skin);
         leaveLobbyButton.addListener(new ClickListener() {
             @Override
@@ -96,8 +87,7 @@ public class GDXNetworkLobby implements Screen {
         startGameButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                if (lobbyPlayers.size() >= 2 && isAdmin) { // Changed to 2 for easier testing
-                    startGame();
+                if (lobbyPlayers.size() >= 2 && isAdmin) {                       startGame();
                 } else if (!isAdmin) {
                     statusLabel.setText("Only the admin can start the game!");
                 } else {
@@ -143,8 +133,7 @@ public class GDXNetworkLobby implements Screen {
 
         String currentUsername = App.getInstance().getCurrentUser() != null ? App.getInstance().getCurrentUser().getUsername() : "";
         for (String username : onlineUsers) {
-            // Only show users who are not the current player
-            if (!username.equals(currentUsername)) {
+                          if (!username.equals(currentUsername)) {
                 Label userLabel = new Label(username, skin);
                 onlineUsersTable.add(userLabel).width(280).pad(2);
                 onlineUsersTable.row();
@@ -167,8 +156,7 @@ public class GDXNetworkLobby implements Screen {
         }
 
         lobbyLabel.setText("Lobby Players (" + lobbyPlayers.size() + "/4)");
-        startGameButton.setDisabled(lobbyPlayers.size() < 2 || !isAdmin); // Update start button state
-    }
+        startGameButton.setDisabled(lobbyPlayers.size() < 2 || !isAdmin);       }
 
     private void startGame() {
         boolean success = controller.startGame();
@@ -184,8 +172,7 @@ public class GDXNetworkLobby implements Screen {
         boolean success = controller.leaveLobby();
         if (success) {
             statusLabel.setText("Left lobby successfully!");
-            // You might want to navigate back to the online lobbies menu
-            Main.getInstance().setScreen(new GDXOnlineLobbiesMenu());
+                          Main.getInstance().setScreen(new GDXOnlineLobbiesMenu());
         } else {
             statusLabel.setText("Failed to leave lobby!");
         }
@@ -196,8 +183,7 @@ public class GDXNetworkLobby implements Screen {
         if (controller.isConnected()) {
             statusLabel.setText("Connected to server!");
             updateOnlineUsers();
-            updateLobbyPlayers(); // Also update lobby players when screen is shown
-        } else {
+            updateLobbyPlayers();           } else {
             statusLabel.setText("Error: Not connected to server!");
         }
     }

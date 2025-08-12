@@ -31,7 +31,6 @@ public class GDXOnlineLobbiesMenu implements Screen {
         rootTable.setFillParent(true);
         stage.addActor(rootTable);
 
-        // --- Search Bar ---
         rootTable.add(new Label("Find Lobby by ID:", skin)).padTop(20);
         TextField searchField = new TextField("", skin);
         searchField.setMessageText("Enter Lobby ID...");
@@ -48,7 +47,6 @@ public class GDXOnlineLobbiesMenu implements Screen {
             }
         });
 
-        // --- Main UI ---
         Label titleLabel = new Label("Public Lobbies", skin);
         titleLabel.setFontScale(1.5f);
         rootTable.add(titleLabel).padTop(20).colspan(3).row();

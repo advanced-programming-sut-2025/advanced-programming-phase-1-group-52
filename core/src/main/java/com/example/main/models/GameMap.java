@@ -39,7 +39,7 @@ public class GameMap implements Serializable {
     private final ArrayList<Player> players;
     private final ArrayList<FarmThemes> themes;
 
-    // --- THIS IS THE CORRECTED CONSTRUCTOR ---
+
     public GameMap(ArrayList<User> users, ArrayList<FarmThemes> themes) {
         this.tiles = new Tile[90][60];
         this.currentWeather = Weather.Sunny;
@@ -50,7 +50,7 @@ public class GameMap implements Serializable {
         this.themes = themes;
         this.players = new ArrayList<>();
         for (User user : users) {
-            // This ensures we don't add null players from empty slots
+
             if(user != null && user.getPlayer() != null) {
                 this.players.add(user.getPlayer());
             }
@@ -58,7 +58,7 @@ public class GameMap implements Serializable {
 
         Random rand = new Random();
 
-        // --- Player 1 Quadrant (Top-Left) ---
+
         if (this.players.size() > 0) {
             Player p1 = this.players.get(0);
             generateBuilding(this.players, 0, TileType.House, 1, 8, 1, 8);
@@ -74,7 +74,7 @@ public class GameMap implements Serializable {
             placeRandomWildTrees(p1, 1, 1, 29, 29);
         }
 
-        // --- Player 2 Quadrant (Top-Right) ---
+
         if (this.players.size() > 1) {
             Player p2 = this.players.get(1);
             generateBuilding(this.players, 1, TileType.House, 81, 88, 1, 8);
@@ -90,7 +90,7 @@ public class GameMap implements Serializable {
             placeRandomWildTrees(p2, 61, 1, 89, 29);
         }
 
-        // --- Player 3 Quadrant (Bottom-Left) ---
+
         if (this.players.size() > 2) {
             Player p3 = this.players.get(2);
             generateBuilding(this.players, 2, TileType.House, 1, 8, 31, 38);
@@ -106,7 +106,7 @@ public class GameMap implements Serializable {
             placeRandomWildTrees(p3, 1, 31, 29, 59);
         }
 
-        // --- Player 4 Quadrant (Bottom-Right) ---
+
         if (this.players.size() > 3) {
             Player p4 = this.players.get(3);
             generateBuilding(this.players, 3, TileType.House, 81, 88, 31, 38);
@@ -122,11 +122,11 @@ public class GameMap implements Serializable {
             placeRandomWildTrees(p4, 61, 31, 89, 59);
         }
 
-        // Generate farms and borders safely
+
         generateFarm(this.players, themes);
         generateBushBorders(this.players);
 
-        // Fill any remaining null tiles
+
         for (int i = 0; i < 90; i++) {
             for (int j = 0; j < 60; j++) {
                 if (tiles[i][j] == null) {
@@ -135,7 +135,7 @@ public class GameMap implements Serializable {
             }
         }
 
-        // Generate NPC and Shop buildings (These are player-neutral)
+
         for (NPCType npc : NPCType.values()) {
             generateBuilding(null, 4, TileType.NPCHouse, npc.getHouseCornerX(), npc.getHouseCornerX() + 4, npc.getHouseCornerY(), npc.getHouseCornerY() + 6);
             this.npcHouses.add(new NPCHouse(npc));
@@ -152,7 +152,7 @@ public class GameMap implements Serializable {
         }
     }
 
-    // --- I've created helper methods to reduce code duplication ---
+
     private void generateGrassPatch(Player owner, int regionX, int regionY, int regionWidth, int regionHeight) {
         Random rand = new Random();
         int grassX = rand.nextInt(regionWidth) + regionX;
@@ -179,7 +179,7 @@ public class GameMap implements Serializable {
         }
     }
 
-    // --- All other methods remain the same ---
+
     public void setCurrentWeather(Weather currentWeather) { this.currentWeather = currentWeather; }
     public void lightning(int playerIndex) {
         Random rand = new Random();
@@ -535,8 +535,8 @@ public class GameMap implements Serializable {
                 if (targetTile.getSeed() != null) {
                     ItemType plantable = targetTile.getSeed().getForagingSeedType().getPlantType();
 
-                    // --- THIS IS THE FIX ---
-                    // Only proceed if the seed actually produces a plant
+
+
                     if (plantable != null) {
                         if (plantable instanceof TreeType treeType) {
                             targetTile.setType(TileType.Tree);
@@ -546,7 +546,7 @@ public class GameMap implements Serializable {
                             targetTile.setPlant(new Crop(plantable, 1));
                         }
                     }
-                    // Always remove the seed after attempting to plant
+
                     targetTile.setSeed(null);
                 }
             }
@@ -644,14 +644,14 @@ public class GameMap implements Serializable {
         }
     }
 
-    // In main/models/GameMap.java
+
 
     public void regenerateQuarries() {
         if (this.players == null || this.themes == null || this.players.isEmpty() || this.themes.isEmpty()) {
             return;
         }
-        // This logic is moved from the old generateFarm method
-        // It regenerates the quarry for each player based on their theme
+
+
         if (themes.size() > 0) {
             switch (themes.get(0)) {
                 case Neutral -> generateBuilding(this.players, 0, TileType.Quarry, 1, 9, 24, 28);

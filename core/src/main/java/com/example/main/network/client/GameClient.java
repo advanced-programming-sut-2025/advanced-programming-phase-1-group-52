@@ -16,9 +16,6 @@ import com.example.main.network.common.Message;
 import com.example.main.network.common.MessageType;
 import com.google.gson.Gson;
 
-/**
- * Game client that connects to the server and handles network communication
- */
 public class GameClient {
     private final String host;
     private final int port;
@@ -31,10 +28,8 @@ public class GameClient {
     private User authenticatedUser;
     private Game currentGame;
     private final ClientNetworkListener networkListener;
-    private Object controllerCallback; // For GUI callbacks
-    private final Gson gson;
-    private final ClientMessageHandler messageHandler; // <-- Add this field
-
+    private Object controllerCallback;      private final Gson gson;
+    private final ClientMessageHandler messageHandler;
     public GameClient(String host, int port) {
         this.host = host;
         this.port = port;
@@ -43,8 +38,7 @@ public class GameClient {
         this.executorService = Executors.newCachedThreadPool();
         this.networkListener = new ClientNetworkListener(this);
         this.gson = new Gson();
-        this.messageHandler = new ClientMessageHandler(this); // <-- Instantiate it here
-    }
+        this.messageHandler = new ClientMessageHandler(this);      }
 
     public boolean connect() {
         try {
@@ -54,8 +48,6 @@ public class GameClient {
             connected.set(true);
 
             System.out.println("Connected to server at " + host + ":" + port);
-
-            // Start listening for messages from server
             executorService.execute(networkListener);
 
             return true;
@@ -65,18 +57,12 @@ public class GameClient {
         }
     }
 
-    // =================================================================
-    // IMPORTANT: Replace the entire handleMessage method with this one
-    // =================================================================
     public void handleMessage(Message message) {
         if (message == null) {
             return;
         }
-        // Delegate all message handling to the single, dedicated message handler.
-        // This ensures that all message types are processed correctly.
         messageHandler.handleMessage(message);
     }
-    // =================================================================
 
 
     public void setAuthenticated(boolean status) {
@@ -96,7 +82,6 @@ public class GameClient {
             System.out.println("Sending authentication message for user: " + username);
             sendMessage(authMessage);
 
-            // Wait for authentication response.
             Thread.sleep(3000);
 
             boolean authResult = authenticated.get();

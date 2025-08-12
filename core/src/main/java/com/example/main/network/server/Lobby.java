@@ -36,7 +36,7 @@ public class Lobby {
     }
 
     public boolean canStartGame() {
-        // The check for allPlayersReady() has been removed.
+
         return players.size() >= 2 && players.size() <= maxPlayers;
     }
     public boolean allPlayersReady() {
@@ -46,7 +46,7 @@ public class Lobby {
 
     public boolean checkPassword(String passwordAttempt) {
         if (!this.isPrivate) {
-            return true; // Not private, no password needed
+            return true;
         }
         return this.password != null && this.password.equals(passwordAttempt);
     }
@@ -160,8 +160,8 @@ public class Lobby {
     }
 
     public boolean hasMapRequestBeenSentAndSet() {
-        // This command atomically sets the value to 'true' and returns the PREVIOUS value.
-        // So, it will only return 'false' on the very first time it is called for this lobby.
+
+
         return this.mapRequestSent.getAndSet(true);
     }
 }

@@ -220,7 +220,7 @@ public class Player {
         ToolType type = currentTool.getToolType();
         int energyConsumption = type.getEnergyConsumption();
 
-        // Apply skill-based energy reduction
+
         if (type.name().contains("Hoe") && getSkillLevel(Skills.Farming) >= 4) energyConsumption--;
         if (type.name().contains("Pickaxe") && getSkillLevel(Skills.Mining) >= 4) energyConsumption--;
         if (type.name().contains("Axe") && getSkillLevel(Skills.Foraging) >= 4) energyConsumption--;
@@ -230,7 +230,7 @@ public class Player {
             return new Result(false, "Not enough energy!");
         }
 
-        // --- Tool Specific Logic ---
+
         if (type.name().contains("Pickaxe")) {
             if (tile.getItem() instanceof Mineral || tile.getType() == TileType.Stone) {
                 if (inventory.isFull()) {
@@ -326,8 +326,8 @@ public class Player {
 
                     } else if (itemType instanceof ForagingCropType foragingCropType) {
                         inventory.addItem(new Crop(foragingCropType, 1));
-                        addSkillExperience(Skills.Foraging, 7); // Foraging XP for these
-                        tile.setPlant(null); // Wild forageables are always one-time harvests
+                        addSkillExperience(Skills.Foraging, 7);
+                        tile.setPlant(null);
                         tile.setType(TileType.Earth);
                         reduceEnergy(energyConsumption);
                         return new Result(true, "Harvested a " + foragingCropType.getName() + "!");
@@ -337,7 +337,7 @@ public class Player {
                     int harvestAmount = fruitTree.getTreeType().getHarvestCycle();
                     Fruit harvestedFruit = new Fruit(fruitTree.getFruitType(), harvestAmount);
                     inventory.addItem(harvestedFruit);
-                    fruitTree.setHasBeenHarvestedToday(true); // Prevents re-harvesting with 'J' key
+                    fruitTree.setHasBeenHarvestedToday(true);
 
                     fruitTree.setReadyToHarvest(false);
                     fruitTree.setDayPassed(0);
@@ -461,7 +461,7 @@ public class Player {
             data.deductExperience(expNeeded);
             data.levelUp();
 
-            // Create and add the notification message
+
             String message = skill.name() + " skill increased to level " + data.getLevel() + "!";
             addSystemNotification(message);
 
@@ -472,7 +472,7 @@ public class Player {
         }
     }
 
-    // Add this new method to create system messages (without a sender)
+
     public void addSystemNotification(String message) {
         if (this.notifications == null) {
             this.notifications = new ArrayList<>();

@@ -14,7 +14,7 @@ public enum TreeType implements ItemType {
     Peach("peach tree", "Peach_Sapling", List.of(5, 5, 6, 6), 22, FruitType.Peach, 1, 140, true, 38, List.of(Season.Summer), false),
     Pomegranate("pomegranate tree", "Pomegranate_Sapling", List.of(5, 5, 6, 6), 22, FruitType.Pomegranate, 1, 140, true, 38, List.of(Season.Fall), false),
 
-    // Special/Foraging trees - Now with 5 growth stages
+
     Oak("oak tree", "Acorn", List.of(1, 1, 1, 1), 4, FruitType.Oak_Resin, 7, 150, false, -1, List.of(Season.Spring, Season.Summer, Season.Fall, Season.Winter), true),
     Maple("maple tree", "Maple_Seed", List.of(1, 1, 1, 1), 4, FruitType.Maple_Syrup, 9, 200, false, -1, List.of(Season.Spring, Season.Summer, Season.Fall, Season.Winter), true),
     Pine("pine tree", "Pine_Cone", List.of(1, 1, 1, 1), 4, FruitType.Pine_Tar, 5, 100, false, -1, List.of(Season.Spring, Season.Summer, Season.Fall, Season.Winter), true),

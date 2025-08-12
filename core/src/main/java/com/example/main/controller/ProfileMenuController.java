@@ -8,12 +8,15 @@ import com.example.main.models.User;
 
 public class ProfileMenuController {
     public Result changeUsername(String username) {
-        if (username.length() < 3) {
+        if (username.length() < 3)
             return new Result(false, "Username must be at least 3 characters");
-        }
-        if (SignUpMenuCommands.ValidUsername.getMatcher(username) == null) {
+
+        if (SignUpMenuCommands.ValidUsername.getMatcher(username) == null)
             return new Result(false, "Username is invalid");
-        }
+
+        if(App.getInstance().getCurrentUser().getUsername().equals(username))
+            return new Result(false, "This is your current username!");
+
         for (User user : App.getInstance().getUsers()) {
             if (user.getUsername().equals(username)) {
                 return new Result(false, "Username is already taken");
@@ -21,11 +24,14 @@ public class ProfileMenuController {
         }
 
         App.getInstance().getCurrentUser().setUsername(username);
-        App.getInstance().updateUserData(); // Save data after successful change
+        App.getInstance().updateUserData();
         return new Result(true, "Username changed successfully.");
     }
 
     public Result changeNickname(String nickname) {
+        if(App.getInstance().getCurrentUser().getNickname().equals(nickname))
+            return new Result(false, "This is your current nickname!");
+
         for (User user : App.getInstance().getUsers()) {
             if (user.getNickname().equals(nickname)) {
                 return new Result(false, "Nickname is already taken");
@@ -33,11 +39,14 @@ public class ProfileMenuController {
         }
 
         App.getInstance().getCurrentUser().setNickname(nickname);
-        App.getInstance().updateUserData(); // Save data after successful change
+        App.getInstance().updateUserData();
         return new Result(true, "Nickname changed successfully.");
     }
 
     public Result changeEmail(String email) {
+        if(App.getInstance().getCurrentUser().getEmail().equals(email))
+            return new Result(false, "This is your current email!");
+
         if (SignUpMenuCommands.ValidEmail.getMatcher(email) == null) {
             return new Result(false, "Email format is invalid");
         }
@@ -49,7 +58,7 @@ public class ProfileMenuController {
         }
 
         App.getInstance().getCurrentUser().setEmail(email);
-        App.getInstance().updateUserData(); // Save data after successful change
+        App.getInstance().updateUserData();
         return new Result(true, "Email changed successfully.");
     }
 
@@ -77,7 +86,7 @@ public class ProfileMenuController {
         }
 
         user.setPassword(newPassword);
-        App.getInstance().updateUserData(); // Save data after successful change
+        App.getInstance().updateUserData();
         return new Result(true, "Password changed successfully.");
 
     }

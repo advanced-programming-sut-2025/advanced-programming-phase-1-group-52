@@ -34,7 +34,6 @@ public class PreGameMenuController {
             return new Result(false, "Please enter three different usernames.");
         }
 
-        // Check if any of the entered usernames are the same as the logged-in user
         if (loggedInUser.getUsername().equals(username2) || loggedInUser.getUsername().equals(username3) || loggedInUser.getUsername().equals(username4)) {
             return new Result(false, "You cannot invite yourself to the game.");
         }

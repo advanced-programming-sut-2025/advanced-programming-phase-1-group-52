@@ -55,7 +55,7 @@ public enum ForagingSeedType implements ItemType {
     Ancient_Seeds("ancient seeds", Season.Special, true, "Ancient_Fruit", 250),
     Mixed_Seeds("mixed seeds", Season.Special, false, null, 0),
 
-    // --- CORRECTED TREE SEEDS ---
+
     Apple_Sapling("apple sapling", Season.Special, false, "Apple", 2000),
     Apricot_Sapling("apricot sapling", Season.Special, false, "Apricot", 1000),
     Cherry_Sapling("cherry sapling", Season.Special, false, "Cherry", 1700),
@@ -71,7 +71,7 @@ public enum ForagingSeedType implements ItemType {
     Mushroom_Tree_Seed("mushroom tree seed", Season.Special, true, "Mushroom", 0),
     Mystic_Tree_Seed("mystic tree seed", Season.Special, false, "Mystic", 0);
 
-    // ... (rest of the file remains the same) ...
+
 
     private final String name;
     private final Season season;

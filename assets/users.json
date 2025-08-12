@@ -1,16 +1,6 @@
 [
 {
 	class: com.example.main.models.User
-	username: mamad
-	password: mamad
-	nickname: mamy
-	email: mamad@gmail.com
-	gender: Male
-	securityQuestion: PetName
-	securityAnswer: dog
-}
-{
-	class: com.example.main.models.User
 	username: newuser
 	password: newpass
 	nickname: New User
@@ -51,16 +41,6 @@
 }
 {
 	class: com.example.main.models.User
-	username: completelynewuser
-	password: completelynewpass
-	nickname: Completely New User
-	email: completelynew@example.com
-	gender: Male
-	securityQuestion: PetName
-	securityAnswer: default
-}
-{
-	class: com.example.main.models.User
 	username: testuser
 	password: testpass
 	nickname: Test User
@@ -96,6 +76,36 @@
 	gender: Male
 	securityQuestion: PetName
 	securityAnswer: default
+}
+{
+	class: com.example.main.models.User
+	username: mamad
+	password: mamad
+	nickname: mamy
+	email: mamad@gmail.com
+	gender: Male
+	securityQuestion: PetName
+	securityAnswer: dog
+}
+{
+	class: com.example.main.models.User
+	username: completelynewuser
+	password: completelynewpass
+	nickname: Completely New User
+	email: completelynew@example.com
+	gender: Male
+	securityQuestion: PetName
+	securityAnswer: default
+}
+{
+	class: com.example.main.models.User
+	username: parsa
+	password: ":IUf(55G"
+	nickname: aliz
+	email: parsa@gmail.com
+	gender: Male
+	securityQuestion: PetName
+	securityAnswer: cat
 }
 {
 	class: com.example.main.models.User

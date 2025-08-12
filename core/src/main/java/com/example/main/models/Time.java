@@ -1,9 +1,7 @@
 package com.example.main.models;
 
 public class Time {
-    public static final int DAY_START = 6; // Changed to 6 AM for a more standard start time
-    public static final int DAY_END = 26; // Represents 2:00 AM the next day
-    public static final int ACTIVE_HOURS = DAY_END - DAY_START;
+    public static final int DAY_START = 6;       public static final int DAY_END = 26;       public static final int ACTIVE_HOURS = DAY_END - DAY_START;
 
     private int hour = DAY_START;
     private int minute = 0;
@@ -47,8 +45,7 @@ public class Time {
     }
 
     public void setHour(int hour) {
-        if (hour < 0 || hour > 23) { // Allow full 24-hour range internally
-            throw new IllegalArgumentException("Hour must be between 0 and 23");
+        if (hour < 0 || hour > 23) {               throw new IllegalArgumentException("Hour must be between 0 and 23");
         }
         this.hour = hour;
     }

@@ -93,9 +93,7 @@ public class GameMenuController {
         EventBus.getInstance().subscribe(PlayerDisconnectedEvent.class, this::onPlayerDisconnected);
     }
 
-    /**
-     * This method is called by the EventBus when a GameMapSyncEvent is published.
-     */
+
     private void onPlayerDisconnected(PlayerDisconnectedEvent event) {
         Gdx.app.postRunnable(() -> {
             removePlayer(event.getUsername());
@@ -320,17 +318,17 @@ public class GameMenuController {
         } catch (NumberFormatException e) {
             return new Result(false, "Invalid number format for days.");
         }
-        return changeDate(days); // Call the other method
+        return changeDate(days);
     }
 
-    // This is the main logic, now corrected
+
     public Result changeDate(int days) {
         if (days <= 0) {
             return new Result(false, "Days must be positive");
         }
 
         for (int i = 0; i < days; i++) {
-            game.advanceDay(); // Use the centralized method
+            game.advanceDay();
         }
 
         return new Result(true, "Date advanced by " + days + " day(s)!");
@@ -413,8 +411,8 @@ public class GameMenuController {
     }
 
     public Result walk(String xString, String yString) {
-        // todo : calculate closest way and place the player :P (R)
-        // chaaaaaaaaaaaaaaaaaaaaaaaashm (S)
+
+
         int x = Integer.parseInt(xString);
         int y = Integer.parseInt(yString);
 
@@ -562,38 +560,38 @@ public class GameMenuController {
 
         for (NPC npc : game.getNPCs()) {
             if (npc == null || npc.getQuests() == null) {
-                continue; // Skip null NPCs or NPCs with null quest maps
+                continue;
             }
 
             java.util.HashMap<Quest, Boolean> quests = npc.getQuests();
             List<Quest> questsList = new ArrayList<>(quests.keySet());
 
-            // Check if there are any quests for this NPC
+
             if (questsList.isEmpty()) {
                 continue;
             }
 
-            // Always show first quest if it exists AND is not completed
+
             if (questsList.size() > 0 && questsList.get(0) != null) {
                 Quest firstQuest = questsList.get(0);
                 Boolean isCompleted = quests.get(firstQuest);
-                if (isCompleted == null || !isCompleted) { // Show only if not completed
+                if (isCompleted == null || !isCompleted) {
                     stringBuilder.append(firstQuest.toString());
                 }
             }
 
-            // Show second quest if friendship level >= 1, it exists, AND is not completed
+
             if (questsList.size() > 1 && questsList.get(1) != null &&
                 npc.getFriendShipLevelWith(game.getCurrentPlayer()) != null &&
                 npc.getFriendShipLevelWith(game.getCurrentPlayer()) >= 1) {
                 Quest secondQuest = questsList.get(1);
                 Boolean isCompleted = quests.get(secondQuest);
-                if (isCompleted == null || !isCompleted) { // Show only if not completed
+                if (isCompleted == null || !isCompleted) {
                     stringBuilder.append(secondQuest.toString());
                 }
             }
 
-            // Show third quest based on NPC type, days passed, AND not completed
+
             if (questsList.size() > 2 && questsList.get(2) != null) {
                 boolean showThirdQuest = false;
 
@@ -616,7 +614,7 @@ public class GameMenuController {
                 if (showThirdQuest) {
                     Quest thirdQuest = questsList.get(2);
                     Boolean isCompleted = quests.get(thirdQuest);
-                    if (isCompleted == null || !isCompleted) { // Show only if not completed
+                    if (isCompleted == null || !isCompleted) {
                         stringBuilder.append(thirdQuest.toString());
                     }
                 }
@@ -626,34 +624,34 @@ public class GameMenuController {
         return new Result(true, stringBuilder.toString());
     }
 
-    // Helper method to check if a quest is visible/active (same logic as showQuests)
+
     private boolean isQuestVisible(Quest quest, NPC npc) {
         if (quest == null || npc == null) return false;
 
         HashMap<Quest, Boolean> quests = npc.getQuests();
         if (quests == null) return false;
 
-        // Check if quest is completed - if so, it's not visible
+
         Boolean isCompleted = quests.get(quest);
         if (isCompleted != null && isCompleted) {
-            return false; // Completed quests are never visible
+            return false;
         }
 
         List<Quest> questsList = new ArrayList<>(quests.keySet());
         int questIndex = questsList.indexOf(quest);
 
-        if (questIndex == -1) return false; // Quest not found
+        if (questIndex == -1) return false;
 
-        // First quest is always visible (if not completed)
+
         if (questIndex == 0) return true;
 
-        // Second quest is visible if friendship level >= 1 (if not completed)
+
         if (questIndex == 1) {
             return npc.getFriendShipLevelWith(game.getCurrentPlayer()) != null &&
                 npc.getFriendShipLevelWith(game.getCurrentPlayer()) >= 1;
         }
 
-        // Third quest is visible based on NPC type and days passed (if not completed)
+
         if (questIndex == 2) {
             switch (npc.getType()) {
                 case Abigail -> { return game.getDaysPassed() >= 20; }
@@ -665,7 +663,7 @@ public class GameMenuController {
             }
         }
 
-        return false; // Quests beyond index 2 are not visible
+        return false;
     }
 
     public Result finishQuest(String idString) {
@@ -678,7 +676,7 @@ public class GameMenuController {
             return new Result(false, "Invalid id format!");
         }
 
-        // Add safety check for game NPCs
+
         if (game == null || game.getNPCs() == null) {
             return new Result(false, "Game not properly initialized!");
         }
@@ -690,7 +688,7 @@ public class GameMenuController {
         try {
             for (NPC n : game.getNPCs()) {
                 if (n == null || n.getQuests() == null) {
-                    continue; // Skip null NPCs or NPCs with null quest maps
+                    continue;
                 }
                 HashMap<Quest, Boolean> quests = n.getQuests();
                 for (Quest q : quests.keySet()) {
@@ -715,7 +713,7 @@ public class GameMenuController {
             return new Result(false, "This quest is already done!");
         }
 
-        // Check if the quest is visible/active
+
         if (!isQuestVisible(quest, npc)) {
             return new Result(false, "This quest is not available yet! Check your friendship level or wait for more days to pass.");
         }
@@ -724,7 +722,7 @@ public class GameMenuController {
             return new Result(false, "Quest demand is invalid!");
         }
 
-        // Use the more reliable findItemByType method instead of getItemByName
+
         Item item = currentPlayer.getInventory().findItemByType(quest.getDemand());
         if (item == null) {
             return new Result(false, "You don't have the demanding item: " + quest.getDemand().getName() + "!");
@@ -845,7 +843,7 @@ public class GameMenuController {
         return new Result(true, game.getCurrentPlayer().getUsername() + " sent a message to " + player.getUsername() + ":\n" + message);
     }
 
-    // Remote synchronization variant: applies the same effect without proximity checks
+
     public Result talkRemote(String senderUsername, String receiverUsername, String message) {
         User senderUser = game.getUserByUsername(senderUsername);
         User receiverUser = game.getUserByUsername(receiverUsername);
@@ -1016,7 +1014,7 @@ public class GameMenuController {
         return new Result(true, "You gifted " + itemName + " to " + username);
     }
 
-    // Remote variant used by receiving clients to apply the gift without local proximity/inventory checks
+
     public Result giftPlayerRemote(String senderUsername, String receiverUsername, String itemName, String itemAmountStr) {
         User senderUser = game.getUserByUsername(senderUsername);
         User receiverUser = game.getUserByUsername(receiverUsername);
@@ -1482,7 +1480,7 @@ public class GameMenuController {
         }
         return new Result(true, "There is " + wateringCan.getFilledCapacity() + "liter in watering can");
     }
-    // todo : delete below functions
+
     public Result showCraftingRecipes(){
         Player player = game.getCurrentPlayer();
         ArrayList<CraftingRecipe> playerCraftingRecipes = player.getCraftingRecipe();
@@ -1649,12 +1647,12 @@ public class GameMenuController {
 
     private List<String> validateGameCommand(String command) throws IllegalArgumentException {
 
-        // Check for -u flag
+
         if (GameMenuCommands.CheckFlagInNewGame.getMatcher(command) == null) {
             throw new IllegalArgumentException("Missing '-u' flag. Usage: 'game new -u <user1> <user2> <user3>'");
         }
 
-        // Extract usernames
+
         Matcher usernameMatcher = GameMenuCommands.CreateNewGame.getMatcher(command);
         List<String> usernames = new ArrayList<>();
 
@@ -1665,7 +1663,7 @@ public class GameMenuController {
             System.out.println(username);
         }
 
-        // Validate username count
+
         if (usernames.size() < 3) {
             throw new IllegalArgumentException("Too few usernames. Expected 3, got " + usernames.size());
         }
@@ -1754,7 +1752,7 @@ public class GameMenuController {
         StringBuilder buffMessage = new StringBuilder("Yummy!");
         FoodType foodType = food.getFoodType();
 
-        // Handle Buffs
+
         if (foodType.isBuffMaxEnergy()) {
             ActiveBuff buff = new ActiveBuff(ActiveBuff.BuffType.MAX_ENERGY, null, foodType.getEffectiveTime());
             player.getActiveBuffs().add(buff);
@@ -1762,7 +1760,7 @@ public class GameMenuController {
         }
         if (foodType.getSkillBuff() != null) {
             Skills skillToBuff = foodType.getSkillBuff();
-            player.getSkillData(skillToBuff).applyBuff(4); // Buff to level 4
+            player.getSkillData(skillToBuff).applyBuff(4);
             ActiveBuff buff = new ActiveBuff(ActiveBuff.BuffType.SKILL, skillToBuff, foodType.getEffectiveTime());
             player.getActiveBuffs().add(buff);
             buffMessage.append("\n").append(skillToBuff.name()).append(" buff activated for ").append(foodType.getEffectiveTime() * 10).append(" game minutes!");
@@ -1777,7 +1775,7 @@ public class GameMenuController {
         if (fishingPole == null) {
             return new Result(false, "No fishing pole found");
         }
-        // Ensure map reference is initialized
+
         if (map == null && game != null) {
             map = game.getMap();
         }
@@ -1792,8 +1790,8 @@ public class GameMenuController {
             return new Result(false, "Your inventory is full.");
         }
 
-        // --- NEW LOGIC ---
-        // Find a random fish that can be caught
+
+
         List<FishType> possibleFish = Arrays.stream(FishType.values())
             .filter(f -> f.getSeason() == game.getDate().getCurrentSeason() || f.getSeason() == Season.Special)
             .collect(Collectors.toList());
@@ -1805,10 +1803,10 @@ public class GameMenuController {
         Random rand = new Random();
         FishType caughtFish = possibleFish.get(rand.nextInt(possibleFish.size()));
 
-        // Create and store the minigame instance
+
         this.activeMinigame = new FishingMinigame(caughtFish);
 
-        // Signal success to the view, which will then start the minigame UI
+
         return new Result(true, "A fish has bitten!");
     }
 
@@ -2775,7 +2773,7 @@ public class GameMenuController {
         return new Result(true, "You are now in store menu!");
     }
 
-    // In useTool(Tile targetTile)
+
     public Result useTool(Tile targetTile) {
         Player player = game.getCurrentPlayer();
         if (targetTile == null) {
@@ -2797,11 +2795,11 @@ public class GameMenuController {
             }
             CropType cropType = (CropType) crop.getCropType();
 
-            // Give a larger, random yield (e.g., 15-21)
+
             int yield = 15 + new Random().nextInt(7);
             player.getInventory().addItem(new Crop(cropType, yield));
 
-            // Clear all four tiles that made up the giant crop
+
             for (int i = 0; i < 2; i++) {
                 for (int j = 0; j < 2; j++) {
                     Tile partOfCrop = game.getMap().getTile(rootX + i, rootY + j);
@@ -2948,12 +2946,12 @@ public class GameMenuController {
         return new Result(true, "You can collect\n" + animal.getType().getProducts().get(0).getName() + "\nfrom " + animalName + "!");
     }
 
-    // main/controller/GameMenuController.java
+
 
     public Result craftItem(String recipeName) {
         Player player = game.getCurrentPlayer();
 
-        // Find the recipe enum by its display name
+
         CraftingRecipes recipeType = Arrays.stream(CraftingRecipes.values())
             .filter(r -> r.getName().equalsIgnoreCase(recipeName))
             .findFirst()
@@ -2963,7 +2961,7 @@ public class GameMenuController {
             return new Result(false, "No crafting recipe found with the name: " + recipeName);
         }
 
-        // 1. Check if the player has learned this recipe
+
         boolean hasRecipe = player.getCraftingRecipe().stream()
             .anyMatch(playerRecipe -> playerRecipe.getRecipeType() == recipeType);
 
@@ -2971,12 +2969,12 @@ public class GameMenuController {
             return new Result(false, "You have not learned this recipe yet.");
         }
 
-        // 2. Check if the player's inventory is full
+
         if (player.getInventory().isFull()) {
             return new Result(false, "Your inventory is full. Make some space first.");
         }
 
-        // 3. Check if the player has the required ingredients
+
         for (Map.Entry<ItemType, Integer> entry : recipeType.getIngredients().entrySet()) {
             ItemType requiredItemType = entry.getKey();
             int requiredAmount = entry.getValue();
@@ -2987,18 +2985,18 @@ public class GameMenuController {
             }
         }
 
-        // 4. All checks passed: Deduct ingredients
+
         for (Map.Entry<ItemType, Integer> entry : recipeType.getIngredients().entrySet()) {
             player.getInventory().remove2(entry.getKey().getName(), entry.getValue());
         }
 
-        // 5. Create and add the crafted item using ItemFactory
+
         ItemType productType = recipeType.getProduct();
         try {
             Item craftedItem = ItemFactory.createItemOrThrow(productType.getName(), 1);
             player.getInventory().addItem(craftedItem);
         } catch (Exception e) {
-            // This will catch if ItemFactory doesn't know how to create the item
+
             return new Result(false, "Error creating crafted item: " + productType.getName());
         }
 
@@ -3029,7 +3027,7 @@ public class GameMenuController {
             return new Result(false, "You haven't learned this recipe yet.");
         }
 
-        // --- NEW: Detailed Ingredient Check ---
+
         StringBuilder missingIngredients = new StringBuilder();
         Map<ItemType, Integer> totalIngredients = new HashMap<>();
         player.getInventory().getItems().forEach(item -> totalIngredients.merge(item.getItemType(), item.getNumber(), Integer::sum));
@@ -3046,10 +3044,10 @@ public class GameMenuController {
         if (missingIngredients.length() > 0) {
             return new Result(false, "You are missing ingredients:" + missingIngredients.toString());
         }
-        // --- END: Detailed Ingredient Check ---
 
 
-        // All checks passed, now deduct ingredients
+
+
         for (Map.Entry<ItemType, Integer> entry : recipeType.getIngredients().entrySet()) {
             int amountLeftToDeduct = entry.getValue();
             Item itemInInventory = player.getInventory().findItemByType(entry.getKey());
@@ -3063,7 +3061,7 @@ public class GameMenuController {
             }
         }
 
-        // Create the food and store it temporarily
+
         this.lastCookedFood = new Food(recipeType.getFoodType(), 1);
         return new Result(true, "Successfully cooked " + lastCookedFood.getName());
     }
@@ -3093,7 +3091,7 @@ public class GameMenuController {
         }
 
         String message = lastCookedFood.getName() + " placed in " + destination + ".";
-        this.lastCookedFood = null; // Clear the temporary item
+        this.lastCookedFood = null;
         return new Result(true, message);
     }
 
@@ -3120,15 +3118,15 @@ public class GameMenuController {
             }
         }
 
-        // Select a random food item from the list
+
         Random random = new Random();
         Item itemToMove = foodInInventory.get(random.nextInt(foodInInventory.size()));
 
-        // Create a new food object for the refrigerator to avoid reference issues
+
         Food foodForFridge = new Food((FoodType) itemToMove.getItemType(), 1);
         player.getHouseRefrigerator().putItem(foodForFridge);
 
-        // Remove one from the inventory
+
         player.getInventory().remove2(itemToMove.getName(), 1);
 
         return new Result(true, "Moved 1 " + itemToMove.getName() + " to the refrigerator.");
@@ -3137,7 +3135,7 @@ public class GameMenuController {
     public Result cheatAddCraftingRecipe(String recipeName) {
         Player player = game.getCurrentPlayer();
 
-        // Find the recipe enum by its display name (more user-friendly)
+
         CraftingRecipes recipeType = Arrays.stream(CraftingRecipes.values())
             .filter(r -> r.getName().equalsIgnoreCase(recipeName))
             .findFirst()
@@ -3147,7 +3145,7 @@ public class GameMenuController {
             return new Result(false, "No crafting recipe found with that name.");
         }
 
-        // Check if the player already knows the recipe
+
         boolean alreadyKnown = player.getCraftingRecipe().stream()
             .anyMatch(r -> r.getRecipeType() == recipeType);
 
@@ -3162,7 +3160,7 @@ public class GameMenuController {
     public Result cheatAddCookingRecipe(String recipeName) {
         Player player = game.getCurrentPlayer();
 
-        // Find the recipe enum by its display name
+
         CookingRecipeType recipeType = Arrays.stream(CookingRecipeType.values())
             .filter(r -> r.getDisplayName().equalsIgnoreCase(recipeName))
             .findFirst()
@@ -3172,7 +3170,7 @@ public class GameMenuController {
             return new Result(false, "No cooking recipe found with that name.");
         }
 
-        // Check if the player already knows the recipe
+
         boolean alreadyKnown = player.getCookingRecipe().stream()
             .anyMatch(r -> r.getRecipeType() == recipeType);
 
@@ -3199,11 +3197,11 @@ public class GameMenuController {
             return new Result(false, "You cannot place a machine there.");
         }
 
-        // Create the PlacedMachine state object
+
         PlacedMachine placedMachine = new PlacedMachine((CraftingMachineType) machine.getItemType());
         targetTile.setPlacedMachine(placedMachine);
 
-        // Remove the item from inventory
+
         game.getCurrentPlayer().getInventory().remove2(machine.getName(), 1);
 
         return new Result(true, machine.getName() + " placed successfully.");
@@ -3247,7 +3245,7 @@ public class GameMenuController {
         }
 
         player.reduceEnergy(100);
-        // Manually set progress to finish
+
         while (!machine.isDone()) {
             machine.updateProgress();
         }
@@ -3260,7 +3258,7 @@ public class GameMenuController {
             return new Result(false, "Nothing to cancel.");
         }
 
-        // Return the ingredient to the player's inventory
+
         Item ingredient = machine.getInput();
         if (ingredient != null) {
             game.getCurrentPlayer().getInventory().addItem(ingredient);

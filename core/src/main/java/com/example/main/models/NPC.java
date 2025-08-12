@@ -12,8 +12,7 @@ public class NPC {
     private final HashMap<Quest, Boolean> quests;
     private final ArrayList<NPCFriendship> friendships = new ArrayList<>();
 
-    // --- THIS IS THE CORRECTED CONSTRUCTOR ---
-    public NPC(NPCType type, ArrayList<Player> players) {
+          public NPC(NPCType type, ArrayList<Player> players) {
         this.type = type;
         this.quests = new HashMap<>();
         for (Quest quest : this.type.getQuests()) {
@@ -25,8 +24,7 @@ public class NPC {
 
         if (players != null) {
             for (Player player : players) {
-                if (player != null) { // A final safety check
-                    friendships.add(new NPCFriendship(this, player));
+                if (player != null) {                       friendships.add(new NPCFriendship(this, player));
                 }
             }
         }

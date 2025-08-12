@@ -4,8 +4,7 @@ import com.example.main.enums.design.Season;
 import com.example.main.enums.items.*;
 
 public enum JojaMart implements ShopEntry {
-    // Permanent Stock
-    JojaCola_Product(null, "Joja Cola", "The flagship product of Joja corporation.",
+          JojaCola_Product(null, "Joja Cola", "The flagship product of Joja corporation.",
         75, Integer.MAX_VALUE, MaterialType.Joja_Cola),
     Ancient_Seed_Product(null, "Ancient Seed", "Could these still grow?",
         500, 1, ForagingSeedType.Ancient_Seeds),
@@ -18,8 +17,7 @@ public enum JojaMart implements ShopEntry {
     Rice_Product(null, "Rice", "A basic grain often served under vegetables.",
         250, Integer.MAX_VALUE, MaterialType.Rice),
 
-    // Spring Stock
-    Parsnip_Seeds_Product(Season.Spring, "Parsnip Seeds", "Plant these in the spring. Takes 4 days to mature.",
+          Parsnip_Seeds_Product(Season.Spring, "Parsnip Seeds", "Plant these in the spring. Takes 4 days to mature.",
         25, 5, ForagingSeedType.Parsnip_Seeds),
     Bean_Starter_Product(Season.Spring, "Bean Starter", "Plant these in the spring. Takes 10 days to mature, but keeps producing.",
         75, 5, ForagingSeedType.Bean_Starter),
@@ -42,7 +40,7 @@ public enum JojaMart implements ShopEntry {
     Jazz_Seeds_Product(Season.Spring, "Jazz Seeds", "Plant in spring. Takes 7 days.",
         37, 5, ForagingSeedType.Jazz_Seeds),
 
-    // Summer Stock
+
     Tomato_Seeds_Product(Season.Summer, "Tomato Seeds", "Plant in summer. Takes 11 days, keeps producing.",
         62, 5, ForagingSeedType.Tomato_Seeds),
     Pepper_Seeds_Product(Season.Summer, "Pepper Seeds", "Plant in summer. Takes 5 days, keeps producing.",

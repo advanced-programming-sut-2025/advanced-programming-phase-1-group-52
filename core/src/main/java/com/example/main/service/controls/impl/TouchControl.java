@@ -10,7 +10,6 @@ import com.example.main.configuration.preferences.ControlsData;
 import com.example.main.service.controls.AbstractControl;
 import com.example.main.service.controls.ControlType;
 
-/** Allows to control entity with touch events. */
 public class TouchControl extends AbstractControl {
     private final Vector2 entityPosition = new Vector2();
     private boolean isMoving;
@@ -58,12 +57,11 @@ public class TouchControl extends AbstractControl {
 
     @Override
     public ControlsData toData() {
-        return new ControlsData(getType()); // Touch controls require no shortcuts.
+        return new ControlsData(getType());
     }
 
     @Override
     public void copy(final ControlsData data) {
-        // Touch controls require no shortcuts.
     }
 
     @Override

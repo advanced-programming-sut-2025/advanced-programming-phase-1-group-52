@@ -194,7 +194,7 @@ public class    SignUpMenuController {
         SecureRandom random = new SecureRandom();
         List<Character> passwordChars = new ArrayList<>();
 
-        // Ensure at least one from each required group
+
         passwordChars.add(lowerCase.charAt(random.nextInt(lowerCase.length())));
         passwordChars.add(upperCase.charAt(random.nextInt(upperCase.length())));
         passwordChars.add(digits.charAt(random.nextInt(digits.length())));

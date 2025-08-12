@@ -52,7 +52,7 @@ public enum CookingRecipeType implements ItemType {
     },
     Maki_Roll("Maki Roll Recipe", 100, null, false, 0, 220, FoodType.Maki_Roll) {
         {
-            ingredients.put(FishType.Albacore, 1); // Using a placeholder for "AnyFish"
+            ingredients.put(FishType.Albacore, 1);
             ingredients.put(MaterialType.Rice, 1);
         }
     },
