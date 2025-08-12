@@ -1,6 +1,15 @@
 package com.example.main.GDXviews;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.PriorityQueue;
+import java.util.Random;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.badlogic.gdx.Gdx;
@@ -69,7 +78,8 @@ import static com.example.main.enums.player.Skills.Mining;
 import com.example.main.events.EventBus;
 import com.example.main.events.GameMapSyncEvent;
 import com.example.main.events.RequestMapSnapshotEvent;
-import com.example.main.models.*;
+import com.example.main.models.ActiveBuff;
+import com.example.main.models.App;
 import com.example.main.models.Date;
 import com.example.main.models.FishingMinigame;
 import com.example.main.models.Friendship;
@@ -80,8 +90,10 @@ import com.example.main.models.NPC;
 import com.example.main.models.NPCFriendship;
 import com.example.main.models.Notification;
 import com.example.main.models.Player;
+import com.example.main.models.PlayerScore;
 import com.example.main.models.Quest;
 import com.example.main.models.Result;
+import com.example.main.models.SkillData;
 import com.example.main.models.Tile;
 import com.example.main.models.Time;
 import com.example.main.models.Trade;
@@ -1072,6 +1084,13 @@ public class GDXGameScreen implements Screen {
         {81, 1},
         {1, 31},
         {81, 31}
+    };
+
+    private static final int[][] TRASH_CAN_POSITIONS = {
+        {9, 1},
+        {80, 1},
+        {9, 31},
+        {80, 31}
     };
 
     private static final int[][] HOUSE_AREAS = {
@@ -3047,38 +3066,37 @@ public class GDXGameScreen implements Screen {
     }
 
     private void renderTrashCans() {
+        int i = 0;
         for (User user : game.getPlayers()) {
             Player player = user.getPlayer();
-            if (player == null) {
-                continue;
-            }
+            if (player == null) { i++; continue; }
 
             int trashCanX = player.getTrashCanX();
             int trashCanY = player.getTrashCanY();
+            if ((trashCanX == 0 && trashCanY == 0) && i < TRASH_CAN_POSITIONS.length) {
+                trashCanX = TRASH_CAN_POSITIONS[i][0];
+                trashCanY = TRASH_CAN_POSITIONS[i][1];
+                player.setTrashCanX(trashCanX);
+                player.setTrashCanY(trashCanY);
+            }
 
             if (trashCanX < 0 || trashCanX >= MAP_WIDTH || trashCanY < 0 || trashCanY >= MAP_HEIGHT) {
-                continue;
+                i++; continue;
             }
 
             float worldX = trashCanX * TILE_SIZE;
             float worldY = (MAP_HEIGHT - 1 - trashCanY) * TILE_SIZE;
 
             TrashCan trashCan = player.getTrashCan();
-            if (trashCan == null) {
-                continue;
-            }
+            if (trashCan == null) { i++; continue; }
 
             Texture trashCanTexture = getTrashCanTexture(trashCan.getTrashCanType());
-            if (trashCanTexture == null) {
-                continue;
-            }
+            if (trashCanTexture == null) { i++; continue; }
 
             float trashCanWidth = TILE_SIZE;
             float trashCanHeight = TILE_SIZE;
-            float renderX = worldX;
-            float renderY = worldY;
-
-            spriteBatch.draw(trashCanTexture, renderX, renderY, trashCanWidth, trashCanHeight);
+            spriteBatch.draw(trashCanTexture, worldX, worldY, trashCanWidth, trashCanHeight);
+            i++;
         }
     }
 
