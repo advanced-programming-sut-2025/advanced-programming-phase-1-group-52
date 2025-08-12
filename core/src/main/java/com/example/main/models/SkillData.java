@@ -36,7 +36,7 @@ public class SkillData {
             this.originalLevel = this.level;
             this.isBuffed = true;
         }
-        this.level = tempLevel; // Set to the new buffed level
+        this.level = tempLevel;
     }
 
     public void removeBuff() {

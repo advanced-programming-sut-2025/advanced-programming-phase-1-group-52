@@ -47,8 +47,7 @@ public class GDXMainMenu implements Screen {
             public void clicked(InputEvent event, float x, float y) {
                 Result result = controller.menuEnter("PreGameMenu");
                 System.out.println(result.Message());
-//                Main.getInstance().setScreen(new GDXPreGameMenu());
-            }
+              }
         });
 
         networkLobbyButton.addListener(new ClickListener() {
@@ -96,8 +95,7 @@ public class GDXMainMenu implements Screen {
 
     @Override
     public void show() {
-        // Update welcome message with current user from the global App singleton
-        com.example.main.models.User currentUser = com.example.main.models.App.getInstance().getCurrentUser();
+                  com.example.main.models.User currentUser = com.example.main.models.App.getInstance().getCurrentUser();
         if (currentUser != null && currentUser.getUsername() != null) {
             welcomeLabel.setText("Welcome, " + currentUser.getNickname());
         } else {

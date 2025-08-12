@@ -6,10 +6,8 @@ import com.example.main.service.controls.ControlType;
 import com.badlogic.gdx.InputAdapter;
 import com.badlogic.gdx.InputMultiplexer;
 
-/** Allows to control an entity with keyboard events. */
 public class KeyboardControl extends AbstractButtonControl {
     public KeyboardControl() {
-        // Initial settings:
         up = Keys.UP;
         down = Keys.DOWN;
         left = Keys.LEFT;

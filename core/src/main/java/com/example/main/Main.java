@@ -18,15 +18,15 @@ public class Main extends Game {
     private GameClient gameClient;
     private static MainMenuController mainMenuController;
 
-    // Network configuration
+
     private static String serverIp = "localhost";
     private static int serverPort = 8080;
     private static boolean isNetworkMode = false;
 
     public static void main(String[] args) {
-        // Check if we're in network mode
+
         if (isNetworkMode) {
-            // In network mode, start with the login screen
+
             System.out.println("Network mode enabled. Starting with login screen...");
         }
         (new AppView()).runProgram();
@@ -41,10 +41,10 @@ public class Main extends Game {
         gameClient = new GameClient("localhost", 8080);
 
         if (isNetworkMode) {
-            // In network mode, start with login screen
+
             this.setScreen(new GDXLoginMenu());
         } else {
-            // In single player mode, start with sign up screen
+
             this.setScreen(new GDXSignUpMenu());
         }
     }
@@ -78,7 +78,7 @@ public class Main extends Game {
     }
 
 
-    // Network methods
+
     public static void setNetworkInfo(String ip, int port) {
         serverIp = ip;
         serverPort = port;

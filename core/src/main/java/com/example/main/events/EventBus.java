@@ -6,9 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
-/**
- * A simple, thread-safe, singleton event bus for decoupled communication.
- */
+
 public class EventBus {
     private static final EventBus INSTANCE = new EventBus();
     private final Map<Class<? extends AppEvent>, List<Consumer<AppEvent>>> listeners = new HashMap<>();
@@ -19,11 +17,7 @@ public class EventBus {
         return INSTANCE;
     }
 
-    /**
-     * Subscribes a listener to a specific type of event.
-     * @param eventClass The class of the event to listen for.
-     * @param listener The action to execute when the event is published.
-     */
+
     public <T extends AppEvent> void subscribe(Class<T> eventClass, Consumer<T> listener) {
         synchronized (listeners) {
             List<Consumer<AppEvent>> eventListeners = listeners.computeIfAbsent(eventClass, k -> new ArrayList<>());
@@ -31,10 +25,7 @@ public class EventBus {
         }
     }
 
-    /**
-     * Publishes an event to all registered listeners.
-     * @param event The event to publish.
-     */
+
     public void publish(AppEvent event) {
         List<Consumer<AppEvent>> eventListeners;
         synchronized (listeners) {

@@ -7,8 +7,6 @@ import com.example.main.configuration.preferences.ControlsData;
 import com.example.main.service.controls.Control;
 import com.example.main.service.controls.ControlListener;
 import com.example.main.service.controls.ControlType;
-
-/** Mock-up controls representing an inactive player. */
 public class InactiveControl implements Control {
     @Override
     public boolean isActive() {

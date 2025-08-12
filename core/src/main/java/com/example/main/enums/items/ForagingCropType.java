@@ -1,4 +1,4 @@
-// In main/enums/items/ForagingCropType.java
+
 
 package com.example.main.enums.items;
 
@@ -6,7 +6,7 @@ package com.example.main.enums.items;
 import com.example.main.enums.design.Season;
 
 public enum ForagingCropType implements ItemType{
-    // All crops:
+
     Common_Mushroom("common mushroom", Season.Special, 40, 38),
 
     // Spring Crops

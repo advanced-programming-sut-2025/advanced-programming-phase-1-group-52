@@ -15,9 +15,7 @@ import com.example.main.network.common.Message;
 import com.example.main.network.common.MessageType;
 import com.google.gson.Gson;
 
-/**
- * Handles individual client connections on the server
- */
+
 public class ClientHandler implements Runnable {
     private final Socket clientSocket;
     private final GameServer server;
@@ -57,14 +55,14 @@ public class ClientHandler implements Runnable {
             System.out.println("[SERVER LOG] Received message from client " + clientId + ": " + messageJson);
         }
         try {
-            // Parse the message JSON and create Message object
+
             Message message = gson.fromJson(messageJson, Message.class);
             if (message == null) {
                 System.err.println("Failed to parse message, skipping");
                 return;
             }
             if (message.getType() == MessageType.ERROR) {
-                // Skip processing error messages that were created as fallbacks
+
                 System.err.println("Received error message, skipping processing");
                 return;
             }
@@ -128,8 +126,8 @@ public class ClientHandler implements Runnable {
 
     private void handleAuthentication(Message message) {
         try {
-            // When the client sends an AUTHENTICATION message, its body is a Map.
-            // We need to cast the body to a Map to safely get the username and password.
+
+
             Map<String, Object> body = (Map<String, Object>) message.getBody();
             String username = (String) body.get("username");
             String password = (String) body.get("password");
@@ -144,13 +142,11 @@ public class ClientHandler implements Runnable {
                     sendAuthSuccessMessage(user);
                     System.out.println("Authentication successful for client: " + clientId);
 
-                    // Check if we can start the game
-                    /* if (server.getAuthenticatedUsersCount() >= 1) {
-                        server.startGame();
-                    } */
+
+
                 } catch (Exception e) {
                     System.err.println("Error sending success message: " + e.getMessage());
-                    // Don't send failure message if success message failed
+
                 }
             } else {
                 sendAuthFailedMessage("Invalid credentials");
@@ -163,9 +159,9 @@ public class ClientHandler implements Runnable {
     }
 
     private void handlePlayerAction(Message message) {
-        // No authentication required for player actions
+
         try {
-            // Assuming getFromBody works like a map getter, if not, this needs the same Map cast as above
+
             Map<String, Object> body = (Map<String, Object>) message.getBody();
             String action = (String) body.get("action");
             Object actionData = body.get("actionData");
@@ -176,7 +172,7 @@ public class ClientHandler implements Runnable {
     }
 
     private void handleHeartbeat() {
-        // Simply acknowledge the heartbeat
+
         sendHeartbeatMessage();
     }
 
@@ -226,7 +222,7 @@ public class ClientHandler implements Runnable {
         return running;
     }
 
-    // Helper methods for creating messages
+
     private Message parseMessageFromJson(String messageJson) {
         try {
             return gson.fromJson(messageJson, Message.class);
@@ -245,7 +241,7 @@ public class ClientHandler implements Runnable {
     }
 
     private void sendAuthSuccessMessage(User user) {
-        // Manually create a HashMap to avoid Gson serialization issues with the User object
+
         HashMap<String, Object> body = new HashMap<>();
         body.put("username", user.getUsername());
         body.put("nickname", user.getNickname());
@@ -295,7 +291,7 @@ public class ClientHandler implements Runnable {
     }
 
     private void handleLobbyLeave() {
-        // No authentication required for lobby operations
+
         String lobbyId = server.getClientLobbyId(clientId);
         if (lobbyId != null) {
             server.leaveLobby(clientId);
@@ -305,7 +301,7 @@ public class ClientHandler implements Runnable {
     }
 
     private void handleLobbyReady(Message message) {
-        // No authentication required for lobby operations
+
         try {
             Map<String, Object> body = (Map<String, Object>) message.getBody();
             boolean ready = (Boolean) body.get("ready");
@@ -348,16 +344,16 @@ public class ClientHandler implements Runnable {
             if (lobby != null && lobby.getHostId().equals(clientId) && lobby.canStartGame()) {
                 lobby.setGameStarted(true);
 
-                // Create the message to tell clients to go to the pre-game screen.
+
                 Message navigateMessage = new Message(new HashMap<>(), MessageType.NAVIGATE_TO_PREGAME);
                 System.out.println("[SERVER LOG] Host " + clientId + " started lobby " + lobbyId + ". Sending NAVIGATE_TO_PREGAME to all players.");
 
-                // Send this message to every player in the lobby.
+
                 for (String playerId : lobby.getPlayerIds()) {
                     server.sendMessageToClient(playerId, navigateMessage);
                 }
             } else {
-                // This error message is now more accurate.
+
                 sendErrorMessage("Cannot start game. You must be the host and have at least 2 players.");
             }
         }
@@ -411,7 +407,7 @@ public class ClientHandler implements Runnable {
         HashMap<String, Object> body = new HashMap<>();
         body.put("onlineUsers", onlineUsers);
 
-        // Convert users to a JSON array string representation
+
         StringBuilder usersJson = new StringBuilder("[");
         boolean first = true;
         for (User user : onlineUsers) {
@@ -441,30 +437,30 @@ public class ClientHandler implements Runnable {
             String email = (String) body.get("email");
             String genderStr = (String) body.get("gender");
 
-            // Validate input
+
             if (username == null || password == null || nickname == null || email == null || genderStr == null) {
                 sendErrorMessage("Missing required fields for registration");
                 return;
             }
 
-            // Check if user already exists
+
             if (server.getAuthManager().userExists(username)) {
                 sendErrorMessage("Username already exists");
                 return;
             }
 
-            // Create new user
+
             Gender gender = Gender.valueOf(genderStr);
             User newUser = new User(username, password, nickname, email, gender);
-            // Initialize security fields to avoid serialization issues
+
             newUser.setSecurityQuestion(SecurityQuestion.PetName);
             newUser.setSecurityAnswer("default");
 
-            // Register user
+
             boolean success = server.getAuthManager().registerUser(newUser);
 
             if (success) {
-                // Send success message
+
                 HashMap<String, Object> responseBody = new HashMap<>();
                 responseBody.put("message", "User registered successfully");
                 Message response = new Message(responseBody, MessageType.AUTH_SUCCESS);
@@ -489,7 +485,7 @@ public class ClientHandler implements Runnable {
                 lobbyInfo.put("name", lobby.getName());
                 lobbyInfo.put("isPrivate", lobby.isPrivate());
 
-                // **THE FIX**: Add the missing data that the client needs.
+
                 lobbyInfo.put("playerCount", lobby.getPlayerCount());
                 lobbyInfo.put("maxPlayers", lobby.getMaxPlayers());
                 lobbyInfo.put("host", lobby.getHostUsername());
@@ -497,7 +493,7 @@ public class ClientHandler implements Runnable {
                 visibleLobbies.add(lobbyInfo);
             }
         }
-        // This message now contains all the required information.
+
         sendMessage(new Message(new HashMap<>() {{ put("lobbies", visibleLobbies); }}, MessageType.AVAILABLE_LOBBIES_UPDATE));
     }
 
@@ -519,13 +515,13 @@ public class ClientHandler implements Runnable {
 
         HashMap<String, Object> body = new HashMap<>();
         if (lobby != null) {
-            // Lobby found, send back its details
+
             body.put("found", true);
             body.put("lobbyId", lobby.getLobbyId());
             body.put("name", lobby.getName());
             body.put("isPrivate", lobby.isPrivate());
         } else {
-            // Lobby not found
+
             body.put("found", false);
         }
         sendMessage(new Message(body, MessageType.LOBBY_FIND_RESULT));
@@ -535,10 +531,10 @@ public class ClientHandler implements Runnable {
         String lobbyId = server.getClientLobbyId(clientId);
         if (lobbyId != null) {
             try {
-                // Extract the farm theme from the message body
+
                 String themeName = message.getFromBody("farmTheme");
                 FarmThemes theme = FarmThemes.valueOf(themeName);
-                // Pass the choice to the main server logic
+
                 server.handleFarmChoice(clientId, lobbyId, theme);
             } catch (Exception e) {
                 System.err.println("[SERVER ERROR] Could not process farm choice from client " + clientId + ": " + e.getMessage());
@@ -550,11 +546,11 @@ public class ClientHandler implements Runnable {
         String lobbyId = server.getClientLobbyId(clientId);
         if (lobbyId != null) {
             try {
-                // Extract coordinates from the message. Gson deserializes numbers as Double.
+
                 int newX = ((Double) message.getFromBody("x")).intValue();
                 int newY = ((Double) message.getFromBody("y")).intValue();
 
-                // Pass the data to the main server for processing.
+
                 server.handlePlayerMove(lobbyId, clientId, newX, newY);
             } catch (Exception e) {
                 System.err.println("[SERVER ERROR] Could not process PLAYER_MOVE message from client " + clientId + ": " + e.getMessage());

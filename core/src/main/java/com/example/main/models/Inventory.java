@@ -168,20 +168,20 @@ public class Inventory {
         }
     }
 
-    // In main/models/Inventory.java
+
 
     public void remove2(String itemName, int quantity){
         Iterator<Item> iterator = items.iterator();
         while (iterator.hasNext()) {
             Item item = iterator.next();
             if (item.getName().equalsIgnoreCase(itemName)) {
-                if (item.getNumber() <= quantity) { // If the stack is removed completely
-                    iterator.remove(); // Safely remove the item
+                if (item.getNumber() <= quantity) {
+                    iterator.remove();
                     this.numOfItems -= 1;
-                } else { // If only some are removed from the stack
+                } else {
                     item.setNumber(item.getNumber() - quantity);
                 }
-                break; // Stop after finding and modifying the item
+                break;
             }
         }
     }

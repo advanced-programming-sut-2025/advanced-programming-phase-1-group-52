@@ -8,8 +8,7 @@ import java.util.Map;
 import com.example.main.enums.items.MaterialType;
 
 public enum Blacksmith implements ShopEntry{
-    // Stock items
-    Copper_Ore_Product(Type.STOCK, "Copper Ore", "A common ore that can be smelted into bars.",
+          Copper_Ore_Product(Type.STOCK, "Copper Ore", "A common ore that can be smelted into bars.",
             75, MineralType.Copper_Ore, Integer.MAX_VALUE,0, null),
     Iron_Ore_Product(Type.STOCK, "Iron Ore", "A fairly common ore that can be smelted into bars.",
             150, MineralType.Iron_Ore, Integer.MAX_VALUE, 0, null),

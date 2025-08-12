@@ -23,17 +23,14 @@ import com.example.main.models.Game;
 import com.example.main.models.GameMapSnapshot;
 import com.example.main.models.GameStateSnapshot;
 import com.example.main.models.Player;
-import com.example.main.models.User; // <-- Add this import
-import com.example.main.network.common.Message; // <-- Add this import
-import com.example.main.network.common.MessageType; // <-- Add this import
+import com.example.main.models.User;
+import com.example.main.network.common.Message;
+import com.example.main.network.common.MessageType;
 import com.google.gson.Gson;
 
-/**
- * Handles incoming messages from the server
- */
-public class ClientMessageHandler {
+  public class ClientMessageHandler {
     private GameClient client;
-    private final Gson gson; // <-- Add a Gson instance
+    private final Gson gson;
 
     public ClientMessageHandler(GameClient client) {
         this.client = client;
@@ -105,7 +102,7 @@ public class ClientMessageHandler {
             case INITIALIZE_GAME:
                 handleInitializeGame(message);
                 break;
-            case PLAYER_LEAVE: // <-- ADD THIS CASE
+            case PLAYER_LEAVE:
                 handlePlayerLeave(message);
                 break;
             case REQUEST_GAME_MAP:
@@ -122,17 +119,17 @@ public class ClientMessageHandler {
     private void handleAuthSuccess(Message message) {
         try {
             System.out.println("Handling AUTH_SUCCESS message: " + message.getBody());
-            // Check if this is a registration success or authentication success
+
             String regMessage = message.getFromBody("message");
             if (regMessage != null && regMessage.equals("User registered successfully")) {
                 System.out.println("Registration successful: " + regMessage);
-                // For registration, we might want to automatically log in the user
-                // or redirect to login screen
+
+
                 return;
             }
 
-            // Handle authentication success
-            // The server sends individual user fields
+
+
             String username = message.getFromBody("username");
             String nickname = message.getFromBody("nickname");
             String email = message.getFromBody("email");
@@ -151,7 +148,7 @@ public class ClientMessageHandler {
                     networkService.setCurrentUser(user);
                     System.out.println("Authenticated user set in App singleton: " + user.getUsername());
 
-                    // Switch to the main menu screen on the main GDX thread
+
                     Gdx.app.postRunnable(() -> {
                         Main.getInstance().setScreen(new GDXMainMenu(networkService));
                     });
@@ -194,7 +191,7 @@ public class ClientMessageHandler {
             String senderId = message.getFromBody("senderId");
             System.out.println("Received player action: " + action + " from " + senderId);
 
-            // Integrate with game logic for synced actions
+
             if ("talk".equals(action) && actionData instanceof java.util.Map) {
                 @SuppressWarnings("unchecked")
                 java.util.Map<String, Object> map = (java.util.Map<String, Object>) actionData;
@@ -202,7 +199,7 @@ public class ClientMessageHandler {
                 String receiverUsername = (String) map.get("receiverUsername");
                 String text = (String) map.get("message");
 
-                // Apply on the main GDX thread to safely touch UI/state
+
                 com.badlogic.gdx.Gdx.app.postRunnable(() -> {
                     com.badlogic.gdx.Screen current = com.example.main.Main.getInstance().getScreen();
                     if (current instanceof com.example.main.GDXviews.GDXGameScreen) {
@@ -551,7 +548,7 @@ public class ClientMessageHandler {
                     com.badlogic.gdx.Screen current = com.example.main.Main.getInstance().getScreen();
                     if (current instanceof com.example.main.GDXviews.GDXGameScreen) {
                         ((com.example.main.GDXviews.GDXGameScreen) current).applyRemoteAdvanceDate(senderUsername, days);
-                        // After date advance, normalize weather to sender's
+
                         if (todayWeather != null) {
                             try {
                                 com.example.main.enums.design.Weather tw = com.example.main.enums.design.Weather.valueOf(todayWeather);
@@ -616,7 +613,7 @@ public class ClientMessageHandler {
                 com.badlogic.gdx.Gdx.app.postRunnable(() -> {
                     com.badlogic.gdx.Screen current = com.example.main.Main.getInstance().getScreen();
                     if (current instanceof com.example.main.GDXviews.GDXGameScreen) {
-                        // Only the requester should handle this response; ignore if current user is the responder
+
                         com.example.main.models.Game g = com.example.main.models.App.getInstance().getCurrentGame();
                         if (g != null && g.getCurrentPlayer() != null) {
                             String me = g.getCurrentPlayer().getUsername();
@@ -669,7 +666,7 @@ public class ClientMessageHandler {
                 com.badlogic.gdx.Gdx.app.postRunnable(() -> {
                     com.badlogic.gdx.Screen current = com.example.main.Main.getInstance().getScreen();
                     if (current instanceof com.example.main.GDXviews.GDXGameScreen) {
-                        // Only the initiator should process the response; ignore if current user is the responder
+
                         com.example.main.models.Game g = com.example.main.models.App.getInstance().getCurrentGame();
                         if (g != null && g.getCurrentPlayer() != null) {
                             String me = g.getCurrentPlayer().getUsername();
@@ -759,7 +756,7 @@ public class ClientMessageHandler {
                     com.badlogic.gdx.Screen current = com.example.main.Main.getInstance().getScreen();
                     if (current instanceof com.example.main.GDXviews.GDXGameScreen) {
                         ((com.example.main.GDXviews.GDXGameScreen) current).onKickVoteUpdate(target, yes, total, finished, passed);
-                        // If I am the kicked target and vote is finished and passed, ensure I go to main menu
+
                         if (finished && passed) {
                             com.example.main.models.Game g = com.example.main.models.App.getInstance().getCurrentGame();
                             if (g != null && g.getCurrentPlayer() != null && g.getCurrentPlayer().getUsername().equals(target)) {
@@ -782,7 +779,7 @@ public class ClientMessageHandler {
                 com.badlogic.gdx.Gdx.app.postRunnable(() -> {
                     com.badlogic.gdx.Screen current = com.example.main.Main.getInstance().getScreen();
                     if (current instanceof com.example.main.GDXviews.GDXGameScreen) {
-                        // Only partner (receiver) should apply remote respond from initiator
+
                         com.example.main.models.Game g = com.example.main.models.App.getInstance().getCurrentGame();
                         if (g != null && g.getCurrentPlayer() != null && g.getCurrentPlayer().getUsername().equals(partner)) {
                             ((com.example.main.GDXviews.GDXGameScreen) current).applyRemoteRespondToTrade(initiator, partner, accepted, givingItemName, givingAmount, receivingItemName, receivingAmount);
@@ -909,11 +906,11 @@ public class ClientMessageHandler {
     private void handleTurnChange(Message message) {
         String playerId = message.getFromBody("playerId");
         System.out.println("Turn changed to player: " + playerId);
-        // Here you would update the UI to show whose turn it is
+
     }
 
     private void handleHeartbeat() {
-        // Simply acknowledge the heartbeat
+
         sendHeartbeatMessage();
     }
 
@@ -923,8 +920,8 @@ public class ClientMessageHandler {
     }
 
     private void handleCustomMessage(Message message) {
-        // Override this method in your game-specific implementation
-        // to handle custom game messages
+
+
         System.out.println("Received custom message: " + message.getType());
     }
 
@@ -945,7 +942,7 @@ public class ClientMessageHandler {
 
             System.out.println("Joined lobby: " + lobbyId);
 
-            // Notify the controller about successful lobby join
+
             if (client.getControllerCallback() instanceof NetworkLobbyController) {
                 NetworkLobbyController controller = (NetworkLobbyController) client.getControllerCallback();
                 controller.onLobbyJoinSuccess(lobbyId);
@@ -960,7 +957,7 @@ public class ClientMessageHandler {
 
     private void handleLobbyLeave(Message message) {
         System.out.println("Left lobby");
-        // You can add lobby state management here
+
     }
 
     private void handleUpdatePlayerPositions(Message message) {
@@ -995,7 +992,7 @@ public class ClientMessageHandler {
             String lobbyId = message.getFromBody("lobbyId");
             String newAdminUsername = message.getFromBody("newAdminUsername");
             System.out.println("Lobby admin changed for lobby: " + lobbyId + " - New admin: " + newAdminUsername);
-            // You can update the lobby admin in the UI
+
         } catch (Exception e) {
             System.err.println("Error handling lobby admin change: " + e.getMessage());
         }
@@ -1017,16 +1014,16 @@ public class ClientMessageHandler {
                 }
             }
 
-            // **THE FIX IS HERE**
 
-            // 1. Get the persistent controller instance.
+
+
             NetworkLobbyController controller = App.getInstance().getNetworkService().getLobbyController();
             if (controller != null) {
-                // 2. Update the controller's internal state.
+
                 controller.updateLobbyPlayers(playerNames);
             }
 
-            // 3. Get the current screen and update the UI.
+
             Screen currentScreen = Main.getInstance().getScreen();
             if (currentScreen instanceof GDXLobbyScreen) {
                 Gdx.app.postRunnable(() -> {
@@ -1043,7 +1040,7 @@ public class ClientMessageHandler {
         try {
             boolean ready = message.getFromBody("ready");
             System.out.println("Ready status set to: " + ready);
-            // You can update the ready status UI here
+
         } catch (Exception e) {
             System.err.println("Error handling lobby ready: " + e.getMessage());
         }
@@ -1053,7 +1050,7 @@ public class ClientMessageHandler {
         try {
             String lobbyId = message.getFromBody("lobbyId");
             System.out.println("Game starting for lobby: " + lobbyId);
-            // You can transition to the game here
+
         } catch (Exception e) {
             System.err.println("Error handling lobby start game: " + e.getMessage());
         }
@@ -1065,23 +1062,23 @@ public class ClientMessageHandler {
             String lobbyName = message.getFromBody("lobbyName");
             Boolean isAdmin = message.getFromBody("isAdmin");
 
-            if (lobbyId == null || lobbyName == null || isAdmin == null) { /* ... error handling ... */ return; }
+            if (lobbyId == null || lobbyName == null || isAdmin == null) { return; }
 
-            // **FIX 2**: Update the controller's state *before* switching screens.
+
             NetworkLobbyController controller = App.getInstance().getNetworkService().getLobbyController();
             if (controller != null) {
                 controller.setHostStatus(isAdmin);
             } else {
                 System.err.println("CRITICAL: NetworkService or LobbyController is null.");
-                return; // Abort if controller can't be found
+                return;
             }
 
-            // Now that the state is set, switch to the new screen.
+
             Gdx.app.postRunnable(() -> {
                 Main.getInstance().setScreen(new GDXLobbyScreen(lobbyId, lobbyName));
             });
 
-        } catch (Exception e) { /* ... error handling ... */ }
+        } catch (Exception e) {}
     }
 
     private void handleOnlineUsersUpdate(Message message) {
@@ -1089,20 +1086,20 @@ public class ClientMessageHandler {
             String usersJson = message.getFromBody("users");
             System.out.println("Received online users update: " + usersJson);
 
-            // Parse the JSON string to extract user information
+
             java.util.List<Object> onlineUsers = new java.util.ArrayList<>();
 
-            // Simple JSON parsing - remove brackets and split by comma
+
             if (usersJson != null && !usersJson.isEmpty() && !usersJson.equals("[]")) {
-                // Remove outer brackets
+
                 String innerJson = usersJson.substring(1, usersJson.length() - 1);
 
-                // Split by "},{" to get individual user objects
+
                 String[] userStrings = innerJson.split("\\},\\{");
 
                 for (int i = 0; i < userStrings.length; i++) {
                     String userString = userStrings[i];
-                    // Fix brackets if needed
+
                     if (i == 0 && !userString.startsWith("{")) {
                         userString = "{" + userString;
                     }
@@ -1110,11 +1107,11 @@ public class ClientMessageHandler {
                         userString = userString + "}";
                     }
 
-                    // Extract username from the JSON string
-                    // This is a simple approach - in a real implementation you might want to use a proper JSON parser
+
+
                     String username = "Unknown";
                     if (userString.contains("\"username\":\"")) {
-                        int start = userString.indexOf("\"username\":\"") + 13; // length of ""username":""
+                        int start = userString.indexOf("\"username\":\"") + 13;
                         int end = userString.indexOf("\"", start);
                         if (end > start) {
                             username = userString.substring(start, end);
@@ -1128,7 +1125,7 @@ public class ClientMessageHandler {
 
             System.out.println("Online users count: " + onlineUsers.size());
 
-            // Update controller if available
+
             Object callback = client.getControllerCallback();
             if (callback instanceof com.example.main.controller.NetworkLobbyController) {
                 com.example.main.controller.NetworkLobbyController controller =
@@ -1149,12 +1146,12 @@ public class ClientMessageHandler {
             Screen currentScreen = Main.getInstance().getScreen();
             System.out.println("[CLIENT LOG] Current screen is: " + (currentScreen != null ? currentScreen.getClass().getSimpleName() : "null"));
 
-            // *** THE FIX IS HERE ***
-            // We now check for the correct screen: GDXOnlineLobbiesMenu
+
+
             if (currentScreen instanceof GDXOnlineLobbiesMenu) {
                 System.out.println("[CLIENT LOG] Screen is GDXOnlineLobbiesMenu. Posting UI update to main thread.");
                 Gdx.app.postRunnable(() -> {
-                    // And we cast to GDXOnlineLobbiesMenu to call its update method
+
                     ((GDXOnlineLobbiesMenu) currentScreen).updateLobbyList(lobbies);
                 });
             } else {
@@ -1187,10 +1184,10 @@ public class ClientMessageHandler {
             if (found) {
                 String lobbyId = message.getFromBody("lobbyId");
                 boolean isPrivate = message.getFromBody("isPrivate");
-                // The screen will handle the next step (joining or showing password dialog)
+
                 Gdx.app.postRunnable(() -> lobbyMenu.handleFoundLobby(lobbyId, isPrivate));
             } else {
-                // Tell the screen the lobby was not found
+
                 Gdx.app.postRunnable(() -> lobbyMenu.showStatus("Lobby with that ID not found."));
             }
         }
@@ -1198,10 +1195,10 @@ public class ClientMessageHandler {
 
     private void handleNavigateToPregame() {
         System.out.println("[CLIENT LOG] Received NAVIGATE_TO_PREGAME command from server.");
-        // Use postRunnable to ensure the screen change happens on the main LibGDX thread.
+
         Gdx.app.postRunnable(() -> {
             Main game = Main.getInstance();
-            // This will correctly switch to the pre-game menu screen.
+
             game.setScreen(new GDXPreGameMenu(game, App.getInstance().getNetworkService()));
         });
     }
@@ -1210,26 +1207,26 @@ public class ClientMessageHandler {
         try {
             System.out.println("[CLIENT LOG] Received INITIALIZE_GAME. Deserializing snapshot.");
 
-            // --- THIS IS THE CORRECTED LOGIC ---
 
-            // 1. Get the raw, generic object from the message body. At this point, it's a LinkedTreeMap.
+
+
             Object rawSnapshotObject = message.getFromBody("snapshot");
 
-            // 2. Create a new Gson instance to perform a second, explicit conversion.
+
             Gson gson = new Gson();
 
-            // 3. Convert the generic object into a specific GameStateSnapshot object.
-            // This is the standard and correct way to handle nested objects with Gson.
+
+
             GameStateSnapshot snapshot = gson.fromJson(gson.toJson(rawSnapshotObject), GameStateSnapshot.class);
 
-            // --- END OF CORRECTION ---
+
 
             if (snapshot == null) {
                 System.err.println("[CLIENT ERROR] GameStateSnapshot was null after conversion.");
                 return;
             }
 
-            // The rest of the logic remains the same.
+
             Game newGame = createGameFromSnapshot(snapshot);
             App.getInstance().setCurrentGame(newGame);
 
@@ -1249,14 +1246,14 @@ public class ClientMessageHandler {
                 System.out.println("[CLIENT LOG] Player " + username + " has left the game.");
                 Game currentGame = App.getInstance().getCurrentGame();
                 if (currentGame != null) {
-                    // Use Gdx.app.postRunnable to ensure the game state is modified
-                    // on the main LibGDX thread, which is safe for rendering.
+
+
                     Gdx.app.postRunnable(() -> {
                         currentGame.removePlayer(username);
                     });
                 }
                 System.out.println("[CLIENT LOG] Player " + username + " left. Publishing event.");
-                // Publish the event that the GameMenuController is listening for.
+
                 EventBus.getInstance().publish(new PlayerDisconnectedEvent(username));
             }
         } catch (Exception e) {
@@ -1266,28 +1263,28 @@ public class ClientMessageHandler {
 
     private void handleRequestGameMap(Message message) {
         System.out.println("[CLIENT LOG] Received REQUEST_GAME_MAP from server. Publishing local event.");
-        // The message handler's job is done. It just announces that the request happened.
+
         EventBus.getInstance().publish(new RequestMapSnapshotEvent());
     }
 
     private void handleSyncGameMap(Message message) {
         System.out.println("[CLIENT LOG] Received SYNC_GAME_MAP from server. Deserializing snapshot.");
         try {
-            // --- THIS IS THE CORRECTED LOGIC ---
 
-            // 1. Get the raw object, which is a LinkedTreeMap.
+
+
             Object rawSnapshotObject = message.getFromBody("gameMapSnapshot");
 
-            // 2. Create a new Gson instance to perform the explicit conversion.
+
             Gson gson = new Gson();
 
-            // 3. Convert the generic map into our specific GameMapSnapshot object.
+
             GameMapSnapshot snapshot = gson.fromJson(gson.toJson(rawSnapshotObject), GameMapSnapshot.class);
 
-            // --- END OF CORRECTION ---
+
 
             if (snapshot != null) {
-                // Publish the event. The GDXGameScreen is listening for this.
+
                 System.out.println("[CLIENT LOG] Snapshot converted successfully. Publishing sync event.");
                 EventBus.getInstance().publish(new GameMapSyncEvent(snapshot));
             } else {
@@ -1302,13 +1299,13 @@ public class ClientMessageHandler {
     private Game createGameFromSnapshot(GameStateSnapshot snapshot) {
         ArrayList<User> playersInGame = new ArrayList<>();
         User hostUser = null;
-        User thisClientUser = null; // A variable to hold our local user
+        User thisClientUser = null;
 
-        // Get the username of the person running this instance of the game.
+
         String myUsername = App.getInstance().getCurrentUser().getUsername();
 
         for (GameStateSnapshot.PlayerSnapshot pSnap : snapshot.getPlayers()) {
-            // Create the User and Player objects for everyone in the match
+
             User user = new User(pSnap.getUsername(), "", "", "", pSnap.getGender());
             Player player = new Player(pSnap.getUsername(), pSnap.getGender());
 
@@ -1321,24 +1318,24 @@ public class ClientMessageHandler {
             user.setFarmTheme(snapshot.getFarmThemes().get(index));
             playersInGame.add(user);
 
-            // --- THIS IS THE FIX ---
-            // Check if the user we just created is the one playing on this machine.
+
+
             if (user.getUsername().equals(myUsername)) {
-                thisClientUser = user; // If so, we've found ourself!
+                thisClientUser = user;
             }
-            // --- END OF FIX ---
+
 
             if (user.getUsername().equals(snapshot.getHostUsername())) {
                 hostUser = user;
             }
         }
 
-        // Create the main Game object
-        Game newGame = new Game(playersInGame);
-        newGame.setMainPlayer(hostUser); // Set the host (mainPlayer)
-        newGame.setLocalPlayerUser(thisClientUser); // Set THIS client's user
 
-        // CRITICAL: Set the current user/player on this client to the local player
+        Game newGame = new Game(playersInGame);
+        newGame.setMainPlayer(hostUser);
+        newGame.setLocalPlayerUser(thisClientUser);
+
+
         if (thisClientUser != null && thisClientUser.currentPlayer() != null) {
             newGame.setCurrentUser(thisClientUser);
             newGame.setCurrentPlayer(thisClientUser.currentPlayer());

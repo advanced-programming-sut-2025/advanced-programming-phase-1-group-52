@@ -84,9 +84,7 @@ public class App {
     }
 
     public void updateUserData() {
-        // User data is now managed by AuthManager
-        // This method is kept for compatibility
-    }
+                        }
 
     public User getUser(String hostUsername) {
         List<User> users = AuthManager.getInstance().getAllUsers();

@@ -1,14 +1,12 @@
 package com.example.main.models;
 
-import com.example.main.enums.design.FarmThemes; // <-- 1. IMPORT FARMTHEMES
-import com.example.main.enums.player.Gender;
+import com.example.main.enums.design.FarmThemes;   import com.example.main.enums.player.Gender;
 import com.example.main.enums.regex.SecurityQuestion;
 
 import java.util.HashMap;
 
 public class User {
-    // --- Fields to be saved in JSON ---
-    public String username;
+          public String username;
     public String password;
     public String nickname;
     public String email;
@@ -18,15 +16,12 @@ public class User {
     public int numPlayed = 0;
     public int highScore = 0;
 
-    // --- Runtime fields (marked as transient to be ignored by JSON serializer) ---
-    private transient HashMap<Game, Player> userPlayers = new HashMap<>();
+          private transient HashMap<Game, Player> userPlayers = new HashMap<>();
     private transient Game userGame;
     private transient Player currentPlayer;
     private transient String clientId;
-    private transient FarmThemes farmTheme; // <-- 2. ADD THE TRANSIENT FARMTHEME FIELD
-
-    // No-argument constructor for JSON deserialization
-    public User() {
+    private transient FarmThemes farmTheme;
+          public User() {
         this.userPlayers = new HashMap<>();
     }
 
@@ -39,10 +34,8 @@ public class User {
         this.userPlayers = new HashMap<>();
     }
 
-    // --- Getters and Setters ---
 
-    // --- 3. ADD GETTER AND SETTER FOR FARMTHEME ---
-    public FarmThemes getFarmTheme() {
+          public FarmThemes getFarmTheme() {
         return farmTheme;
     }
 
@@ -50,8 +43,7 @@ public class User {
         this.farmTheme = farmTheme;
     }
 
-    // --- (Rest of your existing getters and setters) ---
-    public String getUsername() { return username; }
+          public String getUsername() { return username; }
 
     public void setUsername(String username) { this.username = username; }
 

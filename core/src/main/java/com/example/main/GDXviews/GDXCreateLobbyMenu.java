@@ -34,11 +34,8 @@ public class GDXCreateLobbyMenu implements Screen {
         rootTable.setFillParent(true);
         stage.addActor(rootTable);
 
-        // ** THE FIX IS HERE **
-        // Create the label using the default style, which is guaranteed to exist.
-        Label titleLabel = new Label("Create a New Lobby", skin);
-        // Then, scale it up to make it look like a title.
-        titleLabel.setFontScale(1.5f);
+                            Label titleLabel = new Label("Create a New Lobby", skin);
+                  titleLabel.setFontScale(1.5f);
         rootTable.add(titleLabel).padBottom(20).colspan(2).row();
 
         rootTable.add(new Label("Lobby Name:", skin)).left();

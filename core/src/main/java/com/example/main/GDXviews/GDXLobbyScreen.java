@@ -38,8 +38,7 @@ public class GDXLobbyScreen implements Screen {
         titleLabel.setFontScale(1.2f);
         table.add(titleLabel).padBottom(5).row();
 
-        // **THE FIX**: Add a label to display the Lobby ID.
-        Label idLabel = new Label("Lobby ID: " + lobbyId, skin);
+                  Label idLabel = new Label("Lobby ID: " + lobbyId, skin);
         table.add(idLabel).padBottom(10).row();
 
         statusLabel = new Label("Waiting for players...", skin);
@@ -79,8 +78,7 @@ public class GDXLobbyScreen implements Screen {
             statusLabel.setText("Failed to start game! Only the host can start with 2+ players.");
         } else {
             statusLabel.setText("Starting game...");
-            // The server will send a message to all clients to start the game
-        }
+                      }
     }
 
     private void leaveLobby() {

@@ -8,7 +8,7 @@ import com.example.main.models.item.Item;
 
 public class HouseRefrigerator {
     ArrayList<Item> items;
-    private final int capacity = 36; // Stardew Valley standard fridge size
+    private final int capacity = 36;
 
     public HouseRefrigerator() {
         this.items = new ArrayList<>();
@@ -61,16 +61,16 @@ public class HouseRefrigerator {
             Item existing = iterator.next();
             if (existing.getItemType().equals(itemType)) {
                 if (existing.getNumber() < quantity) {
-                    return false; // Not enough to remove
+                    return false;
                 }
                 if (existing.getNumber() == quantity) {
-                    iterator.remove(); // Remove the whole stack
+                    iterator.remove();
                 } else {
                     existing.setNumber(existing.getNumber() - quantity);
                 }
                 return true;
             }
         }
-        return false; // Item not found
+        return false;
     }
 }

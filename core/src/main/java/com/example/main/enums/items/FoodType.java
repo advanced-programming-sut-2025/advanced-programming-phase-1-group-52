@@ -1,4 +1,4 @@
-// In main/enums/items/FoodType.java
+
 
 package com.example.main.enums.items;
 

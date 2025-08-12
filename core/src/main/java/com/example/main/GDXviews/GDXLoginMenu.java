@@ -89,37 +89,30 @@ public class GDXLoginMenu implements Screen {
         String password = passwordField.getText();
 
         if (Main.isNetworkMode()) {
-            // Network mode - authenticate with server
-            handleNetworkLogin(username, password);
+                          handleNetworkLogin(username, password);
         }
         else {
-            // Single player mode - use local authentication
-            Result result = controller.login(username, password);
+                          Result result = controller.login(username, password);
             messageLabel.setText(result.Message());
             if (result.isSuccessful()) {
                 System.out.println("Login successful, transitioning to main menu.");
-                Main.getInstance().setScreen(new GDXMainMenu(null)); // No network service in single player
-            }
+                Main.getInstance().setScreen(new GDXMainMenu(null));               }
         }
     }
 
     private void handleNetworkLogin(String username, String password) {
-        // In network mode, authenticate directly with server
-        messageLabel.setText("Connecting to server...");
+                  messageLabel.setText("Connecting to server...");
 
-        // Create network service and authenticate
-        this.networkService = new com.example.main.service.NetworkService();
+                  this.networkService = new com.example.main.service.NetworkService();
         com.example.main.models.App.getInstance().setNetworkService(this.networkService);
 
-        // Connect to server
-        boolean connected = networkService.connectToServer(Main.getServerIp(), Main.getServerPort());
+                  boolean connected = networkService.connectToServer(Main.getServerIp(), Main.getServerPort());
         if (!connected) {
             messageLabel.setText("Failed to connect to server.");
             return;
         }
 
-        // Authenticate with server. The response will be handled by ClientMessageHandler.
-        if (networkService.authenticate(username, password)) {
+                  if (networkService.authenticate(username, password)) {
             messageLabel.setText("Login request sent. Waiting for server response...");
         }
         else {

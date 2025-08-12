@@ -9,7 +9,7 @@ public class PlacedMachine {
     private final CraftingMachineType machineType;
     private Item input;
     private Good output;
-    private int progress = 0; // In 10-minute game intervals
+    private int progress = 0;
     private ArtisanProductType currentRecipe;
 
     public PlacedMachine(CraftingMachineType machineType) {
@@ -27,8 +27,7 @@ public class PlacedMachine {
             progress++;
             if (progress >= currentRecipe.getProcessingTime()) {
                 this.output = new Good(currentRecipe, 1);
-                this.input = null; // Consume input
-            }
+                this.input = null;               }
         }
     }
 

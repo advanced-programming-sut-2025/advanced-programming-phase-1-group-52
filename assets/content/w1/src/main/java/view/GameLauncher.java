@@ -28,7 +28,7 @@ public class GameLauncher extends Application {
     public Pane pane;
     public Timeline createMeteors;
     public Text scoreBoard;
-    
+
     public GameLauncher(String username) {
         game = new Game(username, this);
     }
@@ -36,9 +36,8 @@ public class GameLauncher extends Application {
     public void start (Stage stage) throws Exception {
         pane = new Pane();
         setSize(pane);
-    
-//        setBackground(pane);
-    
+
+
         createCannon();
         pane.getChildren().add(cannon);
         pane.setBackground(new Background(createBackgroundImage()));
@@ -46,9 +45,9 @@ public class GameLauncher extends Application {
         createMeteors = new Timeline(new KeyFrame(Duration.seconds(2), actionEvent -> createMeteor()));
         createMeteors.setCycleCount(-1);
         createMeteors.play();
-    
+
         pane.getChildren().add(createScoreHbox());
-        
+
         Scene scene = new Scene(pane);
         stage.setScene(scene);
         stage.setResizable(false);
@@ -56,7 +55,7 @@ public class GameLauncher extends Application {
         stage.show();
         cannon.requestFocus();
     }
-    
+
     private void createMeteor() {
         Meteor meteor = new Meteor(ApplicationController.random.nextDouble(50, game.WIDTH - 100), 30);
         meteor.setMeteorAnimation(new MeteorAnimation(pane, game, cannon, meteor));
@@ -64,7 +63,7 @@ public class GameLauncher extends Application {
         meteor.getMeteorAnimation().play();
         game.meteors.getChildren().add(meteor);
     }
-    
+
     private void createCannon () {
         cannon = new Cannon(game);
         cannon.setOnKeyPressed(keyEvent -> {
@@ -77,14 +76,14 @@ public class GameLauncher extends Application {
             }
         });
     }
-    
+
     private void setSize (Pane pane) {
         pane.setMinHeight(HEIGHT);
         pane.setMaxHeight(HEIGHT);
         pane.setMinWidth(WIDTH);
         pane.setMaxWidth(WIDTH);
     }
-    
+
     private HBox createScoreHbox() {
         HBox hBox = new HBox();
         scoreBoard = new Text(360, 50,
@@ -95,14 +94,14 @@ public class GameLauncher extends Application {
         hBox.setLayoutX(10);
         return hBox;
     }
-    
+
     private void setBackground (Pane pane) {
         Image backgroundImage = new Image(GameLauncher.class.getResource("/Images/envirenement.png").toExternalForm());
         ImageView background = new ImageView(backgroundImage);
         background.setX((game.WIDTH / 2) - (backgroundImage.getWidth() / 2));
         pane.getChildren().add(background);
     }
-    
+
     private BackgroundImage createBackgroundImage () {
         Image image = new Image(Game.class.getResource("/Images/envirenement.png").toExternalForm(), WIDTH ,HEIGHT, false, false);
         BackgroundImage backgroundImage = new BackgroundImage(image,

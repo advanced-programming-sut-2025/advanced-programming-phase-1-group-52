@@ -73,8 +73,7 @@ public class GDXOnlineMenu implements Screen {
     @Override
     public void show() {
         Gdx.input.setInputProcessor(stage);
-        // Update title with current user
-        String username = com.example.main.models.App.getInstance().getCurrentUser() != null ?
+                  String username = com.example.main.models.App.getInstance().getCurrentUser() != null ?
             com.example.main.models.App.getInstance().getCurrentUser().getUsername() : "Guest";
         titleLabel.setText("Online Multiplayer - " + username);
         System.out.println("[UI LOG] GDXOnlineMenu is now visible.");
@@ -88,8 +87,7 @@ public class GDXOnlineMenu implements Screen {
 
     public void updateLobbyList(List<Map<String, Object>> lobbies) {
         System.out.println("[UI LOG] updateLobbyList called with " + (lobbies != null ? lobbies.size() : "null") + " lobbies.");
-        lobbyListTable.clear(); // Clear the old list from the UI
-
+        lobbyListTable.clear();
         if (lobbies == null || lobbies.isEmpty()) {
             System.out.println("[UI LOG] No lobbies to display. Showing 'No available lobbies' message.");
             lobbyListTable.add(new Label("No available lobbies found.", skin)).center();
@@ -100,8 +98,7 @@ public class GDXOnlineMenu implements Screen {
         for (Map<String, Object> lobbyInfo : lobbies) {
             String lobbyId = (String) lobbyInfo.get("lobbyId");
             String name = (String) lobbyInfo.get("name");
-            // Ensure numbers are handled correctly after JSON deserialization
-            int playerCount = ((Number) lobbyInfo.get("playerCount")).intValue();
+                          int playerCount = ((Number) lobbyInfo.get("playerCount")).intValue();
             int maxPlayers = ((Number) lobbyInfo.get("maxPlayers")).intValue();
             String host = (String) lobbyInfo.get("host");
 

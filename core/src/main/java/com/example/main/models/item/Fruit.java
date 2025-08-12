@@ -7,7 +7,6 @@ import com.example.main.enums.items.TreeType;
 public class Fruit extends Item implements Growable {
     private FruitType fruitType;
     private TreeType treeType;
-
     private int currentStage = 0;
     private int dayPassed = 0;
     private int dayRemaining = 0;
@@ -16,16 +15,14 @@ public class Fruit extends Item implements Growable {
     private boolean needsWaterToday = false;
     private boolean isReadyToHarvest = false;
     private int unwateredDays = 0;
-    private boolean hasBeenHarvestedToday = false; // Add this flag
-
+    private boolean hasBeenHarvestedToday = false;
     public Fruit(FruitType fruitType, int number) {
         super(fruitType, number);
         this.fruitType = fruitType;
         this.treeType = findTreeType();
     }
 
-    // Add getter and setter for the new flag
-    public boolean hasBeenHarvestedToday() {
+          public boolean hasBeenHarvestedToday() {
         return hasBeenHarvestedToday;
     }
 
@@ -62,9 +59,7 @@ public class Fruit extends Item implements Growable {
 
     @Override
     public void setNotWateredForTwoDays(boolean notWateredForTwoDays) {
-        // This method is less relevant now with the unwateredDays counter,
-        // but we keep it to satisfy the Growable interface.
-    }
+                        }
 
     private TreeType findTreeType() {
         for (TreeType treeType : TreeType.values()) {

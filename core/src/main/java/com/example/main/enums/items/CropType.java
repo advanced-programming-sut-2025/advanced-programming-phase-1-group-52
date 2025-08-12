@@ -4,7 +4,7 @@ import com.example.main.enums.design.Season;
 import java.util.List;
 
 public enum CropType implements ItemType {
-    // Spring crops
+
     Blue_Jazz("blue jazz", 1,2,2,2, 7, true, null, 50, true, 45, 20, Season.Spring, false),
     Carrot("carrot", 1,1,1,3, 6, true, null, 35, true, 75, 33, Season.Spring, false),
     Cauliflower("cauliflower", 1,2,4,4, 11, true, null, 175, true, 75, 33, Season.Spring, true),

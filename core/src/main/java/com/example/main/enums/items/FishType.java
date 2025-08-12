@@ -4,7 +4,7 @@ import com.example.main.enums.design.Season;
 
 public enum FishType implements ItemType {
 
-    // Spring Fish
+
     Anchovy("Anchovy", 30, Season.Spring, "Ordinary", MovementPattern.DARTER),
     Sardine("Sardine", 40, Season.Spring, "Ordinary", MovementPattern.DARTER),
     Bream("Bream", 45, Season.Spring, "Ordinary", MovementPattern.SMOOTH),
@@ -13,7 +13,7 @@ public enum FishType implements ItemType {
     Eel("Eel", 85, Season.Spring, "Ordinary", MovementPattern.SMOOTH),
     Legend("Legend", 5000, Season.Spring, "Legendary", MovementPattern.SMOOTH),
 
-    // Summer Fish
+
     Pufferfish("Pufferfish", 200, Season.Summer, "Ordinary", MovementPattern.FLOATER),
     Rainbow_Trout("Rainbow Trout", 65, Season.Summer, "Ordinary", MovementPattern.SMOOTH),
     Red_Mullet("Red Mullet", 75, Season.Summer, "Ordinary", MovementPattern.SMOOTH),
@@ -23,7 +23,7 @@ public enum FishType implements ItemType {
     Octopus("Octopus", 150, Season.Summer, "Ordinary", MovementPattern.SINKER),
     Crimsonfish("Crimsonfish", 1500, Season.Summer, "Legendary", MovementPattern.DARTER),
 
-    // Fall Fish
+
     Albacore("Albacore", 75, Season.Fall, "Ordinary", MovementPattern.SMOOTH),
     Salmon("Salmon", 75, Season.Fall, "Ordinary", MovementPattern.SMOOTH),
     Walleye("Walleye", 105, Season.Fall, "Ordinary", MovementPattern.SMOOTH),

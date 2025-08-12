@@ -20,21 +20,21 @@ public class DatabaseManager {
 
     public DatabaseManager() {
         json = new Json();
-        
-        // Check if we're in terminal mode (Gdx.files is null)
+
+
         if (Gdx.files == null) {
             isTerminalMode = true;
             fileHandle = null;
         } else {
             isTerminalMode = false;
-            // Look for users.json in assets directory
+
             fileHandle = Gdx.files.internal(USERS_FILE);
         }
     }
 
     public void saveUsers(List<User> users) {
         String data = json.prettyPrint(users);
-        
+
         if (isTerminalMode) {
             saveUsersTerminal(data);
         } else {
@@ -51,7 +51,7 @@ public class DatabaseManager {
             return json.fromJson(ArrayList.class, User.class, jsonString);
         }
     }
-    
+
     private void saveUsersTerminal(String data) {
         try (FileWriter writer = new FileWriter(USERS_FILE)) {
             writer.write(data);
@@ -59,14 +59,14 @@ public class DatabaseManager {
             System.err.println("Error saving users: " + e.getMessage());
         }
     }
-    
+
     private List<User> loadUsersTerminal() {
         File file = new File(USERS_FILE);
         if (!file.exists()) {
             System.err.println("users.json not found at: " + file.getAbsolutePath());
             return new ArrayList<>();
         }
-        
+
         try (FileReader reader = new FileReader(file)) {
             StringBuilder content = new StringBuilder();
             int character;
@@ -74,7 +74,7 @@ public class DatabaseManager {
                 content.append((char) character);
             }
             String jsonString = content.toString();
-            
+
             List<User> users = json.fromJson(ArrayList.class, User.class, jsonString);
             return users != null ? users : new ArrayList<>();
         } catch (IOException e) {

@@ -1,6 +1,6 @@
 package com.example.main.service;
 
-import com.example.main.controller.NetworkLobbyController; // <-- Add this import
+import com.example.main.controller.NetworkLobbyController;
 import com.example.main.models.User;
 import java.util.HashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -10,9 +10,7 @@ import com.example.main.network.client.GameClient;
 import com.example.main.network.common.Message;
 import com.example.main.network.common.MessageType;
 
-/**
- * Service class that integrates network functionality with the game
- */
+
 public class NetworkService {
     private User currentUser;
     private GameClient client;
@@ -20,21 +18,18 @@ public class NetworkService {
     private final AtomicBoolean isAuthenticated;
     private Game currentGame;
 
-    // **FIX 1**: Add a field for the single, persistent lobby controller.
+
     private final NetworkLobbyController lobbyController;
 
     public NetworkService() {
         this.isConnected = new AtomicBoolean(false);
         this.isAuthenticated = new AtomicBoolean(false);
-        // **FIX 2**: Instantiate the controller here, in the constructor.
-        // It will now live as long as the NetworkService does.
+
+
         this.lobbyController = new NetworkLobbyController(this);
     }
 
-    /**
-     * **FIX 3**: Add a getter for the lobby controller.
-     * This allows any screen to access the shared instance.
-     */
+
     public NetworkLobbyController getLobbyController() {
         return this.lobbyController;
     }
@@ -50,8 +45,8 @@ public class NetworkService {
             boolean connected = client.connect();
             isConnected.set(connected);
             if (connected) {
-                // **FIX 4**: CRITICAL - After connecting, set the persistent lobby controller
-                // as the callback for the GameClient. This is the missing link.
+
+
                 client.setControllerCallback(this.lobbyController);
                 System.out.println("Successfully connected to server and set lobby controller callback.");
             } else {
@@ -72,14 +67,14 @@ public class NetworkService {
         boolean authenticated = client.authenticate(username, password);
         isAuthenticated.set(authenticated);
         if (authenticated) {
-            // The ClientMessageHandler now sets the current user in the App singleton.
-            // This line can be simplified or removed if the handler does it all.
+
+
             currentUser = client.getAuthenticatedUser();
         }
         return authenticated;
     }
 
-    // ... No other changes are needed below this point ...
+
 
     public User getCurrentUser() {
         return currentUser;

@@ -74,8 +74,7 @@ public class GameMenu implements AppMenu {
             System.out.println(controller.energyShow().Message());
         }
         else if ((matcher = GameMenuCommands.CHEATEnergySet.getMatcher(input)) != null) {
-            //System.out.println(controller.cheatSetEnergy(matcher.group("value")).Message());
-        }
+                      }
         else if ((matcher = GameMenuCommands.CHEATEnergyUnlimited.getMatcher(input)) != null) {
             System.out.println(controller.cheatUnlimitedEnergy().Message());
         }
@@ -85,10 +84,7 @@ public class GameMenu implements AppMenu {
         else if ((matcher = GameMenuCommands.InventoryShow.getMatcher(input)) != null) {
             System.out.println(controller.showInventoryItems().Message());
         }
-//        else if ((matcher = GameMenuCommands.RemoveInventoryItems.getMatcher(input)) != null) {
-//            System.out.println(controller.removeItemFromInventory(matcher.group("name"),matcher.group("number")).Message());
-//        }
-        else if ((matcher = GameMenuCommands.ToolEquip.getMatcher(input)) != null) {
+              else if ((matcher = GameMenuCommands.ToolEquip.getMatcher(input)) != null) {
             System.out.println(controller.equipTool(matcher.group("name")).Message());
         }
         else if ((matcher = GameMenuCommands.ToolShowCurrent.getMatcher(input)) != null) {

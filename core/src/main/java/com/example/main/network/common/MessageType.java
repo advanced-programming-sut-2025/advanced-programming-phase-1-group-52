@@ -12,7 +12,7 @@ public enum MessageType {
     DISCONNECT,
     ERROR,
     REGISTER,
-    // Lobby messages
+
     LOBBY_JOIN,
     LOBBY_JOIN_FAILED,
     LOBBY_JOIN_SUCCESS,
@@ -22,22 +22,22 @@ public enum MessageType {
     LOBBY_READY,
     CREATE_LOBBY,
     LOBBY_START_GAME,
-    // Online users messages
+
     REQUEST_ONLINE_USERS,
     ONLINE_USERS_UPDATE,
-    // Lobby requests
+
     REQUEST_AVAILABLE_LOBBIES,
     AVAILABLE_LOBBIES_UPDATE,
     LOBBY_FIND_BY_ID,
     LOBBY_FIND_RESULT,
-    // Game begins baby!
-    NAVIGATE_TO_PREGAME,  // Server -> Client: Tells all players in the lobby to switch to the pre-game screen.
-    SUBMIT_FARM_CHOICE,   // Client -> Server: A player sends their chosen farm type.
+
+    NAVIGATE_TO_PREGAME,
+    SUBMIT_FARM_CHOICE,
     GAME_SETUP_COMPLETE,
     INITIALIZE_GAME,
-    REQUEST_GAME_MAP, // Server -> Client (Host): Asks for the master copy of the map
-    SEND_GAME_MAP,    // Client (Host) -> Server: Contains the master GameMap
+    REQUEST_GAME_MAP,
+    SEND_GAME_MAP,
     SYNC_GAME_MAP,
-    PLAYER_MOVE,          // A message from a client to the server indicating they have moved.
+    PLAYER_MOVE,
     UPDATE_PLAYER_POSITIONS,
 }

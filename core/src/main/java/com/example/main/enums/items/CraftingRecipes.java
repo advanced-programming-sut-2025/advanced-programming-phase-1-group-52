@@ -5,7 +5,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public enum CraftingRecipes implements ItemType {
-    // Updated to point to the corrected CraftingMachineType enums
+
     CherryBombRecipe("Cherry Bomb Recipe", Map.of(
         MineralType.Copper_Ore, 4,
         MineralType.Coal, 1

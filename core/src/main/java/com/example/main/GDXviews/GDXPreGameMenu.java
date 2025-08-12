@@ -15,14 +15,13 @@ import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.example.main.Main;
 import com.example.main.controller.NetworkLobbyController;
 import com.example.main.enums.design.FarmThemes;
-import com.example.main.events.EventBus; // <-- 1. ADD IMPORT
-import com.example.main.events.NavigateToGameScreenEvent; // <-- 2. ADD IMPORT
+import com.example.main.events.EventBus;
+import com.example.main.events.NavigateToGameScreenEvent;
 import com.example.main.service.NetworkService;
 
 public class GDXPreGameMenu implements Screen {
 
-    // The user's Main class is the com.badlogic.gdx.Game instance
-    private final Main game;
+          private final Main game;
     private final Stage stage;
     private final Skin skin;
     private final NetworkLobbyController controller;
@@ -96,21 +95,15 @@ public class GDXPreGameMenu implements Screen {
             }
         });
 
-        // --- 3. ADD THIS METHOD CALL AT THE END OF THE CONSTRUCTOR ---
-        subscribeToEvents();
+                  subscribeToEvents();
     }
 
-    /**
-     * Subscribes this screen to listen for the NavigateToGameScreenEvent.
-     * When the event is received, it will trigger the screen change.
-     */
+
     private void subscribeToEvents() {
         EventBus.getInstance().subscribe(NavigateToGameScreenEvent.class, event -> {
-            // Use postRunnable to ensure the screen change happens on the main render thread
-            Gdx.app.postRunnable(() -> {
+                          Gdx.app.postRunnable(() -> {
                 System.out.println("[GDXPreGameMenu] Navigation event received! Switching to GDXGameScreen.");
-                // Use the stored 'game' instance to switch to the new screen
-                game.setScreen(new GDXGameScreen());
+                                  game.setScreen(new GDXGameScreen());
             });
         });
     }
@@ -124,8 +117,6 @@ public class GDXPreGameMenu implements Screen {
         }
     }
 
-    // --- 4. THE onGameSetupComplete() METHOD IS NO LONGER NEEDED AND CAN BE DELETED ---
-    // public void onGameSetupComplete() { ... }
 
     @Override
     public void show() {

@@ -1,7 +1,7 @@
 package com.example.main.enums.items;
 
 public enum CraftingMachineType implements ItemType {
-    // Corrected names to match PNG files
+
     Cherry_Bomb("Cherry Bomb", 50),
     Bomb("Bomb", 50),
     Mega_Bomb("Mega Bomb", 50),

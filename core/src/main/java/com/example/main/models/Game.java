@@ -34,14 +34,12 @@ public class Game {
     private boolean crowAttackHappened = false;
     private transient User localPlayerUser;
 
-    // --- THIS IS THE CORRECTED CONSTRUCTOR ---
-    public Game(ArrayList<User> players) {
+          public Game(ArrayList<User> players) {
         this.time = new Time();
         this.date = new Date();
         this.players = players;
 
-        // Safely set the current player and user to the first player in the list.
-        if (!players.isEmpty()) {
+                  if (!players.isEmpty()) {
             this.currentPlayer = players.get(0).getPlayer();
             this.currentUser = players.get(0);
         }
@@ -49,10 +47,7 @@ public class Game {
         this.todayWeather = Weather.Sunny;
         this.tomorrowWeather = Weather.Rainy;
 
-        // --- DYNAMIC FRIENDSHIP CREATION ---
-        // This nested loop creates a friendship between every unique pair of players,
-        // regardless of whether there are 2, 3, or 4 players. This is now safe.
-        for (int i = 0; i < players.size(); i++) {
+                                      for (int i = 0; i < players.size(); i++) {
             for (int j = i + 1; j < players.size(); j++) {
                 User user1 = players.get(i);
                 User user2 = players.get(j);
@@ -61,18 +56,15 @@ public class Game {
                 }
             }
         }
-        // --- END OF CORRECTION ---
 
         ArrayList<Player> realPlayers = new ArrayList<>();
         for (User user : this.players) {
-            // Ensure we don't add null players if the user object is just a placeholder
-            if (user != null && user.getPlayer() != null) {
+                          if (user != null && user.getPlayer() != null) {
                 realPlayers.add(user.getPlayer());
             }
         }
 
-        // The rest of the constructor is safe.
-        this.NPCs.add(new NPC(NPCType.Abigail, realPlayers));
+                  this.NPCs.add(new NPC(NPCType.Abigail, realPlayers));
         this.NPCs.add(new NPC(NPCType.Harvey, realPlayers));
         this.NPCs.add(new NPC(NPCType.Lia, realPlayers));
         this.NPCs.add(new NPC(NPCType.Robin, realPlayers));
@@ -81,19 +73,15 @@ public class Game {
 
 
     public Game(ArrayList<User> users, Map<String, Player> playerMap) {
-        this(users); // This calls the original constructor to do all the basic setup.
-
-        // Now, iterate through the game's list of users and assign the correct Player object.
-        for (User user : this.players) {
+        this(users);
+                  for (User user : this.players) {
             if (user != null && playerMap.containsKey(user.getUsername())) {
                 user.setCurrentPlayer(playerMap.get(user.getUsername()));
             }
         }
     }
 
-    // --- ALL OTHER METHODS IN YOUR CLASS REMAIN EXACTLY THE SAME ---
-    // (advanceTimeByMinutes, advanceDay, getFriendshipsByPlayer, etc.)
-    public void advanceTimeByMinutes(int minutes) {
+                public void advanceTimeByMinutes(int minutes) {
         int tensOfMinutesPassed = (this.time.getMinute() + minutes) / 10 - this.time.getMinute() / 10;
         int daysPassed = this.time.addMinutes(minutes);
 
@@ -111,9 +99,7 @@ public class Game {
         }
     }
 
-    /**
-     * Contains all the logic that should be executed when a day passes.
-     */
+
     public void advanceDay() {
         this.daysPassed++;
         this.date.addDays(1);
@@ -202,9 +188,7 @@ public class Game {
         this.switchCounter++;
         if(this.switchCounter >= 4){
             this.switchCounter = 0;
-            // The timePassed() method is deprecated in favor of advanceTimeByMinutes
-            // timePassed();
-        }
+                                    }
         return true;
     }
 
@@ -454,7 +438,6 @@ public class Game {
         }
     }
 
-    // In main/models/Game.java
 
     public void updateTreesAndPlants() {
         if (map == null) return;
@@ -465,28 +448,24 @@ public class Game {
                 if (tile.getPlant() != null) {
                     Growable plant = tile.getPlant();
 
-                    // --- Handle Crops (Both Farm and Wild Forageables) ---
-                    if (plant instanceof Crop crop) {
+                                          if (plant instanceof Crop crop) {
                         ItemType type = crop.getCropType();
 
-                        // THIS IS THE CRITICAL CHECK: We only process growth for actual farm crops.
-                        if (type instanceof CropType cropType) {
+                                                  if (type instanceof CropType cropType) {
                             boolean wasWatered = plant.isWateredToday();
 
-                            // 1. Logic for removing dead farm crops
-                            if (!wasWatered) {
+                                                          if (!wasWatered) {
                                 if (crop.isNotWateredForTwoDays()) {
                                     tile.setPlant(null);
                                     tile.setType(TileType.Shoveled);
-                                    continue; // Skip to the next tile
-                                } else {
+                                    continue;                                   } else {
                                     crop.setNotWateredForTwoDays(true);
                                 }
                             } else {
                                 crop.setNotWateredForTwoDays(false);
                             }
 
-                            // 2. Growth Logic (only runs if watered)
+
                             if (!plant.isReadyToHarvest() && wasWatered) {
                                 plant.setDayPassed(plant.getDayPassed() + 1);
 
@@ -506,15 +485,15 @@ public class Game {
                                 plant.setCurrentStage(newStage);
                             }
 
-                            // 3. Maturity Check
+
                             if (plant.getDayPassed() >= cropType.getTotalHarvestTime()) {
                                 plant.setReadyToHarvest(true);
                             }
                         }
-                        // If 'type' is a ForagingCropType, all the logic above is skipped.
+
 
                     }
-                    // --- Handle Fruit Trees ---
+
                     else if (plant instanceof Fruit fruit) {
                         boolean wasWatered = fruit.isWateredToday();
                         if (!wasWatered && !fruit.getTreeType().isForaging()) {
@@ -531,7 +510,7 @@ public class Game {
                             if (wasWatered || fruit.getTreeType().isForaging()) {
                                 fruit.setDayPassed(fruit.getDayPassed() + 1);
                             }
-                            // Update fruit tree stage logic here if needed
+
                         }
 
                         if (fruit.getDayPassed() >= fruit.getTreeType().getTotalHarvestTime() && fruit.getTreeType().getSeasons().contains(date.getCurrentSeason())) {
@@ -541,7 +520,7 @@ public class Game {
                         }
                     }
 
-                    // Reset watered status for ALL plants at the end of the day
+
                     plant.setWateredToday(false);
                 }
             }
@@ -618,18 +597,18 @@ public class Game {
         Tile[][] tiles = map.getTiles();
         Random rand = new Random();
 
-        // Iterate through all possible top-left corners of a 2x2 square
+
         for (int x = 0; x < 89; x++) {
             for (int y = 0; y < 59; y++) {
 
-                // 1. Check if a 2x2 square of the same giant-able crop exists
+
                 Tile topLeft = tiles[x][y];
                 if (topLeft == null || !(topLeft.getPlant() instanceof Crop)) continue;
 
                 Crop firstCrop = (Crop) topLeft.getPlant();
                 ItemType firstType = firstCrop.getCropType();
                 if (!(firstType instanceof CropType)) {
-                    continue; // Only actual farm crops can become giant
+                    continue;
                 }
                 CropType cropType = (CropType) firstType;
 
@@ -644,9 +623,9 @@ public class Game {
                     bottomLeft.getPlant() instanceof Crop && ((Crop) bottomLeft.getPlant()).getCropType() instanceof CropType && ((CropType) ((Crop) bottomLeft.getPlant()).getCropType()) == cropType && ((Crop) bottomLeft.getPlant()).isReadyToHarvest() &&
                     bottomRight.getPlant() instanceof Crop && ((Crop) bottomRight.getPlant()).getCropType() instanceof CropType && ((CropType) ((Crop) bottomRight.getPlant()).getCropType()) == cropType && ((Crop) bottomRight.getPlant()).isReadyToHarvest()) {
 
-                    // 2. 5% chance to merge into a giant crop
+
                     if (rand.nextInt(100) < 5) {
-                        // 3. Mark all four tiles as part of a giant crop, pointing to the top-left tile
+
                         topLeft.setPartOfGiantCrop(true);
                         topLeft.setGiantCropRootX(x);
                         topLeft.setGiantCropRootY(y);
@@ -669,9 +648,9 @@ public class Game {
     }
     public synchronized void removePlayer(String username) {
         if (username == null) {
-            return; // or throw an exception
+            return;
         }
-        // Using removeIf for a cleaner and safer removal from the list
+
         players.removeIf(user -> user != null && username.equals(user.getUsername()));
     }
 
